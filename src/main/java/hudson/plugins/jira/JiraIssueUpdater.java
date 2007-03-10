@@ -17,6 +17,8 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.text.MessageFormat;
@@ -91,34 +93,44 @@ public class JiraIssueUpdater extends Publisher {
             return true;
         }
 
-        Set<String> issues = new HashSet<String>();
+        Set<String> ids = findIssueIds(build);
 
-        for (Iterator<? extends Entry> itr = build.getChangeSet().iterator(); itr.hasNext();) {
-            Entry change =  itr.next();
-            Matcher m = ISSUE_PATTERN.matcher(change.getMsg());
-            while(m.find())
-                issues.add(m.group());
-        }
-
-        if(issues.isEmpty())
+        if(ids.isEmpty())
             return true;    // nothing found here.
 
+        List<JiraIssue> issues = new ArrayList<JiraIssue>();
         try {
             JiraSession session = site.createSession();
-            for (String issue : issues) {
-                logger.println("Updating "+issue);
-                session.addComment(issue,
+            for (String id : ids) {
+                logger.println("Updating "+id);
+                session.addComment(id,
                     MessageFormat.format(
                         site.supportsWikiStyleComment?
                         "Integrated in !{0}nocacheImages/16x16/{3}.gif! [{2}|{0}{1}]":
                         "Integrated in {2} (See {0}{1})",
                         rootUrl, build.getUrl(), build, build.getIconColor().noAnime()));
+
+                issues.add(new JiraIssue(session.getIssue(id)));
+
             }
         } catch (ServiceException e) {
             e.printStackTrace(listener.error("Failed to connect to JIRA"));
         }
+        build.getActions().add(new JiraBuildAction(build,issues));
 
         return true;
+    }
+
+    private Set<String> findIssueIds(Build build) {
+        Set<String> ids = new HashSet<String>();
+
+        for (Iterator<? extends Entry> itr = build.getChangeSet().iterator(); itr.hasNext();) {
+            Entry change =  itr.next();
+            Matcher m = ISSUE_PATTERN.matcher(change.getMsg());
+            while(m.find())
+                ids.add(m.group());
+        }
+        return ids;
     }
 
     public DescriptorImpl getDescriptor() {

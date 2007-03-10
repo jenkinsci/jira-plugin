@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.RemoteComment;
+import hudson.plugins.jira.soap.RemoteIssue;
 
 import java.rmi.RemoteException;
 
@@ -36,5 +37,15 @@ public final class JiraSession {
         RemoteComment rc = new RemoteComment();
         rc.setBody(comment);
         service.addComment(token, issueId, rc);
+    }
+
+    /**
+     * Gets the details of one issue.
+     *
+     * @param id
+     *      Issue ID like "MNG-1235".
+     */
+    public RemoteIssue getIssue(String id) throws RemoteException {
+        return service.getIssue(token,id);
     }
 }
