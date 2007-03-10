@@ -40,7 +40,7 @@ public class JiraBuildAction implements Action {
      * Computes the URL to the given issue.
      */
     public URL getUrl(JiraIssue issue) throws IOException {
-        JiraIssueUpdater p = (JiraIssueUpdater) owner.getProject().getPublishers().get(JiraIssueUpdater.class);
+        JiraIssueUpdater p = (JiraIssueUpdater) owner.getProject().getPublishers().get(JiraIssueUpdater.DESCRIPTOR);
         if(p==null) return null;
         JiraSite site = p.getSite();
         if(site==null)  return null;

@@ -30,7 +30,7 @@ public final class JiraIssue implements Comparable<JiraIssue> {
     }
 
     public JiraIssue(RemoteIssue issue) {
-        this(issue.getId(),issue.getDescription());
+        this(issue.getKey(),issue.getSummary());
     }
 
     public int compareTo(JiraIssue that) {
