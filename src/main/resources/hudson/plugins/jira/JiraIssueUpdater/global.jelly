@@ -1,0 +1,32 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:section title="JIRA">
+    <f:entry title="JIRA sites"
+      description="JIRA sites that projects will want to connect">
+      <f:repeatable var="site" items="${descriptor.sites}">
+        <table width="100%">
+          <f:entry title="URL">
+            <f:textbox name="jira.url" value="${site.url}" />
+          </f:entry>
+          <f:entry title="Supports Wiki notation"
+                   description="Check the box if this JIRA supports Wiki notations in comments">
+            <f:checkbox name="jira.supportsWikiStyleComment" checked="${site.supportsWikiStyleComment}"/>
+          </f:entry>
+          <f:entry title="User Name">
+            <f:textbox name="jira.userName" value="${site.userName}" />
+          </f:entry>
+          <f:entry title="Password"
+              description="Hudson uses this username/password to remotely access JIRA">
+            <input class="setting-input" name="jira.password"
+                   type="password" value="${site.password}" />
+          </f:entry>
+
+          <f:entry title="">
+            <div align="right">
+              <f:repeatableDeleteButton />
+            </div>
+          </f:entry>
+        </table>
+      </f:repeatable>
+    </f:entry>
+  </f:section>
+</j:jelly>
