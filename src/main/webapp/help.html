@@ -1,14 +1,4 @@
 <div>
-  Enabling this option makes Hudson do the following:
-
-  <ol>
-    <li>
-      Look for JIRA issue keys (like HUDSON-153) in SCM commit messages,
-      and update those issues with back pointers to the Hudson builds.
-    </li>
-    <li>
-      JIRA issue keys in changelog messages will by hyperlinked to their
-      JIRA pages.
-    </li>
-  </ol>
+  This causes Hudson to remotely login to JIRA (via its SOAP API) and
+  post comments, to note a build number that integrates the change.
 </div>

@@ -10,11 +10,11 @@
           <f:entry title="Supports Wiki notation" help="/plugin/jira/help-wiki.html">
             <f:checkbox name="jira.supportsWikiStyleComment" checked="${site.supportsWikiStyleComment}"/>
           </f:entry>
-          <f:entry title="User Name">
+          <f:entry title="User Name" help="/plugin/jira/help-login.html">
             <f:textbox name="jira.userName" value="${site.userName}" />
           </f:entry>
           <f:entry title="Password"
-              description="Hudson uses this username/password to remotely post comments to JIRA">
+              description="If SOAP API is not supported by JIRA, leave username/password empty">
             <input class="setting-input" name="jira.password"
                    type="password" value="${site.password}" />
           </f:entry>

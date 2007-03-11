@@ -1,29 +1,28 @@
 package hudson.plugins.jira;
 
 import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractBuild.DependencyChange;
 import hudson.model.Build;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
-import hudson.model.Result;
 import hudson.model.Hudson;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractBuild.DependencyChange;
+import hudson.model.Result;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.tasks.Publisher;
-import hudson.util.CopyOnWriteList;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Iterator;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.text.MessageFormat;
 
 /**
  * Parses build changelog for JIRA issue IDs and then
@@ -32,42 +31,7 @@ import java.text.MessageFormat;
  * @author Kohsuke Kawaguchi
  */
 public class JiraIssueUpdater extends Publisher {
-
-    /**
-     * Used to find {@link JiraSite}. Matches {@link JiraSite#getName()}.
-     */
-    public final String siteName;
-
-    /**
-     * @stapler-constructor
-     */
-    public JiraIssueUpdater(String siteName) {
-        if(siteName==null) {
-            // defaults to the first one
-            JiraSite[] sites = DESCRIPTOR.getSites();
-            if(sites.length>0)
-                siteName = sites[0].getName();
-        }
-        this.siteName = siteName;
-    }
-
-    /**
-     * Gets the {@link JiraSite} that this project belongs to.
-     *
-     * @return
-     *      null if the configuration becomes out of sync.
-     */
-    public JiraSite getSite() {
-        JiraSite[] sites = DESCRIPTOR.getSites();
-        if(siteName==null && sites.length>0)
-            // default
-            return sites[0];
-
-        for( JiraSite site : sites ) {
-            if(site.getName().equals(siteName))
-                return site;
-        }
-        return null;
+    public JiraIssueUpdater() {
     }
 
     /**
@@ -81,9 +45,9 @@ public class JiraIssueUpdater extends Publisher {
     public boolean perform(Build build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         PrintStream logger = listener.getLogger();
 
-        JiraSite site = getSite();
+        JiraSite site = JiraSite.get(build.getProject());
         if(site==null) {
-            logger.println("No such jira site '"+this.siteName+"'. This must be a project configuration error");
+            logger.println("No jira site is configured for this project. This must be a project configuration error");
             build.setResult(Result.FAILURE);
             return true;
         }
@@ -103,6 +67,11 @@ public class JiraIssueUpdater extends Publisher {
         List<JiraIssue> issues = new ArrayList<JiraIssue>();
         try {
             JiraSession session = site.createSession();
+            if(session==null) {
+                logger.println("The system configuration does not allow remote JIRA access");
+                build.setResult(Result.FAILURE);
+                return true;
+            }
             for (String id : ids) {
                 logger.println("Updating "+id);
                 session.addComment(id,
@@ -152,12 +121,8 @@ public class JiraIssueUpdater extends Publisher {
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     public static final class DescriptorImpl extends Descriptor<Publisher> {
-
-        private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<JiraSite>();
-
         private DescriptorImpl() {
             super(JiraIssueUpdater.class);
-            load();
         }
 
         public String getDisplayName() {
@@ -168,18 +133,8 @@ public class JiraIssueUpdater extends Publisher {
             return "/plugin/jira/help.html";
         }
 
-        public JiraSite[] getSites() {
-            return sites.toArray(new JiraSite[0]);
-        }
-
         public Publisher newInstance(StaplerRequest req) {
-            return req.bindParameters(JiraIssueUpdater.class,"jira.");
-        }
-
-        public boolean configure(StaplerRequest req) {
-            sites.replaceBy(req.bindParametersToList(JiraSite.class,"jira."));
-            save();
-            return true;
+            return new JiraIssueUpdater();
         }
     }
 }

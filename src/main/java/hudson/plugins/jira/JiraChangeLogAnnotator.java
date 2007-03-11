@@ -17,17 +17,19 @@ import java.text.MessageFormat;
 public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
     public void annotate(AbstractBuild<?,?> build, Entry change, MarkupText text) {
+        JiraSite site = JiraSite.get(build.getProject());
+        if(site==null)      return;    // not configured with JIRA
+
+        // if there's any recorded detail information, try to use that, too.
         JiraBuildAction a = build.getAction(JiraBuildAction.class);
-        if(a==null)
-            return; // not configured with JIRA
 
         for(SubText token : text.findTokens(JiraIssueUpdater.ISSUE_PATTERN)) {
             try {
                 String id = token.group(0);
-                URL url = a.getUrl(id);
+                URL url = site.getUrl(id);
                 if(url==null)   continue;
 
-                JiraIssue issue = a.getIssue(id);
+                JiraIssue issue = a!=null ? a.getIssue(id) : null;
 
                 if(issue==null) {
                     token.surroundWith("<a href='"+url+"'>","</a>");

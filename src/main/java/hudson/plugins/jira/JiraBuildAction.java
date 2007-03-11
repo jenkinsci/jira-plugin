@@ -38,24 +38,6 @@ public class JiraBuildAction implements Action {
     }
 
     /**
-     * Computes the URL to the given issue.
-     */
-    public URL getUrl(JiraIssue issue) throws IOException {
-        return getUrl(issue.id);
-    }
-
-    /**
-     * Computes the URL to the given issue.
-     */
-    public URL getUrl(String id) throws MalformedURLException {
-        JiraIssueUpdater p = (JiraIssueUpdater) owner.getProject().getPublishers().get(JiraIssueUpdater.DESCRIPTOR);
-        if(p==null) return null;
-        JiraSite site = p.getSite();
-        if(site==null)  return null;
-        return new URL(site.url,"browse/"+ id);
-    }
-
-    /**
      * Finds {@link JiraIssue} whose ID matches the given one.
      */
     public JiraIssue getIssue(String id) {
