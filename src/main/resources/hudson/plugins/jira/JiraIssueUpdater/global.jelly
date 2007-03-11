@@ -14,7 +14,7 @@
             <f:textbox name="jira.userName" value="${site.userName}" />
           </f:entry>
           <f:entry title="Password"
-              description="Hudson uses this username/password to remotely access JIRA">
+              description="Hudson uses this username/password to remotely post comments to JIRA">
             <input class="setting-input" name="jira.password"
                    type="password" value="${site.password}" />
           </f:entry>
