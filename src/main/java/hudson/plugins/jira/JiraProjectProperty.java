@@ -104,7 +104,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
         /**
          * Checks if the JIRA URL is accessible and exists.
          */
-        public void doURLCheck(final StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+        public void doUrlCheck(final StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
             // this can be used to check existence of any file in any URL, so admin only
             new FormFieldValidator(req,rsp,true) {
                 protected void check() throws IOException, ServletException {
@@ -127,8 +127,12 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
 
                         error("This is a valid URL but it doesn't look like JIRA");
                     } catch (IOException e) {
-                        // any invalid URL comes here 
-                        error(e.getMessage());
+                        // any invalid URL comes here
+                        if(e.getMessage().equals(url))
+                            // Sun JRE (and probably others too) often return just the URL in the error.
+                            error("Unable to connect "+url);
+                        else
+                            error(e.getMessage());
                     }
                 }
             }.process();
