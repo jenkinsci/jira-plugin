@@ -3,13 +3,12 @@ package hudson.plugins.jira;
 import hudson.MarkupText;
 import hudson.MarkupText.SubText;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.Project;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet.Entry;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.MessageFormat;
 
 /**
  * {@link ChangeLogAnnotator} that picks up JIRA issue IDs.
@@ -18,25 +17,29 @@ import java.net.URL;
 public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
     public void annotate(AbstractBuild<?,?> build, Entry change, MarkupText text) {
-        AbstractProject ap = build.getParent();
-        if (ap instanceof Project) {
-            Project p = (Project) ap;
-            JiraIssueUpdater updater = (JiraIssueUpdater) p.getPublishers().get(JiraIssueUpdater.DESCRIPTOR);
-            if(updater==null)
-                return; // not configured with JIRA
+        JiraBuildAction a = build.getAction(JiraBuildAction.class);
+        if(a==null)
+            return; // not configured with JIRA
 
-            JiraSite site = updater.getSite();
-            if(site==null)
-                return; // not configured properly
+        for(SubText token : text.findTokens(JiraIssueUpdater.ISSUE_PATTERN)) {
+            try {
+                String id = token.group(0);
+                URL url = a.getUrl(id);
+                if(url==null)   continue;
 
-            for(SubText token : text.findTokens(JiraIssueUpdater.ISSUE_PATTERN)) {
-                try {
-                    token.surroundWith("<a href='"+new URL(site.url,"browse/"+token.group(0))+"'>","</a>");
-                } catch (MalformedURLException e) {
-                    // impossible
+                JiraIssue issue = a.getIssue(id);
+
+                if(issue==null) {
+                    token.surroundWith("<a href='"+url+"'>","</a>");
+                } else {
+                    token.surroundWith(
+                        MessageFormat.format("<a href=''{0}'' id=''JIRA-{1}''>",url,issue.id),
+                        MessageFormat.format("</a><script>makeTooltip(''JIRA-{1}'',''{0}'');</script>",
+                            issue.title,issue.id));
                 }
+            } catch (MalformedURLException e) {
+                // impossible
             }
         }
-
     }
 }
