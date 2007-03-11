@@ -12,12 +12,15 @@
             <f:checkbox name="jira.supportsWikiStyleComment" checked="${site.supportsWikiStyleComment}"/>
           </f:entry>
           <f:entry title="User Name" help="/plugin/jira/help-login.html">
-            <f:textbox name="jira.userName" value="${site.userName}" />
+            <f:textbox name="jira.userName" value="${site.userName}"
+                checkMethod="post"
+                checkUrl="'${rootURL}/jobProperty/JiraProjectProperty/loginCheck?url='+escape(Form.findMatchingInput(this,'jira.url').value)+'&amp;user='+escape(this.value)+'&amp;pass='+escape(Form.findMatchingInput(this,'jira.password').value)"/>
           </f:entry>
           <f:entry title="Password"
               description="If SOAP API is not supported by JIRA, leave username/password empty">
             <input class="setting-input" name="jira.password"
-                   type="password" value="${site.password}" />
+                   type="password" value="${site.password}"
+                   onchange="Form.findMatchingInput(this,'jira.userName').onchange()" />
           </f:entry>
 
           <f:entry title="">

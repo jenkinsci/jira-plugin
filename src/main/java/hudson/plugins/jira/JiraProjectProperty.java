@@ -9,8 +9,10 @@ import hudson.util.CopyOnWriteList;
 import hudson.util.FormFieldValidator;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.apache.axis.AxisFault;
 
 import javax.servlet.ServletException;
+import javax.xml.rpc.ServiceException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -133,6 +135,32 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
                             error("Unable to connect "+url);
                         else
                             error(e.getMessage());
+                    }
+                }
+            }.process();
+        }
+
+        /**
+         * Checks if the user name and password are valid.
+         */
+        public void doLoginCheck(final StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+            new FormFieldValidator(req,rsp,false) {
+                protected void check() throws IOException, ServletException {
+                    String url = Util.fixEmpty(request.getParameter("url"));
+                    if(url==null) {// URL not entered yet
+                        ok();
+                        return;
+                    }
+                    JiraSite site = new JiraSite(new URL(url),
+                        request.getParameter("user"),
+                        request.getParameter("pass"));
+                    try {
+                        site.createSession();
+                        ok();
+                    } catch (AxisFault e) {
+                        error(e.getFaultString());
+                    } catch (ServiceException e) {
+                        error(e.getMessage());
                     }
                 }
             }.process();
