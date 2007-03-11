@@ -6,6 +6,8 @@ import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.Hudson;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractBuild.DependencyChange;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.tasks.Publisher;
 import hudson.util.CopyOnWriteList;
@@ -93,7 +95,7 @@ public class JiraIssueUpdater extends Publisher {
             return true;
         }
 
-        Set<String> ids = findIssueIds(build);
+        Set<String> ids = findIssueIdsRecursive(build);
 
         if(ids.isEmpty())
             return true;    // nothing found here.
@@ -121,16 +123,26 @@ public class JiraIssueUpdater extends Publisher {
         return true;
     }
 
-    private Set<String> findIssueIds(Build build) {
+    private Set<String> findIssueIdsRecursive(Build build) {
         Set<String> ids = new HashSet<String>();
 
+        findIssues(build,ids);
+
+        // check for issues fixed in dependencies
+        for( DependencyChange depc : build.getDependencyChanges(build.getPreviousBuild()).values())
+            for(AbstractBuild b : depc.getBuilds())
+                findIssues(b,ids);
+
+        return ids;
+    }
+
+    private void findIssues(AbstractBuild<?,?> build, Set<String> ids) {
         for (Iterator<? extends Entry> itr = build.getChangeSet().iterator(); itr.hasNext();) {
             Entry change =  itr.next();
             Matcher m = ISSUE_PATTERN.matcher(change.getMsg());
             while(m.find())
                 ids.add(m.group());
         }
-        return ids;
     }
 
     public DescriptorImpl getDescriptor() {

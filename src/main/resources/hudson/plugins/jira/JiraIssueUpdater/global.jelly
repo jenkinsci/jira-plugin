@@ -4,11 +4,10 @@
       description="JIRA sites that projects will want to connect">
       <f:repeatable var="site" items="${descriptor.sites}">
         <table width="100%">
-          <f:entry title="URL">
+          <f:entry title="URL" help="/plugin/jira/help-url.html">
             <f:textbox name="jira.url" value="${site.url}" />
           </f:entry>
-          <f:entry title="Supports Wiki notation"
-                   description="Check the box if this JIRA supports Wiki notations in comments">
+          <f:entry title="Supports Wiki notation" help="/plugin/jira/help-wiki.html">
             <f:checkbox name="jira.supportsWikiStyleComment" checked="${site.supportsWikiStyleComment}"/>
           </f:entry>
           <f:entry title="User Name">
