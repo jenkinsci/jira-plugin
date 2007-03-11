@@ -4,7 +4,7 @@
     <f:entry title="JIRA site">
       <select class="setting-input" name="jira.siteName">
         <j:forEach var="s" items="${descriptor.sites}">
-          <f:option selected="${s.name==instance.name}">${s.name}</f:option>
+          <f:option selected="${s.name==instance.siteName}">${s.name}</f:option>
         </j:forEach>
       </select>
     </f:entry>
