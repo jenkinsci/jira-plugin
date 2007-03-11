@@ -1,11 +1,20 @@
 package hudson.plugins.jira;
 
+import hudson.Util;
 import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
-import hudson.model.Job;
 import hudson.util.CopyOnWriteList;
+import hudson.util.FormFieldValidator;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+
+import javax.servlet.ServletException;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
 
 /**
  * Associates {@link AbstractProject} with {@link JiraSite}.
@@ -90,6 +99,39 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
             sites.replaceBy(req.bindParametersToList(JiraSite.class,"jira."));
             save();
             return true;
+        }
+
+        /**
+         * Checks if the JIRA URL is accessible and exists.
+         */
+        public void doURLCheck(final StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+            // this can be used to check existence of any file in any URL, so admin only
+            new FormFieldValidator(req,rsp,true) {
+                protected void check() throws IOException, ServletException {
+                    String url = Util.fixEmpty(request.getParameter("value"));
+                    if(url==null) {
+                        error("JIRA URL is a mandatory field");
+                        return;
+                    }
+
+                    try {
+                        BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openStream(),"UTF-8"));
+                        
+                        String line;
+                        while((line=in.readLine())!=null) {
+                            if(line.indexOf("Atlassian JIRA")!=-1) {
+                                ok();   // looks like it
+                                return;
+                            }
+                        }
+
+                        error("This is a valid URL but it doesn't look like JIRA");
+                    } catch (IOException e) {
+                        // any invalid URL comes here 
+                        error(e.getMessage());
+                    }
+                }
+            }.process();
         }
     }
 }
