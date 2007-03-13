@@ -8,7 +8,7 @@
   </parent>
   
   <artifactId>jira</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <packaging>hpi</packaging>
   <name>Hudson JIRA plugin</name>
   <description>Integrates Hudson to JIRA</description>
@@ -72,4 +72,8 @@
       <version>0.4</version>
     </dependency>
   </dependencies>
+
+  <scm>
+    <tag>jira-1_0</tag>
+  </scm>
 </project>
