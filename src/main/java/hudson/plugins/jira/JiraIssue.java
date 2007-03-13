@@ -10,7 +10,7 @@ import hudson.plugins.jira.soap.RemoteIssue;
  * so that Hudson can display it without talking to JIRA.
  *
  * @author Kohsuke Kawaguchi
- * @see JiraBuildAction#getUrl(JiraIssue) 
+ * @see JiraSite#getUrl(JiraIssue) 
  */
 public final class JiraIssue implements Comparable<JiraIssue> {
     /**
