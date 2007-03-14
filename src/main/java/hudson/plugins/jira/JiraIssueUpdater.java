@@ -79,7 +79,7 @@ public class JiraIssueUpdater extends Publisher {
                         site.supportsWikiStyleComment?
                         "Integrated in !{0}nocacheImages/16x16/{3}.gif! [{2}|{0}{1}]":
                         "Integrated in {2} (See {0}{1})",
-                        rootUrl, build.getUrl(), build, build.getIconColor().noAnime()));
+                        rootUrl, build.getUrl(), build, build.getResult().color));
 
                 issues.add(new JiraIssue(session.getIssue(id)));
 
