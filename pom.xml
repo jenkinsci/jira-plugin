@@ -28,6 +28,7 @@
             </goals>
           </execution>
         </executions>
+        <!-- use the dependency that we can resolve in the java.net maven repo -->
         <dependencies>
           <dependency>
             <groupId>javax.activation</groupId>
