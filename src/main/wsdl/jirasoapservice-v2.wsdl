@@ -229,12 +229,12 @@ Built on Oct 05, 2005 (05:23:37 EDT)-->
    </complexType>
    <complexType name="RemoteComment">
     <sequence>
-     <element name="author" nillable="true" type="xsd:string"/>
-     <element name="body" nillable="true" type="xsd:string"/>
-     <element name="created" nillable="true" type="xsd:dateTime"/>
-     <element name="groupLevel" nillable="true" type="xsd:string"/>
-     <element name="id" nillable="true" type="xsd:string"/>
-     <element name="roleLevel" nillable="true" type="xsd:string"/>
+      <!--element name="author" nillable="true" type="xsd:string"/-->
+      <element name="body" nillable="true" type="xsd:string"/>
+      <!--element name="created" nillable="true" type="xsd:dateTime"/>
+      <element name="groupLevel" nillable="true" type="xsd:string"/>
+      <element name="id" nillable="true" type="xsd:string"/>
+      <element name="roleLevel" nillable="true" type="xsd:string"/-->
     </sequence>
    </complexType>
    <complexType name="RemoteGroup">
