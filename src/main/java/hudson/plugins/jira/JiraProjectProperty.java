@@ -117,6 +117,8 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
                     }
 
                     try {
+                        // TODO: by default JIRA uses UTF-8, but it may change.
+                        // use HTTP content type to find out the charset.
                         BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openStream(),"UTF-8"));
                         
                         String line;
