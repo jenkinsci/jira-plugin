@@ -7,15 +7,13 @@ import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.util.CopyOnWriteList;
 import hudson.util.FormFieldValidator;
+import org.apache.axis.AxisFault;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
-import org.apache.axis.AxisFault;
 
 import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URL;
 
 /**
@@ -108,7 +106,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
          */
         public void doUrlCheck(final StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
             // this can be used to check existence of any file in any URL, so admin only
-            new FormFieldValidator(req,rsp,true) {
+            new FormFieldValidator.URLCheck(req,rsp) {
                 protected void check() throws IOException, ServletException {
                     String url = Util.fixEmpty(request.getParameter("value"));
                     if(url==null) {
@@ -117,26 +115,12 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
                     }
 
                     try {
-                        // TODO: by default JIRA uses UTF-8, but it may change.
-                        // use HTTP content type to find out the charset.
-                        BufferedReader in = new BufferedReader(new InputStreamReader(new URL(url).openStream(),"UTF-8"));
-                        
-                        String line;
-                        while((line=in.readLine())!=null) {
-                            if(line.indexOf("Atlassian JIRA")!=-1) {
-                                ok();   // looks like it
-                                return;
-                            }
-                        }
-
-                        error("This is a valid URL but it doesn't look like JIRA");
-                    } catch (IOException e) {
-                        // any invalid URL comes here
-                        if(e.getMessage().equals(url))
-                            // Sun JRE (and probably others too) often return just the URL in the error.
-                            error("Unable to connect "+url);
+                        if(findText(open(new URL(url)),"Atlassian JIRA"))
+                            ok();
                         else
-                            error(e.getMessage());
+                            error("This is a valid URL but it doesn't look like JIRA");
+                    } catch (IOException e) {
+                        handleIOException(url,e);
                     }
                 }
             }.process();
