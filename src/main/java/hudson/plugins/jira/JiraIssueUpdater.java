@@ -15,7 +15,6 @@ import org.kohsuke.stapler.StaplerRequest;
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -75,10 +74,10 @@ public class JiraIssueUpdater extends Publisher {
             for (String id : ids) {
                 logger.println("Updating "+id);
                 session.addComment(id,
-                    MessageFormat.format(
+                    String.format(
                         site.supportsWikiStyleComment?
-                        "Integrated in !{0}nocacheImages/16x16/{3}.gif! [{2}|{0}{1}]":
-                        "Integrated in {2} (See {0}{1})",
+                        "Integrated in !%1$snocacheImages/16x16/%4$s.gif! [%3$s|%1$s%2$s]":
+                        "Integrated in %3$s (See %1$s%2$s)",
                         rootUrl, build.getUrl(), build, build.getResult().color));
 
                 issues.add(new JiraIssue(session.getIssue(id)));

@@ -8,7 +8,6 @@ import hudson.scm.ChangeLogSet.Entry;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.MessageFormat;
 
 /**
  * {@link ChangeLogAnnotator} that picks up JIRA issue IDs.
@@ -35,8 +34,8 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                     token.surroundWith("<a href='"+url+"'>","</a>");
                 } else {
                     token.surroundWith(
-                        MessageFormat.format("<a href=''{0}'' id=''JIRA-{1}''>",url,issue.id),
-                        MessageFormat.format("</a><script>makeTooltip(''JIRA-{1}'',''{0}'');</script>",
+                        String.format("<a href='%s' id='JIRA-%s'>",url,issue.id),
+                        String.format("</a><script>makeTooltip('JIRA-%2$s','%1$s');</script>",
                             issue.title,issue.id));
                 }
             } catch (MalformedURLException e) {
