@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?><metadata>
+  <groupId>org.codehaus.mojo</groupId>
+  <artifactId>axistools-maven-plugin</artifactId>
+  <version>1.1-hudson-jira</version>
+  <versioning>
+    <latest>1.1-hudson-jira</latest>
+    <versions>
+      <version>1.1-hudson-jira</version>
+    </versions>
+    <lastUpdated>20070404232018</lastUpdated>
+  </versioning>
+  <plugins>
+    <plugin>
+      <name>Maven Axis Tools Plugin</name>
+      <prefix>axistools</prefix>
+      <artifactId>axistools-maven-plugin</artifactId>
+    </plugin>
+  </plugins>
+</metadata>
