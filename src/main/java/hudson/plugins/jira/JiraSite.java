@@ -93,8 +93,11 @@ public class JiraSite {
      */
     public static JiraSite get(AbstractProject<?,?> p) {
         JiraProjectProperty jpp = p.getProperty(JiraProjectProperty.class);
-        if(jpp!=null)
-            return jpp.getSite();
+        if(jpp!=null) {
+            JiraSite site = jpp.getSite();
+            if(site!=null)
+                return site;
+        }
 
         // none is explicitly configured. try the default ---
         // if only one is configured, that must be it.
