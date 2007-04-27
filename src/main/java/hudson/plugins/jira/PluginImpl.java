@@ -1,7 +1,6 @@
 package hudson.plugins.jira;
 
 import hudson.Plugin;
-import hudson.model.JobPropertyDescriptor;
 import hudson.model.Jobs;
 import hudson.tasks.BuildStep;
 

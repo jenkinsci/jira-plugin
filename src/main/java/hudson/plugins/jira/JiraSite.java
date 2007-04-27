@@ -1,16 +1,15 @@
 package hudson.plugins.jira;
 
+import hudson.Util;
+import hudson.model.AbstractProject;
 import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.JiraSoapServiceService;
 import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
-import hudson.model.AbstractProject;
-import hudson.model.JobProperty;
-import hudson.Util;
 
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
-import java.net.URL;
 import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Represents an external JIRA installation and configuration

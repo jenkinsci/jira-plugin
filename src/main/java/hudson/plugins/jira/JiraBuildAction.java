@@ -1,11 +1,8 @@
 package hudson.plugins.jira;
 
+import hudson.model.AbstractBuild;
 import hudson.model.Action;
-import hudson.model.Build;
 
-import java.io.IOException;
-import java.net.URL;
-import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.Collection;
 
@@ -15,11 +12,11 @@ import java.util.Collection;
  * @author Kohsuke Kawaguchi
  */
 public class JiraBuildAction implements Action {
-    public final Build owner;
+    public final AbstractBuild owner;
 
     public final JiraIssue[] issues;
 
-    public JiraBuildAction(Build owner, Collection<JiraIssue> issues) {
+    public JiraBuildAction(AbstractBuild owner, Collection<JiraIssue> issues) {
         this.owner = owner;
         this.issues = issues.toArray(new JiraIssue[issues.size()]);
         Arrays.sort(this.issues);

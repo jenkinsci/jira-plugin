@@ -22,7 +22,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         // if there's any recorded detail information, try to use that, too.
         JiraBuildAction a = build.getAction(JiraBuildAction.class);
 
-        for(SubText token : text.findTokens(JiraIssueUpdater.ISSUE_PATTERN)) {
+        for(SubText token : text.findTokens(Updater.ISSUE_PATTERN)) {
             try {
                 String id = token.group(0);
                 URL url = site.getUrl(id);
