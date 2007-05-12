@@ -1,0 +1,21 @@
+track back support. hudson should support track backs
+  http://www.atlassian.com/software/jira/docs/v3.7.4/trackback.html
+  needs to find out how it works.
+
+use listeners to monitor comments that have links?
+  IssueEventListener
+  http://www.atlassian.com/software/jira/docs/v3.7.4/listeners.html
+
+SOAP-based remote access (done)
+  http://confluence.atlassian.com/display/JIRA/Creating+a+SOAP+Client
+  http://localhost:90/rpc/soap/jirasoapservice-v2?wsdl
+
+perhaps add a tab to issue, listing related builds?
+  see how CVS integration does it:
+  http://www.atlassian.com/software/jira/docs/v3.7.4/images/docs/config/cvs_integration-versioncontrol.png
+  or see how Subversion integration works:
+  http://svn.atlassian.com/svn/public/contrib/jira/subversion-jira-plugin/trunk/
+  https://issues.apache.org/jira/browse/IO-113?page=com.atlassian.jira.plugin.ext.subversion:subversion-commits-tabpanel
+
+JIRA Wiki formatting rules:
+  http://localhost:90/secure/WikiRendererHelpAction.jspa?section=texteffects
