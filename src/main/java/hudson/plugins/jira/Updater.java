@@ -61,7 +61,7 @@ class Updater {
                     String.format(
                         site.supportsWikiStyleComment?
                         "Integrated in !%1$snocacheImages/16x16/%4$s.gif! [%3$s|%1$s%2$s]":
-                        "Integrated in %3$s (See %1$s%2$s)",
+                        "Integrated in %3$s (See [%1$s%2$s])",
                         rootUrl, build.getUrl(), build, build.getResult().color));
 
                 issues.add(new JiraIssue(session.getIssue(id)));
