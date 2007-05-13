@@ -3,8 +3,11 @@ package hudson.plugins.jira;
 import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.RemoteComment;
 import hudson.plugins.jira.soap.RemoteIssue;
+import hudson.plugins.jira.soap.RemoteProject;
 
 import java.rmi.RemoteException;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Connection to JIRA.
@@ -25,9 +28,27 @@ public final class JiraSession {
      */
     public final String token;
 
+    /**
+     * Lazily computed list of project keys.
+     */
+    private Set<String> projectKeys;
+
     /*package*/ JiraSession(JiraSoapService service, String token) {
         this.service = service;
         this.token = token;
+    }
+
+    /**
+     * Returns the set of project keys (like MNG, HUDSON, etc) that are available
+     * in this JIRA.
+     */
+    public Set<String> getProjectKeys() throws RemoteException {
+        if(projectKeys==null) {
+            projectKeys = new HashSet<String>();
+            for(RemoteProject p : service.getProjects(token))
+                projectKeys.add(p.getKey());
+        }
+        return projectKeys;
     }
 
     /**
@@ -44,8 +65,18 @@ public final class JiraSession {
      *
      * @param id
      *      Issue ID like "MNG-1235".
+     * @return
+     *      null if no such issue exists.
      */
     public RemoteIssue getIssue(String id) throws RemoteException {
-        return service.getIssue(token,id);
+        if(existsIssue(id))
+            return service.getIssue(token,id);
+        else
+            return null;
+    }
+
+    public boolean existsIssue(String id) throws RemoteException {
+        int idx = id.indexOf('-');
+        return idx >= 0 && getProjectKeys().contains(id.substring(0, idx));
     }
 }

@@ -56,6 +56,8 @@ class Updater {
                 return true;
             }
             for (String id : ids) {
+                if(!session.existsIssue(id))
+                    continue;   // token looked like a JIRA issue but it's not.
                 logger.println("Updating "+id);
                 session.addComment(id,
                     String.format(
@@ -75,6 +77,9 @@ class Updater {
         return true;
     }
 
+    /**
+     * Finds the strings that match JIRA issue ID patterns.
+     */
     private static Set<String> findIssueIdsRecursive(AbstractBuild<?,?> build) {
         Set<String> ids = new HashSet<String>();
 
