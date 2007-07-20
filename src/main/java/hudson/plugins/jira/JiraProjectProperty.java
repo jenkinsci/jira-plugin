@@ -10,6 +10,7 @@ import hudson.util.FormFieldValidator;
 import org.apache.axis.AxisFault;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
@@ -30,9 +31,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
      */
     public final String siteName;
 
-    /**
-     * @stapler-constructor
-     */
+    @DataBoundConstructor
     public JiraProjectProperty(String siteName) {
         if(siteName==null) {
             // defaults to the first one
