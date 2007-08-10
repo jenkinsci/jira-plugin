@@ -34,9 +34,8 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                     token.surroundWith("<a href='"+url+"'>","</a>");
                 } else {
                     token.surroundWith(
-                        String.format("<a href='%s' id='JIRA-%s'>",url,issue.id),
-                        String.format("</a><script>makeTooltip('JIRA-%2$s','%1$s');</script>",
-                            issue.title,issue.id));
+                        String.format("<a href='%s' tooltip='%s'>",url,issue.title),
+                        "</a>");
                 }
             } catch (MalformedURLException e) {
                 // impossible
