@@ -1,0 +1,12 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <j:if test="${descriptor.sites.size() &gt; 1}">
+    <!-- show the selection only when there's something to select -->
+    <f:entry title="JIRA site">
+      <select class="setting-input" name="jira.siteName">
+        <j:forEach var="s" items="${descriptor.sites}">
+          <f:option selected="${s.name==instance.siteName}">${s.name}</f:option>
+        </j:forEach>
+      </select>
+    </f:entry>
+  </j:if>
+</j:jelly>
