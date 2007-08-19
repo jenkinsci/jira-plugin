@@ -81,7 +81,9 @@ class Updater {
      * Finds the strings that match JIRA issue ID patterns.
      *
      * This method returns all likely candidates and doesn't check
-     * if such ID actually exists or not.
+     * if such ID actually exists or not. We don't want to use
+     * {@link JiraSite#existsIssue(String)} here so that new projects
+     * in JIRA can be detected.
      */
     private static Set<String> findIssueIdsRecursive(AbstractBuild<?,?> build) {
         Set<String> ids = new HashSet<String>();

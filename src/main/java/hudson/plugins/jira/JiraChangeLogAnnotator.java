@@ -25,8 +25,9 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         for(SubText token : text.findTokens(Updater.ISSUE_PATTERN)) {
             try {
                 String id = token.group(0);
+                if(!site.existsIssue(id))
+                    continue;
                 URL url = site.getUrl(id);
-                if(url==null)   continue;
 
                 JiraIssue issue = a!=null ? a.getIssue(id) : null;
 

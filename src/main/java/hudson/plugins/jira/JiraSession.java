@@ -33,9 +33,15 @@ public final class JiraSession {
      */
     private Set<String> projectKeys;
 
-    /*package*/ JiraSession(JiraSoapService service, String token) {
+    /**
+     * This session is created for this site.
+     */
+    private final JiraSite site;
+
+    /*package*/ JiraSession(JiraSite site, JiraSoapService service, String token) {
         this.service = service;
         this.token = token;
+        this.site = site;
     }
 
     /**
@@ -47,6 +53,7 @@ public final class JiraSession {
             projectKeys = new HashSet<String>();
             for(RemoteProject p : service.getProjects(token))
                 projectKeys.add(p.getKey());
+            site.setProjectKeys(projectKeys);
         }
         return projectKeys;
     }

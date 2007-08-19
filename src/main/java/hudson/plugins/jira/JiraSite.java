@@ -10,6 +10,12 @@ import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
+import java.util.logging.Logger;
+import java.util.logging.Level;
+import java.rmi.RemoteException;
 
 /**
  * Represents an external JIRA installation and configuration
@@ -40,6 +46,12 @@ public class JiraSite {
     public boolean supportsWikiStyleComment;
 
     /**
+     * List of project keys (i.e., "MNG" portion of "MNG-512"),
+     * last time we checked. Copy on write semantics.
+     */
+    private transient volatile Set<String> projects;
+
+    /**
      * @stapler-constructor
      */
     public JiraSite(URL url, String userName, String password) {
@@ -67,7 +79,7 @@ public class JiraSite {
 
         JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
             new URL(url, "rpc/soap/jirasoapservice-v2"));
-        return new JiraSession(service,service.login(userName,password));
+        return new JiraSession(this,service,service.login(userName,password));
     }
 
     /**
@@ -84,6 +96,37 @@ public class JiraSite {
         return new URL(url,"browse/"+ id);
     }
 
+    /**
+     * Gets the list of project IDs in this JIRA.
+     * This information could be bit old. 
+     */
+    public Set<String> getProjectKeys() {
+        if(projects==null) {
+            synchronized (this) {
+                try {
+                    if(projects==null)
+                        // this will cause the setProjectKeys invocation.
+                        createSession().getProjectKeys();
+                } catch (IOException e) {
+                    // in case of error, set empty set to avoid trying the same thing repeatedly.
+                    LOGGER.log(Level.WARNING,"Failed to obtain JIRA project list",e);
+                    setProjectKeys(new HashSet<String>());
+                } catch (ServiceException e) {
+                    LOGGER.log(Level.WARNING,"Failed to obtain JIRA project list",e);
+                    setProjectKeys(new HashSet<String>());
+                }
+            }
+        }
+        return Collections.unmodifiableSet(projects);
+    }
+
+    protected void setProjectKeys(Set<String> keys) {
+        if(projects!=null && projects.equals(keys))
+            return; // no change
+
+        projects = new HashSet<String>(keys);
+        JiraProjectProperty.DESCRIPTOR.save();
+    }
 
     /**
      * Gets the effective {@link JiraSite} associated with the given project.
@@ -105,6 +148,22 @@ public class JiraSite {
         if(sites.length==1) return sites[0];
 
         return null;
-
     }
+
+    /**
+     * Checks if the given JIRA id will be likely to exist in this issue tracker.
+     *
+     * <p>
+     * This method checks whether the key portion is a valid key (except that
+     * it can potentially use stale data). Number portion is not checked at all.
+     *
+     * @param id
+     *      String like MNG-1234
+     */
+    public boolean existsIssue(String id) {
+        int idx = id.indexOf('-');
+        return idx >= 0 && getProjectKeys().contains(id.substring(0, idx));
+    }
+
+    private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
 }

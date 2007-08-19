@@ -150,5 +150,9 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
                 }
             }.process();
         }
+
+        public void save() {
+            super.save();
+        }
     }
 }
