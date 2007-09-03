@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -99,10 +98,9 @@ class Updater {
     }
 
     private static void findIssues(AbstractBuild<?,?> build, Set<String> ids) {
-        for (Iterator<? extends Entry> itr = build.getChangeSet().iterator(); itr.hasNext();) {
-            Entry change =  itr.next();
+        for (Entry change : build.getChangeSet()) {
             Matcher m = ISSUE_PATTERN.matcher(change.getMsg());
-            while(m.find())
+            while (m.find())
                 ids.add(m.group());
         }
     }
@@ -111,7 +109,8 @@ class Updater {
      * Regexp pattern that identifies JIRA issue token.
      *
      * <p>
-     * At least two upper alphabetic (no numbers allowed.)
+     * At least two upper alphabetic.
+     * Numbers are also allowed as project keys (see issue #729)
      */
-    public static final Pattern ISSUE_PATTERN = Pattern.compile("\\b[A-Z]([A-Z]+)-[1-9][0-9]*\\b");
+    public static final Pattern ISSUE_PATTERN = Pattern.compile("\\b[A-Z]([A-Z0-9]+)-[1-9][0-9]*\\b");
 }
