@@ -1,0 +1,17 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+<!--
+  It turns out this seems to be rather redundant, as links in changelogs seem to be enough 
+
+  <t:summary icon="orange-square.gif">
+    JIRA issues
+    <table>
+      <j:forEach var="issue" items="${it.issues}">
+        <tr>
+          <td><a href="${it.getUrl(issue)}">${issue.id}</a></td>
+          <td>${issue.title}</td>
+        </tr>
+      </j:forEach>
+    </table>
+  </t:summary>
+-->
+</j:jelly>
