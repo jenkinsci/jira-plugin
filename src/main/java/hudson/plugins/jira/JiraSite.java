@@ -10,12 +10,11 @@ import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Collections;
-import java.util.logging.Logger;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
-import java.rmi.RemoteException;
+import java.util.logging.Logger;
 
 /**
  * Represents an external JIRA installation and configuration
@@ -98,15 +97,18 @@ public class JiraSite {
 
     /**
      * Gets the list of project IDs in this JIRA.
-     * This information could be bit old. 
+     * This information could be bit old, or it can be null.
      */
     public Set<String> getProjectKeys() {
         if(projects==null) {
             synchronized (this) {
                 try {
-                    if(projects==null)
+                    if(projects==null) {
                         // this will cause the setProjectKeys invocation.
-                        createSession().getProjectKeys();
+                        JiraSession session = createSession();
+                        if(session!=null)
+                            session.getProjectKeys();
+                    }
                 } catch (IOException e) {
                     // in case of error, set empty set to avoid trying the same thing repeatedly.
                     LOGGER.log(Level.WARNING,"Failed to obtain JIRA project list",e);
@@ -162,7 +164,10 @@ public class JiraSite {
      */
     public boolean existsIssue(String id) {
         int idx = id.indexOf('-');
-        return idx >= 0 && getProjectKeys().contains(id.substring(0, idx));
+        if(idx==-1) return false;
+
+        Set<String> keys = getProjectKeys();
+        return keys==null || keys.contains(id.substring(0,idx));
     }
 
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
