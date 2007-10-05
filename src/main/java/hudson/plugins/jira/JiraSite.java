@@ -25,7 +25,7 @@ import java.util.logging.Logger;
 public class JiraSite {
     /**
      * URL of JIRA, like <tt>http://jira.codehaus.org/</tt>.
-     * Mandatory.
+     * Mandatory. Normalized to end with '/'
      */
     public URL url;
 
@@ -54,6 +54,12 @@ public class JiraSite {
      * @stapler-constructor
      */
     public JiraSite(URL url, String userName, String password) {
+        if(!url.toExternalForm().endsWith("/"))
+            try {
+                url = new URL(url.toExternalForm()+"/");
+            } catch (MalformedURLException e) {
+                throw new AssertionError(e); // impossible
+            }
         this.url = url;
         this.userName = Util.fixEmpty(userName);
         this.password = Util.fixEmpty(password);
