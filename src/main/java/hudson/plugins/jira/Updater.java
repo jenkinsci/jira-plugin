@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractBuild.DependencyChange;
 import hudson.model.BuildListener;
@@ -61,9 +62,10 @@ class Updater {
                 session.addComment(id,
                     String.format(
                         site.supportsWikiStyleComment?
-                        "Integrated in !%1$snocacheImages/16x16/%4$s.gif! [%3$s|%1$s%2$s]":
-                        "Integrated in %3$s (See [%1$s%2$s])",
-                        rootUrl, build.getUrl(), build, build.getResult().color));
+                        "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]":
+                        "Integrated in %2$s (See [%4$s])",
+                        rootUrl, build, build.getResult().color.getImage(),
+                        Util.encode(rootUrl+build.getUrl())));
 
                 issues.add(new JiraIssue(session.getIssue(id)));
 
