@@ -118,13 +118,15 @@ public class JiraSite {
                 } catch (IOException e) {
                     // in case of error, set empty set to avoid trying the same thing repeatedly.
                     LOGGER.log(Level.WARNING,"Failed to obtain JIRA project list",e);
-                    setProjectKeys(new HashSet<String>());
                 } catch (ServiceException e) {
                     LOGGER.log(Level.WARNING,"Failed to obtain JIRA project list",e);
-                    setProjectKeys(new HashSet<String>());
                 }
             }
         }
+        // fall back to empty if failed to talk to the server
+        if(projects==null)
+            setProjectKeys(new HashSet<String>());
+        
         return Collections.unmodifiableSet(projects);
     }
 
