@@ -1,0 +1,35 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:section title="JIRA">
+    <f:entry title="JIRA sites"
+      description="JIRA sites that projects will want to connect">
+      <f:repeatable name="jirasite" var="site" items="${descriptor.sites}">
+        <table width="100%">
+          <f:entry title="URL" help="/plugin/jira/help-url.html">
+            <f:textbox name="jira.url" value="${site.url}"
+                checkUrl="'${rootURL}/jobProperty/JiraProjectProperty/urlCheck?value='+escape(this.value)" />
+          </f:entry>
+          <f:entry title="Supports Wiki notation" help="/plugin/jira/help-wiki.html">
+            <f:checkbox name="jira.supportsWikiStyleComment" checked="${site.supportsWikiStyleComment}"/>
+          </f:entry>
+          <f:entry title="User Name" help="/plugin/jira/help-login.html">
+            <f:textbox name="jira.userName" value="${site.userName}"
+                checkMethod="post"
+                checkUrl="'${rootURL}/jobProperty/JiraProjectProperty/loginCheck?url='+escape(Form.findMatchingInput(this,'jira.url').value)+'&amp;user='+escape(this.value)+'&amp;pass='+escape(Form.findMatchingInput(this,'jira.password').value)"/>
+          </f:entry>
+          <f:entry title="Password"
+              description="If SOAP API is not supported by JIRA, leave username/password empty">
+            <input class="setting-input" name="jira.password"
+                   type="password" value="${site.password}"
+                   onchange="Form.findMatchingInput(this,'jira.userName').onchange()" />
+          </f:entry>
+
+          <f:entry title="">
+            <div align="right">
+              <f:repeatableDeleteButton />
+            </div>
+          </f:entry>
+        </table>
+      </f:repeatable>
+    </f:entry>
+  </f:section>
+</j:jelly>
