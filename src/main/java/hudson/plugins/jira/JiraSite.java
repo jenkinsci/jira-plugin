@@ -53,7 +53,7 @@ public class JiraSite {
     /**
      * @stapler-constructor
      */
-    public JiraSite(URL url, String userName, String password) {
+    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment) {
         if(!url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm()+"/");
@@ -63,6 +63,7 @@ public class JiraSite {
         this.url = url;
         this.userName = Util.fixEmpty(userName);
         this.password = Util.fixEmpty(password);
+        this.supportsWikiStyleComment = supportsWikiStyleComment;
     }
 
     public JiraSite() {}
