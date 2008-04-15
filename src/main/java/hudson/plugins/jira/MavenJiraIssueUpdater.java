@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
 import hudson.Launcher;
+import hudson.tasks.BuildStepDescriptor;
 import hudson.maven.MavenBuild;
 import hudson.maven.MavenReporter;
 import hudson.maven.MavenReporterDescriptor;
@@ -10,6 +11,16 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.io.IOException;
 
 /**
+ * {@link MavenReporter} for JIRA.
+ *
+ * <p>
+ * Modern plugins don't have to do this &mdash; they should simply have
+ * {@link JiraIssueUpdater} and have its descriptor extend from {@link BuildStepDescriptor},
+ * and you can get rid of this class altogether.
+ *
+ * <p>
+ * In case of the JIRA plugin, however, this is left for a compatibility reason.
+ *
  * @author Kohsuke Kawaguchi
  */
 public class MavenJiraIssueUpdater extends MavenReporter {
