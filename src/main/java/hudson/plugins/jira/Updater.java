@@ -60,8 +60,11 @@ class Updater {
                 return true;
             }
             for (String id : ids) {
-                if(!session.existsIssue(id))
+                if(!session.existsIssue(id)) {
+                    if(debug)
+                        logger.println(id+" looked like a JIRA issue but it wans't");
                     continue;   // token looked like a JIRA issue but it's actually not.
+                }
                 logger.println(Messages.Updater_Updating(id));
                 session.addComment(id,
                     String.format(
