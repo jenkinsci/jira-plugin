@@ -27,7 +27,7 @@ public class JiraBuildAction implements Action {
     }
 
     public String getDisplayName() {
-        return "JIRA issues";
+        return Messages.JiraBuildAction_DisplayName();
     }
 
     public String getUrlName() {

@@ -36,7 +36,7 @@ public class JiraIssueUpdater extends Publisher {
         }
 
         public String getDisplayName() {
-            return "Updated relevant JIRA issues";
+            return Messages.JiraIssueUpdater_DisplayName();
         }
 
         public String getHelpFile() {

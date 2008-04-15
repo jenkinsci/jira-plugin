@@ -31,14 +31,14 @@ class Updater {
 
         JiraSite site = JiraSite.get(build.getProject());
         if(site==null) {
-            logger.println("No jira site is configured for this project. This must be a project configuration error");
+            logger.println(Messages.Updater_NoJiraSite());
             build.setResult(Result.FAILURE);
             return true;
         }
 
         String rootUrl = Hudson.getInstance().getRootUrl();
         if(rootUrl==null) {
-            logger.println("Hudson URL is not configured yet. Go to system configuration to set this value");
+            logger.println(Messages.Updater_NoHudsonUrl());
             build.setResult(Result.FAILURE);
             return true;
         }
@@ -55,14 +55,14 @@ class Updater {
         try {
             JiraSession session = site.createSession();
             if(session==null) {
-                logger.println("The system configuration does not allow remote JIRA access");
+                logger.println(Messages.Updater_NoRemoteAccess());
                 build.setResult(Result.FAILURE);
                 return true;
             }
             for (String id : ids) {
                 if(!session.existsIssue(id))
                     continue;   // token looked like a JIRA issue but it's actually not.
-                logger.println("Updating "+id);
+                logger.println(Messages.Updater_Updating(id));
                 session.addComment(id,
                     String.format(
                         site.supportsWikiStyleComment?
@@ -75,7 +75,7 @@ class Updater {
 
             }
         } catch (ServiceException e) {
-            e.printStackTrace(listener.error("Failed to connect to JIRA"));
+            e.printStackTrace(listener.error(Messages.Updater_FailedToConnect()));
         }
         build.getActions().add(new JiraBuildAction(build,issues));
 

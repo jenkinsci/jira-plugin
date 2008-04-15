@@ -80,7 +80,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
         }
 
         public String getDisplayName() {
-            return "Associated JIRA";
+            return Messages.JiraProjectProperty_DisplayName();
         }
 
         public JiraSite[] getSites() {
@@ -109,7 +109,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
                 protected void check() throws IOException, ServletException {
                     String url = Util.fixEmpty(request.getParameter("value"));
                     if(url==null) {
-                        error("JIRA URL is a mandatory field");
+                        error(Messages.JiraProjectProperty_JiraUrlMandatory());
                         return;
                     }
 
@@ -117,7 +117,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
                         if(findText(open(new URL(url)),"Atlassian JIRA"))
                             ok();
                         else
-                            error("This is a valid URL but it doesn't look like JIRA");
+                            error(Messages.JiraProjectProperty_NotAJiraUrl());
                     } catch (IOException e) {
                         handleIOException(url,e);
                     }
