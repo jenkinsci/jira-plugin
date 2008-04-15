@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,8 +45,11 @@ class Updater {
 
         Set<String> ids = findIssueIdsRecursive(build);
 
-        if(ids.isEmpty())
+        if(ids.isEmpty()) {
+            if(debug)
+                logger.println("No JIRA issues found.");
             return true;    // nothing found here.
+        }
 
         List<JiraIssue> issues = new ArrayList<JiraIssue>();
         try {
@@ -101,6 +105,7 @@ class Updater {
 
     private static void findIssues(AbstractBuild<?,?> build, Set<String> ids) {
         for (Entry change : build.getChangeSet()) {
+            LOGGER.fine("Looking for JIRA ID in "+change.getMsg());
             Matcher m = ISSUE_PATTERN.matcher(change.getMsg());
             while (m.find())
                 ids.add(m.group());
@@ -115,4 +120,11 @@ class Updater {
      * Numbers are also allowed as project keys (see issue #729)
      */
     public static final Pattern ISSUE_PATTERN = Pattern.compile("\\b[A-Z]([A-Z0-9]+)-[1-9][0-9]*\\b");
+
+    private static final Logger LOGGER = Logger.getLogger(Updater.class.getName());
+
+    /**
+     * Debug flag.
+     */
+    public static boolean debug = false;
 }
