@@ -8,6 +8,7 @@ import hudson.plugins.jira.soap.RemoteProject;
 import java.rmi.RemoteException;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.logging.Logger;
 
 /**
  * Connection to JIRA.
@@ -50,10 +51,12 @@ public final class JiraSession {
      */
     public Set<String> getProjectKeys() throws RemoteException {
         if(projectKeys==null) {
+            LOGGER.fine("Fetching remote project key list from "+site.getName());
             projectKeys = new HashSet<String>();
             for(RemoteProject p : service.getProjects(token))
                 projectKeys.add(p.getKey());
             site.setProjectKeys(projectKeys);
+            LOGGER.fine("Project list="+projectKeys);
         }
         return projectKeys;
     }
@@ -86,4 +89,6 @@ public final class JiraSession {
         int idx = id.indexOf('-');
         return idx >= 0 && getProjectKeys().contains(id.substring(0, idx));
     }
+
+    private static final Logger LOGGER = Logger.getLogger(JiraSession.class.getName());
 }
