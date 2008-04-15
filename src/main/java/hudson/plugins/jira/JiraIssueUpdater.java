@@ -4,6 +4,7 @@ import hudson.Launcher;
 import hudson.model.Build;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.model.AbstractBuild;
 import hudson.tasks.Publisher;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -19,7 +20,7 @@ public class JiraIssueUpdater extends Publisher {
     public JiraIssueUpdater() {
     }
 
-    public boolean perform(Build build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         return Updater.perform(build, listener);
     }
 
