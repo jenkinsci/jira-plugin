@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
- * Report issues related to the build.
+ * JIRA issues related to the build.
  *
  * @author Kohsuke Kawaguchi
  */
