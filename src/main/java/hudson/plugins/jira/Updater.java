@@ -6,6 +6,7 @@ import hudson.model.AbstractBuild.DependencyChange;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.scm.ChangeLogSet.Entry;
 
 import javax.xml.rpc.ServiceException;
@@ -51,6 +52,8 @@ class Updater {
             return true;    // nothing found here.
         }
 
+        boolean noUpdate = build.getResult().isWorseThan(Result.SUCCESS);
+
         List<JiraIssue> issues = new ArrayList<JiraIssue>();
         try {
             JiraSession session = site.createSession();
@@ -65,14 +68,16 @@ class Updater {
                         logger.println(id+" looked like a JIRA issue but it wans't");
                     continue;   // token looked like a JIRA issue but it's actually not.
                 }
-                logger.println(Messages.Updater_Updating(id));
-                session.addComment(id,
-                    String.format(
-                        site.supportsWikiStyleComment?
-                        "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]":
-                        "Integrated in %2$s (See [%4$s])",
-                        rootUrl, build, build.getResult().color.getImage(),
-                        Util.encode(rootUrl+build.getUrl())));
+                if(!noUpdate) {
+                    logger.println(Messages.Updater_Updating(id));
+                    session.addComment(id,
+                        String.format(
+                            site.supportsWikiStyleComment?
+                            "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]":
+                            "Integrated in %2$s (See [%4$s])",
+                            rootUrl, build, build.getResult().color.getImage(),
+                            Util.encode(rootUrl+build.getUrl())));
+                }
 
                 issues.add(new JiraIssue(session.getIssue(id)));
 
@@ -82,6 +87,10 @@ class Updater {
             e.printStackTrace(listener.getLogger());
         }
         build.getActions().add(new JiraBuildAction(build,issues));
+
+        if(noUpdate)
+            // this build didn't work, so carry forward the issue to the next build
+            build.addAction(new JiraCarryOverAction(ids));
 
         return true;
     }
@@ -97,6 +106,15 @@ class Updater {
     private static Set<String> findIssueIdsRecursive(AbstractBuild<?,?> build) {
         Set<String> ids = new HashSet<String>();
 
+        // first, issues that were carried forward.
+        Run prev = build.getPreviousBuild();
+        if(prev!=null) {
+            JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
+            if(a!=null)
+                ids.addAll(a.getIDs());
+        }
+
+        // then issues in this build
         findIssues(build,ids);
 
         // check for issues fixed in dependencies
