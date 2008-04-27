@@ -78,7 +78,8 @@ class Updater {
 
             }
         } catch (ServiceException e) {
-            e.printStackTrace(listener.error(Messages.Updater_FailedToConnect()));
+            listener.getLogger().println(Messages.Updater_FailedToConnect());
+            e.printStackTrace(listener.getLogger());
         }
         build.getActions().add(new JiraBuildAction(build,issues));
 
