@@ -16,6 +16,8 @@ import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.net.URL;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  * Associates {@link AbstractProject} with {@link JiraSite}.
@@ -119,6 +121,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
                         else
                             error(Messages.JiraProjectProperty_NotAJiraUrl());
                     } catch (IOException e) {
+                        LOGGER.log(Level.WARNING, "Unable to connect to "+url, e);
                         handleIOException(url,e);
                     }
                 }
@@ -155,4 +158,6 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
             super.save();
         }
     }
+
+    private static final Logger LOGGER = Logger.getLogger(JiraProjectProperty.class.getName());
 }
