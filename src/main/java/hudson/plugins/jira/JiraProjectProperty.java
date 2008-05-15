@@ -146,8 +146,10 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
                         site.createSession();
                         ok();
                     } catch (AxisFault e) {
+                        LOGGER.log(Level.WARNING, "Failed to login to JIRA at "+url,e);
                         error(e.getFaultString());
                     } catch (ServiceException e) {
+                        LOGGER.log(Level.WARNING, "Failed to login to JIRA at "+url,e);
                         error(e.getMessage());
                     }
                 }
