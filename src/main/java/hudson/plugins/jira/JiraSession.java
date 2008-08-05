@@ -53,7 +53,7 @@ public final class JiraSession {
         if(projectKeys==null) {
             LOGGER.fine("Fetching remote project key list from "+site.getName());
             projectKeys = new HashSet<String>();
-            for(RemoteProject p : service.getProjects(token))
+            for(RemoteProject p : service.getProjectsNoSchemes(token))
                 projectKeys.add(p.getKey());
             site.setProjectKeys(projectKeys);
             LOGGER.fine("Project list="+projectKeys);
