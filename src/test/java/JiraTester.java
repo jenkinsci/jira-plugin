@@ -20,8 +20,10 @@ public class JiraTester {
         String token = service.login("kohsuke", "kohsuke");
 
         // key can be used.
-        RemoteProject[] projects = service.getProjects(token);
-        System.out.println(projects);
+        RemoteProject[] projects = service.getProjectsNoSchemes(token);
+        for (RemoteProject p : projects) {
+            System.out.println(p.getKey());
+        }
 
         RemoteIssue issue = service.getIssue(token, "HUDSON-1");
         System.out.println(issue);
