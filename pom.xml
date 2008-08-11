@@ -23,6 +23,7 @@
         <configuration>
           <packageSpace>hudson.plugins.jira.soap</packageSpace>
           <sourceDirectory>src/main/wsdl/</sourceDirectory>
+          <outputDirectory>target/generated-sources/wsdl2java</outputDirectory>
         </configuration>
         <executions>
           <execution>
