@@ -52,7 +52,7 @@ class Updater {
             return true;    // nothing found here.
         }
 
-        boolean noUpdate = build.getResult().isWorseThan(Result.SUCCESS);
+        boolean noUpdate = build.getResult().isWorseThan(Result.UNSTABLE);
 
         List<JiraIssue> issues = new ArrayList<JiraIssue>();
         try {
