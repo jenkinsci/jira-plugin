@@ -7,6 +7,7 @@ import hudson.model.BuildListener;
 import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 
 import javax.xml.rpc.ServiceException;
@@ -70,13 +71,23 @@ class Updater {
                 }
                 if(!noUpdate) {
                     logger.println(Messages.Updater_Updating(id));
+                    String aggregateComment ="";
+                    for(Entry e :(ChangeLogSet<Entry>)build.getChangeSet()){
+                        if(e.getMsg().contains(id)){
+                            aggregateComment +=e.getMsg() + "\n";
+                            aggregateComment = aggregateComment.replaceAll(id, "");
+
+                        }
+                    }
+
+
                     session.addComment(id,
                         String.format(
                             site.supportsWikiStyleComment?
-                            "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]":
-                            "Integrated in %2$s (See [%4$s])",
+                            "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
+                            "Integrated in %2$s (See [%4$s])\n    %5$s",
                             rootUrl, build, build.getResult().color.getImage(),
-                            Util.encode(rootUrl+build.getUrl())));
+                            Util.encode(rootUrl+build.getUrl()),aggregateComment));
                 }
 
                 issues.add(new JiraIssue(session.getIssue(id)));
