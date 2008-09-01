@@ -42,7 +42,8 @@ public class MavenJiraIssueUpdater extends MavenReporter {
         }
 
         public String getDisplayName() {
-            return Messages.JiraIssueUpdater_DisplayName();
+          // Placed in the build settings section
+           return Messages.JiraIssueUpdater_DisplayName();
         }
 
         public String getHelpFile() {
