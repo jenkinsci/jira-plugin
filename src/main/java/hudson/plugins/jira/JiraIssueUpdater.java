@@ -36,7 +36,9 @@ public class JiraIssueUpdater extends Publisher {
         }
 
         public String getDisplayName() {
+            // Displayed in the publisher section
             return Messages.JiraIssueUpdater_DisplayName();
+           
         }
 
         public String getHelpFile() {
