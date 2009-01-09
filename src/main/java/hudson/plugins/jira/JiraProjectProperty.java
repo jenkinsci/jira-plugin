@@ -84,6 +84,10 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
         public String getDisplayName() {
             return Messages.JiraProjectProperty_DisplayName();
         }
+        
+        public void setSites(JiraSite site) {
+        	sites.add(site);
+        }
 
         public JiraSite[] getSites() {
             return sites.toArray(new JiraSite[0]);
