@@ -13,7 +13,7 @@
   <packaging>hpi</packaging>
   <name>Hudson JIRA plugin</name>
   <description>Integrates Hudson to JIRA</description>
-  <url>http://hudson.gotdns.com/wiki/display/HUDSON/JIRA+Plugin</url>
+  <url>http://wiki.hudson-ci.org/display/HUDSON/JIRA+Plugin</url>
 
   <build>
     <plugins>
