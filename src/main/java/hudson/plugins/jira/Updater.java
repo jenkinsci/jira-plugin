@@ -152,7 +152,7 @@ class Updater {
      * At least two upper alphabetic.
      * Numbers are also allowed as project keys (see issue #729)
      */
-    public static final Pattern ISSUE_PATTERN = Pattern.compile("\\b[A-Z]([A-Z0-9]+)-[1-9][0-9]*\\b");
+    public static final Pattern ISSUE_PATTERN = Pattern.compile("\\b[A-Z]([A-Z0-9_]+)-[1-9][0-9]*\\b");
 
     private static final Logger LOGGER = Logger.getLogger(Updater.class.getName());
 
