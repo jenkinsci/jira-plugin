@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import hudson.Extension;
 import hudson.MarkupText;
 import hudson.MarkupText.SubText;
 import hudson.model.AbstractBuild;
@@ -13,6 +14,7 @@ import java.net.URL;
  * {@link ChangeLogAnnotator} that picks up JIRA issue IDs.
  * @author Kohsuke Kawaguchi
  */
+@Extension
 public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
     public void annotate(AbstractBuild<?,?> build, Entry change, MarkupText text) {

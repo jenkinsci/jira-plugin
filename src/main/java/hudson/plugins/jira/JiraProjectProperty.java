@@ -1,15 +1,16 @@
 package hudson.plugins.jira;
 
+import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractProject;
+import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.util.CopyOnWriteList;
-import hudson.util.FormFieldValidator;
+import hudson.util.FormValidation;
 import org.apache.axis.AxisFault;
 import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.servlet.ServletException;
@@ -18,6 +19,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import net.sf.json.JSONObject;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Associates {@link AbstractProject} with {@link JiraSite}.
@@ -63,10 +66,12 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
         return null;
     }
 
+    @Override
     public DescriptorImpl getDescriptor() {
         return DESCRIPTOR;
     }
 
+    @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     public static final class DescriptorImpl extends JobPropertyDescriptor {
@@ -77,6 +82,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
             load();
         }
 
+        @Override
         public boolean isApplicable(Class<? extends Job> jobType) {
             return AbstractProject.class.isAssignableFrom(jobType);
         }
@@ -100,7 +106,8 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
             return jpp;
         }
 
-        public boolean configure(StaplerRequest req) {
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject formData) {
             sites.replaceBy(req.bindParametersToList(JiraSite.class,"jira."));
             save();
             return true;
@@ -109,59 +116,53 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
         /**
          * Checks if the JIRA URL is accessible and exists.
          */
-        public void doUrlCheck(final StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+        public FormValidation doUrlCheck(@QueryParameter final String value) throws IOException, ServletException {
             // this can be used to check existence of any file in any URL, so admin only
-            new FormFieldValidator.URLCheck(req,rsp) {
-                protected void check() throws IOException, ServletException {
-                    String url = Util.fixEmpty(request.getParameter("value"));
+            if (!Hudson.getInstance().hasPermission(Hudson.ADMINISTER))
+                return FormValidation.ok();
+
+            return new FormValidation.URLCheck() {
+                @Override
+                protected FormValidation check() throws IOException, ServletException {
+                    String url = Util.fixEmpty(value);
                     if(url==null) {
-                        error(Messages.JiraProjectProperty_JiraUrlMandatory());
-                        return;
+                        return FormValidation.error(Messages.JiraProjectProperty_JiraUrlMandatory());
                     }
 
                     try {
                         if(findText(open(new URL(url)),"Atlassian JIRA"))
-                            ok();
+                            return FormValidation.ok();
                         else
-                            error(Messages.JiraProjectProperty_NotAJiraUrl());
+                            return FormValidation.error(Messages.JiraProjectProperty_NotAJiraUrl());
                     } catch (IOException e) {
                         LOGGER.log(Level.WARNING, "Unable to connect to "+url, e);
-                        handleIOException(url,e);
+                        return handleIOException(url,e);
                     }
                 }
-            }.process();
+            }.check();
         }
 
         /**
          * Checks if the user name and password are valid.
          */
-        public void doLoginCheck(final StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
-            new FormFieldValidator(req,rsp,false) {
-                protected void check() throws IOException, ServletException {
-                    String url = Util.fixEmpty(request.getParameter("url"));
-                    if(url==null) {// URL not entered yet
-                        ok();
-                        return;
-                    }
-                    JiraSite site = new JiraSite(new URL(url),
-                        request.getParameter("user"),
-                        request.getParameter("pass"),false);
-                    try {
-                        site.createSession();
-                        ok();
-                    } catch (AxisFault e) {
-                        LOGGER.log(Level.WARNING, "Failed to login to JIRA at "+url,e);
-                        error(e.getFaultString());
-                    } catch (ServiceException e) {
-                        LOGGER.log(Level.WARNING, "Failed to login to JIRA at "+url,e);
-                        error(e.getMessage());
-                    }
-                }
-            }.process();
-        }
-
-        public void save() {
-            super.save();
+        public FormValidation doLoginCheck(StaplerRequest request) throws IOException {
+            String url = Util.fixEmpty(request.getParameter("url"));
+            if(url==null) {// URL not entered yet
+                return FormValidation.ok();
+            }
+            JiraSite site = new JiraSite(new URL(url),
+                request.getParameter("user"),
+                request.getParameter("pass"),false);
+            try {
+                site.createSession();
+                return FormValidation.ok();
+            } catch (AxisFault e) {
+                LOGGER.log(Level.WARNING, "Failed to login to JIRA at "+url,e);
+                return FormValidation.error(e.getFaultString());
+            } catch (ServiceException e) {
+                LOGGER.log(Level.WARNING, "Failed to login to JIRA at "+url,e);
+                return FormValidation.error(e.getMessage());
+            }
         }
     }
 
