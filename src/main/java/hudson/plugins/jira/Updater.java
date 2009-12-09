@@ -2,15 +2,14 @@ package hudson.plugins.jira;
 
 import hudson.Util;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractBuild.DependencyChange;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.model.AbstractBuild.DependencyChange;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -21,6 +20,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.rpc.ServiceException;
+
 /**
  * Actual JIRA update logic.
  *
@@ -28,7 +29,7 @@ import java.util.regex.Pattern;
  * @author Kohsuke Kawaguchi
  */
 class Updater {
-    static boolean perform(AbstractBuild build, BuildListener listener) throws InterruptedException, IOException {
+    static boolean perform(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException {
         PrintStream logger = listener.getLogger();
 
         JiraSite site = JiraSite.get(build.getProject());
@@ -66,16 +67,17 @@ class Updater {
             for (String id : ids) {
                 if(!session.existsIssue(id)) {
                     if(debug)
-                        logger.println(id+" looked like a JIRA issue but it wans't");
+                        logger.println(id+" looked like a JIRA issue but it wasn't");
                     continue;   // token looked like a JIRA issue but it's actually not.
                 }
                 if(!noUpdate) {
                     logger.println(Messages.Updater_Updating(id));
-                    String aggregateComment ="";
+                    StringBuilder aggregateComment = new StringBuilder();
                     for(Entry e :(ChangeLogSet<Entry>)build.getChangeSet()){
                         if(e.getMsg().contains(id)){
-                            aggregateComment +=e.getMsg() + "\n";
-                            aggregateComment = aggregateComment.replaceAll(id, "");
+                            aggregateComment.append(e.getMsg()).append("\n");
+                            // kutzi: don't know why the issue id was removed in previous versions:
+                            //aggregateComment = aggregateComment.replaceAll(id, "");
 
                         }
                     }
@@ -118,7 +120,7 @@ class Updater {
         Set<String> ids = new HashSet<String>();
 
         // first, issues that were carried forward.
-        Run prev = build.getPreviousBuild();
+        Run<?, ?> prev = build.getPreviousBuild();
         if(prev!=null) {
             JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
             if(a!=null)
@@ -130,7 +132,7 @@ class Updater {
 
         // check for issues fixed in dependencies
         for( DependencyChange depc : build.getDependencyChanges(build.getPreviousBuild()).values())
-            for(AbstractBuild b : depc.getBuilds())
+            for(AbstractBuild<?, ?> b : depc.getBuilds())
                 findIssues(b,ids);
 
         return ids;
