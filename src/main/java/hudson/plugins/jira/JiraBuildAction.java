@@ -12,11 +12,11 @@ import java.util.Collection;
  * @author Kohsuke Kawaguchi
  */
 public class JiraBuildAction implements Action {
-    public final AbstractBuild owner;
+    public final AbstractBuild<?, ?> owner;
 
     public final JiraIssue[] issues;
 
-    public JiraBuildAction(AbstractBuild owner, Collection<JiraIssue> issues) {
+    public JiraBuildAction(AbstractBuild<?, ?> owner, Collection<JiraIssue> issues) {
         this.owner = owner;
         this.issues = issues.toArray(new JiraIssue[issues.size()]);
         Arrays.sort(this.issues);

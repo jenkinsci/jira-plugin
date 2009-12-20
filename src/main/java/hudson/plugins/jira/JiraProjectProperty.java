@@ -83,11 +83,13 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public boolean isApplicable(Class<? extends Job> jobType) {
             return AbstractProject.class.isAssignableFrom(jobType);
         }
 
-        public String getDisplayName() {
+        @Override
+		public String getDisplayName() {
             return Messages.JiraProjectProperty_DisplayName();
         }
         
@@ -99,7 +101,8 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
             return sites.toArray(new JiraSite[0]);
         }
         
-        public JobProperty<?> newInstance(StaplerRequest req) throws FormException {
+        @Override
+		public JobProperty<?> newInstance(StaplerRequest req) throws FormException {
             JiraProjectProperty jpp = req.bindParameters(JiraProjectProperty.class, "jira.");
             if(jpp.siteName==null)
                 jpp = null; // not configured

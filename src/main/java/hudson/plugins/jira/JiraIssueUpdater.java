@@ -25,7 +25,7 @@ public class JiraIssueUpdater extends Recorder {
     }
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         return Updater.perform(build, listener);
     }
 
@@ -46,7 +46,8 @@ public class JiraIssueUpdater extends Recorder {
             super(JiraIssueUpdater.class);
         }
 
-        public String getDisplayName() {
+        @Override
+		public String getDisplayName() {
             // Displayed in the publisher section
             return Messages.JiraIssueUpdater_DisplayName();
            
@@ -63,6 +64,7 @@ public class JiraIssueUpdater extends Recorder {
         }
 
         @Override
+        @SuppressWarnings("unchecked")
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
         }
