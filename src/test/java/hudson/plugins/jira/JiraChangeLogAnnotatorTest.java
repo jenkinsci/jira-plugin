@@ -6,7 +6,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.MarkupText;
 
 import java.util.Collections;
-import java.net.URL;
 
 /**
  * @author Kohsuke Kawaguchi

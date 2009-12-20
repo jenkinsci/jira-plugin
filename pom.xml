@@ -98,5 +98,17 @@
       <artifactId>commons-discovery</artifactId>
       <version>0.4</version>
     </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.8.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+	  <groupId>com.google.collections</groupId>
+	  <artifactId>google-collections</artifactId>
+	  <version>1.0-rc5</version>
+	  <scope>test</scope>
+	</dependency>
   </dependencies>
 </project>

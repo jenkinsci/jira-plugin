@@ -7,7 +7,6 @@ import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.AbstractBuild.DependencyChange;
-import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 
 import java.io.IOException;
@@ -73,7 +72,7 @@ class Updater {
                 if(!noUpdate) {
                     logger.println(Messages.Updater_Updating(id));
                     StringBuilder aggregateComment = new StringBuilder();
-                    for(Entry e :(ChangeLogSet<Entry>)build.getChangeSet()){
+                    for(Entry e :build.getChangeSet()){
                         if(e.getMsg().contains(id)){
                             aggregateComment.append(e.getMsg()).append("\n");
                             // kutzi: don't know why the issue id was removed in previous versions:
@@ -138,12 +137,12 @@ class Updater {
         return ids;
     }
 
-    private static void findIssues(AbstractBuild<?,?> build, Set<String> ids) {
+    static void findIssues(AbstractBuild<?,?> build, Set<String> ids) {
         for (Entry change : build.getChangeSet()) {
             LOGGER.fine("Looking for JIRA ID in "+change.getMsg());
             Matcher m = ISSUE_PATTERN.matcher(change.getMsg());
             while (m.find())
-                ids.add(m.group());
+                ids.add(m.group().toUpperCase());
         }
     }
 
@@ -151,10 +150,10 @@ class Updater {
      * Regexp pattern that identifies JIRA issue token.
      *
      * <p>
-     * At least two upper alphabetic.
-     * Numbers are also allowed as project keys (see issue #729)
+     * First char must be a letter, then at least one letter, digit or underscore.
+     * See issue HUDSON-729, HUDSON-4092
      */
-    public static final Pattern ISSUE_PATTERN = Pattern.compile("\\b[A-Z]([A-Z0-9_]+)-[1-9][0-9]*\\b");
+    public static final Pattern ISSUE_PATTERN = Pattern.compile("\\b[a-zA-Z]([a-zA-Z0-9_]+)-[1-9][0-9]*\\b");
 
     private static final Logger LOGGER = Logger.getLogger(Updater.class.getName());
 

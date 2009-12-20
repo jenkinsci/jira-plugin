@@ -17,7 +17,8 @@ import java.net.URL;
 @Extension
 public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
-    public void annotate(AbstractBuild<?,?> build, Entry change, MarkupText text) {
+    @Override
+	public void annotate(AbstractBuild<?,?> build, Entry change, MarkupText text) {
         JiraSite site = JiraSite.get(build.getProject());
         if(site==null)      return;    // not configured with JIRA
 
@@ -41,7 +42,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                         "</a>");
                 }
             } catch (MalformedURLException e) {
-                // impossible
+            	throw new AssertionError(e); // impossible
             }
         }
     }
