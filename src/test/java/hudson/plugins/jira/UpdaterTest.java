@@ -1,21 +1,33 @@
 package hudson.plugins.jira;
 
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.model.User;
+import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import javax.xml.rpc.ServiceException;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.google.common.collect.Sets;
 
@@ -143,5 +155,60 @@ public class UpdaterTest {
 		Updater.findIssues(build, ids);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
+	}
+	
+	@Test
+	@Bug(4572)
+	public void testComment() throws IOException, ServiceException, InterruptedException {
+		// mock JIRA session:
+		JiraSession session = mock(JiraSession.class);
+		when(session.existsIssue(Mockito.anyString())).thenReturn(Boolean.TRUE);
+		when(session.getIssue(Mockito.anyString())).thenReturn(new RemoteIssue());
+		
+		final List<String> comments = new ArrayList<String>();
+		
+		Answer answer = new Answer<Object>() {
+			public Object answer(InvocationOnMock invocation) throws Throwable {
+				comments.add((String) invocation.getArguments()[1]);
+				return null;
+			}
+		};
+		doAnswer(answer).when(session).addComment(Mockito.anyString(), Mockito.anyString());
+		
+		// mock build:
+		FreeStyleBuild build = mock(FreeStyleBuild.class);
+		FreeStyleProject project = mock(FreeStyleProject.class);
+		when(build.getProject()).thenReturn(project);
+		ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+		when(build.getChangeSet()).thenReturn(changeLogSet);
+		when(build.getResult()).thenReturn(Result.SUCCESS);
+		
+		Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOOBAR-4711"));
+		when(changeLogSet.iterator()).thenReturn(entries.iterator());
+		
+		// test:
+		Set<String> ids = Sets.newHashSet("FOOBAR-4711");
+		Updater.getJiraIssuesAndSubmitComments(build,
+				System.out, "http://hudson" , ids, session, false, false);
+		
+		Assert.assertEquals(1, comments.size());
+		String comment = comments.get(0);
+		
+		Assert.assertTrue(comment.contains("FOOBAR-4711"));
+		
+		
+		// must also work case-insensitively (HUDSON-4132)
+		comments.clear();
+		entries = Sets.newHashSet(new MockEntry("Fixed Foobar-4711"));
+		when(changeLogSet.iterator()).thenReturn(entries.iterator());
+		ids = Sets.newHashSet("FOOBAR-4711");
+		Updater.getJiraIssuesAndSubmitComments(build,
+				System.out, "http://hudson" , ids, session, false, false);
+		
+		Assert.assertEquals(1, comments.size());
+		comment = comments.get(0);
+		
+		Assert.assertTrue(comment.contains("Foobar-4711"));
+		
 	}
 }

@@ -11,6 +11,7 @@ import hudson.scm.ChangeLogSet.Entry;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,52 +53,27 @@ class Updater {
                 logger.println("No JIRA issues found.");
             return true;    // nothing found here.
         }
+        
+        JiraSession session = null;
+		try {
+			session = site.createSession();
+		} catch (ServiceException e) {
+			listener.getLogger().println(Messages.Updater_FailedToConnect());
+            e.printStackTrace(listener.getLogger());
+		}
+        if(session==null) {
+            logger.println(Messages.Updater_NoRemoteAccess());
+            build.setResult(Result.FAILURE);
+            return true;
+        }
 
         boolean noUpdate = build.getResult().isWorseThan(Result.UNSTABLE);
+        
+        boolean useWikiStyleComments = site.supportsWikiStyleComment;
 
-        List<JiraIssue> issues = new ArrayList<JiraIssue>();
-        try {
-            JiraSession session = site.createSession();
-            if(session==null) {
-                logger.println(Messages.Updater_NoRemoteAccess());
-                build.setResult(Result.FAILURE);
-                return true;
-            }
-            for (String id : ids) {
-                if(!session.existsIssue(id)) {
-                    if(debug)
-                        logger.println(id+" looked like a JIRA issue but it wasn't");
-                    continue;   // token looked like a JIRA issue but it's actually not.
-                }
-                if(!noUpdate) {
-                    logger.println(Messages.Updater_Updating(id));
-                    StringBuilder aggregateComment = new StringBuilder();
-                    for(Entry e :build.getChangeSet()){
-                        if(e.getMsg().contains(id)){
-                            aggregateComment.append(e.getMsg()).append("\n");
-                            // kutzi: don't know why the issue id was removed in previous versions:
-                            //aggregateComment = aggregateComment.replaceAll(id, "");
-
-                        }
-                    }
-
-
-                    session.addComment(id,
-                        String.format(
-                            site.supportsWikiStyleComment?
-                            "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
-                            "Integrated in %2$s (See [%4$s])\n    %5$s",
-                            rootUrl, build, build.getResult().color.getImage(),
-                            Util.encode(rootUrl+build.getUrl()),aggregateComment));
-                }
-
-                issues.add(new JiraIssue(session.getIssue(id)));
-
-            }
-        } catch (ServiceException e) {
-            listener.getLogger().println(Messages.Updater_FailedToConnect());
-            e.printStackTrace(listener.getLogger());
-        }
+        List<JiraIssue> issues = getJiraIssuesAndSubmitComments(build, logger,
+				rootUrl, ids, session, noUpdate, useWikiStyleComments);
+            
         build.getActions().add(new JiraBuildAction(build,issues));
 
         if(noUpdate)
@@ -106,6 +82,56 @@ class Updater {
 
         return true;
     }
+
+    // TODO: the method name implies that this method should be refactored...
+	static List<JiraIssue> getJiraIssuesAndSubmitComments(
+			AbstractBuild<?, ?> build, PrintStream logger, String hudsonRootUrl,
+			Set<String> ids, JiraSession session, boolean noUpdate,
+			boolean useWikiStyleComments) throws RemoteException {
+		List<JiraIssue> issues = new ArrayList<JiraIssue>();
+        for (String id : ids) {
+            if(!session.existsIssue(id)) {
+                if(debug)
+                    logger.println(id+" looked like a JIRA issue but it wasn't");
+                continue;   // token looked like a JIRA issue but it's actually not.
+            }
+            if(!noUpdate) {
+                logger.println(Messages.Updater_Updating(id));
+                StringBuilder aggregateComment = new StringBuilder();
+                for(Entry e :build.getChangeSet()){
+                    if(e.getMsg().toUpperCase().contains(id)){
+                        aggregateComment.append(e.getMsg()).append("\n");
+                        // kutzi: don't know why the issue id was removed in previous versions:
+                        //aggregateComment = aggregateComment.replaceAll(id, "");
+
+                    }
+                }
+
+                session.addComment(id,
+                    createComment(build, useWikiStyleComments,
+                    		hudsonRootUrl, aggregateComment.toString()));
+            }
+
+            issues.add(new JiraIssue(session.getIssue(id)));
+        }
+		return issues;
+	}
+
+    /**
+     * Creates a comment to be used in JIRA for the build.
+     */
+	private static String createComment(AbstractBuild<?, ?> build,
+			boolean wikiStyle, String hudsonRootUrl, String scmComments) {
+		return String.format(
+		    wikiStyle ?
+		    "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
+		    "Integrated in %2$s (See [%4$s])\n    %5$s",
+		    hudsonRootUrl,
+		    build,
+		    build.getResult().color.getImage(),
+		    Util.encode(hudsonRootUrl+build.getUrl()),
+		    scmComments);
+	}
 
     /**
      * Finds the strings that match JIRA issue ID patterns.

@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  *
  * @author Kohsuke Kawaguchi
  */
-public final class JiraSession {
+public class JiraSession {
     public final JiraSoapService service;
 
     /**
