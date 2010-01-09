@@ -25,11 +25,14 @@ import java.io.IOException;
  */
 public class MavenJiraIssueUpdater extends MavenReporter {
 
+    private static final long serialVersionUID = -3416800198673836204L;
+
     @Override
     public boolean end(MavenBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         return Updater.perform(build, listener);
     }
 
+    @Override
     public MavenReporterDescriptor getDescriptor() {
         return DescriptorImpl.DESCRIPTOR;
     }
@@ -41,15 +44,18 @@ public class MavenJiraIssueUpdater extends MavenReporter {
             super(MavenJiraIssueUpdater.class);
         }
 
+        @Override
         public String getDisplayName() {
           // Placed in the build settings section
            return Messages.JiraIssueUpdater_DisplayName();
         }
 
+        @Override
         public String getHelpFile() {
             return "/plugin/jira/help.html";
         }
 
+        @Override
         public MavenJiraIssueUpdater newInstance(StaplerRequest req) throws FormException {
             return new MavenJiraIssueUpdater();
         }

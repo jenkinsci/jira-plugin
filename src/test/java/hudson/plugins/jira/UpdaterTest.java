@@ -157,6 +157,10 @@ public class UpdaterTest {
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 	}
 	
+	/**
+	 * Tests that the generated comment matches the expectations -
+	 * especially that the JIRA id is not stripped from the comment.
+	 */
 	@Test
 	@Bug(4572)
 	public void testComment() throws IOException, ServiceException, InterruptedException {
