@@ -73,7 +73,7 @@ public class JiraSite {
     }
 
     /**
-     * Creates a remote access session tos his JIRA.
+     * Creates a remote access session to this JIRA.
      *
      * @return
      *      null if remote access is not supported.
