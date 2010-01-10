@@ -86,12 +86,12 @@
     <dependency>
       <groupId>javax.activation</groupId>
       <artifactId>activation</artifactId>
-      <version>1.1</version>
+      <version>1.1.1</version>
     </dependency>
     <dependency>
       <groupId>wsdl4j</groupId>
       <artifactId>wsdl4j</artifactId>
-      <version>1.6.1</version>
+      <version>1.6.2</version>
     </dependency>
     <dependency>
       <groupId>commons-discovery</groupId>
@@ -107,7 +107,7 @@
     <dependency>
 	  <groupId>com.google.collections</groupId>
 	  <artifactId>google-collections</artifactId>
-	  <version>1.0-rc5</version>
+	  <version>1.0</version>
 	  <scope>test</scope>
 	</dependency>
   </dependencies>
