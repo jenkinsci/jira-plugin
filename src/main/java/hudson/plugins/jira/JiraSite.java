@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,27 +26,29 @@ public class JiraSite {
      * URL of JIRA, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
      */
-    public URL url;
+    public final URL url;
 
     /**
      * User name needed to login. Optional.
      */
-    public String userName;
+    public final String userName;
 
     /**
      * Password needed to login. Optional.
      */
-    public String password;
+    public final String password;
 
     /**
      * True if this JIRA is configured to allow Confluence-style Wiki comment.
      */
-    public boolean supportsWikiStyleComment;
+    public final boolean supportsWikiStyleComment;
 
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
      * last time we checked. Copy on write semantics.
      */
+    // TODO: seems like this is never invalidated (never set to null)
+    // should we implement to invalidate this (say every hour)?
     private transient volatile Set<String> projects;
 
     /**
@@ -66,8 +67,6 @@ public class JiraSite {
         this.supportsWikiStyleComment = supportsWikiStyleComment;
     }
 
-    public JiraSite() {}
-    
     public String getName() {
         return url.toExternalForm();
     }
@@ -99,7 +98,7 @@ public class JiraSite {
      * Computes the URL to the given issue.
      */
     public URL getUrl(String id) throws MalformedURLException {
-        return new URL(url,"browse/"+ id);
+        return new URL(url, "browse/" + id.toUpperCase());
     }
 
     /**
@@ -111,10 +110,9 @@ public class JiraSite {
             synchronized (this) {
                 try {
                     if(projects==null) {
-                        // this will cause the setProjectKeys invocation.
                         JiraSession session = createSession();
                         if(session!=null)
-                            session.getProjectKeys();
+                            projects = Collections.unmodifiableSet(session.getProjectKeys());
                     }
                 } catch (IOException e) {
                     // in case of error, set empty set to avoid trying the same thing repeatedly.
@@ -125,18 +123,11 @@ public class JiraSite {
             }
         }
         // fall back to empty if failed to talk to the server
-        if(projects==null)
-            setProjectKeys(new HashSet<String>());
+        if(projects==null) {
+            return Collections.emptySet();
+        }
         
-        return Collections.unmodifiableSet(projects);
-    }
-
-    protected void setProjectKeys(Set<String> keys) {
-        if(projects!=null && projects.equals(keys))
-            return; // no change
-
-        projects = new HashSet<String>(keys);
-        JiraProjectProperty.DESCRIPTOR.save();
+        return projects;
     }
 
     /**
@@ -176,7 +167,7 @@ public class JiraSite {
         if(idx==-1) return false;
 
         Set<String> keys = getProjectKeys();
-        return keys==null || keys.contains(id.substring(0,idx));
+        return keys.contains(id.substring(0,idx).toUpperCase());
     }
 
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());

@@ -48,14 +48,17 @@ public class JiraSession {
     /**
      * Returns the set of project keys (like MNG, HUDSON, etc) that are available
      * in this JIRA.
+     * 
+     * Guarantees to return all project keys in upper case.
      */
     public Set<String> getProjectKeys() throws RemoteException {
         if(projectKeys==null) {
             LOGGER.fine("Fetching remote project key list from "+site.getName());
-            projectKeys = new HashSet<String>();
-            for(RemoteProject p : service.getProjectsNoSchemes(token))
-                projectKeys.add(p.getKey());
-            site.setProjectKeys(projectKeys);
+            RemoteProject[] remoteProjects = service.getProjectsNoSchemes(token);
+            projectKeys = new HashSet<String>(remoteProjects.length);
+            for(RemoteProject p : remoteProjects) {
+                projectKeys.add(p.getKey().toUpperCase());
+            }
             LOGGER.fine("Project list="+projectKeys);
         }
         return projectKeys;
@@ -86,8 +89,7 @@ public class JiraSession {
     }
 
     public boolean existsIssue(String id) throws RemoteException {
-        int idx = id.indexOf('-');
-        return idx >= 0 && getProjectKeys().contains(id.substring(0, idx));
+        return site.existsIssue(id);
     }
 
     private static final Logger LOGGER = Logger.getLogger(JiraSession.class.getName());
