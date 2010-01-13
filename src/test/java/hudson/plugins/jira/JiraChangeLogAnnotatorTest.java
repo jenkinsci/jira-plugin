@@ -7,9 +7,13 @@ import static org.mockito.Mockito.when;
 import hudson.MarkupText;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.xml.rpc.ServiceException;
 
@@ -72,5 +76,38 @@ public class JiraChangeLogAnnotatorTest  {
         annotator.annotate(mock(FreeStyleBuild.class), null, text);
         
         Assert.assertEquals("fixed <a href='http://dummy'>DUMMY-42</a>", text.toString());
+    }
+    
+    @Test
+    @Bug(5252)
+    public void testGetIssueDetailsFromUpstreamJob() {
+        FreeStyleBuild b = mock(FreeStyleBuild.class);
+        
+        FreeStyleBuild upstream1 = mock(FreeStyleBuild.class);
+        FreeStyleBuild upstream2 = mock(FreeStyleBuild.class);
+        
+        FreeStyleProject upstreamProj1 = mock(FreeStyleProject.class);
+        when(upstreamProj1.getBuildByNumber(Mockito.anyInt())).thenReturn(upstream1);
+        
+        FreeStyleProject upstreamProj2 = mock(FreeStyleProject.class);
+        when(upstreamProj2.getBuildByNumber(Mockito.anyInt())).thenReturn(upstream2);
+        
+        @SuppressWarnings("unchecked")
+        Map<AbstractProject, Integer> upstreamBuilds = new HashMap<AbstractProject, Integer>();
+        upstreamBuilds.put(upstreamProj1, Integer.valueOf(1));
+        upstreamBuilds.put(upstreamProj2, Integer.valueOf(1));
+        
+        when(b.getTransitiveUpstreamBuilds()).thenReturn(upstreamBuilds);
+        
+        JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
+        JiraBuildAction action = new JiraBuildAction(upstream1, Collections.singletonList(issue));
+        when(upstream1.getAction(JiraBuildAction.class)).thenReturn(action);
+        
+        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+        doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+        
+        MarkupText text = new MarkupText("fixed DUMMY-42");
+        annotator.annotate(b, null, text);
+        Assert.assertTrue(text.toString().contains(TITLE));
     }
 }

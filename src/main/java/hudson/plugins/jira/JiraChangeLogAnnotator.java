@@ -6,11 +6,14 @@ import hudson.Util;
 import hudson.MarkupText.SubText;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Run;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet.Entry;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * {@link ChangeLogAnnotator} that picks up JIRA issue IDs.
@@ -25,7 +28,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         if(site==null)      return;    // not configured with JIRA
 
         // if there's any recorded detail information, try to use that, too.
-        JiraBuildAction a = build.getAction(JiraBuildAction.class);
+        Map<String, JiraIssue> associatedIssues = fetchAllAssociatatedIssues(build);
 
         for(SubText token : text.findTokens(Updater.ISSUE_PATTERN)) {
             try {
@@ -34,7 +37,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                     continue;
                 URL url = site.getUrl(id);
 
-                JiraIssue issue = a!=null ? a.getIssue(id) : null;
+                JiraIssue issue = associatedIssues.get(id);
 
                 if(issue==null) {
                     token.surroundWith("<a href='"+url+"'>","</a>");
@@ -47,6 +50,39 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
             	throw new AssertionError(e); // impossible
             }
         }
+    }
+    
+    /**
+     * Fetches all {@link JiraIssue}s associated with the build and all
+     * its upstream builds.
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, JiraIssue> fetchAllAssociatatedIssues(AbstractBuild<?,?> build) {
+        Map<String, JiraIssue> issues = new HashMap<String, JiraIssue>();
+        
+        JiraBuildAction a = build.getAction(JiraBuildAction.class);
+        if (a != null) {
+            for (JiraIssue i : a.issues) {
+                issues.put(i.id, i);
+            }
+        }
+        
+        Map<AbstractProject, Integer> transitiveUpstreamBuilds = build.getTransitiveUpstreamBuilds();
+        
+        for (Map.Entry<AbstractProject, Integer> entry : transitiveUpstreamBuilds.entrySet()) {
+            AbstractProject project = entry.getKey();
+            Run run = project.getBuildByNumber(entry.getValue().intValue());
+            if (run != null) {
+                a = run.getAction(JiraBuildAction.class);
+                if (a != null) {
+                    for (JiraIssue i : a.issues) {
+                        issues.put(i.id, i);
+                    }
+                }
+            }
+        }
+        
+        return issues;
     }
 
     JiraSite getSiteForProject(AbstractProject<?, ?> project) {
