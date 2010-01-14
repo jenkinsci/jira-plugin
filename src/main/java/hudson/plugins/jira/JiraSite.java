@@ -5,6 +5,7 @@ import hudson.model.AbstractProject;
 import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.JiraSoapServiceService;
 import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
+import hudson.plugins.jira.soap.RemoteIssue;
 
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
@@ -168,6 +169,20 @@ public class JiraSite {
 
         Set<String> keys = getProjectKeys();
         return keys.contains(id.substring(0,idx).toUpperCase());
+    }
+    
+    /**
+     * Returns the remote issue with the given id or <code>null</code> if it wasn't found.
+     */
+    public JiraIssue getIssue(String id) throws IOException, ServiceException {
+        JiraSession session = createSession();
+        if (session != null) {
+            RemoteIssue remoteIssue = session.getIssue(id);
+            if (remoteIssue != null) {
+                return new JiraIssue(remoteIssue);
+            }
+        }
+        return null;
     }
 
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());

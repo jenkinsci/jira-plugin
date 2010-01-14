@@ -5,6 +5,9 @@ import hudson.model.Action;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * JIRA issues related to the build.
@@ -14,7 +17,7 @@ import java.util.Collection;
 public class JiraBuildAction implements Action {
     public final AbstractBuild<?, ?> owner;
 
-    public final JiraIssue[] issues;
+    public JiraIssue[] issues;
 
     public JiraBuildAction(AbstractBuild<?, ?> owner, Collection<JiraIssue> issues) {
         this.owner = owner;
@@ -43,5 +46,13 @@ public class JiraBuildAction implements Action {
                 return issue;
         }
         return null;
+    }
+
+    public void addIssues(Set<JiraIssue> issuesToBeSaved) {
+        SortedSet<JiraIssue> allIssues = new TreeSet<JiraIssue>();
+        allIssues.addAll(issuesToBeSaved);
+        allIssues.addAll(Arrays.asList(this.issues));
+        
+        this.issues = allIssues.toArray(new JiraIssue[allIssues.size()]);
     }
 }

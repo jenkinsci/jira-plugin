@@ -6,14 +6,16 @@ import hudson.Util;
 import hudson.MarkupText.SubText;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.Run;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet.Entry;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * {@link ChangeLogAnnotator} that picks up JIRA issue IDs.
@@ -21,15 +23,17 @@ import java.util.Map;
  */
 @Extension
 public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
-
+    private static final Logger LOGGER = Logger.getLogger(JiraChangeLogAnnotator.class.getName());
     @Override
 	public void annotate(AbstractBuild<?,?> build, Entry change, MarkupText text) {
         JiraSite site = getSiteForProject(build.getProject());
         if(site==null)      return;    // not configured with JIRA
 
         // if there's any recorded detail information, try to use that, too.
-        Map<String, JiraIssue> associatedIssues = fetchAllAssociatatedIssues(build);
-
+        JiraBuildAction a = build.getAction(JiraBuildAction.class);
+        
+        Set<JiraIssue> issuesToBeSaved = new HashSet<JiraIssue>();
+        
         for(SubText token : text.findTokens(Updater.ISSUE_PATTERN)) {
             try {
                 String id = token.group(0).toUpperCase();
@@ -37,7 +41,19 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                     continue;
                 URL url = site.getUrl(id);
 
-                JiraIssue issue = associatedIssues.get(id);
+                JiraIssue issue = null;
+                if (a != null) {
+                    issue = a.getIssue(id);
+                }
+
+                if (issue == null) {
+                    try {
+                        issue = site.getIssue(id);
+                        issuesToBeSaved.add(issue);
+                    } catch (Exception e) {
+                        LOGGER.log(Level.WARNING, "Error getting remote issue", e);
+                    }
+                }
 
                 if(issue==null) {
                     token.surroundWith("<a href='"+url+"'>","</a>");
@@ -50,39 +66,26 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
             	throw new AssertionError(e); // impossible
             }
         }
+        
+        if (!issuesToBeSaved.isEmpty()) {
+            saveIssues(build, a, issuesToBeSaved);
+        }
     }
     
-    /**
-     * Fetches all {@link JiraIssue}s associated with the build and all
-     * its upstream builds.
-     */
-    @SuppressWarnings("unchecked")
-    private Map<String, JiraIssue> fetchAllAssociatatedIssues(AbstractBuild<?,?> build) {
-        Map<String, JiraIssue> issues = new HashMap<String, JiraIssue>();
-        
-        JiraBuildAction a = build.getAction(JiraBuildAction.class);
+    private void saveIssues(AbstractBuild<?, ?> build, JiraBuildAction a,
+            Set<JiraIssue> issuesToBeSaved) {
         if (a != null) {
-            for (JiraIssue i : a.issues) {
-                issues.put(i.id, i);
-            }
+            a.addIssues(issuesToBeSaved);
+        } else {
+            JiraBuildAction action = new JiraBuildAction(build, issuesToBeSaved);
+            build.addAction(action);
         }
         
-        Map<AbstractProject, Integer> transitiveUpstreamBuilds = build.getTransitiveUpstreamBuilds();
-        
-        for (Map.Entry<AbstractProject, Integer> entry : transitiveUpstreamBuilds.entrySet()) {
-            AbstractProject project = entry.getKey();
-            Run run = project.getBuildByNumber(entry.getValue().intValue());
-            if (run != null) {
-                a = run.getAction(JiraBuildAction.class);
-                if (a != null) {
-                    for (JiraIssue i : a.issues) {
-                        issues.put(i.id, i);
-                    }
-                }
-            }
+        try {
+            build.save();
+        } catch (final IOException e) {
+            LOGGER.log(Level.WARNING, "Error saving updated build", e);
         }
-        
-        return issues;
     }
 
     JiraSite getSiteForProject(AbstractProject<?, ?> project) {
