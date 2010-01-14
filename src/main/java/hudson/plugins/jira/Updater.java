@@ -31,54 +31,63 @@ import javax.xml.rpc.ServiceException;
 class Updater {
     static boolean perform(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException {
         PrintStream logger = listener.getLogger();
-
-        JiraSite site = JiraSite.get(build.getProject());
-        if(site==null) {
-            logger.println(Messages.Updater_NoJiraSite());
-            build.setResult(Result.FAILURE);
-            return true;
-        }
-
-        String rootUrl = Hudson.getInstance().getRootUrl();
-        if(rootUrl==null) {
-            logger.println(Messages.Updater_NoHudsonUrl());
-            build.setResult(Result.FAILURE);
-            return true;
-        }
-
-        Set<String> ids = findIssueIdsRecursive(build);
-
-        if(ids.isEmpty()) {
-            if(debug)
-                logger.println("No JIRA issues found.");
-            return true;    // nothing found here.
-        }
+        Set<String> ids = null;
         
-        JiraSession session = null;
-		try {
-			session = site.createSession();
-		} catch (ServiceException e) {
-			listener.getLogger().println(Messages.Updater_FailedToConnect());
-            e.printStackTrace(listener.getLogger());
-		}
-        if(session==null) {
-            logger.println(Messages.Updater_NoRemoteAccess());
-            build.setResult(Result.FAILURE);
-            return true;
-        }
-
-        boolean noUpdate = build.getResult().isWorseThan(Result.UNSTABLE);
-        
-        boolean useWikiStyleComments = site.supportsWikiStyleComment;
-
-        List<JiraIssue> issues = getJiraIssuesAndSubmitComments(build, logger,
-				rootUrl, ids, session, noUpdate, useWikiStyleComments);
+        try {
+            JiraSite site = JiraSite.get(build.getProject());
+            if(site==null) {
+                logger.println(Messages.Updater_NoJiraSite());
+                build.setResult(Result.FAILURE);
+                return true;
+            }
+    
+            String rootUrl = Hudson.getInstance().getRootUrl();
+            if(rootUrl==null) {
+                logger.println(Messages.Updater_NoHudsonUrl());
+                build.setResult(Result.FAILURE);
+                return true;
+            }
+    
+            ids = findIssueIdsRecursive(build);
+    
+            if(ids.isEmpty()) {
+                if(debug)
+                    logger.println("No JIRA issues found.");
+                return true;    // nothing found here.
+            }
             
-        build.getActions().add(new JiraBuildAction(build,issues));
-
-        if(noUpdate)
-            // this build didn't work, so carry forward the issue to the next build
-            build.addAction(new JiraCarryOverAction(ids));
+            JiraSession session = null;
+    		try {
+    			session = site.createSession();
+    		} catch (ServiceException e) {
+    			listener.getLogger().println(Messages.Updater_FailedToConnect());
+                e.printStackTrace(listener.getLogger());
+    		}
+            if(session==null) {
+                logger.println(Messages.Updater_NoRemoteAccess());
+                build.setResult(Result.FAILURE);
+                return true;
+            }
+    
+            boolean noUpdate = build.getResult().isWorseThan(Result.UNSTABLE);
+            
+            boolean useWikiStyleComments = site.supportsWikiStyleComment;
+    
+            List<JiraIssue> issues = getJiraIssuesAndSubmitComments(build, logger,
+    				rootUrl, ids, session, noUpdate, useWikiStyleComments);
+                
+            build.getActions().add(new JiraBuildAction(build,issues));
+    
+            if(noUpdate)
+                // this build didn't work, so carry forward the issues to the next build
+                build.addAction(new JiraCarryOverAction(ids));
+        } catch (Exception e) {
+            logger.println("Error updating JIRA issues. Saving issues for next build.\n" + e);
+            if (ids != null && !ids.isEmpty()) {
+                // updating issues failed, so carry forward issues to the next build
+                build.addAction(new JiraCarryOverAction(ids));
+            }
+        }
 
         return true;
     }
