@@ -29,6 +29,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
 /**
@@ -191,9 +192,9 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		// test:
-		Set<String> ids = Sets.newHashSet("FOOBAR-4711");
-		Updater.getJiraIssuesAndSubmitComments(build,
-				System.out, "http://hudson" , ids, session, false, false);
+		List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
+		Updater.submitComments(build,
+				System.out, "http://hudson" , ids, session, false);
 		
 		Assert.assertEquals(1, comments.size());
 		String comment = comments.get(0);
@@ -205,9 +206,9 @@ public class UpdaterTest {
 		comments.clear();
 		entries = Sets.newHashSet(new MockEntry("Fixed Foobar-4711"));
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
-		ids = Sets.newHashSet("FOOBAR-4711");
-		Updater.getJiraIssuesAndSubmitComments(build,
-				System.out, "http://hudson" , ids, session, false, false);
+		ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
+		Updater.submitComments(build,
+				System.out, "http://hudson" , ids, session, false);
 		
 		Assert.assertEquals(1, comments.size());
 		comment = comments.get(0);

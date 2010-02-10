@@ -5,6 +5,7 @@ import hudson.model.InvisibleAction;
 
 import java.util.Collection;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Remembers JIRA IDs that need to be updated later,
@@ -18,8 +19,15 @@ public class JiraCarryOverAction extends InvisibleAction {
      */
     private final String ids;
 
-    public JiraCarryOverAction(Collection<String> ids) {
-        this.ids = Util.join(ids,",");
+    public JiraCarryOverAction(List<JiraIssue> issues) {
+        StringBuilder buf = new StringBuilder();
+        boolean first=true;
+        for (JiraIssue issue : issues) {
+            if(first)   first=false;
+            else        buf.append(",");
+            buf.append(issue.id);
+        }
+        this.ids = buf.toString();
     }
 
     public Collection<String> getIDs() {
