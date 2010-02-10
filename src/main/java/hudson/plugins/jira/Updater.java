@@ -7,6 +7,7 @@ import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.AbstractBuild.DependencyChange;
+import hudson.plugins.jira.soap.RemotePermissionException;
 import hudson.scm.ChangeLogSet.Entry;
 
 import java.io.IOException;
@@ -81,6 +82,12 @@ class Updater {
             if(noUpdate)
                 // this build didn't work, so carry forward the issues to the next build
                 build.addAction(new JiraCarryOverAction(ids));
+        } catch (RemotePermissionException e) {
+            // Seems like RemotePermissionException can mean 'no permission' as well as
+            // 'issue doesn't exist'.
+            // To prevent carrying forward invalid issues forever, we have to drop them
+            // even if the cause of the exception was different.
+            logger.println("Error updating JIRA issues. Issues will not be updated.\n" + e);
         } catch (Exception e) {
             logger.println("Error updating JIRA issues. Saving issues for next build.\n" + e);
             if (ids != null && !ids.isEmpty()) {
