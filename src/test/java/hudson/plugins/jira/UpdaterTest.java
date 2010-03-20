@@ -194,7 +194,7 @@ public class UpdaterTest {
 		// test:
 		List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
 		Updater.submitComments(build,
-				System.out, "http://hudson" , ids, session, false);
+				System.out, "http://hudson" , ids, session, false, false);
 		
 		Assert.assertEquals(1, comments.size());
 		String comment = comments.get(0);
@@ -208,7 +208,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
 		Updater.submitComments(build,
-				System.out, "http://hudson" , ids, session, false);
+				System.out, "http://hudson" , ids, session, false, false);
 		
 		Assert.assertEquals(1, comments.size());
 		comment = comments.get(0);

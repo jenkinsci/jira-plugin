@@ -155,7 +155,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
             }
             JiraSite site = new JiraSite(new URL(url),
                 request.getParameter("user"),
-                request.getParameter("pass"),false);
+                request.getParameter("pass"),false, false);
             try {
                 site.createSession();
                 return FormValidation.ok();

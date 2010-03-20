@@ -8,12 +8,17 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.AbstractBuild.DependencyChange;
 import hudson.plugins.jira.soap.RemotePermissionException;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,6 +27,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Actual JIRA update logic.
@@ -79,7 +86,7 @@ class Updater {
             
             if (doUpdate) {
                 submitComments(build, logger, rootUrl, issues,
-                        session, useWikiStyleComments);
+                        session, useWikiStyleComments, site.recordScmChanges);
             } else {
                 // this build didn't work, so carry forward the issues to the next build
                 build.addAction(new JiraCarryOverAction(issues));
@@ -102,7 +109,7 @@ class Updater {
 	static void submitComments(
 	            AbstractBuild<?, ?> build, PrintStream logger, String hudsonRootUrl,
 	            List<JiraIssue> issues, JiraSession session,
-	            boolean useWikiStyleComments) throws RemoteException {
+	            boolean useWikiStyleComments, boolean recordScmChanges) throws RemoteException {
 	    // copy to prevent ConcurrentModificationException
 	    List<JiraIssue> copy = new ArrayList<JiraIssue>(issues);
         for (JiraIssue issue : copy) {
@@ -120,7 +127,7 @@ class Updater {
 
                 session.addComment(issue.id,
                     createComment(build, useWikiStyleComments,
-                            hudsonRootUrl, aggregateComment.toString()));
+                            hudsonRootUrl, aggregateComment.toString(), recordScmChanges));
             } catch (RemotePermissionException e) {
                 // Seems like RemotePermissionException can mean 'no permission' as well as
                 // 'issue doesn't exist'.
@@ -152,8 +159,8 @@ class Updater {
      * Creates a comment to be used in JIRA for the build.
      */
 	private static String createComment(AbstractBuild<?, ?> build,
-			boolean wikiStyle, String hudsonRootUrl, String scmComments) {
-		return String.format(
+			boolean wikiStyle, String hudsonRootUrl, String scmComments, boolean recordScmChanges) {
+		String comment = String.format(
 		    wikiStyle ?
 		    "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
 		    "Integrated in %2$s (See [%4$s])\n    %5$s",
@@ -162,7 +169,78 @@ class Updater {
 		    build.getResult().color.getImage(),
 		    Util.encode(hudsonRootUrl+build.getUrl()),
 		    scmComments);
+		if (recordScmChanges) {
+		    List<String> scmChanges = getScmRepositoryUrls(wikiStyle, build );
+		    StringBuilder sb = new StringBuilder(comment);
+		    for (String scmChange : scmChanges)
+		    {
+		        sb.append( "\n" ).append( scmChange );
+		    }
+		    return sb.toString();
+		}
+		return comment;
 	}
+	
+	private static List<String> getScmRepositoryUrls(boolean wikiStyle, AbstractBuild<?, ?> build)
+	{
+	    if (build.getProject().getScm() == null) {
+	        return Collections.<String>emptyList();
+	    }
+        if (build.getProject().getScm().getEffectiveBrowser() == null) {
+            return Collections.<String>emptyList();
+        }	    
+        List<String> scmChanges = new ArrayList<String>();
+	    RepositoryBrowser repoBrowser = build.getProject().getScm().getEffectiveBrowser();
+	    for (Entry change : build.getChangeSet()) {
+	        try {
+    	        String uid = change.getAuthor().getId();
+    	        URL url = repoBrowser.getChangeSetLink( change );
+    	        StringBuilder scmChange = new StringBuilder();
+    	        if (StringUtils.isNotBlank( uid )) {
+    	            scmChange.append( uid ).append( " : " );
+    	        }
+    	        if (url != null  && StringUtils.isNotBlank( url.toExternalForm() )) {
+    	            if (wikiStyle) {
+    	                String revision = getRevision( change );
+    	                if (revision != null)
+    	                {
+    	                    scmChange.append( "[" ).append( revision );
+    	                    scmChange.append( "|" );
+    	                    scmChange.append( url.toExternalForm() ).append( "]" );
+    	                }
+    	                else
+    	                {
+    	                    scmChange.append( "[" ).append( url.toExternalForm() ).append( "]" );
+    	                }
+    	            } else {
+    	                scmChange.append( url.toExternalForm() );
+    	            }
+    	        }
+    	        scmChange.append( "Files : " ).append( "\n" );
+    	        for (AffectedFile affectedFile : change.getAffectedFiles()) {
+    	            scmChange.append( "* " ).append( affectedFile.getPath() ).append( "\n" );
+    	        }
+    	        if (scmChange.length()>0) {
+    	            scmChanges.add( scmChange.toString() );
+    	        }
+	        } catch (IOException e) {
+	            LOGGER.warning( "skip failed to calculate scm repo browser link " + e.getMessage() );
+	        }
+	    }
+	    return scmChanges;
+	}
+	
+	private static String getRevision(Entry entry) {
+	    // svn at least can get the revision
+	    try {
+	        Class<?> clazz = entry.getClass();
+	        Method method = clazz.getMethod( "getRevision", null );
+	        return method.invoke( entry, null ).toString();
+	    } catch (Exception e) {
+	        return null;
+	    }
+	}
+	
 
     /**
      * Finds the strings that match JIRA issue ID patterns.

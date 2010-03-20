@@ -43,6 +43,12 @@ public class JiraSite {
      * True if this JIRA is configured to allow Confluence-style Wiki comment.
      */
     public final boolean supportsWikiStyleComment;
+    
+    /**
+     * to record scm changes in jira issue
+     * @since 1.21
+     */
+    public final boolean recordScmChanges;    
 
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
@@ -55,7 +61,7 @@ public class JiraSite {
     /**
      * @stapler-constructor
      */
-    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment) {
+    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges) {
         if(!url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm()+"/");
@@ -66,6 +72,7 @@ public class JiraSite {
         this.userName = Util.fixEmpty(userName);
         this.password = Util.fixEmpty(password);
         this.supportsWikiStyleComment = supportsWikiStyleComment;
+        this.recordScmChanges = recordScmChanges;
     }
 
     public String getName() {

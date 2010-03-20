@@ -11,6 +11,9 @@
           <f:entry title="${%Supports Wiki notation}" help="/plugin/jira/help-wiki.html">
             <f:checkbox name="jira.supportsWikiStyleComment" checked="${site.supportsWikiStyleComment}"/>
           </f:entry>
+          <f:entry title="${%Record Scm changes}" help="/plugin/jira/help-wiki.html">
+            <f:checkbox name="jira.recordScmChanges" checked="${site.recordScmChanges}"/>
+          </f:entry>          
           <f:entry title="${%User Name}" help="/plugin/jira/help-login.html">
             <f:textbox name="jira.userName" value="${site.userName}"
                 checkMethod="post"
