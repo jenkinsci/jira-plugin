@@ -235,7 +235,11 @@ class Updater {
 	    try {
 	        Class<?> clazz = entry.getClass();
 	        Method method = clazz.getMethod( "getRevision", null );
-	        return method.invoke( entry, null ).toString();
+	        if (method==null){
+	            return null;
+	        }
+	        Object revObj = method.invoke( entry, null );
+	        return (revObj != null) ? revObj.toString() : null;
 	    } catch (Exception e) {
 	        return null;
 	    }
