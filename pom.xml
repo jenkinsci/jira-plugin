@@ -61,11 +61,6 @@
   
   <pluginRepositories>
     <pluginRepository>
-      <id>jira-libs</id>
-      <url>file:${project.basedir}/lib</url>
-      <layout>legacy</layout>
-    </pluginRepository>
-    <pluginRepository>
       <id>jira-libs-m2</id>
       <url>file:${project.basedir}/lib</url>
     </pluginRepository>    
