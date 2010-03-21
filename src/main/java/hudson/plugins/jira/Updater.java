@@ -127,7 +127,7 @@ class Updater {
 
                 session.addComment(issue.id,
                     createComment(build, useWikiStyleComments,
-                            hudsonRootUrl, aggregateComment.toString(), recordScmChanges));
+                            hudsonRootUrl, aggregateComment.toString(), recordScmChanges, issue));
             } catch (RemotePermissionException e) {
                 // Seems like RemotePermissionException can mean 'no permission' as well as
                 // 'issue doesn't exist'.
@@ -159,7 +159,7 @@ class Updater {
      * Creates a comment to be used in JIRA for the build.
      */
 	private static String createComment(AbstractBuild<?, ?> build,
-			boolean wikiStyle, String hudsonRootUrl, String scmComments, boolean recordScmChanges) {
+			boolean wikiStyle, String hudsonRootUrl, String scmComments, boolean recordScmChanges, JiraIssue jiraIssue) {
 		String comment = String.format(
 		    wikiStyle ?
 		    "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
@@ -170,7 +170,7 @@ class Updater {
 		    Util.encode(hudsonRootUrl+build.getUrl()),
 		    scmComments);
 		if (recordScmChanges) {
-		    List<String> scmChanges = getScmRepositoryUrls(wikiStyle, build );
+		    List<String> scmChanges = getScmComments(wikiStyle, build, jiraIssue );
 		    StringBuilder sb = new StringBuilder(comment);
 		    for (String scmChange : scmChanges)
 		    {
@@ -181,7 +181,7 @@ class Updater {
 		return comment;
 	}
 	
-	private static List<String> getScmRepositoryUrls(boolean wikiStyle, AbstractBuild<?, ?> build)
+	private static List<String> getScmComments(boolean wikiStyle, AbstractBuild<?, ?> build, JiraIssue jiraIssue)
 	{
 	    if (build.getProject().getScm() == null) {
 	        return Collections.<String>emptyList();
@@ -192,6 +192,9 @@ class Updater {
         List<String> scmChanges = new ArrayList<String>();
 	    RepositoryBrowser repoBrowser = build.getProject().getScm().getEffectiveBrowser();
 	    for (Entry change : build.getChangeSet()) {
+	        if (jiraIssue != null  && !StringUtils.contains( change.getMsg(), jiraIssue.id )) {
+	            continue;
+	        }
 	        try {
     	        String uid = change.getAuthor().getId();
     	        URL url = repoBrowser.getChangeSetLink( change );
@@ -216,7 +219,7 @@ class Updater {
     	                scmChange.append( url.toExternalForm() );
     	            }
     	        }
-    	        scmChange.append( "Files : " ).append( "\n" );
+    	        scmChange.append( "\nFiles : " ).append( "\n" );
     	        for (AffectedFile affectedFile : change.getAffectedFiles()) {
     	            scmChange.append( "* " ).append( affectedFile.getPath() ).append( "\n" );
     	        }
