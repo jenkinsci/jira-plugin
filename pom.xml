@@ -9,7 +9,7 @@
   </parent>
   
   <artifactId>jira</artifactId>
-  <version>1.21</version>
+  <version>1.22-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Hudson JIRA plugin</name>
   <description>Integrates Hudson to JIRA</description>
@@ -121,10 +121,4 @@
 	  <scope>test</scope>
 	</dependency>
   </dependencies>
-
-  <scm>
-    <connection>scm:svn:https://guest@svn.dev.java.net/svn/hudson/tags/jira-1.21</connection>
-    <developerConnection>scm:svn:https://svn.dev.java.net/svn/hudson/tags/jira-1.21</developerConnection>
-    <url>https://hudson.dev.java.net/source/browse/hudson/tags/jira-1.21</url>
-  </scm>
 </project>
