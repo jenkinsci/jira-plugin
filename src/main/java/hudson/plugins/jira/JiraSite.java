@@ -58,6 +58,13 @@ public class JiraSite {
      * @since 1.22
      */    
     public final String userPattern;
+    
+    /**
+     * updated jira issue for all status
+     * @since 1.22
+     */
+    public final boolean updateJiraIssueForAllStatus;
+    
 
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
@@ -70,7 +77,8 @@ public class JiraSite {
     /**
      * @stapler-constructor
      */
-    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern) {
+    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern, 
+                    boolean updateJiraIssueForAllStatus) {
         if(!url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm()+"/");
@@ -83,6 +91,7 @@ public class JiraSite {
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
         this.userPattern = userPattern;
+        this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
     }
 
     public String getName() {

@@ -18,7 +18,6 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -79,8 +78,12 @@ class Updater {
                 return true;
             }
     
-            boolean doUpdate = build.getResult().isBetterOrEqualTo(Result.UNSTABLE);
-            
+            boolean doUpdate = false;
+            if (site.updateJiraIssueForAllStatus){
+                doUpdate = true;
+            } else {
+              doUpdate = build.getResult().isBetterOrEqualTo(Result.UNSTABLE);
+            }
             boolean useWikiStyleComments = site.supportsWikiStyleComment;
             
             issues = getJiraIssues(ids, session, logger);

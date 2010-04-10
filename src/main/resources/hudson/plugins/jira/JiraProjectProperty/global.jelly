@@ -19,6 +19,9 @@
                 checkMethod="post"
                 checkUrl="'${rootURL}/jobProperty/JiraProjectProperty/userPatternCheck?userPattern='+escape(Form.findMatchingInput(this,'jira.userPattern').value)"/>
           </f:entry>             
+          <f:entry title="${%Update Jira Issues For All Build Results}" >
+            <f:checkbox name="jira.updateJiraIssueForAllStatus" checked="${site.updateJiraIssueForAllStatus}"/>
+          </f:entry>          
           <f:entry title="${%User Name}" help="/plugin/jira/help-login.html">
             <f:textbox name="jira.userName" value="${site.userName}"
                 checkMethod="post"
