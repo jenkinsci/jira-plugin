@@ -17,8 +17,6 @@ import java.util.logging.Logger;
 
 import javax.xml.rpc.ServiceException;
 
-import org.apache.commons.lang.StringEscapeUtils;
-
 /**
  * Represents an external JIRA installation and configuration
  * needed to access this JIRA.
