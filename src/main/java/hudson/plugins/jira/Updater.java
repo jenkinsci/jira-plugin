@@ -272,12 +272,12 @@ class Updater {
         }
 
         // then issues in this build
-        findIssues(build,ids, pattern ); //StringEscapeUtils.escapeJava( pattern )
+        findIssues(build,ids, pattern );
 
         // check for issues fixed in dependencies
         for( DependencyChange depc : build.getDependencyChanges(build.getPreviousBuild()).values())
             for(AbstractBuild<?, ?> b : depc.getBuilds())
-                findIssues(b,ids, pattern );//StringEscapeUtils.escapeJava( pattern )
+                findIssues(b,ids, pattern );
 
         return ids;
     }
@@ -295,12 +295,6 @@ class Updater {
             
             while (m.find()) {
                 String content = StringUtils.upperCase( m.group(1));
-                // replace some jira stuff 
-                // see unit UpdaterTest testUserPatternMatch
-                //if (userPattern != null) {
-                //    content = StringUtils.replace(content, "[", "" );
-                //    content = StringUtils.replace(content,  "]", "" );
-                //}
                 ids.add(content);
             }
             
