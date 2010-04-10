@@ -28,7 +28,6 @@ import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -303,7 +302,7 @@ class Updater {
 
     /**
      * Regexp pattern that identifies JIRA issue token.
-     *
+     * If this pattern changes help pages (help-issue-pattern.html) must be updated 
      * <p>
      * First char must be a letter, then at least one letter, digit or underscore.
      * See issue HUDSON-729, HUDSON-4092
