@@ -185,21 +185,18 @@ class Updater {
 	
 	private static List<String> getScmComments(boolean wikiStyle, AbstractBuild<?, ?> build, JiraIssue jiraIssue)
 	{
-	    if (build.getProject().getScm() == null) {
-	        return Collections.<String>emptyList();
+	    RepositoryBrowser repoBrowser = null;
+	    if (build.getProject().getScm() != null) {
+	        repoBrowser = build.getProject().getScm().getEffectiveBrowser();
 	    }
-        if (build.getProject().getScm().getEffectiveBrowser() == null) {
-            return Collections.<String>emptyList();
-        }	    
         List<String> scmChanges = new ArrayList<String>();
-	    RepositoryBrowser repoBrowser = build.getProject().getScm().getEffectiveBrowser();
 	    for (Entry change : build.getChangeSet()) {
 	        if (jiraIssue != null  && !StringUtils.contains( change.getMsg(), jiraIssue.id )) {
 	            continue;
 	        }
 	        try {
     	        String uid = change.getAuthor().getId();
-    	        URL url = repoBrowser.getChangeSetLink( change );
+    	        URL url = repoBrowser == null ? null : repoBrowser.getChangeSetLink( change );
     	        StringBuilder scmChange = new StringBuilder();
     	        if (StringUtils.isNotBlank( uid )) {
     	            scmChange.append( uid ).append( " : " );
