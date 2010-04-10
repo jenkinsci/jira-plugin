@@ -7,7 +7,6 @@ import hudson.plugins.jira.soap.JiraSoapServiceService;
 import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
 import hudson.plugins.jira.soap.RemoteIssue;
 
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -15,6 +14,10 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.xml.rpc.ServiceException;
+
+import org.apache.commons.lang.StringEscapeUtils;
 
 /**
  * Represents an external JIRA installation and configuration
@@ -48,7 +51,13 @@ public class JiraSite {
      * to record scm changes in jira issue
      * @since 1.21
      */
-    public final boolean recordScmChanges;    
+    public final boolean recordScmChanges;   
+    
+    /**
+     * user defined pattern
+     * @since 1.22
+     */    
+    public final String userPattern;
 
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
@@ -61,7 +70,7 @@ public class JiraSite {
     /**
      * @stapler-constructor
      */
-    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges) {
+    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern) {
         if(!url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm()+"/");
@@ -73,6 +82,7 @@ public class JiraSite {
         this.password = Util.fixEmpty(password);
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
+        this.userPattern = userPattern;
     }
 
     public String getName() {

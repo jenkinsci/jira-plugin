@@ -13,7 +13,12 @@
           </f:entry>
           <f:entry title="${%Record Scm changes}" help="/plugin/jira/help-scm-changes.html">
             <f:checkbox name="jira.recordScmChanges" checked="${site.recordScmChanges}"/>
-          </f:entry>          
+          </f:entry>       
+          <f:entry title="${%Issue Pattern}" help="/plugin/jira/help-issue-pattern.html">
+            <f:textbox name="jira.userPattern" value="${site.userPattern}"
+                checkMethod="post"
+                checkUrl="'${rootURL}/jobProperty/JiraProjectProperty/userPatternCheck?userPattern='+escape(Form.findMatchingInput(this,'jira.userPattern').value)"/>
+          </f:entry>             
           <f:entry title="${%User Name}" help="/plugin/jira/help-login.html">
             <f:textbox name="jira.userName" value="${site.userName}"
                 checkMethod="post"

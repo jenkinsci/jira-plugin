@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -55,8 +56,10 @@ class Updater {
                 build.setResult(Result.FAILURE);
                 return true;
             }
-    
-            Set<String> ids = findIssueIdsRecursive(build);
+            if (debug) {
+                logger.println("site.userPattern " + site.userPattern );
+            }
+            Set<String> ids = findIssueIdsRecursive(build, site.userPattern);
     
             if(ids.isEmpty()) {
                 if(debug)
@@ -257,7 +260,7 @@ class Updater {
      * {@link JiraSite#existsIssue(String)} here so that new projects
      * in JIRA can be detected.
      */
-    private static Set<String> findIssueIdsRecursive(AbstractBuild<?,?> build) {
+    private static Set<String> findIssueIdsRecursive(AbstractBuild<?,?> build, String pattern) {
         Set<String> ids = new HashSet<String>();
 
         // first, issues that were carried forward.
@@ -269,22 +272,38 @@ class Updater {
         }
 
         // then issues in this build
-        findIssues(build,ids);
+        findIssues(build,ids, pattern ); //StringEscapeUtils.escapeJava( pattern )
 
         // check for issues fixed in dependencies
         for( DependencyChange depc : build.getDependencyChanges(build.getPreviousBuild()).values())
             for(AbstractBuild<?, ?> b : depc.getBuilds())
-                findIssues(b,ids);
+                findIssues(b,ids, pattern );//StringEscapeUtils.escapeJava( pattern )
 
         return ids;
     }
 
-    static void findIssues(AbstractBuild<?,?> build, Set<String> ids) {
+    /**
+     * @param build
+     * @param ids
+     * @param pattern if pattern is <code>null</code> the default one is used {@value #ISSUE_PATTERN}
+     */
+    static void findIssues(AbstractBuild<?,?> build, Set<String> ids, String userPattern) {
+        Pattern pattern = userPattern == null ? ISSUE_PATTERN : Pattern.compile( userPattern );
         for (Entry change : build.getChangeSet()) {
             LOGGER.fine("Looking for JIRA ID in "+change.getMsg());
-            Matcher m = ISSUE_PATTERN.matcher(change.getMsg());
-            while (m.find())
-                ids.add(m.group().toUpperCase());
+            Matcher m = pattern.matcher(change.getMsg());
+            
+            while (m.find()) {
+                String content = StringUtils.upperCase( m.group(1));
+                // replace some jira stuff 
+                // see unit UpdaterTest testUserPatternMatch
+                //if (userPattern != null) {
+                //    content = StringUtils.replace(content, "[", "" );
+                //    content = StringUtils.replace(content,  "]", "" );
+                //}
+                ids.add(content);
+            }
+            
         }
     }
 
@@ -295,12 +314,12 @@ class Updater {
      * First char must be a letter, then at least one letter, digit or underscore.
      * See issue HUDSON-729, HUDSON-4092
      */
-    public static final Pattern ISSUE_PATTERN = Pattern.compile("\\b[a-zA-Z]([a-zA-Z0-9_]+)-[1-9][0-9]*\\b");
+    public static final Pattern ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)");
 
     private static final Logger LOGGER = Logger.getLogger(Updater.class.getName());
 
     /**
      * Debug flag.
      */
-    public static boolean debug = false;
+    public static boolean debug = true;
 }

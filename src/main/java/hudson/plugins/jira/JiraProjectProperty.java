@@ -19,6 +19,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -155,7 +158,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
             }
             JiraSite site = new JiraSite(new URL(url),
                 request.getParameter("user"),
-                request.getParameter("pass"),false, false);
+                request.getParameter("pass"),false, false, null);
             try {
                 site.createSession();
                 return FormValidation.ok();
@@ -164,6 +167,19 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?,?>> {
                 return FormValidation.error(e.getFaultString());
             } catch (ServiceException e) {
                 LOGGER.log(Level.WARNING, "Failed to login to JIRA at "+url,e);
+                return FormValidation.error(e.getMessage());
+            }
+        }
+        
+        public FormValidation doUserPatternCheck(StaplerRequest request) throws IOException {
+            String userPattern = Util.fixEmpty(request.getParameter("userPattern"));
+            if (userPattern==null) {// userPattern not entered yet
+                return FormValidation.ok();
+            }
+            try {
+                Pattern.compile( userPattern );
+                return FormValidation.ok();
+            } catch (PatternSyntaxException e) {
                 return FormValidation.error(e.getMessage());
             }
         }

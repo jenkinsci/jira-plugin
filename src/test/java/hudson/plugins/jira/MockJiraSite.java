@@ -8,7 +8,7 @@ import java.net.MalformedURLException;
  */
 public class MockJiraSite extends JiraSite {
     public MockJiraSite() throws MalformedURLException {
-        super(new URL("http://www.sun.com/"),null,null,false, false);
+        super(new URL("http://www.sun.com/"),null,null,false, false, null);
     }
 
     @Override

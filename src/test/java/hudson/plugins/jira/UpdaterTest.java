@@ -73,7 +73,7 @@ public class UpdaterTest {
 		when(build.getChangeSet()).thenReturn(changeLogSet);
 		
 		Set<String> ids = new HashSet<String>();
-		Updater.findIssues(build, ids);
+		Updater.findIssues(build, ids, null);
 		Assert.assertTrue(ids.isEmpty());
 		
 
@@ -81,7 +81,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		ids = new HashSet<String>();
-		Updater.findIssues(build, ids);
+		Updater.findIssues(build, ids, null);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("JIRA-4711", ids.iterator().next());
 		
@@ -95,7 +95,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		ids = new TreeSet<String>();
-		Updater.findIssues(build, ids);
+		Updater.findIssues(build, ids, null);
 		Assert.assertEquals(3, ids.size());
 		Set<String> expected = Sets.newTreeSet(Sets.newHashSet(
 				"BL-4711", "TR-123", "ABC-42"));
@@ -113,7 +113,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		Set<String> ids = new HashSet<String>();
-		Updater.findIssues(build, ids);
+		Updater.findIssues(build, ids, null);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("JI123-4711", ids.iterator().next());
 	}
@@ -129,7 +129,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		Set<String> ids = new HashSet<String>();
-		Updater.findIssues(build, ids);
+		Updater.findIssues(build, ids,  null);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 	}
@@ -145,7 +145,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		Set<String> ids = new HashSet<String>();
-		Updater.findIssues(build, ids);
+		Updater.findIssues(build, ids, null);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 		
@@ -153,7 +153,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		ids = new HashSet<String>();
-		Updater.findIssues(build, ids);
+		Updater.findIssues(build, ids, null);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 	}
@@ -216,4 +216,59 @@ public class UpdaterTest {
 		Assert.assertTrue(comment.contains("Foobar-4711"));
 		
 	}
+	
+	
+    @Test
+    @Bug(6043)
+    public void testUserPatternNotMatch() {
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+        
+        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOO_BAR-4711"));
+        when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        
+        Set<String> ids = new HashSet<String>();
+        Updater.findIssues(build, ids,  "[(w)]");
+       
+        Assert.assertEquals(0, ids.size());
+    }	
+    
+    @Test
+    @Bug(6043)
+    public void testUserPatternMatch() {
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+        
+        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]"), new MockEntry( "[TEST-9] with [dede]" ),new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
+        when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        
+        Set<String> ids = new HashSet<String>();
+        String pat = "\\[(\\w+-\\d+)\\]";
+        Updater.findIssues(build, ids, pat );
+        Assert.assertEquals(2, ids.size());
+        Assert.assertTrue( ids.contains( "TEST-9" ) );
+        Assert.assertTrue( ids.contains( "FOOBAR-4711" ) );
+    }   
+    
+    @Test
+    @Bug(6043)
+    public void testUserPatternMatchTwoIssuesInOneComment() {
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+        
+        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]  [FOOBAR-21] "), new MockEntry( "[TEST-9] with [dede]" ),new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
+        when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        
+        Set<String> ids = new HashSet<String>();
+        String pat = "\\[(\\w+-\\d+)\\]";
+        Updater.findIssues(build, ids, pat );
+        Assert.assertEquals(3, ids.size());
+        Assert.assertTrue( ids.contains( "TEST-9" ) );
+        Assert.assertTrue( ids.contains( "FOOBAR-4711" ) );
+        Assert.assertTrue( ids.contains( "FOOBAR-21" ) );
+    }    
+	
 }
