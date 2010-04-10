@@ -321,5 +321,5 @@ class Updater {
     /**
      * Debug flag.
      */
-    public static boolean debug = true;
+    public static boolean debug = false;
 }
