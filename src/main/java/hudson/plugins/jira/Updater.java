@@ -55,7 +55,7 @@ class Updater {
                 return true;
             }
             if (debug) {
-                logger.println("site.userPattern " + site.getUserIssuePattern().pattern() );
+                logger.println("site.userPattern " + site.getUserIssuePattern() );
             }
             Set<String> ids = findIssueIdsRecursive(build, site.getUserIssuePattern());
     
