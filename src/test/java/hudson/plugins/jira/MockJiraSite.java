@@ -13,6 +13,6 @@ public class MockJiraSite extends JiraSite {
 
     @Override
     public boolean existsIssue(String id) {
-        return Updater.ISSUE_PATTERN.matcher(id).matches();
+        return Updater.DEFAULT_ISSUE_PATTERN.matcher(id).matches();
     }
 }

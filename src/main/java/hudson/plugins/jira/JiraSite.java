@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
 
@@ -57,6 +58,8 @@ public class JiraSite {
      */    
     public final String userPattern;
     
+    private transient Pattern userPat;
+    
     /**
      * updated jira issue for all status
      * @since 1.22
@@ -88,7 +91,13 @@ public class JiraSite {
         this.password = Util.fixEmpty(password);
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
-        this.userPattern = userPattern;
+        this.userPattern = Util.fixEmpty(userPattern);
+        if (this.userPattern != null) {
+        	this.userPat = Pattern.compile(this.userPattern);
+        } else {
+        	this.userPat = null;
+        }
+         
         this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
     }
 
@@ -124,6 +133,26 @@ public class JiraSite {
      */
     public URL getUrl(String id) throws MalformedURLException {
         return new URL(url, "browse/" + id.toUpperCase());
+    }
+    
+    /**
+     * Gets the user-defined issue pattern if any.
+     * 
+     * @return the pattern or null
+     */
+    public Pattern getUserIssuePattern() {
+    	if (userPattern == null) {
+    		return null;
+    	}
+    	
+    	if (userPat == null) {
+    		// We don't care about any thread race- or visibility issues here.
+    		// The worst thing which could happen, is that the pattern
+    		// is compiled multiple times.
+    		Pattern p = Pattern.compile(userPattern);
+    		userPat = p;
+    	}
+    	return userPat;
     }
 
     /**

@@ -55,9 +55,9 @@ class Updater {
                 return true;
             }
             if (debug) {
-                logger.println("site.userPattern " + site.userPattern );
+                logger.println("site.userPattern " + site.getUserIssuePattern().pattern() );
             }
-            Set<String> ids = findIssueIdsRecursive(build, site.userPattern);
+            Set<String> ids = findIssueIdsRecursive(build, site.getUserIssuePattern());
     
             if(ids.isEmpty()) {
                 if(debug)
@@ -239,11 +239,11 @@ class Updater {
 	    // svn at least can get the revision
 	    try {
 	        Class<?> clazz = entry.getClass();
-	        Method method = clazz.getMethod( "getRevision", null );
+	        Method method = clazz.getMethod( "getRevision", (Class[])null );
 	        if (method==null){
 	            return null;
 	        }
-	        Object revObj = method.invoke( entry, null );
+	        Object revObj = method.invoke( entry, (Object[])null );
 	        return (revObj != null) ? revObj.toString() : null;
 	    } catch (Exception e) {
 	        return null;
@@ -259,7 +259,7 @@ class Updater {
      * {@link JiraSite#existsIssue(String)} here so that new projects
      * in JIRA can be detected.
      */
-    private static Set<String> findIssueIdsRecursive(AbstractBuild<?,?> build, String pattern) {
+    private static Set<String> findIssueIdsRecursive(AbstractBuild<?,?> build, Pattern pattern) {
         Set<String> ids = new HashSet<String>();
 
         // first, issues that were carried forward.
@@ -284,10 +284,10 @@ class Updater {
     /**
      * @param build
      * @param ids
-     * @param pattern if pattern is <code>null</code> the default one is used {@value #ISSUE_PATTERN}
+     * @param pattern if pattern is <code>null</code> the default one is used {@value #DEFAULT_ISSUE_PATTERN}
      */
-    static void findIssues(AbstractBuild<?,?> build, Set<String> ids, String userPattern) {
-        Pattern pattern = userPattern == null ? ISSUE_PATTERN : Pattern.compile( userPattern );
+    static void findIssues(AbstractBuild<?,?> build, Set<String> ids, Pattern userPattern) {
+        Pattern pattern = userPattern == null ? DEFAULT_ISSUE_PATTERN : userPattern;
         for (Entry change : build.getChangeSet()) {
             LOGGER.fine("Looking for JIRA ID in "+change.getMsg());
             Matcher m = pattern.matcher(change.getMsg());
@@ -307,7 +307,7 @@ class Updater {
      * First char must be a letter, then at least one letter, digit or underscore.
      * See issue HUDSON-729, HUDSON-4092
      */
-    public static final Pattern ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)");
+    public static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)");
 
     private static final Logger LOGGER = Logger.getLogger(Updater.class.getName());
 

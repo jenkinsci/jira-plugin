@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
 
@@ -229,7 +230,7 @@ public class UpdaterTest {
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
         
         Set<String> ids = new HashSet<String>();
-        Updater.findIssues(build, ids,  "[(w)]");
+        Updater.findIssues(build, ids, Pattern.compile("[(w)]"));
        
         Assert.assertEquals(0, ids.size());
     }	
@@ -245,7 +246,7 @@ public class UpdaterTest {
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
         
         Set<String> ids = new HashSet<String>();
-        String pat = "\\[(\\w+-\\d+)\\]";
+        Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         Updater.findIssues(build, ids, pat );
         Assert.assertEquals(2, ids.size());
         Assert.assertTrue( ids.contains( "TEST-9" ) );
@@ -263,7 +264,7 @@ public class UpdaterTest {
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
         
         Set<String> ids = new HashSet<String>();
-        String pat = "\\[(\\w+-\\d+)\\]";
+        Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         Updater.findIssues(build, ids, pat );
         Assert.assertEquals(3, ids.size());
         Assert.assertTrue( ids.contains( "TEST-9" ) );

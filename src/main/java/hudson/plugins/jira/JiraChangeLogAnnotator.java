@@ -34,7 +34,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         
         Set<JiraIssue> issuesToBeSaved = new HashSet<JiraIssue>();
         
-        for(SubText token : text.findTokens(Updater.ISSUE_PATTERN)) {
+        for(SubText token : text.findTokens(Updater.DEFAULT_ISSUE_PATTERN)) {
             try {
                 String id = token.group(0).toUpperCase();
                 if(!site.existsIssue(id))
