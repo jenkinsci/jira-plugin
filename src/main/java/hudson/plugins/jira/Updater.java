@@ -54,10 +54,8 @@ class Updater {
                 build.setResult(Result.FAILURE);
                 return true;
             }
-            if (debug) {
-                logger.println("site.userPattern " + site.getUserIssuePattern() );
-            }
-            Set<String> ids = findIssueIdsRecursive(build, site.getUserIssuePattern(), listener);
+            
+            Set<String> ids = findIssueIdsRecursive(build, site.getIssuePattern(), listener);
     
             if(ids.isEmpty()) {
                 if(debug)
@@ -287,9 +285,8 @@ class Updater {
      * @param ids
      * @param pattern if pattern is <code>null</code> the default one is used {@value #DEFAULT_ISSUE_PATTERN}
      */
-    static void findIssues(AbstractBuild<?,?> build, Set<String> ids, Pattern userPattern,
+    static void findIssues(AbstractBuild<?,?> build, Set<String> ids, Pattern pattern,
     		BuildListener listener) {
-        Pattern pattern = userPattern == null ? DEFAULT_ISSUE_PATTERN : userPattern;
         for (Entry change : build.getChangeSet()) {
             LOGGER.fine("Looking for JIRA ID in "+change.getMsg());
             Matcher m = pattern.matcher(change.getMsg());
@@ -305,15 +302,6 @@ class Updater {
             
         }
     }
-
-    /**
-     * Regexp pattern that identifies JIRA issue token.
-     * If this pattern changes help pages (help-issue-pattern.html) must be updated 
-     * <p>
-     * First char must be a letter, then at least one letter, digit or underscore.
-     * See issue HUDSON-729, HUDSON-4092
-     */
-    public static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)");
 
     private static final Logger LOGGER = Logger.getLogger(Updater.class.getName());
 

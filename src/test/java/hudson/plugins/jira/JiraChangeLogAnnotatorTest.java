@@ -10,6 +10,8 @@ import hudson.model.FreeStyleBuild;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.regex.Pattern;
+
 import javax.xml.rpc.ServiceException;
 
 import org.junit.Assert;
@@ -38,6 +40,7 @@ public class JiraChangeLogAnnotatorTest  {
         when(site.getUrl(Mockito.anyString())).thenReturn(new URL("http://dummy"));
         when(site.existsIssue(Mockito.anyString())).thenCallRealMethod();
         when(site.getProjectKeys()).thenCallRealMethod();
+        when(site.getIssuePattern()).thenCallRealMethod();
     }
 
     @Test
@@ -91,5 +94,21 @@ public class JiraChangeLogAnnotatorTest  {
         MarkupText text = new MarkupText("fixed DUMMY-42");
         annotator.annotate(b, null, text);
         Assert.assertTrue(text.toString().contains(TITLE));
+    }
+    
+    @Test
+    public void testInvalidUserPattern() throws IOException, ServiceException {
+    	when(site.getIssuePattern()).thenReturn(Pattern.compile("[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"));
+    	
+    	JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+        doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+        
+        FreeStyleBuild b = mock(FreeStyleBuild.class);
+        
+        JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
+        when(site.getIssue(Mockito.anyString())).thenReturn(issue);
+        
+        MarkupText text = new MarkupText("fixed DUMMY-42");
+        annotator.annotate(b, null, text);
     }
 }

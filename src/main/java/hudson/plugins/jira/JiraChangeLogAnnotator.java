@@ -34,9 +34,19 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         
         Set<JiraIssue> issuesToBeSaved = new HashSet<JiraIssue>();
         
-        for(SubText token : text.findTokens(Updater.DEFAULT_ISSUE_PATTERN)) {
+        for(SubText token : text.findTokens(site.getIssuePattern())) {
             try {
-                String id = token.group(0).toUpperCase();
+            	String id;
+            	try {
+            		id = token.group(1).toUpperCase();
+            	} catch (ArrayIndexOutOfBoundsException e) {
+            		// ugly hack to detect that there is no group 1
+            		// currently (1.355) SubText doesn't provide a groupCount() o.s.l.t. 
+            		LOGGER.log(Level.WARNING,
+            				"Issue pattern " + site.getIssuePattern() + " doesn't seem to have a capturing group. ",
+            				e);
+            		continue;
+            	}
                 if(!site.existsIssue(id))
                     continue;
                 URL url = site.getUrl(id);

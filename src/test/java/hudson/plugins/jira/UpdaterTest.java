@@ -85,7 +85,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		ids = new HashSet<String>();
-		Updater.findIssues(build, ids, null, listener);
+		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("JIRA-4711", ids.iterator().next());
 		
@@ -99,7 +99,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		ids = new TreeSet<String>();
-		Updater.findIssues(build, ids, null, listener);
+		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(3, ids.size());
 		Set<String> expected = Sets.newTreeSet(Sets.newHashSet(
 				"BL-4711", "TR-123", "ABC-42"));
@@ -118,7 +118,7 @@ public class UpdaterTest {
 		
 		Set<String> ids = new HashSet<String>();
 		BuildListener listener = mock(BuildListener.class);
-		Updater.findIssues(build, ids, null, listener);
+		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("JI123-4711", ids.iterator().next());
 	}
@@ -134,7 +134,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		Set<String> ids = new HashSet<String>();
-		Updater.findIssues(build, ids,  null, mock(BuildListener.class));
+		Updater.findIssues(build, ids,  JiraSite.DEFAULT_ISSUE_PATTERN, mock(BuildListener.class));
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 	}
@@ -151,7 +151,7 @@ public class UpdaterTest {
 		
 		Set<String> ids = new HashSet<String>();
 		BuildListener listener = mock(BuildListener.class);
-		Updater.findIssues(build, ids, null, listener);
+		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 		
@@ -159,7 +159,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		ids = new HashSet<String>();
-		Updater.findIssues(build, ids, null, listener);
+		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 	}

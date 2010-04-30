@@ -25,6 +25,16 @@ import javax.xml.rpc.ServiceException;
  * @author Kohsuke Kawaguchi
  */
 public class JiraSite {
+	
+    /**
+     * Regexp pattern that identifies JIRA issue token.
+     * If this pattern changes help pages (help-issue-pattern_xy.html) must be updated 
+     * <p>
+     * First char must be a letter, then at least one letter, digit or underscore.
+     * See issue HUDSON-729, HUDSON-4092
+     */
+    protected static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)");
+	
     /**
      * URL of JIRA, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
@@ -56,7 +66,7 @@ public class JiraSite {
      * user defined pattern
      * @since 1.22
      */    
-    public final String userPattern;
+    private final String userPattern;
     
     private transient Pattern userPat;
     
@@ -140,7 +150,7 @@ public class JiraSite {
      * 
      * @return the pattern or null
      */
-    public Pattern getUserIssuePattern() {
+    public Pattern getUserPattern() {
     	if (userPattern == null) {
     		return null;
     	}
@@ -153,6 +163,14 @@ public class JiraSite {
     		userPat = p;
     	}
     	return userPat;
+    }
+    
+    public Pattern getIssuePattern() {
+    	if (getUserPattern() != null) {
+    		return getUserPattern();
+    	}
+    	
+    	return DEFAULT_ISSUE_PATTERN;
     }
 
     /**
