@@ -56,7 +56,7 @@ public class JiraChangeLogAnnotatorTest  {
         annotator.annotate(b,null, text);
 
         // make sure '$' didn't confuse the JiraChangeLogAnnotator
-        Assert.assertTrue(text.toString().contains(TITLE));
+        Assert.assertTrue(text.toString(false).contains(TITLE));
     }
     
     @Test
@@ -73,7 +73,7 @@ public class JiraChangeLogAnnotatorTest  {
         MarkupText text = new MarkupText("fixed DUMMY-42");
         annotator.annotate(mock(FreeStyleBuild.class), null, text);
         
-        Assert.assertEquals("fixed <a href='http://dummy'>DUMMY-42</a>", text.toString());
+        Assert.assertEquals("fixed <a href='http://dummy'>DUMMY-42</a>", text.toString(false));
     }
     
     /**
@@ -93,9 +93,12 @@ public class JiraChangeLogAnnotatorTest  {
         
         MarkupText text = new MarkupText("fixed DUMMY-42");
         annotator.annotate(b, null, text);
-        Assert.assertTrue(text.toString().contains(TITLE));
+        Assert.assertTrue(text.toString(false).contains(TITLE));
     }
     
+    /**
+     * Tests that no exception is thrown if user issue pattern is invalid (contains no groups)
+     */
     @Test
     public void testInvalidUserPattern() throws IOException, ServiceException {
     	when(site.getIssuePattern()).thenReturn(Pattern.compile("[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"));
@@ -105,10 +108,8 @@ public class JiraChangeLogAnnotatorTest  {
         
         FreeStyleBuild b = mock(FreeStyleBuild.class);
         
-        JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
-        when(site.getIssue(Mockito.anyString())).thenReturn(issue);
-        
         MarkupText text = new MarkupText("fixed DUMMY-42");
         annotator.annotate(b, null, text);
+        Assert.assertFalse(text.toString(false).contains(TITLE));
     }
 }
