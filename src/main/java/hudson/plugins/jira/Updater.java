@@ -57,7 +57,7 @@ class Updater {
             if (debug) {
                 logger.println("site.userPattern " + site.getUserIssuePattern() );
             }
-            Set<String> ids = findIssueIdsRecursive(build, site.getUserIssuePattern());
+            Set<String> ids = findIssueIdsRecursive(build, site.getUserIssuePattern(), listener);
     
             if(ids.isEmpty()) {
                 if(debug)
@@ -259,7 +259,8 @@ class Updater {
      * {@link JiraSite#existsIssue(String)} here so that new projects
      * in JIRA can be detected.
      */
-    private static Set<String> findIssueIdsRecursive(AbstractBuild<?,?> build, Pattern pattern) {
+    private static Set<String> findIssueIdsRecursive(AbstractBuild<?,?> build, Pattern pattern,
+    		BuildListener listener) {
         Set<String> ids = new HashSet<String>();
 
         // first, issues that were carried forward.
@@ -271,12 +272,12 @@ class Updater {
         }
 
         // then issues in this build
-        findIssues(build,ids, pattern );
+        findIssues(build,ids, pattern, listener);
 
         // check for issues fixed in dependencies
         for( DependencyChange depc : build.getDependencyChanges(build.getPreviousBuild()).values())
             for(AbstractBuild<?, ?> b : depc.getBuilds())
-                findIssues(b,ids, pattern );
+                findIssues(b,ids, pattern, listener);
 
         return ids;
     }
@@ -286,15 +287,20 @@ class Updater {
      * @param ids
      * @param pattern if pattern is <code>null</code> the default one is used {@value #DEFAULT_ISSUE_PATTERN}
      */
-    static void findIssues(AbstractBuild<?,?> build, Set<String> ids, Pattern userPattern) {
+    static void findIssues(AbstractBuild<?,?> build, Set<String> ids, Pattern userPattern,
+    		BuildListener listener) {
         Pattern pattern = userPattern == null ? DEFAULT_ISSUE_PATTERN : userPattern;
         for (Entry change : build.getChangeSet()) {
             LOGGER.fine("Looking for JIRA ID in "+change.getMsg());
             Matcher m = pattern.matcher(change.getMsg());
             
             while (m.find()) {
-                String content = StringUtils.upperCase( m.group(1));
-                ids.add(content);
+            	if (m.groupCount() >= 1) {
+	                String content = StringUtils.upperCase( m.group(1));
+	                ids.add(content);
+            	} else {
+            		listener.getLogger().println("Warning: The JIRA pattern " + pattern + " doesn't define a capturing group!");
+            	}
             }
             
         }

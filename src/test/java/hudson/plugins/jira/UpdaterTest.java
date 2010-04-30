@@ -3,6 +3,8 @@ package hudson.plugins.jira;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
@@ -69,12 +71,13 @@ public class UpdaterTest {
 	public void testFindIssues() {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+		BuildListener listener = mock(BuildListener.class);
 		
 		when(changeLogSet.iterator()).thenReturn(Collections.EMPTY_LIST.iterator());
 		when(build.getChangeSet()).thenReturn(changeLogSet);
 		
 		Set<String> ids = new HashSet<String>();
-		Updater.findIssues(build, ids, null);
+		Updater.findIssues(build, ids, null, listener);
 		Assert.assertTrue(ids.isEmpty());
 		
 
@@ -82,7 +85,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		ids = new HashSet<String>();
-		Updater.findIssues(build, ids, null);
+		Updater.findIssues(build, ids, null, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("JIRA-4711", ids.iterator().next());
 		
@@ -96,7 +99,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		ids = new TreeSet<String>();
-		Updater.findIssues(build, ids, null);
+		Updater.findIssues(build, ids, null, listener);
 		Assert.assertEquals(3, ids.size());
 		Set<String> expected = Sets.newTreeSet(Sets.newHashSet(
 				"BL-4711", "TR-123", "ABC-42"));
@@ -114,7 +117,8 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		Set<String> ids = new HashSet<String>();
-		Updater.findIssues(build, ids, null);
+		BuildListener listener = mock(BuildListener.class);
+		Updater.findIssues(build, ids, null, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("JI123-4711", ids.iterator().next());
 	}
@@ -130,7 +134,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		Set<String> ids = new HashSet<String>();
-		Updater.findIssues(build, ids,  null);
+		Updater.findIssues(build, ids,  null, mock(BuildListener.class));
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 	}
@@ -146,7 +150,8 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		Set<String> ids = new HashSet<String>();
-		Updater.findIssues(build, ids, null);
+		BuildListener listener = mock(BuildListener.class);
+		Updater.findIssues(build, ids, null, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 		
@@ -154,7 +159,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		
 		ids = new HashSet<String>();
-		Updater.findIssues(build, ids, null);
+		Updater.findIssues(build, ids, null, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 	}
@@ -230,7 +235,7 @@ public class UpdaterTest {
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
         
         Set<String> ids = new HashSet<String>();
-        Updater.findIssues(build, ids, Pattern.compile("[(w)]"));
+        Updater.findIssues(build, ids, Pattern.compile("[(w)]"), mock(BuildListener.class));
        
         Assert.assertEquals(0, ids.size());
     }	
@@ -247,7 +252,7 @@ public class UpdaterTest {
         
         Set<String> ids = new HashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
-        Updater.findIssues(build, ids, pat );
+        Updater.findIssues(build, ids, pat, mock(BuildListener.class) );
         Assert.assertEquals(2, ids.size());
         Assert.assertTrue( ids.contains( "TEST-9" ) );
         Assert.assertTrue( ids.contains( "FOOBAR-4711" ) );
@@ -265,7 +270,7 @@ public class UpdaterTest {
         
         Set<String> ids = new HashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
-        Updater.findIssues(build, ids, pat );
+        Updater.findIssues(build, ids, pat, mock(BuildListener.class));
         Assert.assertEquals(3, ids.size());
         Assert.assertTrue( ids.contains( "TEST-9" ) );
         Assert.assertTrue( ids.contains( "FOOBAR-4711" ) );
