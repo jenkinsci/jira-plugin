@@ -112,4 +112,28 @@ public class JiraChangeLogAnnotatorTest  {
         annotator.annotate(b, null, text);
         Assert.assertFalse(text.toString(false).contains(TITLE));
     }
+
+    /**
+     * Tests that only the 1st matching group is hyperlinked and not the whole pattern.
+     * Previous implementation did so.
+     */
+    @Test
+    public void testMatchOnlyMatchGroup1() throws IOException, ServiceException {
+        
+        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+        doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+        when(site.getIssuePattern()).thenReturn(Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)abc"));
+        
+        MarkupText text = new MarkupText("fixed DUMMY-42abc");
+        annotator.annotate(mock(FreeStyleBuild.class), null, text);
+        
+        Assert.assertEquals("fixed <a href='http://dummy'>DUMMY-42</a>abc", text.toString(false));
+        
+        // check again when issue != null:
+        JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
+        when(site.getIssue(Mockito.anyString())).thenReturn(issue);
+        text = new MarkupText("fixed DUMMY-42abc");
+        annotator.annotate(mock(FreeStyleBuild.class), null, text);
+        Assert.assertEquals("fixed <a href='http://dummy' tooltip='title with $sign to confuse TextMarkup.replace'>DUMMY-42</a>abc", text.toString(false));
+    }
 }

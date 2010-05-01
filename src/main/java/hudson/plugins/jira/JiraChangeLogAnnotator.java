@@ -1,5 +1,14 @@
 package hudson.plugins.jira;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+
 import hudson.Extension;
 import hudson.MarkupText;
 import hudson.Util;
@@ -8,14 +17,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet.Entry;
-
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * {@link ChangeLogAnnotator} that picks up JIRA issue IDs.
@@ -34,7 +35,13 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         
         Set<JiraIssue> issuesToBeSaved = new HashSet<JiraIssue>();
         
-        for(SubText token : text.findTokens(site.getIssuePattern())) {
+        Pattern pattern = site.getIssuePattern();
+        
+        if (LOGGER.isLoggable(Level.FINE)) {
+        	LOGGER.fine("Using issue pattern: " + pattern);
+        }
+        
+        for(SubText token : text.findTokens(pattern)) {
             try {
             	String id;
             	try {
@@ -66,11 +73,17 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 }
 
                 if(issue==null) {
-                    token.surroundWith("<a href='"+url+"'>","</a>");
+                	token.addMarkup(token.start(1) - token.start(),
+                			token.end(1) - token.start(),
+                			"<a href='"+url+"'>", "</a>");
+                    // token.surroundWith("<a href='"+url+"'>","</a>");
                 } else {
-                    token.surroundWith(
-                        String.format("<a href='%s' tooltip='%s'>",url, Util.escape(issue.title)),
-                        "</a>");
+                	token.addMarkup(token.start(1) - token.start(),
+                			token.end(1) - token.start(),
+                			String.format("<a href='%s' tooltip='%s'>",url, Util.escape(issue.title)), "</a>");
+//                    token.surroundWith(
+//                        String.format("<a href='%s' tooltip='%s'>",url, Util.escape(issue.title)),
+//                        "</a>");
                 }
             } catch (MalformedURLException e) {
             	throw new AssertionError(e); // impossible
