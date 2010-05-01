@@ -281,9 +281,7 @@ class Updater {
     }
 
     /**
-     * @param build
-     * @param ids
-     * @param pattern if pattern is <code>null</code> the default one is used {@value #DEFAULT_ISSUE_PATTERN}
+     * @param pattern pattern to use to match issue ids
      */
     static void findIssues(AbstractBuild<?,?> build, Set<String> ids, Pattern pattern,
     		BuildListener listener) {

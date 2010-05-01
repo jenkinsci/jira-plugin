@@ -223,6 +223,43 @@ public class UpdaterTest {
 		
 	}
 	
+	/**
+	 * Tests that the default pattern doesn't match strings like
+	 * 'project-1.1'.
+	 * These patterns are used e.g. by the maven release plugin.
+	 */
+	@Test
+	public void testDoNotMatchDotsInIssueId() {
+	    FreeStyleBuild build = mock(FreeStyleBuild.class);
+        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+        
+        // commit messages like the one from the Maven release plugin must not match
+        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("prepare release project-4.7.1"));
+        when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        
+        Set<String> ids = new HashSet<String>();
+        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
+        Assert.assertEquals(0, ids.size());
+        
+        // but ids with just a full-stop after it must still match
+        entries = Sets.newHashSet(new MockEntry("Fixed FOO-4. Did it right this time"));
+        when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        
+        ids = new HashSet<String>();
+        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
+        Assert.assertEquals(1, ids.size());
+        Assert.assertEquals("FOO-4", ids.iterator().next());
+        
+        // as well as messages with a full-stop as last character after an issue id
+        entries = Sets.newHashSet(new MockEntry("Fixed FOO-4."));
+        when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        
+        ids = new HashSet<String>();
+        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
+        Assert.assertEquals(1, ids.size());
+        Assert.assertEquals("FOO-4", ids.iterator().next());
+	}
 	
     @Test
     @Bug(6043)

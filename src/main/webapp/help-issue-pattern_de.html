@@ -1,5 +1,5 @@
 <div>
   Eigenes Suchmuster (regulärer Ausdruck) zum Erkennen von JIRA IssueS definieren.<br />
-  Falls leer, wird das Standardmuster benutzt: ([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)<br />
-  Bitte beachten, dass das Muster genau eine Gruppe enthalten muss, welche die JIRA Id enthalten muss!
+  Falls leer, wird das Standardmuster benutzt: ([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\.[^0-9]|\.$|$)<br />
+  Bitte beachten, dass das Muster eine Matching-Gruppe (mit Index 1) enthalten muss, welche die JIRA Id enthalten muss!
 </div>
