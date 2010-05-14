@@ -7,12 +7,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import hudson.Extension;
 import hudson.MarkupText;
 import hudson.Util;
-import hudson.MarkupText.SubText;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.scm.ChangeLogAnnotator;
@@ -41,22 +41,26 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         	LOGGER.fine("Using issue pattern: " + pattern);
         }
         
-        for(SubText token : text.findTokens(pattern)) {
-            try {
-            	String id;
-            	try {
-            		id = token.group(1).toUpperCase();
-            	} catch (ArrayIndexOutOfBoundsException e) {
-            		// ugly hack to detect that there is no group 1
-            		// currently (1.355) SubText doesn't provide a groupCount() o.s.l.t. 
-            		LOGGER.log(Level.WARNING,
-            				"Issue pattern " + site.getIssuePattern() + " doesn't seem to have a capturing group. ",
-            				e);
-            		continue;
-            	}
-                if(!site.existsIssue(id))
+        String plainText = text.getText();
+        
+        Matcher m = pattern.matcher(plainText);
+        
+        while (m.find()) {
+        	if (m.groupCount() >= 1) {
+        		
+        		String id = m.group(1);
+        		LOGGER.info("Annotating JIRA id: '" + id + "'");
+            	
+                if(!site.existsIssue(id)) {
                     continue;
-                URL url = site.getUrl(id);
+                }
+                
+                URL url;
+                try {
+                	url = site.getUrl(id);
+                } catch (MalformedURLException e) {
+                	throw new AssertionError(e); // impossible
+                }
 
                 JiraIssue issue = null;
                 if (a != null) {
@@ -66,28 +70,24 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 if (issue == null) {
                     try {
                         issue = site.getIssue(id);
-                        issuesToBeSaved.add(issue);
+                        if (issue != null) {
+                        	issuesToBeSaved.add(issue);
+                        }
                     } catch (Exception e) {
-                        LOGGER.log(Level.WARNING, "Error getting remote issue", e);
+                        LOGGER.log(Level.WARNING, "Error getting remote issue " + id, e);
                     }
                 }
 
                 if(issue==null) {
-                	token.addMarkup(token.start(1) - token.start(),
-                			token.end(1) - token.start(),
-                			"<a href='"+url+"'>", "</a>");
-                    // token.surroundWith("<a href='"+url+"'>","</a>");
+                	text.addMarkup(m.start(1), m.end(1), "<a href='"+url+"'>", "</a>");
                 } else {
-                	token.addMarkup(token.start(1) - token.start(),
-                			token.end(1) - token.start(),
-                			String.format("<a href='%s' tooltip='%s'>",url, Util.escape(issue.title)), "</a>");
-//                    token.surroundWith(
-//                        String.format("<a href='%s' tooltip='%s'>",url, Util.escape(issue.title)),
-//                        "</a>");
+                	text.addMarkup(m.start(1), m.end(1),
+            			String.format("<a href='%s' tooltip='%s'>",url, Util.escape(issue.title)), "</a>");
                 }
-            } catch (MalformedURLException e) {
-            	throw new AssertionError(e); // impossible
-            }
+        		
+        	} else {
+        		LOGGER.log(Level.WARNING, "The JIRA pattern " + pattern + " doesn't define a capturing group!");
+        	}
         }
         
         if (!issuesToBeSaved.isEmpty()) {

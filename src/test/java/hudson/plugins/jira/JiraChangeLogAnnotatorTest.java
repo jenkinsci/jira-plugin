@@ -59,6 +59,30 @@ public class JiraChangeLogAnnotatorTest  {
         Assert.assertTrue(text.toString(false).contains(TITLE));
     }
     
+    /**
+     * Hudson's MarkupText#findTokens() doesn't work in our case if
+     * the whole pattern matches the following word boundary character
+     * (but not matching group 1).
+     * 
+     * Regression test for this.
+     */
+    @Test
+    public void testWordBoundaryProblem() throws Exception {
+        FreeStyleBuild b = mock(FreeStyleBuild.class);
+        
+        when(b.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(b, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+
+        // old changelog annotator used MarkupText#findTokens
+        // That broke because of the space after the issue id.
+        MarkupText text = new MarkupText("DUMMY-4071 Text ");
+        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+        doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+        
+        annotator.annotate(b,null, text);
+
+        Assert.assertEquals("<a href='http://dummy'>DUMMY-4071</a> Text ", text.toString(false));
+    }
+    
     @Test
     @Bug(4132)
     public void testCaseInsensitiveAnnotate() throws IOException, ServiceException {
