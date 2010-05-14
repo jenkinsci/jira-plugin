@@ -165,7 +165,7 @@ class Updater {
 			boolean wikiStyle, String hudsonRootUrl, String scmComments, boolean recordScmChanges, JiraIssue jiraIssue) {
 		String comment = String.format(
 		    wikiStyle ?
-		    "Integrated in !%1$snocacheImages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
+		    "Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
 		    "Integrated in %2$s (See [%4$s])\n    %5$s",
 		    hudsonRootUrl,
 		    build,
