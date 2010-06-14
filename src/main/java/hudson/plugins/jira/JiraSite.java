@@ -17,6 +17,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Represents an external JIRA installation and configuration
@@ -88,6 +89,7 @@ public class JiraSite {
     /**
      * @stapler-constructor
      */
+    @DataBoundConstructor
     public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern, 
                     boolean updateJiraIssueForAllStatus) {
         if(!url.toExternalForm().endsWith("/"))
