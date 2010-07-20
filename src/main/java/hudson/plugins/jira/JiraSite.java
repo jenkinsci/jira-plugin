@@ -53,6 +53,11 @@ public class JiraSite {
     public final String password;
 
     /**
+     * Group visibility to constrain the visibility of the added comment. Optional.
+     */
+    public final String groupVisibility;
+    
+    /**
      * True if this JIRA is configured to allow Confluence-style Wiki comment.
      */
     public final boolean supportsWikiStyleComment;
@@ -91,7 +96,7 @@ public class JiraSite {
      */
     @DataBoundConstructor
     public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern, 
-                    boolean updateJiraIssueForAllStatus) {
+                    boolean updateJiraIssueForAllStatus, String groupVisibility) {
         if(!url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm()+"/");
@@ -111,6 +116,7 @@ public class JiraSite {
         }
          
         this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
+        this.groupVisibility = Util.fixEmpty(groupVisibility);
     }
 
     public String getName() {

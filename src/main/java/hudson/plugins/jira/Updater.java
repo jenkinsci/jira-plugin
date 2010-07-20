@@ -89,7 +89,7 @@ class Updater {
             
             if (doUpdate) {
                 submitComments(build, logger, rootUrl, issues,
-                        session, useWikiStyleComments, site.recordScmChanges);
+                        session, useWikiStyleComments, site.recordScmChanges, site.groupVisibility);
             } else {
                 // this build didn't work, so carry forward the issues to the next build
                 build.addAction(new JiraCarryOverAction(issues));
@@ -105,14 +105,24 @@ class Updater {
         return true;
     }
 
+ 
     /**
      * Submits comments for the given issues.
      * Removes from <code>issues</code> the ones which appear to be invalid.
+     * @param build
+     * @param logger
+     * @param hudsonRootUrl
+     * @param issues
+     * @param session
+     * @param useWikiStyleComments
+     * @param recordScmChanges
+     * @param groupVisibility
+     * @throws RemoteException
      */
-	static void submitComments(
+    static void submitComments(
 	            AbstractBuild<?, ?> build, PrintStream logger, String hudsonRootUrl,
 	            List<JiraIssue> issues, JiraSession session,
-	            boolean useWikiStyleComments, boolean recordScmChanges) throws RemoteException {
+	            boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility) throws RemoteException {
 	    // copy to prevent ConcurrentModificationException
 	    List<JiraIssue> copy = new ArrayList<JiraIssue>(issues);
         for (JiraIssue issue : copy) {
@@ -130,7 +140,7 @@ class Updater {
 
                 session.addComment(issue.id,
                     createComment(build, useWikiStyleComments,
-                            hudsonRootUrl, aggregateComment.toString(), recordScmChanges, issue));
+                            hudsonRootUrl, aggregateComment.toString(), recordScmChanges, issue), groupVisibility);
             } catch (RemotePermissionException e) {
                 // Seems like RemotePermissionException can mean 'no permission' as well as
                 // 'issue doesn't exist'.

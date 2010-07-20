@@ -9,6 +9,8 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.User;
+import hudson.plugins.jira.soap.RemoteComment;
+import hudson.plugins.jira.soap.RemoteGroup;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
@@ -175,16 +177,21 @@ public class UpdaterTest {
 		JiraSession session = mock(JiraSession.class);
 		when(session.existsIssue(Mockito.anyString())).thenReturn(Boolean.TRUE);
 		when(session.getIssue(Mockito.anyString())).thenReturn(new RemoteIssue());
+		when(session.getGroup(Mockito.anyString())).thenReturn(new RemoteGroup("Software Development", null));
 		
-		final List<String> comments = new ArrayList<String>();
+		final List<RemoteComment> comments = new ArrayList<RemoteComment>();
 		
 		Answer answer = new Answer<Object>() {
 			public Object answer(InvocationOnMock invocation) throws Throwable {
-				comments.add((String) invocation.getArguments()[1]);
+				RemoteComment rc = new RemoteComment();
+				rc.setId((String) invocation.getArguments()[0]);
+				rc.setBody((String) invocation.getArguments()[1]);
+				rc.setGroupLevel((String) invocation.getArguments()[2]);
+				comments.add(rc);
 				return null;
 			}
 		};
-		doAnswer(answer).when(session).addComment(Mockito.anyString(), Mockito.anyString());
+		doAnswer(answer).when(session).addComment(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 		
 		// mock build:
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
@@ -200,12 +207,13 @@ public class UpdaterTest {
 		// test:
 		List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
 		Updater.submitComments(build,
-				System.out, "http://hudson" , ids, session, false, false);
+				System.out, "http://hudson" , ids, session, false, false, "");
 		
 		Assert.assertEquals(1, comments.size());
-		String comment = comments.get(0);
+		RemoteComment comment = comments.get(0);
 		
-		Assert.assertTrue(comment.contains("FOOBAR-4711"));
+		Assert.assertTrue(comment.getBody().contains("FOOBAR-4711"));
+		Assert.assertTrue(comment.getGroupLevel().equals(""));
 		
 		
 		// must also work case-insensitively (HUDSON-4132)
@@ -214,12 +222,12 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
 		Updater.submitComments(build,
-				System.out, "http://hudson" , ids, session, false, false);
+				System.out, "http://hudson" , ids, session, false, false,"");
 		
 		Assert.assertEquals(1, comments.size());
 		comment = comments.get(0);
 		
-		Assert.assertTrue(comment.contains("Foobar-4711"));
+		Assert.assertTrue(comment.getBody().contains("Foobar-4711"));
 		
 	}
 	

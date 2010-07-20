@@ -33,7 +33,9 @@
                    type="password" value="${site.password}"
                    onchange="Form.findMatchingInput(this,'jira.userName').onchange()" />
           </f:entry>
-
+          <f:entry title="${%Visible for Group}" help="/plugin/jira/help-group-visibility.html">
+            <f:textbox name="jira.groupVisibility" value="${site.groupVisibility}"/>
+          </f:entry>
           <f:entry title="">
             <div align="right">
               <f:repeatableDeleteButton />
