@@ -18,6 +18,12 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+  
+  <scm>
+   <connection>scm:git:git://github.com/hudson/jira-plugin.git</connection>
+   <developerConnection>scm:git:git@github.com:hudson/jira-plugin.git</developerConnection>
+   <url>https://github.com/hudson/jira-plugin</url>
+  </scm>  
 
   <developers>
     <developer>
