@@ -39,6 +39,10 @@
           <groupId>org.apache.maven</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>2.3.2</version>
+          <configuration>
+            <source>1.5</source>
+            <target>1.5</target>
+          </configuration>          
         </plugin>
         <plugin>
           <groupId>org.apache.maven</groupId>
@@ -108,13 +112,6 @@
       </plugin> 
     </plugins>
   </build>
-  
-  <pluginRepositories>
-    <pluginRepository>
-      <id>jira-libs-m2</id>
-      <url>file:${project.basedir}/lib</url>
-    </pluginRepository>    
-  </pluginRepositories>
 
   <dependencies>
     <dependency>
@@ -166,6 +163,10 @@
   </dependencies>
   
   <distributionManagement>
+    <repository>
+      <id>java.net-m2-repository</id>
+      <url>http://maven.hudson-labs.org:8081/content/repositories/releases/</url>
+    </repository>  
     <!--  maven3 doesn't support anymore id local -->
     <snapshotRepository>
       <!-- prevent accidental deployment of SNAPSHOTS to repository -->
@@ -206,5 +207,35 @@
       </build>
     </profile>   
   </profiles>  
+  
+  <repositories>
+    <repository>
+      <id>m.g.o-public</id>
+      <url>http://maven.glassfish.org/content/groups/public/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>m.g.o-public</id>
+      <url>http://maven.glassfish.org/content/groups/public/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>jira-libs-m2</id>
+      <url>file:${project.basedir}/lib</url>
+    </pluginRepository>    
+  </pluginRepositories>  
   
 </project>

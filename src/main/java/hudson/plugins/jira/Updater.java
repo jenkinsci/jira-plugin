@@ -230,8 +230,17 @@ class Updater {
     	            }
     	        }
     	        scmChange.append( "\nFiles : " ).append( "\n" );
-    	        for (AffectedFile affectedFile : change.getAffectedFiles()) {
-    	            scmChange.append( "* " ).append( affectedFile.getPath() ).append( "\n" );
+    	        //added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
+    	        try {
+	    	        for (AffectedFile affectedFile : change.getAffectedFiles()) {
+	    	            scmChange.append( "* " ).append( affectedFile.getPath() ).append( "\n" );
+	    	        }
+    	        } catch (UnsupportedOperationException e) {
+    	            LOGGER.warning( "Unsupported SCM operation 'getAffectedFiles'. Fall back to getAffectedPaths.");
+	    	        for (String affectedPath : change.getAffectedPaths()) {
+	    	            scmChange.append( "* " ).append( affectedPath ).append( "\n" );
+	    	        }
+    	            
     	        }
     	        if (scmChange.length()>0) {
     	            scmChanges.add( scmChange.toString() );
