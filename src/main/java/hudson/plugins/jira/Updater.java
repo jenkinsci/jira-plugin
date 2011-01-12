@@ -230,6 +230,7 @@ class Updater {
     	            }
     	        }
     	        scmChange.append( "\nFiles : " ).append( "\n" );
+    	        // see http://issues.hudson-ci.org/browse/HUDSON-2508
     	        //added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
     	        try {
 	    	        for (AffectedFile affectedFile : change.getAffectedFiles()) {
