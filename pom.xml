@@ -64,7 +64,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>axistools-maven-plugin</artifactId>
-        <version>1.1-hudson-jira</version>
+        <version>1.4</version>
         <configuration>
           <packageSpace>hudson.plugins.jira.soap</packageSpace>
           <sourceDirectory>src/main/wsdl/</sourceDirectory>
@@ -245,10 +245,6 @@
         <enabled>false</enabled>
       </snapshots>
     </pluginRepository>
-    <pluginRepository>
-      <id>jira-libs-m2</id>
-      <url>file:${project.basedir}/lib</url>
-    </pluginRepository>    
   </pluginRepositories>  
   
 </project>
