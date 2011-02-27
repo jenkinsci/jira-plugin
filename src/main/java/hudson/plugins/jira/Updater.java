@@ -50,7 +50,7 @@ class Updater {
     
             String rootUrl = Hudson.getInstance().getRootUrl();
             if(rootUrl==null) {
-                logger.println(Messages.Updater_NoHudsonUrl());
+                logger.println(Messages.Updater_NoJenkinsUrl());
                 build.setResult(Result.FAILURE);
                 return true;
             }
@@ -111,7 +111,7 @@ class Updater {
      * Removes from <code>issues</code> the ones which appear to be invalid.
      * @param build
      * @param logger
-     * @param hudsonRootUrl
+     * @param jenkinsRootUrl
      * @param issues
      * @param session
      * @param useWikiStyleComments
@@ -120,7 +120,7 @@ class Updater {
      * @throws RemoteException
      */
     static void submitComments(
-	            AbstractBuild<?, ?> build, PrintStream logger, String hudsonRootUrl,
+	            AbstractBuild<?, ?> build, PrintStream logger, String jenkinsRootUrl,
 	            List<JiraIssue> issues, JiraSession session,
 	            boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility) throws RemoteException {
 	    // copy to prevent ConcurrentModificationException
@@ -140,7 +140,7 @@ class Updater {
 
                 session.addComment(issue.id,
                     createComment(build, useWikiStyleComments,
-                            hudsonRootUrl, aggregateComment.toString(), recordScmChanges, issue), groupVisibility);
+                            jenkinsRootUrl, aggregateComment.toString(), recordScmChanges, issue), groupVisibility);
             } catch (RemotePermissionException e) {
                 // Seems like RemotePermissionException can mean 'no permission' as well as
                 // 'issue doesn't exist'.
@@ -171,16 +171,16 @@ class Updater {
     /**
      * Creates a comment to be used in JIRA for the build.
      */
-	private static String createComment(AbstractBuild<?, ?> build,
-			boolean wikiStyle, String hudsonRootUrl, String scmComments, boolean recordScmChanges, JiraIssue jiraIssue) {
+    private static String createComment(AbstractBuild<?, ?> build,
+            boolean wikiStyle, String jenkinsRootUrl, String scmComments, boolean recordScmChanges, JiraIssue jiraIssue) {
 		String comment = String.format(
 		    wikiStyle ?
 		    "Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
 		    "Integrated in %2$s (See [%4$s])\n    %5$s",
-		    hudsonRootUrl,
+		    jenkinsRootUrl,
 		    build,
 		    build.getResult().color.getImage(),
-		    Util.encode(hudsonRootUrl+build.getUrl()),
+		    Util.encode(jenkinsRootUrl+build.getUrl()),
 		    scmComments);
 		if (recordScmChanges) {
 		    List<String> scmChanges = getScmComments(wikiStyle, build, jiraIssue );
@@ -230,7 +230,7 @@ class Updater {
     	            }
     	        }
     	        scmChange.append( "\nFiles : " ).append( "\n" );
-    	        // see http://issues.hudson-ci.org/browse/HUDSON-2508
+    	        // see http://issues.jenkins-ci.org/browse/JENKINS-2508
     	        //added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
     	        try {
 	    	        for (AffectedFile affectedFile : change.getAffectedFiles()) {

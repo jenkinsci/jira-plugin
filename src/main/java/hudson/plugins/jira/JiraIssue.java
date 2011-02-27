@@ -7,7 +7,7 @@ import hudson.plugins.jira.soap.RemoteIssue;
  *
  * <p>
  * This class is used to persist crucial issue information
- * so that Hudson can display it without talking to JIRA.
+ * so that Jenkins can display it without talking to JIRA.
  *
  * @author Kohsuke Kawaguchi
  * @see JiraSite#getUrl(JiraIssue) 

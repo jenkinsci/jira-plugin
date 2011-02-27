@@ -49,7 +49,7 @@ public class JiraSession {
 	}
 
 	/**
-	 * Returns the set of project keys (like MNG, HUDSON, etc) that are
+	 * Returns the set of project keys (like MNG, JENKINS, etc) that are
 	 * available in this JIRA.
 	 * 
 	 * Guarantees to return all project keys in upper case.

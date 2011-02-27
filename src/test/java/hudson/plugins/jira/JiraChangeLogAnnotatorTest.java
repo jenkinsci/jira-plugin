@@ -27,7 +27,7 @@ import com.google.common.collect.Sets;
 /**
  * @author Kohsuke Kawaguchi
  */
-public class JiraChangeLogAnnotatorTest  {
+public class JiraChangeLogAnnotatorTest {
     private static final String TITLE = "title with $sign to confuse TextMarkup.replace";
     private JiraSite site;
     
@@ -35,7 +35,7 @@ public class JiraChangeLogAnnotatorTest  {
     public void before() throws IOException, ServiceException {
         JiraSession session = mock(JiraSession.class);
         when(session.getProjectKeys()).thenReturn(
-                Sets.newHashSet("DUMMY", "HUDSON"));
+                Sets.newHashSet("DUMMY", "JENKINS"));
         
         this.site = mock(JiraSite.class);
         when(site.createSession()).thenReturn(session);
@@ -69,7 +69,7 @@ public class JiraChangeLogAnnotatorTest  {
     }
     
     /**
-     * Hudson's MarkupText#findTokens() doesn't work in our case if
+     * Jenkins' MarkupText#findTokens() doesn't work in our case if
      * the whole pattern matches the following word boundary character
      * (but not matching group 1).
      * 
@@ -127,8 +127,8 @@ public class JiraChangeLogAnnotatorTest  {
     @Bug(4132)
     public void testCaseInsensitiveAnnotate() throws IOException, ServiceException {
         
-        Assert.assertTrue(site.existsIssue("HUDSON-123"));
-        Assert.assertTrue(site.existsIssue("huDsOn-123"));
+        Assert.assertTrue(site.existsIssue("JENKINS-123"));
+        Assert.assertTrue(site.existsIssue("jenKiNs-123"));
         Assert.assertTrue(site.existsIssue("dummy-4711"));
         
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());

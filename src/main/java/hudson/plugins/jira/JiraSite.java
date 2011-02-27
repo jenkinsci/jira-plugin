@@ -32,7 +32,7 @@ public class JiraSite {
      * If this pattern changes help pages (help-issue-pattern_xy.html) must be updated 
      * <p>
      * First char must be a letter, then at least one letter, digit or underscore.
-     * See issue HUDSON-729, HUDSON-4092
+     * See issue JENKINS-729, JENKINS-4092
      */
     protected static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
 	

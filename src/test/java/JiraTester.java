@@ -25,7 +25,7 @@ public class JiraTester {
             System.out.println(p.getKey());
         }
 
-        RemoteIssue issue = service.getIssue(token, "HUDSON-1");
+        RemoteIssue issue = service.getIssue(token, "JENKINS-1");
         System.out.println(issue);
         issue.getSummary(); // gives you title of the issue
     }
