@@ -35,7 +35,7 @@
     <pluginManagement>
       <plugins>
         <plugin>
-          <groupId>org.apache.maven</groupId>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>2.3.2</version>
           <configuration>
@@ -44,7 +44,7 @@
           </configuration>          
         </plugin>
         <plugin>
-          <groupId>org.apache.maven</groupId>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.7.1</version>
         </plugin>
@@ -110,7 +110,7 @@
         </executions>
       </plugin> 
       <plugin>
-        <groupId>org.apache.maven</groupId>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>2.3.2</version>
         <configuration>
@@ -119,7 +119,7 @@
         </configuration>          
       </plugin>
       <plugin>
-        <groupId>org.apache.maven</groupId>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.7.1</version>
       </plugin>      
