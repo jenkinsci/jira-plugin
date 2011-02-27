@@ -106,7 +106,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 		}
 
 		@Override
-		public JobProperty<?> newInstance(StaplerRequest req)
+		public JobProperty<?> newInstance(StaplerRequest req, JSONObject formData)
 				throws FormException {
 			JiraProjectProperty jpp = req.bindParameters(
 					JiraProjectProperty.class, "jira.");

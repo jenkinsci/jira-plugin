@@ -6,6 +6,7 @@ import hudson.maven.MavenBuild;
 import hudson.maven.MavenReporter;
 import hudson.maven.MavenReporterDescriptor;
 import hudson.model.BuildListener;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
@@ -56,7 +57,8 @@ public class MavenJiraIssueUpdater extends MavenReporter {
         }
 
         @Override
-        public MavenJiraIssueUpdater newInstance(StaplerRequest req) throws FormException {
+        public MavenJiraIssueUpdater newInstance(StaplerRequest req, JSONObject formData)
+                throws FormException {
             return new MavenJiraIssueUpdater();
         }
     }
