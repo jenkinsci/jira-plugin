@@ -89,7 +89,7 @@ class Updater {
             
             if (doUpdate) {
                 submitComments(build, logger, rootUrl, issues,
-                        session, useWikiStyleComments, site.recordScmChanges, site.groupVisibility);
+                        session, useWikiStyleComments, site.recordScmChanges, site.groupVisibility, site.roleVisibility);
             } else {
                 // this build didn't work, so carry forward the issues to the next build
                 build.addAction(new JiraCarryOverAction(issues));
@@ -122,7 +122,7 @@ class Updater {
     static void submitComments(
 	            AbstractBuild<?, ?> build, PrintStream logger, String jenkinsRootUrl,
 	            List<JiraIssue> issues, JiraSession session,
-	            boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility) throws RemoteException {
+	            boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RemoteException {
 	    // copy to prevent ConcurrentModificationException
 	    List<JiraIssue> copy = new ArrayList<JiraIssue>(issues);
         for (JiraIssue issue : copy) {
@@ -140,13 +140,13 @@ class Updater {
 
                 session.addComment(issue.id,
                     createComment(build, useWikiStyleComments,
-                            jenkinsRootUrl, aggregateComment.toString(), recordScmChanges, issue), groupVisibility);
+                            jenkinsRootUrl, aggregateComment.toString(), recordScmChanges, issue), groupVisibility, roleVisibility);
             } catch (RemotePermissionException e) {
                 // Seems like RemotePermissionException can mean 'no permission' as well as
                 // 'issue doesn't exist'.
                 // To prevent carrying forward invalid issues forever, we have to drop them
                 // even if the cause of the exception was different.
-                logger.println("Looks like " + issue.id + " is no valid JIRA issue. Issue will not be updated.\n" + e);
+                logger.println("Looks like " + issue.id + " is no valid JIRA issue. Issue will not be updated or you dont have valid rights.\n" + e);
                 issues.remove(issue);
             }
         }
