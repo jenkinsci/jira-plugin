@@ -30,7 +30,7 @@ import org.kohsuke.stapler.QueryParameter;
 /**
  * Associates {@link AbstractProject} with {@link JiraSite}.
  * 
- * @author Kohsuke Kawaguchi
+ * @author Kohsuke Kawaguchi 
  */
 public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 
@@ -168,7 +168,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 			}
 			JiraSite site = new JiraSite(new URL(url), request
 					.getParameter("user"), request.getParameter("pass"), false,
-					false, null, false, request.getParameter("groupVisibility"));
+					false, null, false, request.getParameter("groupVisibility"), request.getParameter("roleVisibility"));
 			try {
 				site.createSession();
 				return FormValidation.ok();
