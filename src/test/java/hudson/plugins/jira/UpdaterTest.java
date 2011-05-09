@@ -191,7 +191,7 @@ public class UpdaterTest {
 				return null;
 			}
 		};
-		doAnswer(answer).when(session).addComment(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+		doAnswer(answer).when(session).addComment(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),Mockito.anyString());
 		
 		// mock build:
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
@@ -207,7 +207,7 @@ public class UpdaterTest {
 		// test:
 		List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
 		Updater.submitComments(build,
-				System.out, "http://jenkins" , ids, session, false, false, "");
+				System.out, "http://jenkins" , ids, session, false, false, "", "");
 		
 		Assert.assertEquals(1, comments.size());
 		RemoteComment comment = comments.get(0);
@@ -222,7 +222,7 @@ public class UpdaterTest {
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
 		Updater.submitComments(build,
-				System.out, "http://jenkins" , ids, session, false, false,"");
+				System.out, "http://jenkins" , ids, session, false, false,"", "");
 		
 		Assert.assertEquals(1, comments.size());
 		comment = comments.get(0);

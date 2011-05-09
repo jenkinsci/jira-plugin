@@ -30,7 +30,7 @@ import org.kohsuke.stapler.QueryParameter;
 /**
  * Associates {@link AbstractProject} with {@link JiraSite}.
  * 
- * @author Kohsuke Kawaguchi
+ * @author Kohsuke Kawaguchi 
  */
 public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 
@@ -141,9 +141,12 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 						return FormValidation.error(Messages
 								.JiraProjectProperty_JiraUrlMandatory());
 					}
-
+					
+					// call the wsdl uri to check if the jira soap service can be reached
 					try {
-						if (findText(open(new URL(url)), "Atlassian JIRA"))
+						URL soapUrl = new URL(new URL(url), "rpc/soap/jirasoapservice-v2?wsdl");
+						
+						if (findText(open(soapUrl), "wsdl:definitions"))
 							return FormValidation.ok();
 						else
 							return FormValidation.error(Messages
@@ -168,7 +171,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 			}
 			JiraSite site = new JiraSite(new URL(url), request
 					.getParameter("user"), request.getParameter("pass"), false,
-					false, null, false, request.getParameter("groupVisibility"));
+					false, null, false, request.getParameter("groupVisibility"), request.getParameter("roleVisibility"));
 			try {
 				site.createSession();
 				return FormValidation.ok();
