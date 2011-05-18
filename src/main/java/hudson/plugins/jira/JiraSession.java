@@ -9,8 +9,8 @@ import hudson.plugins.jira.soap.RemoteProjectRole;
 import hudson.plugins.jira.soap.RemoteValidationException;
 
 import java.rmi.RemoteException;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -114,6 +114,19 @@ public class JiraSession {
 			return service.getIssue(token, id);
 		else
 			return null;
+	}
+
+	/**
+	 * Gets all issues that match the given JQL filter
+	 * 
+	 * @param jqlSearch
+	 *            JQL query string to execute
+	 * @return issues matching the JQL query
+	 * @throws RemoteException
+	 */
+	public RemoteIssue[] getIssuesFromJqlSearch(final String jqlSearch)
+			throws RemoteException {
+		return service.getIssuesFromJqlSearch(token, jqlSearch, 50);
 	}
 
 	/**
