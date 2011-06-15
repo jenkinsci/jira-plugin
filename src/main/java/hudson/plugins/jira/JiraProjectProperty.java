@@ -144,13 +144,16 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 					
 					// call the wsdl uri to check if the jira soap service can be reached
 					try {
+                        if (!findText(open(new URL(url)), "Atlassian JIRA"))
+                            return FormValidation.error(Messages
+                                    .JiraProjectProperty_NotAJiraUrl());
+
 						URL soapUrl = new URL(new URL(url), "rpc/soap/jirasoapservice-v2?wsdl");
-						
-						if (findText(open(soapUrl), "wsdl:definitions"))
-							return FormValidation.ok();
-						else
-							return FormValidation.error(Messages
-									.JiraProjectProperty_NotAJiraUrl());
+						if (!findText(open(soapUrl), "wsdl:definitions"))
+                            return FormValidation.error(Messages
+                                    .JiraProjectProperty_NoWsdlAvailable());
+
+                        return FormValidation.ok();
 					} catch (IOException e) {
 						LOGGER.log(Level.WARNING,
 								"Unable to connect to " + url, e);
