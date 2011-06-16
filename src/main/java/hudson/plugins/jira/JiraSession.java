@@ -5,6 +5,7 @@ import hudson.plugins.jira.soap.RemoteComment;
 import hudson.plugins.jira.soap.RemoteGroup;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.plugins.jira.soap.RemoteProject;
+import hudson.plugins.jira.soap.RemoteProjectRole;
 import hudson.plugins.jira.soap.RemoteValidationException;
 
 import java.rmi.RemoteException;
@@ -76,18 +77,28 @@ public class JiraSession {
 	 * @param groupVisibility
 	 */
 	public void addComment(String issueId, String comment,
-			String groupVisibility) throws RemoteException {
+			String groupVisibility, String roleVisibility) throws RemoteException {
 		RemoteComment rc = new RemoteComment();
 		rc.setBody(comment);
 
 		try {
-			if (groupVisibility != null && groupVisibility != ""
+			if (roleVisibility != null && roleVisibility.equals("") == false
+					&& getRole(roleVisibility) != null) {
+				rc.setRoleLevel(roleVisibility);
+			}
+		} catch (RemoteValidationException rve) {
+			LOGGER.throwing(this.getClass().toString(), "setRoleLevel", rve);
+		}
+		
+		try {
+			if (groupVisibility != null && groupVisibility.equals("") == false
 					&& getGroup(groupVisibility) != null) {
 				rc.setGroupLevel(groupVisibility);
 			}
 		} catch (RemoteValidationException rve) {
-			LOGGER.throwing(this.getClass().toString(), "addComment", rve);
+			LOGGER.throwing(this.getClass().toString(), "setGroupLevel", rve);
 		}
+		
 		service.addComment(token, issueId, rc);
 	}
 
@@ -129,6 +140,35 @@ public class JiraSession {
 	public RemoteGroup getGroup(String groupId) throws RemoteException {
 		LOGGER.fine("Fetching groupInfo from " + groupId);
 		return service.getGroup(token, groupId);
+	}
+	
+	/**
+	 * Gets the details of a role, given a roleId. Used for validating role
+	 * visibility.
+	 * 
+	 * TODO: Cannot validate against the real project role the user have in the project, 
+	 * jira soap api has no such function!
+	 * 
+	 * @param Role
+	 *            ID like "Software Development"
+	 * @return null if no such role exists
+	 */
+	public RemoteProjectRole getRole(String roleId) throws RemoteException {
+		LOGGER.fine("Fetching roleInfo from " + roleId);
+		
+		RemoteProjectRole[] roles= service.getProjectRoles(token);
+		
+		if(roles != null && roles.length > 0) {
+			for(RemoteProjectRole role : roles) {
+				if(role != null && role.getName() != null && role.getName().equals(roleId)) {
+					return role;
+				}
+			}
+		}
+		
+		LOGGER.info("Did not find role named " + roleId + ".");
+
+		return null;
 	}
 
 	public boolean existsIssue(String id) throws RemoteException {
