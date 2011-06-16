@@ -1,12 +1,12 @@
 <!-- this is the page fragment displayed to set up a job -->
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
     <f:entry title="${%Name}" field="name">
-        <f:textbox name="parameter.name" value="${instance.name}" />
+        <f:textbox />
     </f:entry>
     <f:entry title="${%Description}" field="description">
-        <f:textbox name="parameter.description" value="${instance.description}" />
+        <f:textbox />
     </f:entry>
     <f:entry title="${%JQL Search Query}" field="jiraIssueFilter">
-        <f:textbox name="parameter.jiraIssueFilter" value="${instance.jiraIssueFilter}" />
+        <f:textbox />
     </f:entry>
 </j:jelly>

@@ -6,49 +6,30 @@ import hudson.plugins.jira.soap.RemoteIssue;
 
 import hudson.Extension;
 import hudson.model.AbstractProject;
-import hudson.model.Hudson;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
-import hudson.model.ParametersDefinitionProperty;
 
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 import javax.xml.rpc.ServiceException;
 
-public class JiraIssueParameterDefinition extends ParameterDefinition implements
-		Comparable<JiraIssueParameterDefinition> {
+public class JiraIssueParameterDefinition extends ParameterDefinition {
 	private static final long serialVersionUID = 3927562542249244416L;
 
 	private String jiraIssueFilter;
 
-	private final UUID uuid;
-
 	@DataBoundConstructor
-	public JiraIssueParameterDefinition(String name, String description,
-			String jiraIssueFilter, String uuid) {
+	public JiraIssueParameterDefinition(String name, String description, String jiraIssueFilter) {
 		super(name, description);
 
 		this.jiraIssueFilter = jiraIssueFilter;
-
-		if (uuid == null || uuid.length() == 0) {
-			this.uuid = UUID.randomUUID();
-		} else {
-			this.uuid = UUID.fromString(uuid);
-		}
-	}
-
-	public int compareTo(JiraIssueParameterDefinition pd) {
-		if (pd.uuid.equals(uuid)) {
-			return 0;
-		}
-		return -1;
 	}
 
 	@Override
@@ -68,38 +49,8 @@ public class JiraIssueParameterDefinition extends ParameterDefinition implements
 		return value;
 	}
 
-	@Override
-	public ParameterDescriptor getDescriptor() {
-		return (DescriptorImpl) super.getDescriptor();
-	}
-
 	public List<JiraIssueParameterDefinition.Result> getIssues() {
-		AbstractProject<?, ?> context = null;
-
-		@SuppressWarnings("rawtypes")
-		List<AbstractProject> jobs = Hudson.getInstance().getItems(
-				AbstractProject.class);
-
-		// which project is this parameter bound to?
-		for (AbstractProject<?, ?> project : jobs) {
-			ParametersDefinitionProperty property = (ParametersDefinitionProperty) project
-					.getProperty(ParametersDefinitionProperty.class);
-			if (property != null) {
-				List<ParameterDefinition> parameterDefinitions = property
-						.getParameterDefinitions();
-				if (parameterDefinitions != null) {
-					for (ParameterDefinition pd : parameterDefinitions) {
-						if (pd instanceof JiraIssueParameterDefinition
-								&& ((JiraIssueParameterDefinition) pd)
-										.compareTo(this) == 0) {
-							context = project;
-							break;
-						}
-					}
-				}
-			}
-		}
-
+		AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
 		JiraSite site = JiraSite.get(context);
 
 		RemoteIssue[] issues = null;
