@@ -20,6 +20,9 @@ import java.util.List;
 
 import javax.xml.rpc.ServiceException;
 
+import static hudson.Util.fixNull;
+import static java.util.Arrays.asList;
+
 public class JiraIssueParameterDefinition extends ParameterDefinition {
 	private static final long serialVersionUID = 3927562542249244416L;
 
@@ -49,27 +52,19 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 		return value;
 	}
 
-	public List<JiraIssueParameterDefinition.Result> getIssues() {
+	public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException, ServiceException {
 		AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
 		JiraSite site = JiraSite.get(context);
 
-		RemoteIssue[] issues = null;
-		List<Result> issueValues = new ArrayList<Result>();
+        JiraSession session = site.createSession();
+        if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        RemoteIssue[] issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
 
-		try {
-			JiraSession session = site.createSession();
-			issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ServiceException e) {
-			e.printStackTrace();
-		}
+        List<Result> issueValues = new ArrayList<Result>();
 
-		if (issues != null) {
-			for (RemoteIssue issue : issues) {
-				issueValues.add(new Result(issue));
-			}
-		}
+        for (RemoteIssue issue : fixNull(asList(issues))) {
+            issueValues.add(new Result(issue));
+        }
 
 		return issueValues;
 	}
