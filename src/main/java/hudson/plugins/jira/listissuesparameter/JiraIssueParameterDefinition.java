@@ -58,7 +58,11 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 
 		try {
 			JiraSession session = site.createSession();
-			issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
+
+			// session will be null if no SOAP-accessible JIRA site is available
+			if (session != null) {
+				issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ServiceException e) {
