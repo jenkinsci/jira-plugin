@@ -55,6 +55,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 	public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException, ServiceException {
 		AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
 		JiraSite site = JiraSite.get(context);
+        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "+context.getFullDisplayName());
 
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
