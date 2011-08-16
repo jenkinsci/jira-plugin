@@ -163,11 +163,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-	  <groupId>com.google.collections</groupId>
-	  <artifactId>google-collections</artifactId>
-	  <version>1.0</version>
-	  <scope>test</scope>
-	</dependency>
+      <groupId>com.google.collections</groupId>
+      <artifactId>google-collections</artifactId>
+      <version>1.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   
   <profiles>
