@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.403</version>
+    <version>1.405</version>
   </parent>
   
   <artifactId>jira</artifactId>
