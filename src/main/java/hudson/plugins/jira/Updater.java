@@ -32,14 +32,14 @@ import org.apache.commons.lang.StringUtils;
 /**
  * Actual JIRA update logic.
  *
- * 
+ *
  * @author Kohsuke Kawaguchi
  */
 class Updater {
     static boolean perform(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException {
         PrintStream logger = listener.getLogger();
         List<JiraIssue> issues = null;
-        
+
         try {
             JiraSite site = JiraSite.get(build.getProject());
             if(site==null) {
@@ -47,22 +47,22 @@ class Updater {
                 build.setResult(Result.FAILURE);
                 return true;
             }
-    
+
             String rootUrl = Hudson.getInstance().getRootUrl();
             if(rootUrl==null) {
                 logger.println(Messages.Updater_NoJenkinsUrl());
                 build.setResult(Result.FAILURE);
                 return true;
             }
-            
+
             Set<String> ids = findIssueIdsRecursive(build, site.getIssuePattern(), listener);
-    
+
             if(ids.isEmpty()) {
                 if(debug)
                     logger.println("No JIRA issues found.");
                 return true;    // nothing found here.
             }
-            
+
             JiraSession session = null;
     		try {
     			session = site.createSession();
@@ -75,7 +75,7 @@ class Updater {
                 build.setResult(Result.FAILURE);
                 return true;
             }
-    
+
             boolean doUpdate = false;
             if (site.updateJiraIssueForAllStatus){
                 doUpdate = true;
@@ -83,10 +83,10 @@ class Updater {
               doUpdate = build.getResult().isBetterOrEqualTo(Result.UNSTABLE);
             }
             boolean useWikiStyleComments = site.supportsWikiStyleComment;
-            
+
             issues = getJiraIssues(ids, session, logger);
             build.getActions().add(new JiraBuildAction(build,issues));
-            
+
             if (doUpdate) {
                 submitComments(build, logger, rootUrl, issues,
                         session, useWikiStyleComments, site.recordScmChanges, site.groupVisibility, site.roleVisibility);
@@ -105,7 +105,7 @@ class Updater {
         return true;
     }
 
- 
+
     /**
      * Submits comments for the given issues.
      * Removes from <code>issues</code> the ones which appear to be invalid.
@@ -156,8 +156,8 @@ class Updater {
             }
         }
     }
-	
-	private static List<JiraIssue> getJiraIssues( 
+
+	private static List<JiraIssue> getJiraIssues(
             Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {
         List<JiraIssue> issues = new ArrayList<JiraIssue>(ids.size());
         for (String id : ids) {
@@ -171,7 +171,7 @@ class Updater {
         }
         return issues;
     }
-	
+
 
     /**
      * Creates a comment to be used in JIRA for the build.
@@ -180,13 +180,21 @@ class Updater {
             boolean wikiStyle, String jenkinsRootUrl, String scmComments, boolean recordScmChanges, JiraIssue jiraIssue) {
 		String comment = String.format(
 		    wikiStyle ?
-		    "Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
-		    "Integrated in %2$s (See [%4$s])\n    %5$s",
+// [BP] 2010-08-05 | Original code
+//		    "Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
+//		    "Integrated in %2$s (See [%4$s])\n    %5$s",
+// [BP] 2010-08-05 | Adding a line with build result
+		    "Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n     %5$s\n     Result = %6$s":
+		    "Integrated in %2$s (See [%4$s])\n    %5$s\n     Result = %6$s",
 		    jenkinsRootUrl,
 		    build,
 		    build.getResult().color.getImage(),
 		    Util.encode(jenkinsRootUrl+build.getUrl()),
-		    scmComments);
+// [BP] 2010-08-05 | Original code
+//		    scmComments);
+// [BP] 2010-08-05 | Adding a line with build result
+                    scmComments,
+                    build.getResult().toString());
 		if (recordScmChanges) {
 		    List<String> scmChanges = getScmComments(wikiStyle, build, jiraIssue );
 		    StringBuilder sb = new StringBuilder(comment);
@@ -198,7 +206,7 @@ class Updater {
 		}
 		return comment;
 	}
-	
+
 	private static List<String> getScmComments(boolean wikiStyle, AbstractBuild<?, ?> build, JiraIssue jiraIssue)
 	{
 	    RepositoryBrowser repoBrowser = null;
@@ -246,7 +254,7 @@ class Updater {
 	    	        for (String affectedPath : change.getAffectedPaths()) {
 	    	            scmChange.append( "* " ).append( affectedPath ).append( "\n" );
 	    	        }
-    	            
+
     	        }
     	        if (scmChange.length()>0) {
     	            scmChanges.add( scmChange.toString() );
@@ -257,7 +265,7 @@ class Updater {
 	    }
 	    return scmChanges;
 	}
-	
+
 	private static String getRevision(Entry entry) {
 		String commitId = entry.getCommitId();
 		if (commitId != null) {
@@ -278,7 +286,7 @@ class Updater {
 	        return null;
 	    }
 	}
-	
+
 
     /**
      * Finds the strings that match JIRA issue ID patterns.
@@ -319,7 +327,7 @@ class Updater {
         for (Entry change : build.getChangeSet()) {
             LOGGER.fine("Looking for JIRA ID in "+change.getMsg());
             Matcher m = pattern.matcher(change.getMsg());
-            
+
             while (m.find()) {
             	if (m.groupCount() >= 1) {
 	                String content = StringUtils.upperCase( m.group(1));
@@ -328,7 +336,7 @@ class Updater {
             		listener.getLogger().println("Warning: The JIRA pattern " + pattern + " doesn't define a capturing group!");
             	}
             }
-            
+
         }
     }
 
