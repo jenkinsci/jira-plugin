@@ -180,19 +180,12 @@ class Updater {
             boolean wikiStyle, String jenkinsRootUrl, String scmComments, boolean recordScmChanges, JiraIssue jiraIssue) {
 		String comment = String.format(
 		    wikiStyle ?
-// [BP] 2010-08-05 | Original code
-//		    "Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n     %5$s":
-//		    "Integrated in %2$s (See [%4$s])\n    %5$s",
-// [BP] 2010-08-05 | Adding a line with build result
 		    "Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n     %5$s\n     Result = %6$s":
 		    "Integrated in %2$s (See [%4$s])\n    %5$s\n     Result = %6$s",
 		    jenkinsRootUrl,
 		    build,
 		    build.getResult().color.getImage(),
 		    Util.encode(jenkinsRootUrl+build.getUrl()),
-// [BP] 2010-08-05 | Original code
-//		    scmComments);
-// [BP] 2010-08-05 | Adding a line with build result
                     scmComments,
                     build.getResult().toString());
 		if (recordScmChanges) {
