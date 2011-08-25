@@ -131,10 +131,14 @@ class Updater {
                 StringBuilder aggregateComment = new StringBuilder();
                 for(Entry e :build.getChangeSet()){
                     if(e.getMsg().toUpperCase().contains(issue.id)){
-                        aggregateComment.append(e.getMsg()).append("\n");
-                        // kutzi: don't know why the issue id was removed in previous versions:
-                        //aggregateComment = aggregateComment.replaceAll(id, "");
-
+                    	aggregateComment.append(e.getMsg());
+                    	
+            	        String revision = getRevision( e );
+            	        if (revision != null) {
+            	        	aggregateComment.append(" (Revision ").append(revision).append(")");
+            	        }
+                    	
+                        aggregateComment.append("\n");
                     }
                 }
 
@@ -146,7 +150,8 @@ class Updater {
                 // 'issue doesn't exist'.
                 // To prevent carrying forward invalid issues forever, we have to drop them
                 // even if the cause of the exception was different.
-                logger.println("Looks like " + issue.id + " is no valid JIRA issue. Issue will not be updated or you dont have valid rights.\n" + e);
+                logger.println("Looks like " + issue.id + " is no valid JIRA issue or you don't have permission to update the issue.\n" +
+                		"Issue will not be updated.\n" + e);
                 issues.remove(issue);
             }
         }
@@ -254,7 +259,13 @@ class Updater {
 	}
 	
 	private static String getRevision(Entry entry) {
-	    // svn at least can get the revision
+		String commitId = entry.getCommitId();
+		if (commitId != null) {
+			return commitId;
+		}
+		
+	    // fall back to old SVN-specific solution, if we have only installed an old subversion-plugin
+		// which doesn't implement getCommitId, yet
 	    try {
 	        Class<?> clazz = entry.getClass();
 	        Method method = clazz.getMethod( "getRevision", (Class[])null );
