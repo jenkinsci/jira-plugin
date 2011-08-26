@@ -18,8 +18,9 @@ public class JiraCarryOverAction extends InvisibleAction {
      * ','-separate IDs, for compact persistence.
      */
     private final String ids;
+    private final List<Integer> originalBuildNumbers;
 
-    public JiraCarryOverAction(List<JiraIssue> issues) {
+    public JiraCarryOverAction(List<JiraIssue> issues, List<Integer> originalBuildNumbers) {
         StringBuilder buf = new StringBuilder();
         boolean first=true;
         for (JiraIssue issue : issues) {
@@ -28,9 +29,14 @@ public class JiraCarryOverAction extends InvisibleAction {
             buf.append(issue.id);
         }
         this.ids = buf.toString();
+        this.originalBuildNumbers = originalBuildNumbers;
     }
 
     public Collection<String> getIDs() {
         return Arrays.asList(Util.tokenize(ids,","));
+    }
+    
+    public List<Integer> getOriginalBuildNumbers() {
+    	return this.originalBuildNumbers;
     }
 }

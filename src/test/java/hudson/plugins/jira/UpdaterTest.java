@@ -207,6 +207,7 @@ public class UpdaterTest {
 		// test:
 		List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
 		Updater.submitComments(build,
+				Updater.getAggregatedChangeLogs(build, Collections.EMPTY_LIST),
 				System.out, "http://jenkins" , ids, session, false, false, "", "");
 		
 		Assert.assertEquals(1, comments.size());
@@ -221,7 +222,7 @@ public class UpdaterTest {
 		entries = Sets.newHashSet(new MockEntry("Fixed Foobar-4711"));
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
 		ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
-		Updater.submitComments(build,
+		Updater.submitComments(build, Updater.getAggregatedChangeLogs(build, Collections.EMPTY_LIST),
 				System.out, "http://jenkins" , ids, session, false, false,"", "");
 		
 		Assert.assertEquals(1, comments.size());

@@ -7,6 +7,7 @@ import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.AbstractBuild.DependencyChange;
+import hudson.model.AbstractProject;
 import hudson.plugins.jira.soap.RemotePermissionException;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.ChangeLogSet.AffectedFile;
@@ -18,9 +19,13 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,29 +92,54 @@ class Updater {
             issues = getJiraIssues(ids, session, logger);
             build.getActions().add(new JiraBuildAction(build,issues));
 
+            List<Integer> carriedOverBuilds = findCarriedOverBuilds(build);
+            
             if (doUpdate) {
-                submitComments(build, logger, rootUrl, issues,
+            	List<Entry> aggregatedChangeLogs = getAggregatedChangeLogs(build, carriedOverBuilds);
+            	
+                submitComments(build, aggregatedChangeLogs, logger, rootUrl, issues,
                         session, useWikiStyleComments, site.recordScmChanges, site.groupVisibility, site.roleVisibility);
             } else {
                 // this build didn't work, so carry forward the issues to the next build
-                build.addAction(new JiraCarryOverAction(issues));
+            	List<Integer> newCarriedOver = new ArrayList<Integer>(carriedOverBuilds);
+            	newCarriedOver.add(build.getNumber());
+                build.addAction(new JiraCarryOverAction(issues, newCarriedOver));
             }
         } catch (Exception e) {
             logger.println("Error updating JIRA issues. Saving issues for next build.\n" + e);
             if (issues != null && !issues.isEmpty()) {
                 // updating issues failed, so carry forward issues to the next build
-                build.addAction(new JiraCarryOverAction(issues));
+                build.addAction(new JiraCarryOverAction(issues, Collections.singletonList(build.getNumber())));
             }
         }
 
         return true;
     }
 
+    static List<Entry> getAggregatedChangeLogs(AbstractBuild<?, ?> build, List<Integer> carriedOverBuilds) {
+    	List<Entry> aggregated = new ArrayList<Entry>();
+    	for (Entry e : build.getChangeSet()) {
+    		aggregated.add(e);
+    	}
+    	
+    	AbstractProject<?, ?> project = build.getProject();
+    	for (Integer buildNumber : carriedOverBuilds) {
+    		AbstractBuild<?, ?> b = project.getBuildByNumber(buildNumber);
+    		if (b != null) {
+    			for (Entry e : b.getChangeSet()) {
+    	    		aggregated.add(e);
+    	    	}
+    		}
+    	}
+    	
+    	return aggregated;
+    }
 
     /**
      * Submits comments for the given issues.
      * Removes from <code>issues</code> the ones which appear to be invalid.
      * @param build
+     * @param aggregatedChangeLogs 
      * @param logger
      * @param jenkinsRootUrl
      * @param issues
@@ -120,7 +150,7 @@ class Updater {
      * @throws RemoteException
      */
     static void submitComments(
-	            AbstractBuild<?, ?> build, PrintStream logger, String jenkinsRootUrl,
+	            AbstractBuild<?, ?> build, List<Entry> aggregatedChangeLogs, PrintStream logger, String jenkinsRootUrl,
 	            List<JiraIssue> issues, JiraSession session,
 	            boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RemoteException {
 	    // copy to prevent ConcurrentModificationException
@@ -129,7 +159,7 @@ class Updater {
             try {
                 logger.println(Messages.Updater_Updating(issue.id));
                 StringBuilder aggregateComment = new StringBuilder();
-                for(Entry e :build.getChangeSet()){
+                for(Entry e :aggregatedChangeLogs){
                     if(e.getMsg().toUpperCase().contains(issue.id)){
                     	aggregateComment.append(e.getMsg());
                     	
@@ -143,7 +173,7 @@ class Updater {
                 }
 
                 session.addComment(issue.id,
-                    createComment(build, useWikiStyleComments,
+                    createComment(build, aggregatedChangeLogs, useWikiStyleComments,
                             jenkinsRootUrl, aggregateComment.toString(), recordScmChanges, issue), groupVisibility, roleVisibility);
             } catch (RemotePermissionException e) {
                 // Seems like RemotePermissionException can mean 'no permission' as well as
@@ -175,9 +205,10 @@ class Updater {
 
     /**
      * Creates a comment to be used in JIRA for the build.
+     * @param aggregatedChangeLogs 
      */
     private static String createComment(AbstractBuild<?, ?> build,
-            boolean wikiStyle, String jenkinsRootUrl, String scmComments, boolean recordScmChanges, JiraIssue jiraIssue) {
+            List<Entry> aggregatedChangeLogs, boolean wikiStyle, String jenkinsRootUrl, String scmComments, boolean recordScmChanges, JiraIssue jiraIssue) {
 		String comment = String.format(
 		    wikiStyle ?
 		    "Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n     %5$s\n     Result = %6$s":
@@ -189,7 +220,7 @@ class Updater {
                     scmComments,
                     build.getResult().toString());
 		if (recordScmChanges) {
-		    List<String> scmChanges = getScmComments(wikiStyle, build, jiraIssue );
+		    List<String> scmChanges = getScmComments(wikiStyle, build, aggregatedChangeLogs, jiraIssue );
 		    StringBuilder sb = new StringBuilder(comment);
 		    for (String scmChange : scmChanges)
 		    {
@@ -200,14 +231,16 @@ class Updater {
 		return comment;
 	}
 
-	private static List<String> getScmComments(boolean wikiStyle, AbstractBuild<?, ?> build, JiraIssue jiraIssue)
+	
+	private static List<String> getScmComments(boolean wikiStyle, AbstractBuild<?, ?> build, List<Entry> aggregatedChangeLogs, JiraIssue jiraIssue)
 	{
 	    RepositoryBrowser repoBrowser = null;
 	    if (build.getProject().getScm() != null) {
 	        repoBrowser = build.getProject().getScm().getEffectiveBrowser();
 	    }
         List<String> scmChanges = new ArrayList<String>();
-	    for (Entry change : build.getChangeSet()) {
+        
+	    for (Entry change : aggregatedChangeLogs) {
 	        if (jiraIssue != null  && !StringUtils.contains( change.getMsg(), jiraIssue.id )) {
 	            continue;
 	        }
@@ -238,17 +271,27 @@ class Updater {
     	        scmChange.append( "\nFiles : " ).append( "\n" );
     	        // see http://issues.jenkins-ci.org/browse/JENKINS-2508
     	        //added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
+    	        Collection<String> affectedPaths; 
     	        try {
-	    	        for (AffectedFile affectedFile : change.getAffectedFiles()) {
-	    	            scmChange.append( "* " ).append( affectedFile.getPath() ).append( "\n" );
-	    	        }
+    	        	affectedPaths = getAffectedPathsSorted(change);
     	        } catch (UnsupportedOperationException e) {
     	            LOGGER.warning( "Unsupported SCM operation 'getAffectedFiles'. Fall back to getAffectedPaths.");
-	    	        for (String affectedPath : change.getAffectedPaths()) {
-	    	            scmChange.append( "* " ).append( affectedPath ).append( "\n" );
-	    	        }
-
+    	            affectedPaths = change.getAffectedPaths();
     	        }
+    	        
+	        	int count = 0;
+    	        for (String path : affectedPaths) {
+    	            scmChange.append( "* " ).append( path ).append( "\n" );
+    	            count++;
+    	            if (count >= 20) {
+    	            	break;
+    	            }
+    	        }
+    	        
+    	        if (count < affectedPaths.size()) {
+    	        	scmChange.append("(" + (affectedPaths.size() - count) + " more)");
+    	        }
+    	        
     	        if (scmChange.length()>0) {
     	            scmChanges.add( scmChange.toString() );
     	        }
@@ -257,6 +300,16 @@ class Updater {
 	        }
 	    }
 	    return scmChanges;
+	}
+	
+	private static Collection<String> getAffectedPathsSorted(Entry entry) {
+		SortedSet<String> paths = new TreeSet<String>();
+
+		for (AffectedFile file : entry.getAffectedFiles()) {
+			paths.add(file.getPath());
+		}
+		
+		return paths;
 	}
 
 	private static String getRevision(Entry entry) {
@@ -311,6 +364,17 @@ class Updater {
 
         return ids;
     }
+
+
+	private static List<Integer> findCarriedOverBuilds(AbstractBuild<?, ?> build) {
+        Run<?, ?> prev = build.getPreviousBuild();
+        if(prev!=null) {
+            JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
+            if(a!=null)
+                return a.getOriginalBuildNumbers();
+        }
+        return Collections.emptyList();
+	}
 
     /**
      * @param pattern pattern to use to match issue ids
