@@ -7,8 +7,11 @@ import static org.mockito.Mockito.when;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.model.User;
+import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.plugins.jira.soap.RemoteComment;
 import hudson.plugins.jira.soap.RemoteGroup;
 import hudson.plugins.jira.soap.RemoteIssue;
@@ -39,12 +42,12 @@ import com.google.common.collect.Sets;
 
 /**
  * Test case for the JIRA {@link Updater}.
- * 
+ *
  * @author kutzi
  */
 @SuppressWarnings("unchecked")
 public class UpdaterTest {
-	
+
 	private static class MockEntry extends Entry {
 
 		private final String msg;
@@ -52,7 +55,7 @@ public class UpdaterTest {
 		public MockEntry(String msg) {
 			this.msg = msg;
 		}
-		
+
 		@Override
 		public Collection<String> getAffectedPaths() {
 			return null;
@@ -68,29 +71,29 @@ public class UpdaterTest {
 			return this.msg;
 		}
 	}
-	
+
 	@Test
 	public void testFindIssues() {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
 		BuildListener listener = mock(BuildListener.class);
-		
+
 		when(changeLogSet.iterator()).thenReturn(Collections.EMPTY_LIST.iterator());
 		when(build.getChangeSet()).thenReturn(changeLogSet);
-		
+
 		Set<String> ids = new HashSet<String>();
 		Updater.findIssues(build, ids, null, listener);
 		Assert.assertTrue(ids.isEmpty());
-		
+
 
 		Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed JIRA-4711"));
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
-		
+
 		ids = new HashSet<String>();
 		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("JIRA-4711", ids.iterator().next());
-		
+
 		// now test multiple ids
 		entries = Sets.newHashSet(
 				new MockEntry("Fixed BL-4711"),
@@ -99,7 +102,7 @@ public class UpdaterTest {
 				new MockEntry("#123: this one must not match"),
 				new MockEntry("ABC-: this one must also not match"));
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
-		
+
 		ids = new TreeSet<String>();
 		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(3, ids.size());
@@ -107,65 +110,110 @@ public class UpdaterTest {
 				"BL-4711", "TR-123", "ABC-42"));
 		Assert.assertEquals(expected, ids);
 	}
-	
+
+	/**
+	 * Tests that the JiraIssueParameters are identified as updateable JIRA
+	 * issues.
+	 */
+	@Test
+	@Bug(12312)
+	public void testFindIssuesWithJiraParameters() {
+		FreeStyleBuild build = mock(FreeStyleBuild.class);
+		ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+		BuildListener listener = mock(BuildListener.class);
+
+		JiraIssueParameterValue parameter = mock(JiraIssueParameterValue.class);
+		JiraIssueParameterValue parameterTwo = mock(JiraIssueParameterValue.class);
+		ParametersAction action = mock(ParametersAction.class);
+		List<ParameterValue> parameters = new ArrayList<ParameterValue>();
+
+		when(changeLogSet.iterator()).thenReturn(
+				Collections.EMPTY_LIST.iterator());
+		when(build.getChangeSet()).thenReturn(changeLogSet);
+		when(build.getAction(ParametersAction.class)).thenReturn(action);
+		when(action.getParameters()).thenReturn(parameters);
+		when(parameter.getIssue()).thenReturn("JIRA-123");
+		when(parameterTwo.getIssue()).thenReturn("JIRA-321");
+
+		Set<String> ids = new HashSet<String>();
+
+		// Initial state contains zero parameters
+		Updater.findIssues(build, ids, null, listener);
+		Assert.assertTrue(ids.isEmpty());
+
+		ids = new HashSet<String>();
+		parameters.add(parameter);
+		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
+		Assert.assertEquals(1, ids.size());
+		Assert.assertEquals("JIRA-123", ids.iterator().next());
+
+		ids = new TreeSet<String>();
+		parameters.add(parameterTwo);
+		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
+		Assert.assertEquals(2, ids.size());
+		Set<String> expected = Sets.newTreeSet(Sets.newHashSet("JIRA-123",
+				"JIRA-321"));
+		Assert.assertEquals(expected, ids);
+	}
+
 	@Test
 	@Bug(729)
 	public void testDigitsInProjectNameAllowed() {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
 		when(build.getChangeSet()).thenReturn(changeLogSet);
-		
+
 		Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed JI123-4711"));
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
-		
+
 		Set<String> ids = new HashSet<String>();
 		BuildListener listener = mock(BuildListener.class);
 		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("JI123-4711", ids.iterator().next());
 	}
-	
+
 	@Test
 	@Bug(4092)
 	public void testUnderscoreInProjectNameAllowed() {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
 		when(build.getChangeSet()).thenReturn(changeLogSet);
-		
+
 		Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOO_BAR-4711"));
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
-		
+
 		Set<String> ids = new HashSet<String>();
 		Updater.findIssues(build, ids,  JiraSite.DEFAULT_ISSUE_PATTERN, mock(BuildListener.class));
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 	}
-	
+
 	@Test
 	@Bug(4132)
 	public void testLowercaseProjectNameAllowed() {
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
 		when(build.getChangeSet()).thenReturn(changeLogSet);
-		
+
 		Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed foo_bar-4711"));
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
-		
+
 		Set<String> ids = new HashSet<String>();
 		BuildListener listener = mock(BuildListener.class);
 		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
-		
+
 		entries = Sets.newHashSet(new MockEntry("Fixed FoO_bAr-4711"));
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
-		
+
 		ids = new HashSet<String>();
 		Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 		Assert.assertEquals(1, ids.size());
 		Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 	}
-	
+
 	/**
 	 * Tests that the generated comment matches the expectations -
 	 * especially that the JIRA id is not stripped from the comment.
@@ -178,9 +226,9 @@ public class UpdaterTest {
 		when(session.existsIssue(Mockito.anyString())).thenReturn(Boolean.TRUE);
 		when(session.getIssue(Mockito.anyString())).thenReturn(new RemoteIssue());
 		when(session.getGroup(Mockito.anyString())).thenReturn(new RemoteGroup("Software Development", null));
-		
+
 		final List<RemoteComment> comments = new ArrayList<RemoteComment>();
-		
+
 		Answer answer = new Answer<Object>() {
 			public Object answer(InvocationOnMock invocation) throws Throwable {
 				RemoteComment rc = new RemoteComment();
@@ -192,7 +240,7 @@ public class UpdaterTest {
 			}
 		};
 		doAnswer(answer).when(session).addComment(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),Mockito.anyString());
-		
+
 		// mock build:
 		FreeStyleBuild build = mock(FreeStyleBuild.class);
 		FreeStyleProject project = mock(FreeStyleProject.class);
@@ -200,22 +248,22 @@ public class UpdaterTest {
 		ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
 		when(build.getChangeSet()).thenReturn(changeLogSet);
 		when(build.getResult()).thenReturn(Result.SUCCESS);
-		
+
 		Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOOBAR-4711"));
 		when(changeLogSet.iterator()).thenReturn(entries.iterator());
-		
+
 		// test:
 		List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
 		Updater.submitComments(build,
 				System.out, "http://jenkins" , ids, session, false, false, "", "");
-		
+
 		Assert.assertEquals(1, comments.size());
 		RemoteComment comment = comments.get(0);
-		
+
 		Assert.assertTrue(comment.getBody().contains("FOOBAR-4711"));
 		Assert.assertTrue(comment.getGroupLevel().equals(""));
-		
-		
+
+
 		// must also work case-insensitively (JENKINS-4132)
 		comments.clear();
 		entries = Sets.newHashSet(new MockEntry("Fixed Foobar-4711"));
@@ -223,14 +271,14 @@ public class UpdaterTest {
 		ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
 		Updater.submitComments(build,
 				System.out, "http://jenkins" , ids, session, false, false,"", "");
-		
+
 		Assert.assertEquals(1, comments.size());
 		comment = comments.get(0);
-		
+
 		Assert.assertTrue(comment.getBody().contains("Foobar-4711"));
-		
+
 	}
-	
+
 	/**
 	 * Tests that the default pattern doesn't match strings like
 	 * 'project-1.1'.
@@ -241,78 +289,78 @@ public class UpdaterTest {
 	    FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
-        
+
         // commit messages like the one from the Maven release plugin must not match
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("prepare release project-4.7.1"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
-        
+
         Set<String> ids = new HashSet<String>();
         Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         Assert.assertEquals(0, ids.size());
-        
+
         // but ids with just a full-stop after it must still match
         entries = Sets.newHashSet(new MockEntry("Fixed FOO-4. Did it right this time"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
-        
+
         ids = new HashSet<String>();
         Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         Assert.assertEquals(1, ids.size());
         Assert.assertEquals("FOO-4", ids.iterator().next());
-        
+
         // as well as messages with a full-stop as last character after an issue id
         entries = Sets.newHashSet(new MockEntry("Fixed FOO-4."));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
-        
+
         ids = new HashSet<String>();
         Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         Assert.assertEquals(1, ids.size());
         Assert.assertEquals("FOO-4", ids.iterator().next());
 	}
-	
+
     @Test
     @Bug(6043)
     public void testUserPatternNotMatch() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
-        
+
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOO_BAR-4711"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
-        
+
         Set<String> ids = new HashSet<String>();
         Updater.findIssues(build, ids, Pattern.compile("[(w)]"), mock(BuildListener.class));
-       
+
         Assert.assertEquals(0, ids.size());
-    }	
-    
+    }
+
     @Test
     @Bug(6043)
     public void testUserPatternMatch() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
-        
+
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]"), new MockEntry( "[TEST-9] with [dede]" ),new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
-        
+
         Set<String> ids = new HashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         Updater.findIssues(build, ids, pat, mock(BuildListener.class) );
         Assert.assertEquals(2, ids.size());
         Assert.assertTrue( ids.contains( "TEST-9" ) );
         Assert.assertTrue( ids.contains( "FOOBAR-4711" ) );
-    }   
-    
+    }
+
     @Test
     @Bug(6043)
     public void testUserPatternMatchTwoIssuesInOneComment() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
-        
+
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]  [FOOBAR-21] "), new MockEntry( "[TEST-9] with [dede]" ),new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
-        
+
         Set<String> ids = new HashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         Updater.findIssues(build, ids, pat, mock(BuildListener.class));
@@ -320,6 +368,6 @@ public class UpdaterTest {
         Assert.assertTrue( ids.contains( "TEST-9" ) );
         Assert.assertTrue( ids.contains( "FOOBAR-4711" ) );
         Assert.assertTrue( ids.contains( "FOOBAR-21" ) );
-    }    
-	
+    }
+
 }
