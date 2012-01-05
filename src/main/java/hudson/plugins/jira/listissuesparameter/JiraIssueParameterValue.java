@@ -1,8 +1,8 @@
 package hudson.plugins.jira.listissuesparameter;
 
 import hudson.EnvVars;
-import hudson.model.AbstractBuild;
 import hudson.model.ParameterValue;
+import hudson.model.AbstractBuild;
 import hudson.util.VariableResolver;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -42,4 +42,8 @@ public class JiraIssueParameterValue extends ParameterValue {
 		return issue;
 	}
 
+    @Override
+    public String toString() {
+        return "(JiraIssueParameterValue) " + getName() + "='" + issue + "'";
+    }
 }
