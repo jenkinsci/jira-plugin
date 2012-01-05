@@ -40,9 +40,9 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 		String[] values = req.getParameterValues(getName());
 		if (values == null || values.length != 1) {
 			return null;
-		} else {
-			return new JiraIssueParameterValue(getName(), values[0]);
 		}
+
+        return new JiraIssueParameterValue(getName(), values[0]);
 	}
 
 	@Override
@@ -54,11 +54,13 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 
 	public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException, ServiceException {
 		AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+
 		JiraSite site = JiraSite.get(context);
         if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "+context.getFullDisplayName());
 
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+
         RemoteIssue[] issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
 
         List<Result> issueValues = new ArrayList<Result>();

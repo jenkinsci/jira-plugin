@@ -4,9 +4,12 @@ import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Hudson;
+import hudson.model.ParameterValue;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.AbstractBuild.DependencyChange;
+import hudson.model.ParametersAction;
+import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.plugins.jira.soap.RemotePermissionException;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.ChangeLogSet.AffectedFile;
@@ -132,12 +135,12 @@ class Updater {
                 for(Entry e :build.getChangeSet()){
                     if(e.getMsg().toUpperCase().contains(issue.id)){
                     	aggregateComment.append(e.getMsg());
-                    	
+
             	        String revision = getRevision( e );
             	        if (revision != null) {
             	        	aggregateComment.append(" (Revision ").append(revision).append(")");
             	        }
-                    	
+
                         aggregateComment.append("\n");
                     }
                 }
@@ -264,7 +267,7 @@ class Updater {
 		if (commitId != null) {
 			return commitId;
 		}
-		
+
 	    // fall back to old SVN-specific solution, if we have only installed an old subversion-plugin
 		// which doesn't implement getCommitId, yet
 	    try {
@@ -302,7 +305,7 @@ class Updater {
         }
 
         // then issues in this build
-        findIssues(build,ids, pattern, listener);
+        findIssues(build, ids, pattern, listener);
 
         // check for issues fixed in dependencies
         for( DependencyChange depc : build.getDependencyChanges(build.getPreviousBuild()).values())
@@ -330,6 +333,18 @@ class Updater {
             	}
             }
 
+        }
+
+        // Now look for any JiraIssueParameterValue's set in the build
+        // Implements JENKINS-12312
+        ParametersAction parameters = build.getAction(ParametersAction.class);
+
+        if (parameters != null) {
+            for (ParameterValue val : parameters.getParameters()) {
+                if (val instanceof JiraIssueParameterValue) {
+                    ids.add(((JiraIssueParameterValue) val).getIssue());
+                }
+            }
         }
     }
 
