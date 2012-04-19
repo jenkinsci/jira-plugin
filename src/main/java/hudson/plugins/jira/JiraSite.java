@@ -6,11 +6,13 @@ import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.JiraSoapServiceService;
 import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
 import hudson.plugins.jira.soap.RemoteIssue;
+import hudson.plugins.jira.soap.RemoteVersion;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -268,6 +270,31 @@ public class JiraSite {
             }
         }
         return null;
+    }
+    /**
+     * Returns all versions for the given project key.
+     * 
+     * @param projectKey Project Key
+     * @return A set of JiraVersions
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public Set<JiraVersion> getVersions(String projectKey) throws IOException, ServiceException {
+    	JiraSession session = createSession();
+    	if(session == null) return Collections.emptySet();
+    	
+    	RemoteVersion[] versions = session.getVersions(projectKey);
+    	
+    	if(versions == null ) return Collections.emptySet();
+    	
+    	Set<JiraVersion> versionsSet = new HashSet<JiraVersion>(versions.length);
+    			
+    	for( int i = 0; i < versions.length; ++i) {
+    		RemoteVersion version = versions[i];
+    		versionsSet.add(new JiraVersion(version));
+    	}
+    	
+    	return versionsSet;
     }
 
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());

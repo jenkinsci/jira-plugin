@@ -7,6 +7,7 @@ import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.plugins.jira.soap.RemoteProject;
 import hudson.plugins.jira.soap.RemoteProjectRole;
 import hudson.plugins.jira.soap.RemoteValidationException;
+import hudson.plugins.jira.soap.RemoteVersion;
 
 import java.rmi.RemoteException;
 import java.util.HashSet;
@@ -169,6 +170,19 @@ public class JiraSession {
 		LOGGER.info("Did not find role named " + roleId + ".");
 
 		return null;
+	}
+	
+	/**
+	 * Get all versions from the given project
+	 * 
+	 * @param projectKey The key for the project
+	 * @return An array of versions
+	 * @throws RemoteException
+	 */
+	public RemoteVersion[] getVersions(String projectKey) throws RemoteException {
+		LOGGER.fine("Fetching versions from project: " + projectKey);
+		
+		return service.getVersions(token, projectKey);
 	}
 
 	public boolean existsIssue(String id) throws RemoteException {

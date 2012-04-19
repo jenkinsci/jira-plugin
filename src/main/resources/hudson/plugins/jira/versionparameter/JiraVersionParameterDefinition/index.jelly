@@ -1,0 +1,24 @@
+<!-- this is the page fragment displayed when triggering a new build -->
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+  <f:entry title="${it.name}" description="${it.description}">
+    <!-- this div is required because of ParametersDefinitionProperty.java#117 -->
+    <div name="parameter">
+      <input type="hidden" name="name" value="${it.name}"/>
+      <j:choose>
+        <j:when test="${it.versions == null or it.versions.size() == 0}">
+          <!-- no tags at all -->
+          ${%No versions found meeting your filter criteria.}<br/>
+          ${%If you trigger the build, it will likely fail.}
+        </j:when>
+        <j:otherwise>
+          <!-- everything is fine, we can display the drop-down list to the user -->
+          <select name="version">
+            <j:forEach var="version" items="${it.versions}">
+              <option value="${version.name}">${version.name}</option>
+            </j:forEach>
+          </select>
+        </j:otherwise>
+      </j:choose>
+    </div>
+  </f:entry>
+</j:jelly>
