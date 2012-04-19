@@ -271,6 +271,30 @@ public class JiraSite {
         }
         return null;
     }
+    
+    /**
+     * Release a given version.
+     * 
+     * @param projectKey The Project Key
+     * @param versionName The name of the version
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public void releaseVersion(String projectKey, String versionName) throws IOException, ServiceException {
+        JiraSession session = createSession();
+        if (session != null) {
+            RemoteVersion[] versions = session.getVersions(projectKey);
+            if(versions == null ) return;
+            for( RemoteVersion version : versions ) {
+            	if(version.getName().equals(versionName)) {
+            		version.setReleased(true);
+            		session.releaseVersion(projectKey,version);
+            		return;
+            	}
+            }
+        }
+    }
+    
     /**
      * Returns all versions for the given project key.
      * 

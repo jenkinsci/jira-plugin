@@ -191,4 +191,10 @@ public class JiraSession {
 
 	private static final Logger LOGGER = Logger.getLogger(JiraSession.class
 			.getName());
+
+	public void releaseVersion(String projectKey, RemoteVersion version) throws RemoteException  {
+		LOGGER.fine("Releaseing version: " + version.getName());
+		
+		service.releaseVersion(token, projectKey, version);
+	}
 }
