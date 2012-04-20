@@ -6,11 +6,16 @@ import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.JiraSoapServiceService;
 import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
 import hudson.plugins.jira.soap.RemoteIssue;
+import hudson.plugins.jira.soap.RemoteIssueType;
+import hudson.plugins.jira.soap.RemoteVersion;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -269,6 +274,141 @@ public class JiraSite {
         }
         return null;
     }
+    
+    /**
+     * Release a given version.
+     * 
+     * @param projectKey The Project Key
+     * @param versionName The name of the version
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public void releaseVersion(String projectKey, String versionName) throws IOException, ServiceException {
+        JiraSession session = createSession();
+        if (session != null) {
+            RemoteVersion[] versions = session.getVersions(projectKey);
+            if(versions == null ) return;
+            for( RemoteVersion version : versions ) {
+            	if(version.getName().equals(versionName)) {
+            		version.setReleased(true);
+            		session.releaseVersion(projectKey,version);
+            		return;
+            	}
+            }
+        }
+    }
+    
+    /**
+     * Returns all versions for the given project key.
+     * 
+     * @param projectKey Project Key
+     * @return A set of JiraVersions
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public Set<JiraVersion> getVersions(String projectKey) throws IOException, ServiceException {
+    	JiraSession session = createSession();
+    	if(session == null) return Collections.emptySet();
+    	
+    	RemoteVersion[] versions = session.getVersions(projectKey);
+    	
+    	if(versions == null ) return Collections.emptySet();
+    	
+    	Set<JiraVersion> versionsSet = new HashSet<JiraVersion>(versions.length);
+    			
+    	for( int i = 0; i < versions.length; ++i) {
+    		RemoteVersion version = versions[i];
+    		versionsSet.add(new JiraVersion(version));
+    	}
+    	
+    	return versionsSet;
+    }
+    
+    /**
+     * Generates release notes for a given version.
+     * 
+     * @param projectKey
+     * @param versionName
+     * @return release notes
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public String getReleaseNotesForFixVersion(String projectKey, String versionName) throws IOException, ServiceException {
+    	JiraSession session = createSession();
+    	if(session == null) return "";
+    	
+    	RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName);
+    	RemoteIssueType[] types = session.getIssueTypes();
+    	
+    	HashMap<String,String> typeNameMap = new HashMap<String,String>();
+    	
+    	for( RemoteIssueType type : types ) {
+    		typeNameMap.put(type.getId(), type.getName());
+    	}
+    	    	
+    	if(issues == null ) return "";
 
+    	Map<String, Set<String>> releaseNotes = new HashMap<String,Set<String>>();
+    	
+    	for( int i = 0; i < issues.length; ++i ) {
+    		RemoteIssue issue = issues[i];
+    		String key = issue.getKey();
+    		String summary =  issue.getSummary();
+    		String type = "UNKNOWN";
+    		
+    		if( typeNameMap.containsKey(issue.getType())) {
+    			type = typeNameMap.get(issue.getType());
+    		}
+    		
+    		Set<String> issueSet;
+    		if( !releaseNotes.containsKey(type)) {
+    			issueSet = new HashSet<String>();
+    			releaseNotes.put(type, issueSet);
+    		} else {
+    			issueSet = releaseNotes.get(type);
+    		}
+    		
+    		issueSet.add(String.format(" - [%s] %s",key,summary));
+    	}
+    	
+    	StringBuilder sb = new StringBuilder();
+    	for( String type : releaseNotes.keySet() ) {
+    		sb.append(String.format("# %s\n",type));
+    		for(String issue : releaseNotes.get(type)) {
+    			sb.append(issue);
+    			sb.append("\n");
+    		}
+    	}
+    	
+    	return sb.toString();
+    }
+    
+    /**
+     * Gets a set of issues that have the given fixVersion associated with them.
+     * 
+     * @param projectKey The project key
+     * @param versionName The fixVersion
+     * @return A set of JiraIssues
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public Set<JiraIssue> getIssueWithFixVersion(String projectKey, String versionName) throws IOException, ServiceException {
+    	JiraSession session = createSession();
+    	if(session == null) return Collections.emptySet();
+    	
+    	RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName);
+    	    	
+    	if(issues == null ) return Collections.emptySet();
+    	
+    	Set<JiraIssue> issueSet = new HashSet<JiraIssue>(issues.length);
+    			
+    	for( int i = 0; i < issues.length; ++i) {
+    		RemoteIssue issue = issues[i];
+    		issueSet.add(new JiraIssue(issue));
+    	}
+    	
+    	return issueSet;
+    }
+    
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
 }
