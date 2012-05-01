@@ -83,8 +83,6 @@ public class JiraIssueMigrator extends Notifier {
 			JiraSite site = JiraSite.get(build.getProject());
 
 			site.migrateIssuesToFixVersion(jiraProjectKey, realRelease, realQuery);
-
-			System.out.println("Migrated issues to " + realRelease);
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
 					"Unable to release jira version %s/%s: %s", realRelease,

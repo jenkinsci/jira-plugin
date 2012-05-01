@@ -75,8 +75,6 @@ public class JiraReleaseVersionUpdater extends Notifier {
 			JiraSite site = JiraSite.get(build.getProject());
 
 			site.releaseVersion(jiraProjectKey, realRelease);
-
-			System.out.println("Released " + realRelease);
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
 					"Unable to release jira version %s/%s: %s", realRelease,

@@ -208,8 +208,13 @@ public class JiraSession {
 	}
 	
 	public RemoteIssue[] getIssuesWithFixVersion(String projectKey, String version) throws RemoteException {
+		return getIssuesWithFixVersion(projectKey, version, "");
+	}
+	
+	public RemoteIssue[] getIssuesWithFixVersion(String projectKey, String version, String filter) throws RemoteException {
 		LOGGER.fine("Fetching versions from project: " + projectKey + " with fixVersion:" + version);
-		
+		if( filter != null && !filter.isEmpty())
+			return service.getIssuesFromJqlSearch(token, String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter,projectKey,version) , Integer.MAX_VALUE);
 		return service.getIssuesFromJqlSearch(token, String.format("project = \"%s\" and fixVersion = \"%s\"",projectKey,version) , Integer.MAX_VALUE);
 	}
 	
