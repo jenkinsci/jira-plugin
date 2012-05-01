@@ -7,33 +7,28 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.BuildListener;
-import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.plugins.jira.JiraIssueUpdater.DescriptorImpl;
+import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 
-/**
- * Task which releases the jira version specified in the parameters when the build completes.
- * 
- * @author Justen Walker <justen.walker@gmail.com>
- * 
- */
-public class JiraReleaseVersionUpdater extends Notifier {
-
-	private static final long serialVersionUID = 699563338312232811L;
-
+public class JiraIssueMigrator extends Notifier {
+	
+	private static final long serialVersionUID = 6909671291180081586L;
+	
 	private String jiraProjectKey;
 	private String jiraRelease;
+	private String jiraQuery;
 
 	@DataBoundConstructor
-	public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease) {
+	public JiraIssueMigrator(String jiraProjectKey, String jiraRelease, String jiraQuery) {
 		this.jiraRelease = jiraRelease;
 		this.jiraProjectKey = jiraProjectKey;
+		this.jiraQuery = jiraQuery;
 	}
 	
 	public String getJiraRelease() {
@@ -52,6 +47,14 @@ public class JiraReleaseVersionUpdater extends Notifier {
 		this.jiraProjectKey = jiraProjectKey;
 	}
 	
+	public String getJiraQuery() {
+		return jiraQuery;
+	}
+
+	public void setJiraQuery(String jiraQuery) {
+		this.jiraQuery = jiraQuery;
+	}
+
 	@Override
 	public BuildStepDescriptor<Publisher> getDescriptor() {
 		return DESCRIPTOR;
@@ -64,17 +67,22 @@ public class JiraReleaseVersionUpdater extends Notifier {
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) {
 		String realRelease = "NOT_SET";
-
+		String realQuery = "";
 		try {
 			realRelease = build.getEnvironment(listener).expand(jiraRelease);
 
 			if (realRelease == null || realRelease.isEmpty()) {
 				throw new IllegalArgumentException("Release is Empty");
 			}
-
+			
+			realQuery = build.getEnvironment(listener).expand(jiraQuery);
+			if (realQuery == null || realQuery.isEmpty()) {
+				throw new IllegalArgumentException("JQL query is Empty");
+			}
+			
 			JiraSite site = JiraSite.get(build.getProject());
 
-			site.releaseVersion(jiraProjectKey, realRelease);
+			site.migrateIssuesToFixVersion(jiraProjectKey, realRelease, realQuery);
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
 					"Unable to release jira version %s/%s: %s", realRelease,
@@ -92,13 +100,13 @@ public class JiraReleaseVersionUpdater extends Notifier {
 	public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
 		public DescriptorImpl() {
-			super(JiraReleaseVersionUpdater.class);
+			super(JiraIssueMigrator.class);
 		}
 
 		@Override
-		public JiraReleaseVersionUpdater newInstance(StaplerRequest req,
+		public JiraIssueMigrator newInstance(StaplerRequest req,
 				JSONObject formData) throws FormException {
-			return req.bindJSON(JiraReleaseVersionUpdater.class, formData);
+			return req.bindJSON(JiraIssueMigrator.class, formData);
 		}
 
 		@Override
@@ -108,12 +116,13 @@ public class JiraReleaseVersionUpdater extends Notifier {
 
 		@Override
 		public String getDisplayName() {
-			return Messages.JiraReleaseVersionBuilder_DisplayName();
+			return Messages.JiraReleaseVersionMigrator_DisplayName();
 		}
 
 		@Override
 		public String getHelpFile() {
-			return "/plugin/jira/help-release.html";
+			return "/plugin/jira/help-release-migrate.html";
 		}
-	}
+	}	
+
 }
