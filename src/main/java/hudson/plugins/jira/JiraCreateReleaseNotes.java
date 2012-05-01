@@ -24,32 +24,43 @@ import hudson.tasks.Publisher;
 import hudson.tasks.BuildWrapper;
 
 public class JiraCreateReleaseNotes extends BuildWrapper {
+	
+	public static final String DEFAULT_FILTER = "status in (Resolved, Closed)";
+	
 	private String jiraEnvironmentVariable;
 	private String jiraProjectKey;
 	private String jiraRelease;
+	private String jiraFilter;
 
 	@DataBoundConstructor
 	public JiraCreateReleaseNotes(String jiraProjectKey, String jiraRelease, String jiraEnvironmentVariable) {
+		this(jiraProjectKey, jiraRelease, jiraEnvironmentVariable, DEFAULT_FILTER);
+	}
+	
+	public JiraCreateReleaseNotes(String jiraProjectKey, String jiraRelease, String jiraEnvironmentVariable, String jiraFilter) {
 		this.jiraRelease = jiraRelease;
 		this.jiraProjectKey = jiraProjectKey;
 		this.jiraEnvironmentVariable = jiraEnvironmentVariable;
+		this.jiraFilter = jiraFilter;
 	}
 	
 	@Override
 	public Environment setUp(AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 		String realRelease = null;
 		String releaseNotes = "No Release Notes";
-		
+		String realFilter = DEFAULT_FILTER;
 		try {
 			realRelease = build.getEnvironment(listener).expand(jiraRelease);
 
 			if (realRelease == null || realRelease.isEmpty()) {
 				throw new IllegalArgumentException("Release is Empty");
 			}
+			
+			if( jiraFilter != null ) realFilter = build.getEnvironment(listener).expand(jiraFilter);
 
 			JiraSite site = JiraSite.get(build.getProject());
 			
-			releaseNotes = site.getReleaseNotesForFixVersion(jiraProjectKey, realRelease);
+			releaseNotes = site.getReleaseNotesForFixVersion(jiraProjectKey, realRelease, realFilter);
 
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
@@ -96,6 +107,14 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
 		this.jiraProjectKey = jiraProjectKey;
 	}
 	
+	public String getJiraFilter() {
+		return jiraFilter;
+	}
+
+	public void setJiraFilter(String jiraFilter) {
+		this.jiraFilter = jiraFilter;
+	}
+
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.BUILD;
 	}

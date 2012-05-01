@@ -334,10 +334,24 @@ public class JiraSite {
      * @throws ServiceException
      */
     public String getReleaseNotesForFixVersion(String projectKey, String versionName) throws IOException, ServiceException {
+    	return getReleaseNotesForFixVersion(projectKey, versionName, "");
+    }
+    
+    /**
+     * Generates release notes for a given version.
+     * 
+     * @param projectKey
+     * @param versionName
+     * @param filter Additional JQL Filter. Example: status in (Resolved,Closed)
+     * @return release notes
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException, ServiceException {
     	JiraSession session = createSession();
     	if(session == null) return "";
     	
-    	RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName);
+    	RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
     	RemoteIssueType[] types = session.getIssueTypes();
     	
     	HashMap<String,String> typeNameMap = new HashMap<String,String>();
@@ -408,6 +422,22 @@ public class JiraSite {
     	}
     	
     	return issueSet;
+    }
+    
+    /**
+     * Migrates issues matching the jql query provided to a new fix version.
+     * 
+     * @param projectKey The project key
+     * @param versionName The new fixVersion
+     * @param query A JQL Query
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException, ServiceException {
+    	JiraSession session = createSession();
+    	if(session == null) return;
+    	
+    	session.migrateIssuesToFixVersion(projectKey, versionName, query);
     }
     
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
