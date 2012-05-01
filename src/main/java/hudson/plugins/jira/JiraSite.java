@@ -410,5 +410,21 @@ public class JiraSite {
     	return issueSet;
     }
     
+    /**
+     * Migrates issues matching the jql query provided to a new fix version.
+     * 
+     * @param projectKey The project key
+     * @param versionName The new fixVersion
+     * @param query A JQL Query
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException, ServiceException {
+    	JiraSession session = createSession();
+    	if(session == null) return;
+    	
+    	session.migrateIssuesToFixVersion(projectKey, versionName, query);
+    }
+    
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
 }

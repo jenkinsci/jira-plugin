@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.RemoteComment;
+import hudson.plugins.jira.soap.RemoteFieldValue;
 import hudson.plugins.jira.soap.RemoteGroup;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.plugins.jira.soap.RemoteIssueType;
@@ -186,6 +187,26 @@ public class JiraSession {
 		return service.getVersions(token, projectKey);
 	}
 	
+	/**
+	 * Get a version by its name
+	 * 
+	 * @param projectKey The key for the project
+	 * @param name The version name
+	 * @return A RemoteVersion, or null if not found
+	 * @throws RemoteException
+	 */
+	public RemoteVersion getVersionByName(String projectKey, String name) throws RemoteException {
+		LOGGER.fine("Fetching versions from project: " + projectKey);
+		RemoteVersion[] versions = getVersions(projectKey);
+		if(versions == null) return null;
+		for( RemoteVersion version : versions ) {
+			if( version.getName().equals(name) ) {
+				return version;
+			}
+		}
+		return null;
+	}
+	
 	public RemoteIssue[] getIssuesWithFixVersion(String projectKey, String version) throws RemoteException {
 		LOGGER.fine("Fetching versions from project: " + projectKey + " with fixVersion:" + version);
 		
@@ -215,5 +236,22 @@ public class JiraSession {
 		LOGGER.fine("Releaseing version: " + version.getName());
 		
 		service.releaseVersion(token, projectKey, version);
+	}
+	
+	public void migrateIssuesToFixVersion(String projectKey, String version, String query) throws RemoteException {
+		
+		RemoteVersion newVersion = getVersionByName(projectKey,version);
+		if(newVersion == null ) return;
+		
+		LOGGER.fine("Fetching versions with JQL:" + query);
+		RemoteIssue[] issues = service.getIssuesFromJqlSearch(token,query,Integer.MAX_VALUE);
+		if( issues == null ) return;
+		LOGGER.fine("Found issues: " + issues.length);
+		
+		RemoteFieldValue value = new RemoteFieldValue("fixVersions", new String[] { newVersion.getId() } );
+		for( RemoteIssue issue : issues ) {
+			LOGGER.fine("Migrating issue: " + issue.getKey());
+			service.updateIssue(token, issue.getKey(), new RemoteFieldValue[] { value });
+		}
 	}
 }
