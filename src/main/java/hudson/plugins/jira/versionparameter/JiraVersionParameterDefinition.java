@@ -97,7 +97,11 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
 
 	public void setJiraReleasePattern(String pattern) {
 		if(pattern == null || pattern.isEmpty()) this.pattern = null;
-		this.pattern = Pattern.compile(pattern);
+		if(pattern == null || pattern.isEmpty()) {
+			this.pattern = null;
+		} else {
+			this.pattern = Pattern.compile(pattern);
+		}
 	}
 	
 	public String getJiraProjectKey() {
