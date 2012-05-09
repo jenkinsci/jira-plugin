@@ -32,14 +32,16 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
 
 	private String projectKey;
 	private boolean showReleased = false;
+	private boolean showArchived = false;
 	private Pattern pattern = null;
 
 	@DataBoundConstructor
-	public JiraVersionParameterDefinition(String name, String description, String jiraProjectKey, String jiraReleasePattern, String jiraShowReleased) {
+	public JiraVersionParameterDefinition(String name, String description, String jiraProjectKey, String jiraReleasePattern, String jiraShowReleased, String jiraShowArchived) {
 		super(name, description);
 		setJiraProjectKey(jiraProjectKey);
 		setJiraReleasePattern(jiraReleasePattern);
 		setJiraShowReleased(jiraShowReleased);
+		setJiraShowArchived(jiraShowArchived);
 	}
 
 	@Override
@@ -87,6 +89,9 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
 		// Filter released versions
 		if( !showReleased && version.isReleased() ) return false;
 		
+		// Filter archived versions
+		if( !showArchived && version.isArchived() ) return false;
+		
 		return true;
 	}
 
@@ -96,8 +101,11 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
 	}
 
 	public void setJiraReleasePattern(String pattern) {
-		if(pattern == null || pattern.isEmpty()) this.pattern = null;
-		this.pattern = Pattern.compile(pattern);
+		if(pattern == null || pattern.isEmpty()) {
+			this.pattern = null;
+		} else {
+			this.pattern = Pattern.compile(pattern);
+		}
 	}
 	
 	public String getJiraProjectKey() {
@@ -116,6 +124,18 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
 		this.showReleased = Boolean.parseBoolean(showReleased);
 	}
 	
+	
+	
+	public String getJiraShowArchived() {
+		return Boolean.toString(showArchived);
+	}
+
+	public void setJiraShowArchived(String showArchived) {
+		this.showArchived = Boolean.parseBoolean(showArchived);
+	}
+
+
+
 	@Extension
 	public static class DescriptorImpl extends ParameterDescriptor {
 		@Override
