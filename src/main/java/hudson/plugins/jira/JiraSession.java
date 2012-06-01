@@ -290,10 +290,12 @@ public class JiraSession {
     public String getActionIdForIssue(String issueKey, String workflowAction) throws RemoteException {
         RemoteNamedObject[] actions = service.getAvailableActions(token, issueKey);
 
-        for (RemoteNamedObject action : actions) {
-            if (action.getName().equalsIgnoreCase(workflowAction)) {
-                return action.getId();
-            }
+        if (actions != null) {
+	        for (RemoteNamedObject action : actions) {
+	            if (workflowAction.equalsIgnoreCase(action.getName())) {
+	                return action.getId();
+	            }
+	        }
         }
 
         return null;
