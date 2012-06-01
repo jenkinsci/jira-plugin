@@ -6,12 +6,15 @@ import hudson.plugins.jira.soap.RemoteFieldValue;
 import hudson.plugins.jira.soap.RemoteGroup;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.plugins.jira.soap.RemoteIssueType;
+import hudson.plugins.jira.soap.RemoteNamedObject;
 import hudson.plugins.jira.soap.RemoteProject;
 import hudson.plugins.jira.soap.RemoteProjectRole;
+import hudson.plugins.jira.soap.RemoteStatus;
 import hudson.plugins.jira.soap.RemoteValidationException;
 import hudson.plugins.jira.soap.RemoteVersion;
 
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -259,4 +262,81 @@ public class JiraSession {
 			service.updateIssue(token, issue.getKey(), new RemoteFieldValue[] { value });
 		}
 	}
+
+    /**
+     * Progresses the issue's workflow by performing the specified action. The issue's new status is returned.
+     *
+     * @param issueKey
+     * @param workflowActionName
+     * @param fields
+     * @return The new status
+     * @throws RemoteException
+     */
+    public String progressWorkflowAction(String issueKey, String workflowActionName, RemoteFieldValue[] fields)
+            throws RemoteException {
+        LOGGER.fine("Progressing issue " + issueKey + " with workflow action: " + workflowActionName);
+        RemoteIssue issue = service.progressWorkflowAction(token, issueKey, workflowActionName, fields);
+        return getStatusById(issue.getStatus());
+    }
+
+    /**
+     * Returns the matching action id for a given action name.
+     *
+     * @param issueKey
+     * @param workflowAction
+     * @return The action id, or null if the action cannot be found.
+     * @throws RemoteException
+     */
+    public String getActionIdForIssue(String issueKey, String workflowAction) throws RemoteException {
+        RemoteNamedObject[] actions = service.getAvailableActions(token, issueKey);
+
+        for (RemoteNamedObject action : actions) {
+            if (action.getName().equalsIgnoreCase(workflowAction)) {
+                return action.getId();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Returns the status name by status id.
+     *
+     * @param statusId
+     * @return
+     * @throws RemoteException
+     */
+    public String getStatusById(String statusId) throws RemoteException {
+        String status = getKnownStatuses().get(statusId);
+
+        if (status == null) {
+            LOGGER.warning("JIRA status could not be found: " + statusId + ". Checking JIRA for new status types.");
+            knownStatuses = null;
+            // Try again, just in case the admin has recently added a new status. This should be a rare condition.
+            status = getKnownStatuses().get(statusId);
+        }
+
+        return status;
+    }
+
+    private HashMap<String, String> knownStatuses = null;
+
+    /**
+     * Returns all known statuses.
+     *
+     * @return
+     * @throws RemoteException
+     */
+    private HashMap<String,String> getKnownStatuses() throws RemoteException {
+        if (knownStatuses == null) {
+            RemoteStatus[] statuses = service.getStatuses(token);
+            knownStatuses = new HashMap<String, String>(statuses.length);
+
+            for (RemoteStatus status : statuses) {
+                knownStatuses.put(status.getId(), status.getName());
+            }
+        }
+
+        return knownStatuses;
+    }
 }
