@@ -10,8 +10,10 @@ import hudson.plugins.jira.soap.RemoteIssueType;
 import hudson.plugins.jira.soap.RemoteVersion;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.RemoteException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +24,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import javax.xml.rpc.ServiceException;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -40,7 +43,7 @@ public class JiraSite {
      * See issue JENKINS-729, JENKINS-4092
      */
     protected static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
-	
+
     /**
      * URL of JIRA, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
@@ -438,6 +441,54 @@ public class JiraSite {
     	if(session == null) return;
     	
     	session.migrateIssuesToFixVersion(projectKey, versionName, query);
+    }
+
+    /**
+     * Progresses all issues matching the JQL search, using the given workflow action. Optionally
+     * adds a comment to the issue(s) at the same time.
+     *
+     * @param jqlSearch
+     * @param workflowActionName
+     * @param comment
+     * @param console
+     * @throws IOException
+     * @throws ServiceException
+     */
+    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException,
+            ServiceException {
+        JiraSession session = createSession();
+
+        if (session == null) {
+            console.println(Messages.Updater_FailedToConnect());
+            return false;
+        }
+
+        boolean success = true;
+        RemoteIssue[] issues = session.getIssuesFromJqlSearch(jqlSearch);
+
+        for (int i = 0; i < issues.length; i++) {
+            String issueKey = issues[i].getKey();
+
+            String actionId = session.getActionIdForIssue(issueKey, workflowActionName);
+
+            if (actionId == null) {
+                LOGGER.fine("Invalid workflow action " + workflowActionName + " for issue " + issueKey + "; issue status = " + issues[i].getStatus());
+                console.println(Messages.JiraIssueUpdateBuilder_UnknownWorkflowAction(issueKey, workflowActionName));
+                success = false;
+                continue;
+            }
+
+            String newStatus = session.progressWorkflowAction(issueKey, actionId, null);
+
+            console.println("[JIRA] Issue " + issueKey + " transitioned to \"" + newStatus
+                    + "\" due to action \"" + workflowActionName + "\".");
+
+            if (comment != null && !comment.isEmpty()) {
+                session.addComment(issueKey, comment, null, null);
+            }
+        }
+
+        return success;
     }
     
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
