@@ -436,6 +436,22 @@ public class JiraSite {
      * @throws IOException
      * @throws ServiceException
      */
+    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException, ServiceException {
+    	JiraSession session = createSession();
+    	if(session == null) return;
+    	
+    	session.replaceFixVersion(projectKey, fromVersion, toVersion, query);
+    }
+    
+    /**
+     * Migrates issues matching the jql query provided to a new fix version.
+     * 
+     * @param projectKey The project key
+     * @param versionName The new fixVersion
+     * @param query A JQL Query
+     * @throws IOException
+     * @throws ServiceException
+     */
     public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException, ServiceException {
     	JiraSession session = createSession();
     	if(session == null) return;

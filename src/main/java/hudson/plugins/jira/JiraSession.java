@@ -246,6 +246,14 @@ public class JiraSession {
 		service.releaseVersion(token, projectKey, version);
 	}
 	
+	/**
+	 * Replaces the fix version list of all issues matching the JQL Query with the version specified.
+	 * 
+	 * @param projectKey The JIRA Project key
+	 * @param version The replacement version
+	 * @param query The JQL Query
+	 * @throws RemoteException
+	 */
 	public void migrateIssuesToFixVersion(String projectKey, String version, String query) throws RemoteException {
 		
 		RemoteVersion newVersion = getVersionByName(projectKey,version);
@@ -259,6 +267,41 @@ public class JiraSession {
 		RemoteFieldValue value = new RemoteFieldValue("fixVersions", new String[] { newVersion.getId() } );
 		for( RemoteIssue issue : issues ) {
 			LOGGER.fine("Migrating issue: " + issue.getKey());
+			service.updateIssue(token, issue.getKey(), new RemoteFieldValue[] { value });
+		}
+	}
+	
+	/**
+	 * Replaces the given fromVersion with toVersion in all issues matching the JQL query.
+	 * 
+	 * @param projectKey The JIRA Project
+	 * @param fromVersion The name of the version to replace
+	 * @param toVersion The name of the replacement version
+	 * @param query The JQL Query
+	 * @throws RemoteException
+	 */
+	public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws RemoteException {
+		
+		RemoteVersion newVersion = getVersionByName(projectKey,toVersion);
+		if(newVersion == null ) return;
+		
+		LOGGER.fine("Fetching versions with JQL:" + query);
+		RemoteIssue[] issues = service.getIssuesFromJqlSearch(token,query,Integer.MAX_VALUE);
+		if( issues == null ) return;
+		LOGGER.fine("Found issues: " + issues.length);
+		
+		for( RemoteIssue issue : issues ) {
+			Set<String> newVersions = new HashSet<String>();
+			newVersions.add(newVersion.getId());
+			for( RemoteVersion currentVersion : issue.getFixVersions() ) {
+				if( !currentVersion.getName().equals(fromVersion) ) {
+					newVersions.add(currentVersion.getId());
+				}
+			}
+			
+			RemoteFieldValue value = new RemoteFieldValue("fixVersions", newVersions.toArray(new String[0]) );
+			
+			LOGGER.fine("Replaceing version in issue: " + issue.getKey());
 			service.updateIssue(token, issue.getKey(), new RemoteFieldValue[] { value });
 		}
 	}
