@@ -13,12 +13,14 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.rmi.RemoteException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -105,6 +107,11 @@ public class JiraSite {
     private transient volatile Set<String> projects;
 
     /**
+     * Used to guard the computation of {@link #projects}
+     */
+    private transient Lock projectUpdateLock = new ReentrantLock();
+
+    /**
      * @stapler-constructor
      */
     @DataBoundConstructor
@@ -132,6 +139,12 @@ public class JiraSite {
         this.groupVisibility = Util.fixEmpty(groupVisibility);
         this.roleVisibility = Util.fixEmpty(roleVisibility);
     }
+
+    protected Object readResolve() {
+        projectUpdateLock = new ReentrantLock();
+        return this;
+    }
+
 
     public String getName() {
         return url.toExternalForm();
@@ -201,27 +214,34 @@ public class JiraSite {
      */
     public Set<String> getProjectKeys() {
         if(projects==null) {
-            synchronized (this) {
-                try {
-                    if(projects==null) {
-                        JiraSession session = createSession();
-                        if(session!=null)
-                            projects = Collections.unmodifiableSet(session.getProjectKeys());
+            try {
+                if (projectUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
+                    try {
+                        if(projects==null) {
+                            JiraSession session = createSession();
+                            if(session!=null)
+                                projects = Collections.unmodifiableSet(session.getProjectKeys());
+                        }
+                    } catch (IOException e) {
+                        // in case of error, set empty set to avoid trying the same thing repeatedly.
+                        LOGGER.log(Level.WARNING,"Failed to obtain JIRA project list",e);
+                    } catch (ServiceException e) {
+                        LOGGER.log(Level.WARNING,"Failed to obtain JIRA project list",e);
+                    } finally {
+                        projectUpdateLock.unlock();
                     }
-                } catch (IOException e) {
-                    // in case of error, set empty set to avoid trying the same thing repeatedly.
-                    LOGGER.log(Level.WARNING,"Failed to obtain JIRA project list",e);
-                } catch (ServiceException e) {
-                    LOGGER.log(Level.WARNING,"Failed to obtain JIRA project list",e);
                 }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // process this interruption later
             }
         }
         // fall back to empty if failed to talk to the server
-        if(projects==null) {
+        Set<String> p = projects;
+        if(p ==null) {
             return Collections.emptySet();
         }
         
-        return projects;
+        return p;
     }
 
     /**

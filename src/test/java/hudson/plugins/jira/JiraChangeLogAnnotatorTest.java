@@ -50,6 +50,8 @@ public class JiraChangeLogAnnotatorTest {
         when(site.existsIssue(Mockito.anyString())).thenCallRealMethod();
         when(site.getProjectKeys()).thenCallRealMethod();
         when(site.getIssuePattern()).thenCallRealMethod();
+        when(site.readResolve()).thenCallRealMethod();
+        site.readResolve(); // create the lock object
     }
 
     @Test
