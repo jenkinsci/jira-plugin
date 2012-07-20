@@ -2,9 +2,13 @@ package hudson.plugins.jira;
 
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.matrix.MatrixAggregatable;
+import hudson.matrix.MatrixAggregator;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixRun;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.AbstractBuild;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -13,6 +17,7 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
+import java.io.PrintStream;
 
 /**
  * Parses build changelog for JIRA issue IDs and then
@@ -20,12 +25,17 @@ import java.io.IOException;
  *
  * @author Kohsuke Kawaguchi
  */
-public class JiraIssueUpdater extends Recorder {
+public class JiraIssueUpdater extends Recorder implements MatrixAggregatable {
     public JiraIssueUpdater() {
     }
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+        // Don't do anything for individual matrix runs.
+        if (build instanceof MatrixRun) {
+            return true;
+        }
+
         return Updater.perform(build, listener);
     }
 
@@ -40,6 +50,17 @@ public class JiraIssueUpdater extends Recorder {
 
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
+
+    public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
+        return new MatrixAggregator(build, launcher, listener) {
+            @Override
+            public boolean endBuild() throws InterruptedException, IOException {
+                PrintStream logger = listener.getLogger();
+                logger.println("End of Matrix Build. Updating JIRA.");
+                return Updater.perform(this.build, this.listener);
+            }
+        };
+    }
 
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         private DescriptorImpl() {
