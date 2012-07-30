@@ -1,7 +1,11 @@
 package hudson.plugins.jira;
 
+import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
+import hudson.model.Descriptor;
+import hudson.model.Hudson;
 import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.JiraSoapServiceService;
 import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
@@ -24,10 +28,15 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
+import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
 
+import hudson.util.FormValidation;
+import org.apache.axis.AxisFault;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Represents an external JIRA installation and configuration
@@ -35,7 +44,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  *
  * @author Kohsuke Kawaguchi
  */
-public class JiraSite {
+public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 	
     /**
      * Regexp pattern that identifies JIRA issue token.
@@ -111,9 +120,6 @@ public class JiraSite {
      */
     private transient Lock projectUpdateLock = new ReentrantLock();
 
-    /**
-     * @stapler-constructor
-     */
     @DataBoundConstructor
     public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern, 
                     boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility) {
@@ -509,6 +515,97 @@ public class JiraSite {
         }
 
         return success;
+    }
+
+    @Extension
+    public static class DescriptorImpl extends Descriptor<JiraSite> {
+        @Override
+        public String getDisplayName() {
+            return "JIRA Site";
+        }
+
+        /**
+         * Checks if the JIRA URL is accessible and exists.
+         */
+        public FormValidation doUrlCheck(@QueryParameter final String value)
+                throws IOException, ServletException {
+            // this can be used to check existence of any file in any URL, so
+            // admin only
+            if (!Hudson.getInstance().hasPermission(Hudson.ADMINISTER))
+                return FormValidation.ok();
+
+            return new FormValidation.URLCheck() {
+                @Override
+                protected FormValidation check() throws IOException,
+                        ServletException {
+                    String url = Util.fixEmpty(value);
+                    if (url == null) {
+                        return FormValidation.error(Messages
+                                .JiraProjectProperty_JiraUrlMandatory());
+                    }
+
+                    // call the wsdl uri to check if the jira soap service can be reached
+                    try {
+                          if (!findText(open(new URL(url)), "Atlassian JIRA"))
+                              return FormValidation.error(Messages
+                                      .JiraProjectProperty_NotAJiraUrl());
+
+                        URL soapUrl = new URL(new URL(url), "rpc/soap/jirasoapservice-v2?wsdl");
+                        if (!findText(open(soapUrl), "wsdl:definitions"))
+                              return FormValidation.error(Messages
+                                      .JiraProjectProperty_NoWsdlAvailable());
+
+                          return FormValidation.ok();
+                    } catch (IOException e) {
+                        LOGGER.log(Level.WARNING,
+                                "Unable to connect to " + url, e);
+                        return handleIOException(url, e);
+                    }
+                }
+            }.check();
+        }
+
+        public FormValidation doCheckUserPattern(@QueryParameter String value) throws IOException {
+            String userPattern = Util.fixEmpty(value);
+            if (userPattern == null) {// userPattern not entered yet
+                return FormValidation.ok();
+            }
+            try {
+                Pattern.compile(userPattern);
+                return FormValidation.ok();
+            } catch (PatternSyntaxException e) {
+                return FormValidation.error(e.getMessage());
+            }
+        }
+
+        /**
+         * Checks if the user name and password are valid.
+         */
+        public FormValidation doValidate(@QueryParameter String userName,
+                                          @QueryParameter String url,
+                                          @QueryParameter String password,
+                                          @QueryParameter String groupVisibility,
+                                          @QueryParameter String roleVisibility)
+                throws IOException {
+            url = Util.fixEmpty(url);
+            if (url == null) {// URL not entered yet
+                return FormValidation.error("No URL given");
+            }
+            JiraSite site = new JiraSite(new URL(url), userName, password, false,
+                    false, null, false, groupVisibility, roleVisibility);
+            try {
+                site.createSession();
+                return FormValidation.ok("Success");
+            } catch (AxisFault e) {
+                LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url,
+                        e);
+                return FormValidation.error(e.getFaultString());
+            } catch (ServiceException e) {
+                LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url,
+                        e);
+                return FormValidation.error(e.getMessage());
+            }
+        }
     }
     
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());

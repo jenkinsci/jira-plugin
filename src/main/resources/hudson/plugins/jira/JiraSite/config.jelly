@@ -1,0 +1,39 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:entry title="URL" field="url">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Supports Wiki notation}" field="supportsWikiStyleComment">
+    <f:checkbox />
+  </f:entry>
+  <f:entry title="${%Record Scm changes}" field="recordScmChanges">
+    <f:checkbox/>
+  </f:entry>
+  <f:entry title="${%Issue Pattern}" field="userPattern">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Update Jira Issues For All Build Results}" field="updateJiraIssueForAllStatus">
+    <f:checkbox />
+  </f:entry>
+  <f:entry title="${%User Name}" field="userName">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Password}" field="password"
+      description="${%username.password.description}">
+    <f:password />
+  </f:entry>
+  <f:entry title="${%Visible for Group}" field="groupVisibility">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Visible for Project Role}" field="roleVisibility">
+    <f:textbox />
+  </f:entry>
+  <f:entry>
+    <f:validateButton title="${%Validate Settings}"
+            method="validate" with="url,userName,password,groupVisibility,roleVisibility" />
+  </f:entry>
+  <f:entry title="">
+    <div align="right">
+      <f:repeatableDeleteButton />
+    </div>
+  </f:entry>
+</j:jelly>

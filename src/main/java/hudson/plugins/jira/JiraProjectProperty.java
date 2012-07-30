@@ -1,31 +1,16 @@
 package hudson.plugins.jira;
 
 import hudson.Extension;
-import hudson.Util;
 import hudson.model.AbstractProject;
-import hudson.model.Hudson;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
-import hudson.plugins.jira.soap.RemoteGroup;
-import hudson.plugins.jira.soap.RemoteValidationException;
 import hudson.util.CopyOnWriteList;
-import hudson.util.FormValidation;
-import org.apache.axis.AxisFault;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import javax.servlet.ServletException;
-import javax.xml.rpc.ServiceException;
-import java.io.IOException;
-import java.net.URL;
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
+
+import java.util.logging.Logger;
 
 /**
  * Associates {@link AbstractProject} with {@link JiraSite}.
@@ -117,91 +102,9 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject formData) {
-			sites.replaceBy(req.bindParametersToList(JiraSite.class, "jira."));
+			sites.replaceBy(req.bindJSONToList(JiraSite.class, formData.get("sites")));
 			save();
 			return true;
-		}
-
-		/**
-		 * Checks if the JIRA URL is accessible and exists.
-		 */
-		public FormValidation doUrlCheck(@QueryParameter final String value)
-				throws IOException, ServletException {
-			// this can be used to check existence of any file in any URL, so
-			// admin only
-			if (!Hudson.getInstance().hasPermission(Hudson.ADMINISTER))
-				return FormValidation.ok();
-
-			return new FormValidation.URLCheck() {
-				@Override
-				protected FormValidation check() throws IOException,
-						ServletException {
-					String url = Util.fixEmpty(value);
-					if (url == null) {
-						return FormValidation.error(Messages
-								.JiraProjectProperty_JiraUrlMandatory());
-					}
-					
-					// call the wsdl uri to check if the jira soap service can be reached
-					try {
-                        if (!findText(open(new URL(url)), "Atlassian JIRA"))
-                            return FormValidation.error(Messages
-                                    .JiraProjectProperty_NotAJiraUrl());
-
-						URL soapUrl = new URL(new URL(url), "rpc/soap/jirasoapservice-v2?wsdl");
-						if (!findText(open(soapUrl), "wsdl:definitions"))
-                            return FormValidation.error(Messages
-                                    .JiraProjectProperty_NoWsdlAvailable());
-
-                        return FormValidation.ok();
-					} catch (IOException e) {
-						LOGGER.log(Level.WARNING,
-								"Unable to connect to " + url, e);
-						return handleIOException(url, e);
-					}
-				}
-			}.check();
-		}
-
-		/**
-		 * Checks if the user name and password are valid.
-		 */
-		public FormValidation doLoginCheck(StaplerRequest request)
-				throws IOException {
-			String url = Util.fixEmpty(request.getParameter("url"));
-			if (url == null) {// URL not entered yet
-				return FormValidation.ok();
-			}
-			JiraSite site = new JiraSite(new URL(url), request
-					.getParameter("user"), request.getParameter("pass"), false,
-					false, null, false, request.getParameter("groupVisibility"), request.getParameter("roleVisibility"));
-			try {
-				site.createSession();
-				return FormValidation.ok();
-			} catch (AxisFault e) {
-				LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url,
-						e);
-				return FormValidation.error(e.getFaultString());
-			} catch (ServiceException e) {
-				LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url,
-						e);
-				return FormValidation.error(e.getMessage());
-			}
-		}
-
-		public FormValidation doUserPatternCheck(StaplerRequest request)
-				throws IOException {
-			String userPattern = Util.fixEmpty(request
-					.getParameter("userPattern"));
-			if (userPattern == null) {// userPattern not entered yet
-				return FormValidation.ok();
-			}
-			try {
-				Pattern.compile(userPattern);
-				return FormValidation.ok();
-			} catch (PatternSyntaxException e) {
-				return FormValidation.error(e.getMessage());
-			}
 		}
 	}
 
