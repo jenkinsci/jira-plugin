@@ -22,13 +22,15 @@ public class JiraIssueMigrator extends Notifier {
 	
 	private String jiraProjectKey;
 	private String jiraRelease;
+	private String jiraReplaceVersion;
 	private String jiraQuery;
 
 	@DataBoundConstructor
-	public JiraIssueMigrator(String jiraProjectKey, String jiraRelease, String jiraQuery) {
+	public JiraIssueMigrator(String jiraProjectKey, String jiraRelease, String jiraQuery, String jiraReplaceVersion) {
 		this.jiraRelease = jiraRelease;
 		this.jiraProjectKey = jiraProjectKey;
 		this.jiraQuery = jiraQuery;
+		this.jiraReplaceVersion = jiraReplaceVersion;
 	}
 	
 	public String getJiraRelease() {
@@ -55,6 +57,14 @@ public class JiraIssueMigrator extends Notifier {
 		this.jiraQuery = jiraQuery;
 	}
 
+	public String getJiraReplaceVersion() {
+		return jiraReplaceVersion;
+	}
+
+	public void setJiraReplaceVersion(String jiraReplaceVersion) {
+		this.jiraReplaceVersion = jiraReplaceVersion;
+	}
+
 	@Override
 	public BuildStepDescriptor<Publisher> getDescriptor() {
 		return DESCRIPTOR;
@@ -66,10 +76,12 @@ public class JiraIssueMigrator extends Notifier {
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) {
-		String realRelease = "NOT_SET";
+		String realRelease = null;
+		String realReplace = null;
 		String realQuery = "";
 		try {
 			realRelease = build.getEnvironment(listener).expand(jiraRelease);
+			realReplace = build.getEnvironment(listener).expand(jiraReplaceVersion);
 
 			if (realRelease == null || realRelease.isEmpty()) {
 				throw new IllegalArgumentException("Release is Empty");
@@ -82,7 +94,11 @@ public class JiraIssueMigrator extends Notifier {
 			
 			JiraSite site = JiraSite.get(build.getProject());
 
-			site.migrateIssuesToFixVersion(jiraProjectKey, realRelease, realQuery);
+			if( realReplace == null || realReplace.isEmpty() ) {
+				site.migrateIssuesToFixVersion(jiraProjectKey, realRelease, realQuery);	
+			} else {
+				site.replaceFixVersion(jiraProjectKey, realReplace, realRelease, realQuery);
+			}
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
 					"Unable to release jira version %s/%s: %s", realRelease,
