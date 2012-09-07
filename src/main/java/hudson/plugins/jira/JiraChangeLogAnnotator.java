@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import hudson.Extension;
 import hudson.MarkupText;
 import hudson.Util;
@@ -51,8 +52,10 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         		String id = m.group(1);
         		LOGGER.info("Annotating JIRA id: '" + id + "'");
             	
-                if(!site.existsIssue(id)) {
-                    continue;
+                if(StringUtils.isNotBlank(site.password)){
+	        		if(!site.existsIssue(id)) {
+	                    continue;
+	                }
                 }
                 
                 URL url;
