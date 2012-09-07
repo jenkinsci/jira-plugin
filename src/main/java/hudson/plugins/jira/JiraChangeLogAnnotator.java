@@ -51,8 +51,10 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         		String id = m.group(1);
         		LOGGER.info("Annotating JIRA id: '" + id + "'");
             	
-                if(!site.existsIssue(id)) {
-                    continue;
+                if(!(site.password == null || site.password.equals(""))){
+	        		if(!site.existsIssue(id)) {
+	                    continue;
+	                }
                 }
                 
                 URL url;
