@@ -12,11 +12,13 @@ import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.plugins.jira.soap.RemoteIssueType;
 import hudson.plugins.jira.soap.RemoteVersion;
+import hudson.util.FormValidation;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,7 +35,6 @@ import java.util.regex.PatternSyntaxException;
 import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
 
-import hudson.util.FormValidation;
 import org.apache.axis.AxisFault;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -320,6 +321,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             for( RemoteVersion version : versions ) {
             	if(version.getName().equals(versionName)) {
             		version.setReleased(true);
+            		version.setReleaseDate(Calendar.getInstance());
             		session.releaseVersion(projectKey,version);
             		return;
             	}
