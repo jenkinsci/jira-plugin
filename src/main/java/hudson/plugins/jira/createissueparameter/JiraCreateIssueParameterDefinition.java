@@ -1,4 +1,4 @@
-package hudson.plugins.jira.createIssueParameter;
+package hudson.plugins.jira.createissueparameter;
 
 import hudson.Extension;
 import hudson.model.AbstractProject;
@@ -6,8 +6,6 @@ import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
-import hudson.plugins.jira.soap.RemoteIssue;
-import hudson.plugins.jira.versionparameter.JiraVersionParameterValue;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
@@ -15,11 +13,8 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import static hudson.Util.fixNull;
-import static java.util.Arrays.asList;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,12 +23,12 @@ import static java.util.Arrays.asList;
  * Time: 2:52 PM
  * To change this template use File | Settings | File Templates.
  */
-public class JiraCreateIssueParameterDefination extends ParameterDefinition {
+public class JiraCreateIssueParameterDefinition extends ParameterDefinition {
     private String projectkey;
     private String assignee;
 
     @DataBoundConstructor
-    public JiraCreateIssueParameterDefination(String name, String description, String projectkey, String assignee) {
+    public JiraCreateIssueParameterDefinition(String name, String description, String projectkey, String assignee) {
         super(name, description);
         this.projectkey = projectkey;
         this.assignee = assignee;

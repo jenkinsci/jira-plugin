@@ -1,4 +1,4 @@
-package hudson.plugins.jira.createIssueParameter;
+package hudson.plugins.jira.createissueparameter;
 
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
