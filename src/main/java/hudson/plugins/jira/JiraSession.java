@@ -384,4 +384,12 @@ public class JiraSession {
 
         return knownStatuses;
     }
+
+    public void createIssue(String projectKey,String assignee ) throws RemoteException{
+         RemoteIssue issue= new RemoteIssue();
+         issue.setKey(projectKey);
+         issue.setAssignee(assignee);
+         service.createIssue(token,issue);
+    }
+
 }
