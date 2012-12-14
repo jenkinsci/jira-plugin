@@ -3,7 +3,6 @@ package hudson.plugins.jira;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.*;
-import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -27,7 +26,7 @@ import java.util.List;
 public class JiraCreateIssueNotifier extends Notifier{
 
     private String projectKey;
-
+    @DataBoundConstructor
     public JiraCreateIssueNotifier(String projectKey) {
         this.projectKey = projectKey;
     }
@@ -53,25 +52,21 @@ public class JiraCreateIssueNotifier extends Notifier{
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-
-
-        AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
-        if (Result.FAILURE==build.getResult() )  {
+        Result result= build.getResult();
+        if (Result.FAILURE==result)  {
             try{
-            createJiraIssue();
+            createJiraIssue(build);
             }catch(ServiceException exp)  {
                 System.out.print("Service Exception");
             }
         }
-
         return true;
     }
 
-    public void createJiraIssue() throws ServiceException,IOException{
-        AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+    public void createJiraIssue(AbstractBuild<?, ?> build) throws ServiceException,IOException{
 
-        JiraSite site = JiraSite.get(context);
-        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "+context.getFullDisplayName());
+        JiraSite site = JiraSite.get(build.getProject());
+        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "+build.getFullDisplayName());
 
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
@@ -98,7 +93,7 @@ public class JiraCreateIssueNotifier extends Notifier{
 
         @Override
         public String getDisplayName() {
-            return "JiraCreateIssue" ;
+            return "Jira Create Issue" ;
         }
 
         @Override
