@@ -3,6 +3,7 @@ package hudson.plugins.jira;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.*;
+import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
@@ -55,23 +56,26 @@ public class JiraCreateIssueNotifier extends Notifier{
         Result result= build.getResult();
         if (Result.FAILURE==result)  {
             try{
-            createJiraIssue(build);
-            }catch(ServiceException exp)  {
+                RemoteIssue issue=createJiraIssue(build);
+                System.out.println(issue.getKey());
+
+            }catch(ServiceException e)  {
                 System.out.print("Service Exception");
+                e.printStackTrace();
             }
         }
         return true;
     }
 
-    public void createJiraIssue(AbstractBuild<?, ?> build) throws ServiceException,IOException{
+    public RemoteIssue createJiraIssue(AbstractBuild<?, ?> build) throws ServiceException,IOException{
 
         JiraSite site = JiraSite.get(build.getProject());
         if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "+build.getFullDisplayName());
 
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
-        session.createIssue(projectKey);
-
+        RemoteIssue issue = session.createIssue(projectKey);
+        return issue;
     }
 
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
@@ -93,7 +97,7 @@ public class JiraCreateIssueNotifier extends Notifier{
 
         @Override
         public String getDisplayName() {
-            return "Jira Create Issue" ;
+            return "Create Jira Issue" ;
         }
 
         @Override

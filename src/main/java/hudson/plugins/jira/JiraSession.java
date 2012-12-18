@@ -387,11 +387,12 @@ public class JiraSession {
 
     public RemoteIssue createIssue(String projectKey) throws RemoteException{
          RemoteIssue issue= new RemoteIssue();
-         issue.setProject(projectKey);
-         issue.setSummary("Test issue created by jenkins...");
-         RemoteIssue createissue;
-         createissue=service.createIssue(token,issue);
-         return createissue;
+         issue.setProject(projectKey.toUpperCase());
+         issue.setSummary("Test Issue created by hobson-jenkins");
+         issue.setType("1");
+         RemoteIssue createdissue;
+         createdissue=service.createIssue(token,issue);
+         return createdissue;
     }
 
 }
