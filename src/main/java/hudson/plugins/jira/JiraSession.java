@@ -381,7 +381,6 @@ public class JiraSession {
                 knownStatuses.put(status.getId(), status.getName());
             }
         }
-
         return knownStatuses;
     }
 
@@ -390,9 +389,9 @@ public class JiraSession {
          issue.setProject(projectKey.toUpperCase());
          issue.setSummary("Test Issue created by hobson-jenkins");
          issue.setType("1");
-         RemoteIssue createdissue;
-         createdissue=service.createIssue(token,issue);
-         return createdissue;
+         RemoteIssue createdIssue;
+         createdIssue=service.createIssue(token,issue);
+         return createdIssue;
     }
 
 }

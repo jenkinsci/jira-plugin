@@ -52,16 +52,27 @@ public class JiraCreateIssueNotifier extends Notifier{
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        Result result= build.getResult();
-        if (Result.FAILURE==result)  {
-            try{
-                RemoteIssue issue=createJiraIssue(build);
-                System.out.println(issue.getKey());
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+            throws InterruptedException, IOException {
+        Result currentBuildResult= build.getResult();
+        System.out.println(currentBuildResult);
+        Result previousBuildResult= build.getPreviousBuild().getResult();
+        System.out.println(previousBuildResult);
+        if (Result.FAILURE==currentBuildResult)  {
+            if(previousBuildResult==Result.FAILURE)
+            {   //Do nothing
+                listener.getLogger().println("*************************Test fails again*****************************");
+                listener.getLogger().println("The previous build also failed");
+            }else{
+                try{
+                    RemoteIssue issue=createJiraIssue(build);
+                    listener.getLogger().println("**************************Test fails******************************");
+                    listener.getLogger().println( "Creating jira issue with issue ID"+" "+issue.getKey());
 
-            }catch(ServiceException e)  {
-                System.out.print("Service Exception");
-                e.printStackTrace();
+                }catch(ServiceException e)  {
+                    System.out.print("Service Exception");
+                    e.printStackTrace();
+                }
             }
         }
         return true;
