@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.*;
@@ -15,7 +16,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
-import java.util.List;
+import java.util.Set;
 
 /**
  * Created with IntelliJ IDEA.
@@ -27,9 +28,12 @@ import java.util.List;
 public class JiraCreateIssueNotifier extends Notifier{
 
     private String projectKey;
+    private String testDescription;
+
     @DataBoundConstructor
-    public JiraCreateIssueNotifier(String projectKey) {
+    public JiraCreateIssueNotifier(String projectKey,String testDescription) {
         this.projectKey = projectKey;
+        this.testDescription=testDescription;
     }
 
     public String getProjectKey() {
@@ -38,6 +42,14 @@ public class JiraCreateIssueNotifier extends Notifier{
 
     public void setProjectKey(String projectKey) {
         this.projectKey = projectKey;
+    }
+
+    public String getTestDescription() {
+        return testDescription;
+    }
+
+    public void setTestDescription(String testDescription) {
+        this.testDescription = testDescription;
     }
 
     @Override
@@ -55,11 +67,16 @@ public class JiraCreateIssueNotifier extends Notifier{
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException {
         Result currentBuildResult= build.getResult();
+        Result previousBuildResult=null;
         System.out.println(currentBuildResult);
-        Result previousBuildResult= build.getPreviousBuild().getResult();
+        AbstractBuild previousBuild=build.getPreviousBuild();
+        System.out.print(previousBuild);
+        if(previousBuild!=null){
+            previousBuildResult= previousBuild.getResult();
+        }
         System.out.println(previousBuildResult);
         if (Result.FAILURE==currentBuildResult)  {
-            if(previousBuildResult==Result.FAILURE)
+            if(previousBuild!=null &&  previousBuildResult==Result.FAILURE)
             {   //Do nothing
                 listener.getLogger().println("*************************Test fails again*****************************");
                 listener.getLogger().println("The previous build also failed");
@@ -78,16 +95,31 @@ public class JiraCreateIssueNotifier extends Notifier{
         return true;
     }
 
-    public RemoteIssue createJiraIssue(AbstractBuild<?, ?> build) throws ServiceException,IOException{
-
+    public RemoteIssue createJiraIssue(AbstractBuild<?, ?> build) throws ServiceException,IOException,
+            InterruptedException{
+        String buildURL= getBuildURL(build)  ;
         JiraSite site = JiraSite.get(build.getProject());
-        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "+build.getFullDisplayName());
-
+        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
+                + build.getFullDisplayName());
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
-        RemoteIssue issue = session.createIssue(projectKey);
+        RemoteIssue issue = session.createIssue(projectKey,testDescription,buildURL);
+
         return issue;
     }
+     public String getBuildURL(AbstractBuild<?, ?> build) throws IOException,InterruptedException{
+         EnvVars env = build.getEnvironment();
+         String buildURL="";
+         Set<String> keys=env.keySet();
+         for(String key:keys){
+             if(key=="BUILD_URL"){
+                 buildURL=env.get(key);
+                 System.out.println(buildURL);
+             }
+         }
+         return buildURL;
+     }
+
 
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 

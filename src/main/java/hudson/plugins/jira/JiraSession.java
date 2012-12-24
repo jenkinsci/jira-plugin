@@ -384,9 +384,14 @@ public class JiraSession {
         return knownStatuses;
     }
 
-    public RemoteIssue createIssue(String projectKey) throws RemoteException{
+    public RemoteIssue createIssue(String projectKey,String testDescription,String buildURL) throws RemoteException{
          RemoteIssue issue= new RemoteIssue();
+         String description=" As the test fails on jenkins this issue is created." +
+                 "If it is false alert please notify to QA tools : 1.Move the project to OTA and" +
+                 " 2.Add the component as Tools-Jenkins-Jira Integration."+"For more details please check here:"
+                 + buildURL+ " Description of the test : " + testDescription;
          issue.setProject(projectKey.toUpperCase());
+         issue.setDescription(description);
          issue.setSummary("Test Issue created by hobson-jenkins");
          issue.setType("1");
          RemoteIssue createdIssue;
