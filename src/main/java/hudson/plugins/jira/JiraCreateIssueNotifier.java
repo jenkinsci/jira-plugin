@@ -11,8 +11,10 @@ import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.tasks.Notifier;
+import hudson.util.FormValidation;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.QueryParameter;
 
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
@@ -32,7 +34,9 @@ public class JiraCreateIssueNotifier extends Notifier{
 
     @DataBoundConstructor
     public JiraCreateIssueNotifier(String projectKey,String testDescription) {
+        if(projectKey == null) throw new IllegalArgumentException("Project key cannot be null");
         this.projectKey = projectKey;
+
         this.testDescription=testDescription;
     }
 
@@ -98,12 +102,17 @@ public class JiraCreateIssueNotifier extends Notifier{
     public RemoteIssue createJiraIssue(AbstractBuild<?, ?> build) throws ServiceException,IOException,
             InterruptedException{
         String buildURL= getBuildURL(build)  ;
+        String checkDescription=(testDescription=="") ? "No Description is provided" : testDescription;
+        String description="As the test fails on jenkins this issue is created." +
+                " Description of the test : "+checkDescription+ ". For more details please check here:" + buildURL+
+                ". If it is false alert please notify to QA tools : 1.Move the project to OTA and" +
+                " 2.Add the component as Tools-Jenkins-Jira Integration.";
         JiraSite site = JiraSite.get(build.getProject());
         if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
                 + build.getFullDisplayName());
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
-        RemoteIssue issue = session.createIssue(projectKey,testDescription,buildURL);
+        RemoteIssue issue = session.createIssue(projectKey,description,buildURL);
 
         return issue;
     }
@@ -120,11 +129,17 @@ public class JiraCreateIssueNotifier extends Notifier{
          return buildURL;
      }
 
-
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         public DescriptorImpl() {
             super(JiraCreateIssueNotifier.class);
+        }
+        public FormValidation doCheckProjectKey(@QueryParameter String value)
+                throws IOException {
+            if (value.length() == 0) {
+                return FormValidation.error("Please set the project key");
+            }
+            return FormValidation.ok();
         }
 
         @Override
