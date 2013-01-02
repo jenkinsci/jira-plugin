@@ -2,6 +2,9 @@
   <f:entry title="${%Jira Project Key}" field="projectKey">
         <f:textbox/>
   </f:entry>
+  <f:entry title="${%Assignee}" field="assignee">
+            <f:textbox/>
+      </f:entry>
    <f:entry title="${%Description Of Test}" field="testDescription">
           <f:textarea/>
     </f:entry>
