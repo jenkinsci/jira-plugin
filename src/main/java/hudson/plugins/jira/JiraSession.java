@@ -384,7 +384,7 @@ public class JiraSession {
         return knownStatuses;
     }
 
-    public RemoteIssue createIssue(String projectKey,String testDescription,String buildURL,String assignee) throws RemoteException{
+    public RemoteIssue createIssue(String projectKey,String testDescription,String assignee) throws RemoteException{
          RemoteIssue issue= new RemoteIssue();
          issue.setProject(projectKey.toUpperCase());
          issue.setDescription(testDescription);

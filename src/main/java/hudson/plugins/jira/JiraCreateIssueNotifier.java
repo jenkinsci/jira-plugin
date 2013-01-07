@@ -81,14 +81,12 @@ public class JiraCreateIssueNotifier extends Notifier{
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException {
         Result currentBuildResult= build.getResult();
+        System.out.println("variables::"+build.getEnvironment(TaskListener.NULL));
         Result previousBuildResult=null;
-        System.out.println(currentBuildResult);
         AbstractBuild previousBuild=build.getPreviousBuild();
-        System.out.print(previousBuild);
         if(previousBuild!=null){
             previousBuildResult= previousBuild.getResult();
         }
-        System.out.println(previousBuildResult);
         if (Result.FAILURE==currentBuildResult)  {
             if(previousBuild!=null &&  previousBuildResult==Result.FAILURE)
             {   //Do nothing
@@ -111,34 +109,37 @@ public class JiraCreateIssueNotifier extends Notifier{
 
     public RemoteIssue createJiraIssue(AbstractBuild<?, ?> build) throws ServiceException,IOException,
             InterruptedException{
-        String buildURL= getBuildURL(build);
+        EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
+        String buildURL="";
+        String buildNumber="";
+        String jobName="";
+        Set<String> keys=environmentVariable.keySet();
+        for(String key:keys){
+            if(key=="BUILD_URL"){
+                buildURL=environmentVariable.get(key);
+            }
+            if(key=="BUILD_NUMBER") {
+                buildNumber=environmentVariable.get(key);
+            }
+            if(key=="JOB_NAME"){
+                jobName=environmentVariable.get(key);
+            }
+        }
         String checkDescription=(this.testDescription=="") ? "No description is provided" : this.testDescription;
-        String description="As the test fails on jenkins this issue is created." +"\n"+
-                "Description of the test : "+checkDescription+ "For more details please check here : " + buildURL+"\n"+
-                "If it is false alert please notify to QA tools : 1.Move to the OTA project and" +
-                " 2.Add the component as Tools-Jenkins-Jira Integration.";
+        String description="The test "+jobName+" has failed."+"\n\n"+checkDescription+ "* First failed run : ["+
+                buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]"+"\n\n\n\n"+
+                "If it is false alert please notify to QA tools :"+"\n"+"# Move to the OTA project and"+"\n" +
+                "# Set the component to Tools-Jenkins-Jira Integration.";
         String assignee = (this.assignee=="") ? "" : this.assignee;
         JiraSite site = JiraSite.get(build.getProject());
         if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
                 + build.getFullDisplayName());
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
-        RemoteIssue issue = session.createIssue(projectKey,description,buildURL,assignee);
+        RemoteIssue issue = session.createIssue(projectKey,description,assignee);
 
         return issue;
     }
-     public String getBuildURL(AbstractBuild<?, ?> build) throws IOException,InterruptedException{
-         EnvVars env = build.getEnvironment();
-         String buildURL="";
-         Set<String> keys=env.keySet();
-         for(String key:keys){
-             if(key=="BUILD_URL"){
-                 buildURL=env.get(key);
-                 System.out.println(buildURL);
-             }
-         }
-         return buildURL;
-     }
 
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
