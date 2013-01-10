@@ -393,7 +393,23 @@ public class JiraSession {
          issue.setType("1");
          RemoteIssue createdIssue;
          createdIssue=service.createIssue(token,issue);
+         System.out.println("Issue-id:: "+createdIssue.getKey());
+         //String Status=createdIssue.getStatus();
+         //System.out.println("Status no:: "+ Status+"Status value::"+getStatusById(Status));
+         //RemoteStatus statuses[]=service.getStatuses(token);
+         //System.out.println(statuses.toString());
          return createdIssue;
     }
 
+    public void addCommentWithoutConstrains(String issueId, String comment) throws RemoteException{
+        RemoteComment rc = new RemoteComment();
+        rc.setBody(comment);
+        service.addComment(token, issueId, rc);
+    }
+
+    public RemoteIssue getIssueById(String issueId)throws RemoteException{
+        String issueId1=issueId.toString();
+        RemoteIssue issue=service.getIssueById(token,issueId1);
+        return issue;
+    }
 }
