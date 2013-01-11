@@ -376,7 +376,6 @@ public class JiraSession {
         if (knownStatuses == null) {
             RemoteStatus[] statuses = service.getStatuses(token);
             knownStatuses = new HashMap<String, String>(statuses.length);
-
             for (RemoteStatus status : statuses) {
                 knownStatuses.put(status.getId(), status.getName());
             }
@@ -395,25 +394,22 @@ public class JiraSession {
          createdIssue=service.createIssue(token,issue);
          System.out.println("Issue-id:: "+createdIssue.getKey());
          String issue1=createdIssue.getKey();
-         //System.out.println("getIssueObject::"+service.getIssueById(token,issue1));
-         //String Status=createdIssue.getStatus();
-         //System.out.println("Status no:: "+ Status+"Status value::"+getStatusById(Status));
-         //RemoteStatus statuses[]=service.getStatuses(token);
-         //System.out.println(statuses.toString());
          return createdIssue;
     }
 
     public void addCommentWithoutConstrains(String issueId, String comment) throws RemoteException{
         RemoteComment rc = new RemoteComment();
         rc.setBody(comment);
+        System.out.println("In addCommentWithoutC");
         service.addComment(token, issueId, rc);
+        System.out.println("In addCommentWithoutC"+"after calling addComment");
     }
 
-    public RemoteIssue getIssueById(String issueId)throws RemoteException{
-        String issueId1=issueId;//check for the number format exception..!!!
+    public RemoteIssue getIssueByKey(String issueId)throws RemoteException{
         RemoteIssue issue=null;
         try{
-        issue=service.getIssueById(token,issueId1);
+        issue=service.getIssue(token,issueId);
+            System.out.println("In getIssueBy key"+issue);
         }catch(NumberFormatException e){
             e.printStackTrace();
             System.out.println("Number Format Exception");

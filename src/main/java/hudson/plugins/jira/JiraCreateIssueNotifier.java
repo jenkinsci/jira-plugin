@@ -88,15 +88,9 @@ public class JiraCreateIssueNotifier extends Notifier{
         if(previousBuild!=null){
             previousBuildResult= previousBuild.getResult();
         }
-        //System.out.println("console::"+previousBuild.getLog());
-       /* if(previousBuildResult==Result.FAILURE){
-               String consoleLog=previousBuild.getLog();
-               int i=consoleLog.indexOf("issue ID");
-               String sub=consoleLog.substring(i+8,i+16).trim();
-               System.out.println("substring::" + sub);
-        }  */
         String jobName="";
         String buildURL="";
+        String buildNumber="";
         EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
         Set<String> keys=environmentVariable.keySet();
         for(String key:keys){
@@ -106,42 +100,41 @@ public class JiraCreateIssueNotifier extends Notifier{
             if(key=="BUILD_URL"){
                 buildURL=environmentVariable.get(key);
             }
+            if(key=="BUILD_NUMBER") {
+                buildNumber=environmentVariable.get(key);
+            }
         }
-        String comment="[console log|"+buildURL+"]";
+        String comment="- Job is still failing."+"\n"+"- Failed run : ["+
+                buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
+        //find out jenkins home directory do not harcode
         String filename="/home/rupali/repo_ooyala/jenkins-jira-plugin/work/jobs/"+jobName+"/"+"issue.txt";
         if (currentBuildResult==Result.FAILURE)  {
             if(previousBuild!=null &&  previousBuildResult==Result.FAILURE)
             {
-                String issueId="";
-                try {
-                    BufferedReader br = null;
-                    String issue;
-                    br = new BufferedReader(new FileReader(filename));
-
-                    while ((issue = br.readLine()) != null) {
-                        System.out.println(issue);
-                        issueId=issue;
-                    }
-                    br.close();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                String issueId=getIssue(build);
                 listener.getLogger().println("*************************Test fails again*****************************");
                 listener.getLogger().println("The previous build also failed creating issue with issue ID"+" "+issueId);
                 //check for the issue status and then comment on it or delete it accordingly
                 try{
                 String Status=getStatus(build,issueId);
-                    System.out.println("Status::-"+Status);
+                    System.out.println("In perform Status::"+Status);
                     //Status=1=Open OR Status=5=Resolved
-                    if(Status=="1" ||Status=="5"){
+                    if(Status.equals("1")||Status.equals("5")){
+                        System.out.println("When Issue is opened or resolved");
                         addComment(build,issueId,comment);
                     }
-                    if(Status == "6"){
-                        File file=new File(filename);
+                    if(Status.equals("6")){
+                        System.out.println("When Issue is closed");
+                         //reopening the issue and then commenting on the issue
+                        addComment(build,issueId,comment);
+                        /*File file=new File(filename);
                         if(file.exists()==true){
-                           System.out.println(file.delete());
-                        }
+                            if(file.delete()){
+                                System.out.println("File deleted successfully...!!!");
+                            }else{
+                                System.out.println("File do not deleted :( ...!!!");
+                            }
+                        } */
                     }
                 }catch(ServiceException e){
                   e.printStackTrace();
@@ -166,33 +159,27 @@ public class JiraCreateIssueNotifier extends Notifier{
         }
         if(currentBuildResult==Result.SUCCESS)  {
             if(previousBuild!=null && previousBuildResult==Result.FAILURE){
-                //get the issue id, check for
-                String issueId="";
-                try {
-                    BufferedReader br = null;
-                    String issue;
-                    br = new BufferedReader(new FileReader(filename));
-
-                    while ((issue = br.readLine()) != null) {
-                        System.out.println(issue);
-                        issueId=issue;
-                    }
-                    br.close();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                //get the issue id, check for Status
+                String issueId=getIssue(build);
                 try{
                 String Status=getStatus(build,issueId);
-                System.out.println("Status::-"+Status);
+                System.out.println("In perform Status::"+Status);
                 //Status=1=Open OR Status=5=Resolved
-                if(Status=="1" ||Status=="5"){
-                    addComment(build,issueId,comment);
+                if(Status.equals("1") ||Status.equals("5")){
+                    System.out.println("When Issue is opened or resolved");
+                    addComment(build, issueId, comment);
                 }
-                if(Status == "6"){
+                //if issue is in closed status
+                if(Status.equals("6")){
+                    System.out.println("When Issue is closed");
                         File file=new File(filename);
                         if(file.exists()==true){
-                            System.out.println(file.delete());
+                            if(file.delete()){
+                                System.out.println("File deleted successfully...!!!");
+                            }else{
+                                System.out.println("File do not deleted :( ...!!!");
+                            }
+
                         }
                     }
 
@@ -245,8 +232,9 @@ public class JiraCreateIssueNotifier extends Notifier{
                 + build.getFullDisplayName());
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
-        RemoteIssue issue=session.getIssueById(id);
+        RemoteIssue issue=session.getIssueByKey(id);
         String status=issue.getStatus();
+        System.out.println("In getstatus method" + status);
         return status;
     }
 
@@ -257,6 +245,35 @@ public class JiraCreateIssueNotifier extends Notifier{
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
         session.addCommentWithoutConstrains(id,comment);
+    }
+
+    public String getIssue(AbstractBuild<?, ?> build) throws IOException,InterruptedException{
+
+        EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
+        String jobName="";
+        Set<String> keys=environmentVariable.keySet();
+        for(String key:keys){
+            if(key=="JOB_NAME"){
+                jobName=environmentVariable.get(key);
+            }
+        }
+        String filename="/home/rupali/repo_ooyala/jenkins-jira-plugin/work/jobs/"+jobName+"/"+"issue.txt";
+        String issueId="";
+        try {
+            BufferedReader br = null;
+            String issue;
+            br = new BufferedReader(new FileReader(filename));
+
+            while ((issue = br.readLine()) != null) {
+                System.out.println(issue);
+                issueId=issue;
+            }
+            br.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return issueId;
     }
 
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
