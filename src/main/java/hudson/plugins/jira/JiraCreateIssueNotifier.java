@@ -18,7 +18,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.xml.rpc.ServiceException;
-import java.io.IOException;
+import java.io.*;
 import java.util.Set;
 
 /**
@@ -88,30 +88,60 @@ public class JiraCreateIssueNotifier extends Notifier{
         if(previousBuild!=null){
             previousBuildResult= previousBuild.getResult();
         }
-        System.out.println("console::"+previousBuild.getLog());
+        //System.out.println("console::"+previousBuild.getLog());
        /* if(previousBuildResult==Result.FAILURE){
                String consoleLog=previousBuild.getLog();
                int i=consoleLog.indexOf("issue ID");
                String sub=consoleLog.substring(i+8,i+16).trim();
                System.out.println("substring::" + sub);
         }  */
-        if (Result.FAILURE==currentBuildResult)  {
+        String jobName="";
+        String buildURL="";
+        EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
+        Set<String> keys=environmentVariable.keySet();
+        for(String key:keys){
+            if(key=="JOB_NAME"){
+                jobName=environmentVariable.get(key);
+            }
+            if(key=="BUILD_URL"){
+                buildURL=environmentVariable.get(key);
+            }
+        }
+        String comment="[console log|"+buildURL+"]";
+        String filename="/home/rupali/repo_ooyala/jenkins-jira-plugin/work/jobs/"+jobName+"/"+"issue.txt";
+        if (currentBuildResult==Result.FAILURE)  {
             if(previousBuild!=null &&  previousBuildResult==Result.FAILURE)
-            {   //Do nothing
-                 String comment="";
-                //need to improve persisting of issue-id
-                String consoleLog=previousBuild.getLog();
-                int i=consoleLog.indexOf("issue ID");
-                String issueId=consoleLog.substring(i+8,i+16).trim();
-                System.out.println("substring::"+issueId);
+            {
+                String issueId="";
+                try {
+                    BufferedReader br = null;
+                    String issue;
+                    br = new BufferedReader(new FileReader(filename));
+
+                    while ((issue = br.readLine()) != null) {
+                        System.out.println(issue);
+                        issueId=issue;
+                    }
+                    br.close();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 listener.getLogger().println("*************************Test fails again*****************************");
                 listener.getLogger().println("The previous build also failed creating issue with issue ID"+" "+issueId);
-                //check for the issue status and then comment on it
+                //check for the issue status and then comment on it or delete it accordingly
                 try{
-                String Status=getStatus(build,"OJRA-97");
+                String Status=getStatus(build,issueId);
                     System.out.println("Status::-"+Status);
+                    //Status=1=Open OR Status=5=Resolved
                     if(Status=="1" ||Status=="5"){
                         addComment(build,issueId,comment);
+                    }
+                    if(Status == "6"){
+                        File file=new File(filename);
+                        if(file.exists()==true){
+                           System.out.println(file.delete());
+                        }
                     }
                 }catch(ServiceException e){
                   e.printStackTrace();
@@ -119,12 +149,55 @@ public class JiraCreateIssueNotifier extends Notifier{
             }else{
                 try{
                     RemoteIssue issue=createJiraIssue(build);
+                    //create a file store issue-id
+                    PrintWriter writer = new PrintWriter(filename);
+                    writer.println(issue.getKey());
+                    writer.close();
+
                     listener.getLogger().println("**************************Test fails******************************");
                     listener.getLogger().println( "Creating jira issue with issue ID"+" "+issue.getKey());
-                    System.out.println( "Status of issue "+issue.getKey()+" ::"+issue.getStatus());
+                    //System.out.println( "Status of issue "+issue.getKey()+" ::"+issue.getStatus());
 
                 }catch(ServiceException e)  {
                     System.out.print("Service Exception");
+                    e.printStackTrace();
+                }
+            }
+        }
+        if(currentBuildResult==Result.SUCCESS)  {
+            if(previousBuild!=null && previousBuildResult==Result.FAILURE){
+                //get the issue id, check for
+                String issueId="";
+                try {
+                    BufferedReader br = null;
+                    String issue;
+                    br = new BufferedReader(new FileReader(filename));
+
+                    while ((issue = br.readLine()) != null) {
+                        System.out.println(issue);
+                        issueId=issue;
+                    }
+                    br.close();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try{
+                String Status=getStatus(build,issueId);
+                System.out.println("Status::-"+Status);
+                //Status=1=Open OR Status=5=Resolved
+                if(Status=="1" ||Status=="5"){
+                    addComment(build,issueId,comment);
+                }
+                if(Status == "6"){
+                        File file=new File(filename);
+                        if(file.exists()==true){
+                            System.out.println(file.delete());
+                        }
+                    }
+
+                }catch(ServiceException e){
+                    System.out.println("Service Exception");
                     e.printStackTrace();
                 }
             }

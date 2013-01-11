@@ -394,6 +394,8 @@ public class JiraSession {
          RemoteIssue createdIssue;
          createdIssue=service.createIssue(token,issue);
          System.out.println("Issue-id:: "+createdIssue.getKey());
+         String issue1=createdIssue.getKey();
+         //System.out.println("getIssueObject::"+service.getIssueById(token,issue1));
          //String Status=createdIssue.getStatus();
          //System.out.println("Status no:: "+ Status+"Status value::"+getStatusById(Status));
          //RemoteStatus statuses[]=service.getStatuses(token);
@@ -408,8 +410,14 @@ public class JiraSession {
     }
 
     public RemoteIssue getIssueById(String issueId)throws RemoteException{
-        String issueId1=issueId.toString();
-        RemoteIssue issue=service.getIssueById(token,issueId1);
+        String issueId1=issueId;//check for the number format exception..!!!
+        RemoteIssue issue=null;
+        try{
+        issue=service.getIssueById(token,issueId1);
+        }catch(NumberFormatException e){
+            e.printStackTrace();
+            System.out.println("Number Format Exception");
+        }
         return issue;
     }
 }
