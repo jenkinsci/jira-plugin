@@ -392,8 +392,6 @@ public class JiraSession {
          issue.setType("1");
          RemoteIssue createdIssue;
          createdIssue=service.createIssue(token,issue);
-         System.out.println("Issue-id:: "+createdIssue.getKey());
-         String issue1=createdIssue.getKey();
          return createdIssue;
     }
 

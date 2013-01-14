@@ -9,6 +9,7 @@ import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import hudson.tasks.Notifier;
@@ -17,6 +18,7 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
+import javax.servlet.Servlet;
 import javax.xml.rpc.ServiceException;
 import java.io.*;
 import java.util.Set;
@@ -88,15 +90,11 @@ public class JiraCreateIssueNotifier extends Notifier{
         if(previousBuild!=null){
             previousBuildResult= previousBuild.getResult();
         }
-        String jobName="";
         String buildURL="";
         String buildNumber="";
         EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
         Set<String> keys=environmentVariable.keySet();
         for(String key:keys){
-            if(key=="JOB_NAME"){
-                jobName=environmentVariable.get(key);
-            }
             if(key=="BUILD_URL"){
                 buildURL=environmentVariable.get(key);
             }
@@ -104,37 +102,40 @@ public class JiraCreateIssueNotifier extends Notifier{
                 buildNumber=environmentVariable.get(key);
             }
         }
-        String comment="- Job is still failing."+"\n"+"- Failed run : ["+
-                buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
-        //find out jenkins home directory do not harcode
-        String filename="/home/rupali/repo_ooyala/jenkins-jira-plugin/work/jobs/"+jobName+"/"+"issue.txt";
+        String jobDirPath=Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
+        String filename=jobDirPath+"/"+"issue.txt";
         if (currentBuildResult==Result.FAILURE)  {
-            if(previousBuild!=null &&  previousBuildResult==Result.FAILURE)
-            {
+            if(previousBuild!=null &&  previousBuildResult==Result.FAILURE) {
+
+                String comment="- Job is still failing."+"\n"+"- Failed run : ["+
+                        buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
+                //Get the issue-id which was filed when the previous built failed
                 String issueId=getIssue(build);
                 listener.getLogger().println("*************************Test fails again*****************************");
-                listener.getLogger().println("The previous build also failed creating issue with issue ID"+" "+issueId);
-                //check for the issue status and then comment on it or delete it accordingly
+                //Checking the status of the issue.
                 try{
                 String Status=getStatus(build,issueId);
-                    System.out.println("In perform Status::"+Status);
+                    System.out.println("In perform method Status::"+Status);
                     //Status=1=Open OR Status=5=Resolved
                     if(Status.equals("1")||Status.equals("5")){
+                        listener.getLogger().println("The previous build also failed creating issue with issue ID"+" "+issueId);
                         System.out.println("When Issue is opened or resolved");
                         addComment(build,issueId,comment);
                     }
                     if(Status.equals("6")){
                         System.out.println("When Issue is closed");
-                         //reopening the issue and then commenting on the issue
-                        addComment(build,issueId,comment);
-                        /*File file=new File(filename);
-                        if(file.exists()==true){
+                        listener.getLogger().println("The previous build also failed but the issue is closed");
+                        File file=new File(filename);
+                        if(file.exists()){
                             if(file.delete()){
                                 System.out.println("File deleted successfully...!!!");
                             }else{
                                 System.out.println("File do not deleted :( ...!!!");
                             }
-                        } */
+                        }
+
+                        RemoteIssue issue=createJiraIssue(build);
+                        listener.getLogger().println( "Creating jira issue with issue ID"+" "+issue.getKey());
                     }
                 }catch(ServiceException e){
                   e.printStackTrace();
@@ -142,14 +143,8 @@ public class JiraCreateIssueNotifier extends Notifier{
             }else{
                 try{
                     RemoteIssue issue=createJiraIssue(build);
-                    //create a file store issue-id
-                    PrintWriter writer = new PrintWriter(filename);
-                    writer.println(issue.getKey());
-                    writer.close();
-
                     listener.getLogger().println("**************************Test fails******************************");
                     listener.getLogger().println( "Creating jira issue with issue ID"+" "+issue.getKey());
-                    //System.out.println( "Status of issue "+issue.getKey()+" ::"+issue.getStatus());
 
                 }catch(ServiceException e)  {
                     System.out.print("Service Exception");
@@ -157,9 +152,11 @@ public class JiraCreateIssueNotifier extends Notifier{
                 }
             }
         }
-        if(currentBuildResult==Result.SUCCESS)  {
+        if(currentBuildResult==Result.SUCCESS && previousBuild!=null)  {
             if(previousBuild!=null && previousBuildResult==Result.FAILURE){
                 //get the issue id, check for Status
+                String comment="- Job is not falling but the issue is still open."+"\n"+"- Passed run : ["+
+                        buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
                 String issueId=getIssue(build);
                 try{
                 String Status=getStatus(build,issueId);
@@ -173,16 +170,14 @@ public class JiraCreateIssueNotifier extends Notifier{
                 if(Status.equals("6")){
                     System.out.println("When Issue is closed");
                         File file=new File(filename);
-                        if(file.exists()==true){
+                        if(file.exists()){
                             if(file.delete()){
                                 System.out.println("File deleted successfully...!!!");
                             }else{
                                 System.out.println("File do not deleted :( ...!!!");
                             }
-
                         }
                     }
-
                 }catch(ServiceException e){
                     System.out.println("Service Exception");
                     e.printStackTrace();
@@ -211,7 +206,7 @@ public class JiraCreateIssueNotifier extends Notifier{
             }
         }
         String checkDescription=(this.testDescription=="") ? "No description is provided" : this.testDescription;
-        String description="The test "+jobName+" has failed."+"\n\n"+checkDescription+ "* First failed run : ["+
+        String description="The test "+jobName+" has failed."+"\n\n"+checkDescription+"\n\n"+ "* First failed run : ["+
                 buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]"+"\n\n\n\n"+
                 "If it is false alert please notify to QA tools :"+"\n"+"# Move to the OTA project and"+"\n" +
                 "# Set the component to Tools-Jenkins-Jira Integration.";
@@ -222,7 +217,11 @@ public class JiraCreateIssueNotifier extends Notifier{
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
         RemoteIssue issue = session.createIssue(projectKey,description,assignee);
-
+        String jobDirPath=Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
+        String filename=jobDirPath+"/"+"issue.txt";
+        PrintWriter writer = new PrintWriter(filename);
+        writer.println(issue.getKey());
+        writer.close();
         return issue;
     }
 
@@ -234,7 +233,6 @@ public class JiraCreateIssueNotifier extends Notifier{
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
         RemoteIssue issue=session.getIssueByKey(id);
         String status=issue.getStatus();
-        System.out.println("In getstatus method" + status);
         return status;
     }
 
@@ -249,15 +247,8 @@ public class JiraCreateIssueNotifier extends Notifier{
 
     public String getIssue(AbstractBuild<?, ?> build) throws IOException,InterruptedException{
 
-        EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
-        String jobName="";
-        Set<String> keys=environmentVariable.keySet();
-        for(String key:keys){
-            if(key=="JOB_NAME"){
-                jobName=environmentVariable.get(key);
-            }
-        }
-        String filename="/home/rupali/repo_ooyala/jenkins-jira-plugin/work/jobs/"+jobName+"/"+"issue.txt";
+        String jobDirPath=Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
+        String filename=jobDirPath+"/"+"issue.txt";
         String issueId="";
         try {
             BufferedReader br = null;
