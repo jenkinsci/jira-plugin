@@ -8,4 +8,7 @@
    <f:entry title="${%Description Of Test}" field="testDescription">
           <f:textarea/>
     </f:entry>
+    <f:entry title="${%Component Name}" field="component">
+           <f:textbox/>
+    </f:entry>
 </j:jelly>

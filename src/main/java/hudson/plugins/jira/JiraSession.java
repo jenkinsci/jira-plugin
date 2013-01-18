@@ -1,17 +1,6 @@
 package hudson.plugins.jira;
 
-import hudson.plugins.jira.soap.JiraSoapService;
-import hudson.plugins.jira.soap.RemoteComment;
-import hudson.plugins.jira.soap.RemoteFieldValue;
-import hudson.plugins.jira.soap.RemoteGroup;
-import hudson.plugins.jira.soap.RemoteIssue;
-import hudson.plugins.jira.soap.RemoteIssueType;
-import hudson.plugins.jira.soap.RemoteNamedObject;
-import hudson.plugins.jira.soap.RemoteProject;
-import hudson.plugins.jira.soap.RemoteProjectRole;
-import hudson.plugins.jira.soap.RemoteStatus;
-import hudson.plugins.jira.soap.RemoteValidationException;
-import hudson.plugins.jira.soap.RemoteVersion;
+import hudson.plugins.jira.soap.*;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
@@ -383,13 +372,14 @@ public class JiraSession {
         return knownStatuses;
     }
 
-    public RemoteIssue createIssue(String projectKey,String testDescription,String assignee) throws RemoteException{
+    public RemoteIssue createIssue(String projectKey,String testDescription,String assignee,RemoteComponent[] components) throws RemoteException{
          RemoteIssue issue= new RemoteIssue();
          issue.setProject(projectKey.toUpperCase());
          issue.setDescription(testDescription);
          issue.setSummary("Test Issue created by hobson-jenkins");
          issue.setAssignee(assignee);
          issue.setType("1");
+         issue.setComponents(components);
          RemoteIssue createdIssue;
          createdIssue=service.createIssue(token,issue);
          return createdIssue;
@@ -413,5 +403,10 @@ public class JiraSession {
             System.out.println("Number Format Exception");
         }
         return issue;
+    }
+
+    public RemoteComponent[] getComponents(String projectKey)throws RemoteException{
+        RemoteComponent availableRemoteComponents[]= service.getComponents(token, projectKey);
+        return availableRemoteComponents;
     }
 }

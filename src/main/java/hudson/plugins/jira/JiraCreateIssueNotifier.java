@@ -4,7 +4,7 @@ import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.*;
-import hudson.plugins.jira.soap.RemoteComment;
+import hudson.plugins.jira.soap.RemoteComponent;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -18,10 +18,10 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.servlet.Servlet;
 import javax.xml.rpc.ServiceException;
 import java.io.*;
 import java.util.Set;
+import java.util.HashMap;
 
 /**
  * Created with IntelliJ IDEA.
@@ -35,14 +35,16 @@ public class JiraCreateIssueNotifier extends Notifier{
     private String projectKey;
     private String testDescription;
     private String assignee;
+    private String component;
 
     @DataBoundConstructor
-    public JiraCreateIssueNotifier(String projectKey,String testDescription,String assignee) {
+    public JiraCreateIssueNotifier(String projectKey,String testDescription,String assignee,String component) {
         if(projectKey == null) throw new IllegalArgumentException("Project key cannot be null");
         this.projectKey = projectKey;
 
         this.testDescription=testDescription;
         this.assignee=assignee;
+        this.component=component;
     }
 
     public String getProjectKey() {
@@ -67,6 +69,14 @@ public class JiraCreateIssueNotifier extends Notifier{
 
     public void setAssignee(String assignee) {
         this.assignee = assignee;
+    }
+
+    public String getComponent() {
+        return component;
+    }
+
+    public void setComponent(String component) {
+        this.component = component;
     }
 
     @Override
@@ -112,18 +122,18 @@ public class JiraCreateIssueNotifier extends Notifier{
                 //Get the issue-id which was filed when the previous built failed
                 String issueId=getIssue(build);
                 listener.getLogger().println("*************************Test fails again*****************************");
-                //Checking the status of the issue.
                 try{
+                //The status of the issue which was filed when the previous build failed
                 String Status=getStatus(build,issueId);
                     System.out.println("In perform method Status::"+Status);
                     //Status=1=Open OR Status=5=Resolved
                     if(Status.equals("1")||Status.equals("5")){
-                        listener.getLogger().println("The previous build also failed creating issue with issue ID"+" "+issueId);
-                        System.out.println("When Issue is opened or resolved");
+                        listener.getLogger().println("The previous build also failed creating issue with issue ID"+
+                                " "+issueId);
+                        listener.getLogger().println("The status of the Issue is opened or resolved");
                         addComment(build,issueId,comment);
                     }
                     if(Status.equals("6")){
-                        System.out.println("When Issue is closed");
                         listener.getLogger().println("The previous build also failed but the issue is closed");
                         File file=new File(filename);
                         if(file.exists()){
@@ -135,7 +145,7 @@ public class JiraCreateIssueNotifier extends Notifier{
                         }
 
                         RemoteIssue issue=createJiraIssue(build);
-                        listener.getLogger().println( "Creating jira issue with issue ID"+" "+issue.getKey());
+                        listener.getLogger().println( "So Creating jira issue with issue ID"+" "+issue.getKey());
                     }
                 }catch(ServiceException e){
                   e.printStackTrace();
@@ -143,7 +153,7 @@ public class JiraCreateIssueNotifier extends Notifier{
             }else{
                 try{
                     RemoteIssue issue=createJiraIssue(build);
-                    listener.getLogger().println("**************************Test fails******************************");
+                    listener.getLogger().println("**************************Test Fails******************************");
                     listener.getLogger().println( "Creating jira issue with issue ID"+" "+issue.getKey());
 
                 }catch(ServiceException e)  {
@@ -154,13 +164,11 @@ public class JiraCreateIssueNotifier extends Notifier{
         }
         if(currentBuildResult==Result.SUCCESS && previousBuild!=null)  {
             if(previousBuild!=null && previousBuildResult==Result.FAILURE){
-                //get the issue id, check for Status
                 String comment="- Job is not falling but the issue is still open."+"\n"+"- Passed run : ["+
                         buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
                 String issueId=getIssue(build);
                 try{
                 String Status=getStatus(build,issueId);
-                System.out.println("In perform Status::"+Status);
                 //Status=1=Open OR Status=5=Resolved
                 if(Status.equals("1") ||Status.equals("5")){
                     System.out.println("When Issue is opened or resolved");
@@ -193,6 +201,7 @@ public class JiraCreateIssueNotifier extends Notifier{
         String buildURL="";
         String buildNumber="";
         String jobName="";
+        RemoteComponent components[]=null;
         Set<String> keys=environmentVariable.keySet();
         for(String key:keys){
             if(key=="BUILD_URL"){
@@ -210,14 +219,21 @@ public class JiraCreateIssueNotifier extends Notifier{
                 buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]"+"\n\n\n\n"+
                 "If it is false alert please notify to QA tools :"+"\n"+"# Move to the OTA project and"+"\n" +
                 "# Set the component to Tools-Jenkins-Jira Integration.";
+        if(this.component==""){
+            components=null;
+        }else{
+            components=getComponent(build,this.component);
+            System.out.println("In create issue , components ::"+components);
+        }
         String assignee = (this.assignee=="") ? "" : this.assignee;
         JiraSite site = JiraSite.get(build.getProject());
         if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
                 + build.getFullDisplayName());
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
-        RemoteIssue issue = session.createIssue(projectKey,description,assignee);
+        RemoteIssue issue = session.createIssue(projectKey,description,assignee,components);
         String jobDirPath=Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
+        //creating a file in jobs directory and saving the issue-Id
         String filename=jobDirPath+"/"+"issue.txt";
         PrintWriter writer = new PrintWriter(filename);
         writer.println(issue.getKey());
@@ -243,6 +259,45 @@ public class JiraCreateIssueNotifier extends Notifier{
         JiraSession session = site.createSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
         session.addCommentWithoutConstrains(id,comment);
+    }
+
+    public RemoteComponent[] getComponent(AbstractBuild<?, ?> build,String component) throws
+            ServiceException,IOException{
+
+        JiraSite site = JiraSite.get(build.getProject());
+        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
+                + build.getFullDisplayName());
+        JiraSession session = site.createSession();
+        if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        RemoteComponent availableComponents[]= session.getComponents(projectKey);
+        //To store all the componets of the particular project
+        HashMap<String,String> components=new HashMap<String, String>();
+        //converting the user input as a string array
+        String inputComponents[]=component.split(",");
+        int numberOfComponents=inputComponents.length;
+        System.out.println(numberOfComponents);
+        RemoteComponent allcomponents[]=new RemoteComponent[numberOfComponents];
+        for(RemoteComponent rc:availableComponents)  {
+            String name=rc.getName();
+            String id=rc.getId();
+            components.put(name,id);
+        }
+        int i=0;
+        while(i<numberOfComponents){
+            RemoteComponent componentIssue=new RemoteComponent();
+            String userInput= inputComponents[i];
+            String id="";
+            for(String key:components.keySet()) {
+                if(userInput.equalsIgnoreCase(key)){
+                    id=components.get(key);
+                }
+            }
+            componentIssue.setName(userInput);
+            componentIssue.setId(id);
+            allcomponents[i]=componentIssue;
+            i++;
+        }
+       return allcomponents;
     }
 
     public String getIssue(AbstractBuild<?, ?> build) throws IOException,InterruptedException{
