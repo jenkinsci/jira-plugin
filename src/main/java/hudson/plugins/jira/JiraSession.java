@@ -372,11 +372,11 @@ public class JiraSession {
         return knownStatuses;
     }
 
-    public RemoteIssue createIssue(String projectKey,String testDescription,String assignee,RemoteComponent[] components) throws RemoteException{
+    public RemoteIssue createIssue(String projectKey,String description,String assignee,RemoteComponent[] components,String summary) throws RemoteException{
          RemoteIssue issue= new RemoteIssue();
          issue.setProject(projectKey.toUpperCase());
-         issue.setDescription(testDescription);
-         issue.setSummary("Test Issue created by hobson-jenkins");
+         issue.setDescription(description);
+         issue.setSummary(summary);
          issue.setAssignee(assignee);
          issue.setType("1");
          issue.setComponents(components);

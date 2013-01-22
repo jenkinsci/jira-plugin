@@ -206,6 +206,7 @@ public class JiraCreateIssueNotifier extends Notifier{
         String buildURL="";
         String buildNumber="";
         String jobName="";
+        String jenkinsURL="";
         RemoteComponent components[]=null;
         Set<String> keys=environmentVariable.keySet();
         for(String key:keys){
@@ -217,6 +218,9 @@ public class JiraCreateIssueNotifier extends Notifier{
             }
             if(key=="JOB_NAME"){
                 jobName=environmentVariable.get(key);
+            }
+            if(key=="JENKINS_URL"){
+              jenkinsURL=environmentVariable.get(key);
             }
         }
         String checkDescription=(this.testDescription=="") ? "No description is provided" : this.testDescription;
@@ -231,8 +235,9 @@ public class JiraCreateIssueNotifier extends Notifier{
             System.out.println("In create issue , components ::"+components);
         }
         String assignee = (this.assignee=="") ? "" : this.assignee;
+        String summary="Test "+jobName+" failure - "+jenkinsURL;
         JiraSession session = getJiraSession(build);
-        RemoteIssue issue = session.createIssue(projectKey,description,assignee,components);
+        RemoteIssue issue = session.createIssue(projectKey,description,assignee,components,summary);
         String jobDirPath=Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
         //creating a file in jobs directory and saving the issue-Id
         String filename=jobDirPath+"/"+"issue.txt";
