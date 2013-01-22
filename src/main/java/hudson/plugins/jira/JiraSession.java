@@ -388,20 +388,12 @@ public class JiraSession {
     public void addCommentWithoutConstrains(String issueId, String comment) throws RemoteException{
         RemoteComment rc = new RemoteComment();
         rc.setBody(comment);
-        System.out.println("In addCommentWithoutC");
         service.addComment(token, issueId, rc);
-        System.out.println("In addCommentWithoutC"+"after calling addComment");
     }
 
     public RemoteIssue getIssueByKey(String issueId)throws RemoteException{
         RemoteIssue issue=null;
-        try{
         issue=service.getIssue(token,issueId);
-            System.out.println("In getIssueBy key"+issue);
-        }catch(NumberFormatException e){
-            e.printStackTrace();
-            System.out.println("Number Format Exception");
-        }
         return issue;
     }
 

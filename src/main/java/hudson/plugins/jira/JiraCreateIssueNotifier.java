@@ -94,7 +94,7 @@ public class JiraCreateIssueNotifier extends Notifier{
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException{
         Result currentBuildResult= build.getResult();
-        System.out.println("variables::"+build.getEnvironment(TaskListener.NULL));
+        System.out.println("Env Variables::"+build.getEnvironment(TaskListener.NULL));
         Result previousBuildResult=null;
         AbstractBuild previousBuild=build.getPreviousBuild();
         if(previousBuild!=null){
@@ -175,12 +175,12 @@ public class JiraCreateIssueNotifier extends Notifier{
                   String Status=getStatus(build,issueId);
                  //Status=1=Open OR Status=5=Resolved
                  if(Status.equals("1") ||Status.equals("5")){
-                    System.out.println("When Issue is opened or resolved");
+                    System.out.println("The Issue is in opened or resolved status");
                     addComment(build, issueId, comment);
                  }
                 //if issue is in closed status
                  if(Status.equals("6")){
-                    System.out.println("When Issue is closed");
+                    System.out.println("The Issue is in closed status");
                         File file=new File(filename);
                         if(file.exists()){
                             if(file.delete()){
@@ -232,7 +232,7 @@ public class JiraCreateIssueNotifier extends Notifier{
             components=null;
         }else{
             components=getComponent(build,this.component);
-            System.out.println("In create issue , components ::"+components);
+            System.out.println("In create issue, components of project::"+components);
         }
         String assignee = (this.assignee=="") ? "" : this.assignee;
         String summary="Test "+jobName+" failure - "+jenkinsURL;
