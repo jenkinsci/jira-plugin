@@ -38,7 +38,8 @@ public class JiraCreateIssueNotifier extends Notifier{
     private String component;
 
     @DataBoundConstructor
-    public JiraCreateIssueNotifier(String projectKey,String testDescription,String assignee,String component) {
+    public JiraCreateIssueNotifier(String projectKey,String testDescription,String assignee,
+                                   String component) {
         if(projectKey == null) throw new IllegalArgumentException("Project key cannot be null");
         this.projectKey = projectKey;
 
@@ -118,24 +119,26 @@ public class JiraCreateIssueNotifier extends Notifier{
             if(previousBuild!=null &&  previousBuildResult==Result.FAILURE) {
 
                 String comment="- Job is still failing."+"\n"+"- Failed run : ["+
-                        buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
+                      buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
                 //Get the issue-id which was filed when the previous built failed
                 String issueId=getIssue(build);
                 if(issueId!=null) {
-                 listener.getLogger().println("*************************Test fails again*****************************");
+                 listener.getLogger().println("*************************Test fails again******************"+
+                         "**************");
                  try{
                  //The status of the issue which was filed when the previous build failed
                  String Status=getStatus(build,issueId);
                  System.out.println("In perform method Status::"+Status);
                     //Status=1=Open OR Status=5=Resolved
                     if(Status.equals("1")||Status.equals("5")){
-                        listener.getLogger().println("The previous build also failed creating issue with issue ID"+
-                                " "+issueId);
+                        listener.getLogger().println("The previous build also failed creating issue with "+
+                                "issue ID"+" "+issueId);
                         listener.getLogger().println("The status of the Issue is opened or resolved");
                         addComment(build,issueId,comment);
                     }
                     if(Status.equals("6")){
-                        listener.getLogger().println("The previous build also failed but the issue is closed");
+                        listener.getLogger().println("The previous build also failed but the issue " +
+                                "is closed");
                         File file=new File(filename);
                         if(file.exists()){
                             if(file.delete()){
@@ -146,7 +149,8 @@ public class JiraCreateIssueNotifier extends Notifier{
                         }
 
                         RemoteIssue issue=createJiraIssue(build);
-                        listener.getLogger().println( "So Creating jira issue with issue ID"+" "+issue.getKey());
+                        listener.getLogger().println( "So Creating jira issue with issue ID"+
+                                " "+issue.getKey());
                     }
                 }catch(ServiceException e){
                   e.printStackTrace();
@@ -155,8 +159,10 @@ public class JiraCreateIssueNotifier extends Notifier{
             }else{
                 try{
                     RemoteIssue issue=createJiraIssue(build);
-                    listener.getLogger().println("**************************Test Fails******************************");
-                    listener.getLogger().println( "Creating jira issue with issue ID"+" "+issue.getKey());
+                    listener.getLogger().println("**************************Test Fails************" +
+                            "******************");
+                    listener.getLogger().println( "Creating jira issue with issue ID"
+                            +" "+issue.getKey());
 
                 }catch(ServiceException e)  {
                     System.out.print("Service Exception");
@@ -165,9 +171,10 @@ public class JiraCreateIssueNotifier extends Notifier{
             }
         }
         if(currentBuildResult==Result.SUCCESS && previousBuild!=null)  {
-            if(previousBuild!=null && (previousBuildResult==Result.FAILURE || previousBuildResult==Result.SUCCESS)){
+            if(previousBuild!=null && (previousBuildResult==Result.FAILURE ||
+                    previousBuildResult==Result.SUCCESS)){
                 String comment="- Job is not falling but the issue is still open."+"\n"+"- Passed run : ["+
-                        buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
+                       buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
                 String issueId=getIssue(build);
                 //if issue exists it will check the status and comment or delete the file accordingly
                 if(issueId!=null){
@@ -207,6 +214,7 @@ public class JiraCreateIssueNotifier extends Notifier{
         String buildNumber="";
         String jobName="";
         String jenkinsURL="";
+        String checkDescription;
         RemoteComponent components[]=null;
         Set<String> keys=environmentVariable.keySet();
         for(String key:keys){
@@ -223,11 +231,12 @@ public class JiraCreateIssueNotifier extends Notifier{
               jenkinsURL=environmentVariable.get(key);
             }
         }
-        String checkDescription=(this.testDescription=="") ? "No description is provided" : this.testDescription;
-        String description="The test "+jobName+" has failed."+"\n\n"+checkDescription+"\n\n"+ "* First failed run : ["+
-                buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]"+"\n\n\n\n"+
-                "If it is false alert please notify to QA tools :"+"\n"+"# Move to the OTA project and"+"\n" +
-                "# Set the component to Tools-Jenkins-Jira Integration.";
+        checkDescription=(this.testDescription=="") ? "No description is provided" : this.testDescription;
+        String description="The test "+jobName+" has failed."+"\n\n"+checkDescription+"\n\n"+
+                "* First failed run : ["+buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+
+                buildURL.concat("console")+"]"+"\n\n\n\n"+"If it is false alert please notify to QA tools :"
+                +"\n"+"# Move to the OTA project and"+"\n"
+                +"# Set the component to Tools-Jenkins-Jira Integration.";
         if(this.component==""){
             components=null;
         }else{
@@ -254,7 +263,8 @@ public class JiraCreateIssueNotifier extends Notifier{
         return status;
     }
 
-    public void addComment(AbstractBuild<?, ?> build,String id,String comment) throws ServiceException,IOException{
+    public void addComment(AbstractBuild<?, ?> build,String id,String comment)
+            throws ServiceException,IOException{
         JiraSession session = getJiraSession(build);
         session.addCommentWithoutConstrains(id,comment);
     }
@@ -322,7 +332,8 @@ public class JiraCreateIssueNotifier extends Notifier{
         if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
                 + build.getFullDisplayName());
         JiraSession session = site.createSession();
-        if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't " +
+                "configured in Jenkins");
         return session;
     }
 
