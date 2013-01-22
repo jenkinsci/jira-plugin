@@ -121,11 +121,12 @@ public class JiraCreateIssueNotifier extends Notifier{
                         buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
                 //Get the issue-id which was filed when the previous built failed
                 String issueId=getIssue(build);
-                listener.getLogger().println("*************************Test fails again*****************************");
-                try{
-                //The status of the issue which was filed when the previous build failed
-                String Status=getStatus(build,issueId);
-                    System.out.println("In perform method Status::"+Status);
+                if(issueId!=null) {
+                 listener.getLogger().println("*************************Test fails again*****************************");
+                 try{
+                 //The status of the issue which was filed when the previous build failed
+                 String Status=getStatus(build,issueId);
+                 System.out.println("In perform method Status::"+Status);
                     //Status=1=Open OR Status=5=Resolved
                     if(Status.equals("1")||Status.equals("5")){
                         listener.getLogger().println("The previous build also failed creating issue with issue ID"+
@@ -150,6 +151,7 @@ public class JiraCreateIssueNotifier extends Notifier{
                 }catch(ServiceException e){
                   e.printStackTrace();
                 }
+                }
             }else{
                 try{
                     RemoteIssue issue=createJiraIssue(build);
@@ -163,19 +165,21 @@ public class JiraCreateIssueNotifier extends Notifier{
             }
         }
         if(currentBuildResult==Result.SUCCESS && previousBuild!=null)  {
-            if(previousBuild!=null && previousBuildResult==Result.FAILURE){
+            if(previousBuild!=null && (previousBuildResult==Result.FAILURE || previousBuildResult==Result.SUCCESS)){
                 String comment="- Job is not falling but the issue is still open."+"\n"+"- Passed run : ["+
                         buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
                 String issueId=getIssue(build);
+                //if issue exists it will check the status and comment or delete the file accordingly
+                if(issueId!=null){
                 try{
-                String Status=getStatus(build,issueId);
-                //Status=1=Open OR Status=5=Resolved
-                if(Status.equals("1") ||Status.equals("5")){
+                  String Status=getStatus(build,issueId);
+                 //Status=1=Open OR Status=5=Resolved
+                 if(Status.equals("1") ||Status.equals("5")){
                     System.out.println("When Issue is opened or resolved");
                     addComment(build, issueId, comment);
-                }
+                 }
                 //if issue is in closed status
-                if(Status.equals("6")){
+                 if(Status.equals("6")){
                     System.out.println("When Issue is closed");
                         File file=new File(filename);
                         if(file.exists()){
@@ -185,11 +189,12 @@ public class JiraCreateIssueNotifier extends Notifier{
                                 System.out.println("File do not deleted :( ...!!!");
                             }
                         }
-                    }
+                 }
                 }catch(ServiceException e){
                     System.out.println("Service Exception");
                     e.printStackTrace();
                 }
+                }//end If
             }
         }
         return true;
@@ -226,11 +231,7 @@ public class JiraCreateIssueNotifier extends Notifier{
             System.out.println("In create issue , components ::"+components);
         }
         String assignee = (this.assignee=="") ? "" : this.assignee;
-        JiraSite site = JiraSite.get(build.getProject());
-        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
-                + build.getFullDisplayName());
-        JiraSession session = site.createSession();
-        if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        JiraSession session = getJiraSession(build);
         RemoteIssue issue = session.createIssue(projectKey,description,assignee,components);
         String jobDirPath=Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
         //creating a file in jobs directory and saving the issue-Id
@@ -242,33 +243,20 @@ public class JiraCreateIssueNotifier extends Notifier{
     }
 
     public String getStatus(AbstractBuild<?, ?> build,String id) throws ServiceException,IOException{
-        JiraSite site = JiraSite.get(build.getProject());
-        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
-                + build.getFullDisplayName());
-        JiraSession session = site.createSession();
-        if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        JiraSession session = getJiraSession(build);
         RemoteIssue issue=session.getIssueByKey(id);
         String status=issue.getStatus();
         return status;
     }
 
     public void addComment(AbstractBuild<?, ?> build,String id,String comment) throws ServiceException,IOException{
-        JiraSite site = JiraSite.get(build.getProject());
-        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
-                + build.getFullDisplayName());
-        JiraSession session = site.createSession();
-        if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        JiraSession session = getJiraSession(build);
         session.addCommentWithoutConstrains(id,comment);
     }
 
     public RemoteComponent[] getComponent(AbstractBuild<?, ?> build,String component) throws
             ServiceException,IOException{
-
-        JiraSite site = JiraSite.get(build.getProject());
-        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
-                + build.getFullDisplayName());
-        JiraSession session = site.createSession();
-        if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        JiraSession session = getJiraSession(build);
         RemoteComponent availableComponents[]= session.getComponents(projectKey);
         //To store all the componets of the particular project
         HashMap<String,String> components=new HashMap<String, String>();
@@ -315,11 +303,22 @@ public class JiraCreateIssueNotifier extends Notifier{
                 issueId=issue;
             }
             br.close();
-
-        } catch (IOException e) {
+            return issueId;
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
+            System.out.println("There is no such file...!!");
+            return null;
         }
-        return issueId;
+
+    }
+
+    public JiraSession getJiraSession(AbstractBuild<?, ?> build)throws ServiceException,IOException {
+        JiraSite site = JiraSite.get(build.getProject());
+        if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "
+                + build.getFullDisplayName());
+        JiraSession session = site.createSession();
+        if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        return session;
     }
 
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
