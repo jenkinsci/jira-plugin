@@ -1,9 +1,11 @@
 package hudson.plugins.jira;
 
+import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.*;
+import hudson.model.Run.*;
 import hudson.plugins.jira.soap.RemoteComponent;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.tasks.BuildStepDescriptor;
@@ -93,13 +95,17 @@ public class JiraCreateIssueNotifier extends Notifier{
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-            throws InterruptedException, IOException{
+            throws InterruptedException,IOException{
+//     try{
+
         Result currentBuildResult= build.getResult();
+        System.out.println("current result"+currentBuildResult);
         System.out.println("Env Variables::"+build.getEnvironment(TaskListener.NULL));
         Result previousBuildResult=null;
         AbstractBuild previousBuild=build.getPreviousBuild();
         if(previousBuild!=null){
             previousBuildResult= previousBuild.getResult();
+            System.out.println("previous result"+previousBuildResult);
         }
         String buildURL="";
         String buildNumber="";
@@ -115,9 +121,10 @@ public class JiraCreateIssueNotifier extends Notifier{
         }
         String jobDirPath=Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
         String filename=jobDirPath+"/"+"issue.txt";
-        if (currentBuildResult==Result.FAILURE)  {
-            if(previousBuild!=null &&  previousBuildResult==Result.FAILURE) {
-
+        if(currentBuildResult!=Result.ABORTED){
+          if (currentBuildResult==Result.FAILURE){
+            if(previousBuild!=null && previousBuildResult==Result.FAILURE) {
+             System.out.println("Current result failed and previous built also failed");
                 String comment="- Job is still failing."+"\n"+"- Failed run : ["+
                       buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
                 //Get the issue-id which was filed when the previous built failed
@@ -157,6 +164,7 @@ public class JiraCreateIssueNotifier extends Notifier{
                 }
                 }
             }else{
+                System.out.println("Creating issue");
                 try{
                     RemoteIssue issue=createJiraIssue(build);
                     listener.getLogger().println("**************************Test Fails************" +
@@ -169,10 +177,11 @@ public class JiraCreateIssueNotifier extends Notifier{
                     e.printStackTrace();
                 }
             }
-        }
+          }
+
         if(currentBuildResult==Result.SUCCESS && previousBuild!=null)  {
-            if(previousBuild!=null && (previousBuildResult==Result.FAILURE ||
-                    previousBuildResult==Result.SUCCESS)){
+            if(previousBuildResult==Result.FAILURE || previousBuildResult==Result.SUCCESS){
+                System.out.println("Current result success and previous built also failed or success");
                 String comment="- Job is not falling but the issue is still open."+"\n"+"- Passed run : ["+
                        buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
                 String issueId=getIssue(build);
@@ -204,6 +213,13 @@ public class JiraCreateIssueNotifier extends Notifier{
                 }//end If
             }
         }
+//      This exception occurs in Run.java So it is useless catching it here !!!
+//      }catch(InterruptedException e){
+//            System.out.print("Build is aborted..!!!");
+//            e.printStackTrace();
+//            listener.getLogger().println("No issue is filed as build is aborted..!!");
+//       }
+       }
         return true;
     }
 
