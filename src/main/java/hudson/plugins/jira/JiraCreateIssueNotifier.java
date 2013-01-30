@@ -8,22 +8,26 @@ import hudson.model.*;
 import hudson.model.Run.*;
 import hudson.plugins.jira.soap.RemoteComponent;
 import hudson.plugins.jira.soap.RemoteIssue;
+import hudson.remoting.VirtualChannel;
+import hudson.slaves.RetentionStrategy;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.*;
 import hudson.tasks.Notifier;
 import hudson.util.FormValidation;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.QueryParameter;
 
+import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.util.List;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.concurrent.Future;
+import java.util.logging.LogRecord;
 
 /**
  * Created with IntelliJ IDEA.
@@ -95,35 +99,42 @@ public class JiraCreateIssueNotifier extends Notifier{
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
-            throws InterruptedException,IOException{
-//     try{
+            throws IOException{
 
+        boolean isInterrupted=build.getExecutor().isInterrupted();
+        Executor a= build.getExecutor();
+
+        System.out.println("isInterrupted::>"+isInterrupted);
+        String jobDirPath=Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
+        String filename=jobDirPath+"/"+"issue.txt";
+        String buildURL="";
+        String buildNumber="";
+
+        try{
+            EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
+            Set<String> keys=environmentVariable.keySet();
+            for(String key:keys){
+                if(key=="BUILD_URL"){
+                    buildURL=environmentVariable.get(key);
+                }
+                if(key=="BUILD_NUMBER") {
+                    buildNumber=environmentVariable.get(key);
+                }
+            }
+        System.out.println("Env Variables::"+build.getEnvironment(TaskListener.NULL));
         Result currentBuildResult= build.getResult();
         System.out.println("current result"+currentBuildResult);
-        System.out.println("Env Variables::"+build.getEnvironment(TaskListener.NULL));
         Result previousBuildResult=null;
         AbstractBuild previousBuild=build.getPreviousBuild();
         if(previousBuild!=null){
             previousBuildResult= previousBuild.getResult();
             System.out.println("previous result"+previousBuildResult);
         }
-        String buildURL="";
-        String buildNumber="";
-        EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
-        Set<String> keys=environmentVariable.keySet();
-        for(String key:keys){
-            if(key=="BUILD_URL"){
-                buildURL=environmentVariable.get(key);
-            }
-            if(key=="BUILD_NUMBER") {
-                buildNumber=environmentVariable.get(key);
-            }
-        }
-        String jobDirPath=Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
-        String filename=jobDirPath+"/"+"issue.txt";
-        if(currentBuildResult!=Result.ABORTED){
+        Result abortResult=build.getExecutor().abortResult();
+        System.out.println("build.getExecutor().abortResult()"+abortResult);
+        if(currentBuildResult!=Result.ABORTED && previousBuild!=null ){
           if (currentBuildResult==Result.FAILURE){
-            if(previousBuild!=null && previousBuildResult==Result.FAILURE) {
+            if(previousBuildResult==Result.FAILURE) {
              System.out.println("Current result failed and previous built also failed");
                 String comment="- Job is still failing."+"\n"+"- Failed run : ["+
                       buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
@@ -154,16 +165,16 @@ public class JiraCreateIssueNotifier extends Notifier{
                                 System.out.println("File do not deleted :( ...!!!");
                             }
                         }
-
                         RemoteIssue issue=createJiraIssue(build);
                         listener.getLogger().println( "So Creating jira issue with issue ID"+
                                 " "+issue.getKey());
                     }
-                }catch(ServiceException e){
-                  e.printStackTrace();
+                }catch(ServiceException e1){
+                  e1.printStackTrace();
                 }
                 }
-            }else{
+            } //end if(previousBuildResult==Result.FAILURE)
+            if(previousBuildResult==Result.SUCCESS || previousBuildResult==Result.ABORTED){
                 System.out.println("Creating issue");
                 try{
                     RemoteIssue issue=createJiraIssue(build);
@@ -172,14 +183,14 @@ public class JiraCreateIssueNotifier extends Notifier{
                     listener.getLogger().println( "Creating jira issue with issue ID"
                             +" "+issue.getKey());
 
-                }catch(ServiceException e)  {
+                }catch(ServiceException e1)  {
                     System.out.print("Service Exception");
-                    e.printStackTrace();
+                    e1.printStackTrace();
                 }
-            }
-          }
+            }  //end if(previousBuildResult==Result.SUCCESS || previousBuildResult==Result.ABORTED)
+          } //end if(currentBuildResult==Failure)
 
-        if(currentBuildResult==Result.SUCCESS && previousBuild!=null)  {
+        if(currentBuildResult==Result.SUCCESS)  {
             if(previousBuildResult==Result.FAILURE || previousBuildResult==Result.SUCCESS){
                 System.out.println("Current result success and previous built also failed or success");
                 String comment="- Job is not falling but the issue is still open."+"\n"+"- Passed run : ["+
@@ -206,22 +217,21 @@ public class JiraCreateIssueNotifier extends Notifier{
                             }
                         }
                  }
-                }catch(ServiceException e){
+                }catch(ServiceException e2){
                     System.out.println("Service Exception");
-                    e.printStackTrace();
+                    e2.printStackTrace();
                 }
-                }//end If
+                }//end If(issueId!=null)
             }
-        }
-//      This exception occurs in Run.java So it is useless catching it here !!!
-//      }catch(InterruptedException e){
-//            System.out.print("Build is aborted..!!!");
-//            e.printStackTrace();
-//            listener.getLogger().println("No issue is filed as build is aborted..!!");
-//       }
+        }//end if (currentBuildResult==Result.SUCCESS)
+       }//end If Aborted
+       }catch(InterruptedException e){
+          System.out.print("Build is aborted..!!!");
+          e.printStackTrace();
+          listener.getLogger().println("No issue is filed as build is aborted..!!");
        }
         return true;
-    }
+    }//end perform
 
     public RemoteIssue createJiraIssue(AbstractBuild<?, ?> build) throws ServiceException,IOException,
             InterruptedException{
