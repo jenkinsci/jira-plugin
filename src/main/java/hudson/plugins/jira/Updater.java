@@ -39,7 +39,7 @@ import org.apache.commons.lang.StringUtils;
  * @author Kohsuke Kawaguchi
  */
 class Updater {
-    static boolean perform(AbstractBuild<?, ?> build, BuildListener listener) throws InterruptedException, IOException {
+    static boolean perform(AbstractBuild<?, ?> build, BuildListener listener) {
         PrintStream logger = listener.getLogger();
         List<JiraIssue> issues = null;
 
@@ -131,23 +131,10 @@ class Updater {
         for (JiraIssue issue : copy) {
             try {
                 logger.println(Messages.Updater_Updating(issue.id));
-                StringBuilder aggregateComment = new StringBuilder();
-                for(Entry e :build.getChangeSet()){
-                    if(e.getMsg().toUpperCase().contains(issue.id)){
-                        aggregateComment.append(e.getMsg());
-
-                        String revision = getRevision( e );
-                        if (revision != null) {
-                            aggregateComment.append(" (Revision ").append(revision).append(")");
-                        }
-
-                        aggregateComment.append("\n");
-                    }
-                }
-
-                session.addComment(issue.id,
-                    createComment(build, useWikiStyleComments,
-                            jenkinsRootUrl, aggregateComment.toString(), recordScmChanges, issue), groupVisibility, roleVisibility);
+                session.addComment(
+                        issue.id,
+                        createComment(build, useWikiStyleComments, jenkinsRootUrl, recordScmChanges, issue),
+                        groupVisibility, roleVisibility);
             } catch (RemotePermissionException e) {
                 // Seems like RemotePermissionException can mean 'no permission' as well as
                 // 'issue doesn't exist'.
@@ -180,86 +167,80 @@ class Updater {
      * Creates a comment to be used in JIRA for the build.
      */
     private static String createComment(AbstractBuild<?, ?> build,
-            boolean wikiStyle, String jenkinsRootUrl, String scmComments, boolean recordScmChanges, JiraIssue jiraIssue) {
+            boolean wikiStyle, String jenkinsRootUrl, boolean recordScmChanges, JiraIssue jiraIssue) {
         String comment = String.format(
             wikiStyle ?
-            "Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n     %5$s\n     Result = %6$s":
-            "Integrated in %2$s (See [%4$s])\n    %5$s\n     Result = %6$s",
+            "%6$s: Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n%5$s":
+            "%6$s: Integrated in %2$s (See [%4$s])\n%5$s",
             jenkinsRootUrl,
             build,
             build.getResult().color.getImage(),
             Util.encode(jenkinsRootUrl+build.getUrl()),
-                    scmComments,
-                    build.getResult().toString());
-        if (recordScmChanges) {
-            List<String> scmChanges = getScmComments(wikiStyle, build, jiraIssue );
-            StringBuilder sb = new StringBuilder(comment);
-            for (String scmChange : scmChanges)
-            {
-                sb.append( "\n" ).append( scmChange );
-            }
-            return sb.toString();
-        }
+            getScmComments(wikiStyle, build, recordScmChanges, jiraIssue),
+            build.getResult().toString());
         return comment;
     }
 
-    private static List<String> getScmComments(boolean wikiStyle, AbstractBuild<?, ?> build, JiraIssue jiraIssue)
-    {
-        RepositoryBrowser repoBrowser = null;
-        if (build.getProject().getScm() != null) {
-            repoBrowser = build.getProject().getScm().getEffectiveBrowser();
-        }
-        List<String> scmChanges = new ArrayList<String>();
+    private static String getScmComments(boolean wikiStyle,
+            AbstractBuild<?, ?> build, boolean recordScmChanges, JiraIssue jiraIssue) {
+        StringBuilder comment = new StringBuilder();
+        RepositoryBrowser repoBrowser = getRepositoryBrowser(build);
         for (Entry change : build.getChangeSet()) {
-            if (jiraIssue != null  && !StringUtils.contains( change.getMsg(), jiraIssue.id )) {
+            if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.id)) {
                 continue;
             }
-            try {
-                String uid = change.getAuthor().getId();
-                URL url = repoBrowser == null ? null : repoBrowser.getChangeSetLink( change );
-                StringBuilder scmChange = new StringBuilder();
-                if (StringUtils.isNotBlank( uid )) {
-                    scmChange.append( uid ).append( " : " );
-                }
-                if (url != null  && StringUtils.isNotBlank( url.toExternalForm() )) {
-                    if (wikiStyle) {
-                        String revision = getRevision( change );
-                        if (revision != null)
-                        {
-                            scmChange.append( "[" ).append( revision );
-                            scmChange.append( "|" );
-                            scmChange.append( url.toExternalForm() ).append( "]" );
-                        }
-                        else
-                        {
-                            scmChange.append( "[" ).append( url.toExternalForm() ).append( "]" );
-                        }
-                    } else {
-                        scmChange.append( url.toExternalForm() );
+            comment.append(change.getMsg());
+            String revision = getRevision(change);
+            if (revision != null) {
+                URL url = null;
+                if (repoBrowser != null) {
+                    try {
+                        url = repoBrowser.getChangeSetLink(change);
+                    } catch (IOException e) {
+                        LOGGER.warning("Failed to calculate SCM repository browser link " + e.getMessage());
                     }
                 }
-                scmChange.append( "\nFiles : " ).append( "\n" );
+                comment.append(" (");
+                String uid = change.getAuthor().getId();
+                if (StringUtils.isNotBlank(uid)) {
+                    comment.append(uid).append(": ");
+                }
+                if (url != null && StringUtils.isNotBlank(url.toExternalForm())) {
+                    if (wikiStyle) {
+                        comment.append("[").append(revision).append("|");
+                        comment.append(url.toExternalForm()).append("]");
+                    } else {
+                        comment.append(url.toExternalForm());
+                    }
+                } else {
+                    comment.append("rev ").append(revision);
+                }
+                comment.append(")");
+            }
+            comment.append("\n");
+            if (recordScmChanges) {
                 // see http://issues.jenkins-ci.org/browse/JENKINS-2508
-                //added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
+                // added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
                 try {
                     for (AffectedFile affectedFile : change.getAffectedFiles()) {
-                        scmChange.append( "* " ).append( affectedFile.getPath() ).append( "\n" );
+                        comment.append("* ").append(affectedFile.getPath()).append("\n");
                     }
                 } catch (UnsupportedOperationException e) {
-                    LOGGER.warning( "Unsupported SCM operation 'getAffectedFiles'. Fall back to getAffectedPaths.");
+                    LOGGER.warning("Unsupported SCM operation 'getAffectedFiles'. Fall back to getAffectedPaths.");
                     for (String affectedPath : change.getAffectedPaths()) {
-                        scmChange.append( "* " ).append( affectedPath ).append( "\n" );
+                        comment.append("* ").append(affectedPath).append("\n");
                     }
-
                 }
-                if (scmChange.length()>0) {
-                    scmChanges.add( scmChange.toString() );
-                }
-            } catch (IOException e) {
-                LOGGER.warning( "skip failed to calculate scm repo browser link " + e.getMessage() );
             }
         }
-        return scmChanges;
+        return comment.toString();
+    }
+
+    private static RepositoryBrowser<?> getRepositoryBrowser(AbstractBuild<?, ?> build) {
+        if (build.getProject().getScm() != null) {
+            return build.getProject().getScm().getEffectiveBrowser();
+        }
+        return null;
     }
 
     private static String getRevision(Entry entry) {
