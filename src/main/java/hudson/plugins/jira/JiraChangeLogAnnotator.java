@@ -49,12 +49,14 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         	if (m.groupCount() >= 1) {
         		
         		String id = m.group(1);
-        		LOGGER.info("Annotating JIRA id: '" + id + "'");
             	
                 if(!site.existsIssue(id)) {
+                    LOGGER.log(Level.INFO, "No known JIRA project corresponding to id: ''{0}''", id);
                     continue;
                 }
                 
+                LOGGER.log(Level.INFO, "Annotating JIRA id: ''{0}''", id);
+
                 URL url;
                 try {
                 	url = site.getUrl(id);
