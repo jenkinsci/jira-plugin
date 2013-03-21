@@ -64,19 +64,19 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 	throw new AssertionError(e); // impossible
                 }
 
-                URL replacementUrl = null;
+                URL replacementUrl;
                 try {
-                	url = site.getReplacementUrl();
+                	replacementUrl = site.getReplacementUrl();
                 } catch (MalformedURLException e) {
-                	throw new AssertionError(e); // impossible
+                	throw new AssertionError(e);
                 }
 
-                if(replacementUrl != null || !replacementUrl.equals(url)) {
+                if(replacementUrl != null | !replacementUrl.equals(url)) {
                 	try {
-						url = new URL(replacementUrl.getProtocol(), replacementUrl.getHost(), replacementUrl.getPort(), url.getPath());
-					} catch (MalformedURLException e) {
-						throw new AssertionError(e); // impossible
-					}
+                		url = new URL(replacementUrl.getProtocol(), replacementUrl.getHost(), replacementUrl.getPort(), url.getPath());
+                	} catch (MalformedURLException e) {
+                		throw new AssertionError(e);
+                	}
                 }
 
                 JiraIssue issue = null;
