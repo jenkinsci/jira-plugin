@@ -71,7 +71,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 	throw new AssertionError(e);
                 }
 
-                if(replacementUrl != null | !replacementUrl.equals(url)) {
+                if(replacementUrl != null && !replacementUrl.equals(url)) {
                 	try {
                 		url = new URL(replacementUrl.getProtocol(), replacementUrl.getHost(), replacementUrl.getPort(), url.getPath());
                 	} catch (MalformedURLException e) {
