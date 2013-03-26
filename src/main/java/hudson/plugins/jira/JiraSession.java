@@ -123,6 +123,10 @@ public class JiraSession {
 			return null;
 	}
 
+    public void createIssue(RemoteIssue remoteIssue) throws RemoteException {
+        service.createIssue(token, remoteIssue);
+    }
+
 	/**
 	 * Gets all issues that match the given JQL filter
 	 * 

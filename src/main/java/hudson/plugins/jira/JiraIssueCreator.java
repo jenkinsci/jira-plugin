@@ -14,42 +14,85 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import java.io.PrintStream;
+
 /**
- * Task which releases the jira version specified in the parameters when the build completes.
+ * Task which creates a new jira issue.
  * 
- * @author Justen Walker <justen.walker@gmail.com>
+ * @author jdewinne
  * 
  */
 public class JiraIssueCreator extends Notifier {
 
 	private static final long serialVersionUID = 699563338312232811L;
 
-	private String jiraProjectKey;
-	private String jiraRelease;
+	private String summary;
+	private String project;
+    private String issueType;
+    private String component;
+    private String priority;
+    private String description;
+
 
 	@DataBoundConstructor
-	public JiraIssueCreator(String jiraProjectKey, String jiraRelease) {
-		this.jiraRelease = jiraRelease;
-		this.jiraProjectKey = jiraProjectKey;
-	}
-	
-	public String getJiraRelease() {
-		return jiraRelease;
-	}
-
-	public void setJiraRelease(String jiraRelease) {
-		this.jiraRelease = jiraRelease;
+	public JiraIssueCreator(String summary, String project, String issueType, String component, String priority, String description) {
+		this.summary = summary;
+		this.project = project;
+        this.issueType = issueType;
+        this.component = component;
+        this.priority = priority;
+        this.description = description;
 	}
 
-	public String getJiraProjectKey() {
-		return jiraProjectKey;
-	}
+    public String getSummary() {
+        return summary;
+    }
 
-	public void setJiraProjectKey(String jiraProjectKey) {
-		this.jiraProjectKey = jiraProjectKey;
-	}
-	
-	@Override
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getProject() {
+        return project;
+    }
+
+    public void setProject(String project) {
+        this.project = project;
+    }
+
+    public String getIssueType() {
+        return issueType;
+    }
+
+    public void setIssueType(String issueType) {
+        this.issueType = issueType;
+    }
+
+    public String getComponent() {
+        return component;
+    }
+
+    public void setComponent(String component) {
+        this.component = component;
+    }
+
+    public String getPriority() {
+        return priority;
+    }
+
+    public void setPriority(String priority) {
+        this.priority = priority;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    @Override
 	public BuildStepDescriptor<Publisher> getDescriptor() {
 		return DESCRIPTOR;
 	}
@@ -57,25 +100,61 @@ public class JiraIssueCreator extends Notifier {
 	@Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
+    private void validate(String realSummary, String realProject, String realIssueType, String realComponent, String realPriority, String realDescription) {
+        if (realSummary == null || realSummary.isEmpty()) {
+            throw new IllegalArgumentException("Summary is Empty");
+        }
+        if (realProject == null || realProject.isEmpty()) {
+            throw new IllegalArgumentException("Project is Empty");
+        }
+        if (realIssueType == null || realIssueType.isEmpty()) {
+            throw new IllegalArgumentException("Issue type is Empty");
+        }
+        if (realComponent == null || realComponent.isEmpty()) {
+            throw new IllegalArgumentException("Component is Empty");
+        }
+        if (realPriority == null || realPriority.isEmpty()) {
+            throw new IllegalArgumentException("Priority is Empty");
+        }
+        if (realDescription == null || realDescription.isEmpty()) {
+            throw new IllegalArgumentException("Description is Empty");
+        }
+
+    }
+
+
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) {
-		String realRelease = "NOT_SET";
+		String realSummary = "";
+        String realProject = "";
+        String realIssueType = "";
+        String realComponent = "";
+        String realPriority = "";
+        String realDescription = "";
+
 
 		try {
-			realRelease = build.getEnvironment(listener).expand(jiraRelease);
+			realSummary = build.getEnvironment(listener).expand(summary);
+            realProject = build.getEnvironment(listener).expand(project);
+            realIssueType = build.getEnvironment(listener).expand(issueType);
+            realComponent = build.getEnvironment(listener).expand(component);
+            realPriority = build.getEnvironment(listener).expand(priority);
+            realDescription = build.getEnvironment(listener).expand(description);
 
-			if (realRelease == null || realRelease.isEmpty()) {
-				throw new IllegalArgumentException("Release is Empty");
-			}
+            validate(realSummary, realProject, realIssueType, realComponent, realPriority, realDescription);
+
+            PrintStream logger = listener.getLogger();
+            logger.printf("Going to create issue with values:  \nSummary: %s\nProject: %s\nIssueType: %s\nComponent: %s\nPriority: %s\nDescription: %s\n", realSummary,
+                    realProject, realIssueType, realComponent, realPriority, realDescription);
 
 			JiraSite site = JiraSite.get(build.getProject());
 
-			site.releaseVersion(jiraProjectKey, realRelease);
+			site.createIssue( realSummary, realProject, realIssueType, realComponent, realPriority, realDescription);
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
-					"Unable to release jira version %s/%s: %s", realRelease,
-					jiraProjectKey, e));
+					"Unable to create jira issue %s %s %s %s %s %s: %s", realSummary,
+					realProject, realIssueType, realComponent, realPriority, realDescription, e));
 			listener.finished(Result.FAILURE);
 			return false;
 		}
@@ -110,7 +189,7 @@ public class JiraIssueCreator extends Notifier {
 
 		@Override
 		public String getHelpFile() {
-			return "/plugin/jira/help-release.html";
+			return "/plugin/jira/help-create.html";
 		}
 	}
 }

@@ -11,6 +11,7 @@ import hudson.plugins.jira.soap.JiraSoapServiceService;
 import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.plugins.jira.soap.RemoteIssueType;
+import hudson.plugins.jira.soap.RemoteComponent;
 import hudson.plugins.jira.soap.RemoteVersion;
 import hudson.util.FormValidation;
 
@@ -303,6 +304,27 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
         }
         return null;
+    }
+
+    public void createIssue(String realSummary, String realProject, String realIssueType, String realComponent, String realPriority, String realDescription) throws IOException, ServiceException {
+        RemoteIssue remoteIssueToBeCreated = new RemoteIssue();
+        String[] componentNames = realComponent.split(",");
+        RemoteComponent [] components = new RemoteComponent [componentNames.length];
+        for (int i = 0; i < componentNames.length; i++) {
+            components[i] = new RemoteComponent();
+            components[i].setName(componentNames[i]);
+
+        }
+        remoteIssueToBeCreated.setSummary(realSummary);
+        remoteIssueToBeCreated.setProject(realProject);
+        remoteIssueToBeCreated.setType(realIssueType);
+        remoteIssueToBeCreated.setComponents(components);
+        remoteIssueToBeCreated.setPriority(realPriority);
+        remoteIssueToBeCreated.setDescription(realDescription);
+
+        JiraSession session = createSession();
+        session.createIssue(remoteIssueToBeCreated);
+
     }
     
     /**
