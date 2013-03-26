@@ -17,8 +17,11 @@ limitations under the License.
   <f:entry title="${%Summary}" field="summary">
         <f:textbox/>
   </f:entry>
-  <f:entry title="${%Project}" field="project">
-        <f:textbox/>
+  <f:entry name="propject" title="${%Project}" field="project">
+              <select name="project">
+                  <option value="DEV">Operation O + T</option>
+                  <option value="DPI">DPI</option>
+              </select>
   </f:entry>
   <f:entry title="${%Issue type}" field="issueType">
         <f:textbox/>
