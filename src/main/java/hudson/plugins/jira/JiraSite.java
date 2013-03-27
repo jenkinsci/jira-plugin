@@ -312,7 +312,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         RemoteComponent [] components = new RemoteComponent [componentNames.length];
         for (int i = 0; i < componentNames.length; i++) {
             components[i] = new RemoteComponent();
-            components[i].setName(componentNames[i]);
+            components[i].setId(componentNames[i]);
 
         }
         remoteIssueToBeCreated.setSummary(realSummary);

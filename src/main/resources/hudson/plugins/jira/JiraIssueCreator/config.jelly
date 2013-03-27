@@ -17,20 +17,33 @@ limitations under the License.
   <f:entry title="${%Summary}" field="summary">
         <f:textbox/>
   </f:entry>
-  <f:entry name="propject" title="${%Project}" field="project">
+  <f:entry name="project" title="${%Project}" field="project">
               <select name="project">
                   <option value="DEV">Operation O + T</option>
                   <option value="DPI">DPI</option>
               </select>
   </f:entry>
-  <f:entry title="${%Issue type}" field="issueType">
-        <f:textbox/>
+  <f:entry name="issueType" title="${%Issue type}" field="issueType">
+        <select name="issueType">
+                  <option value="6">Incident</option>
+                  <option value="7">ServiceRequest</option>
+                  <option value="8">Change</option>
+                  <option value="1">Finding</option>
+        </select>
   </f:entry>
-  <f:entry title="${%Component}" field="component">
-          <f:textbox/>
+  <f:entry name="component" title="${%Component}" field="component">
+          <select name="component">
+                    <option value="10011">TST Environment</option>
+          </select>
     </f:entry>
-    <f:entry title="${%Priority}" field="priority">
-            <f:textbox/>
+    <f:entry name="priority" title="${%Priority}" field="priority">
+             <select name="priority">
+                        <option value="5">ToBePlanned</option>
+                        <option value="4">Low</option>
+                        <option value="3">Medium</option>
+                        <option value="2">High</option>
+                        <option value="1">Emergency</option>
+              </select>
       </f:entry>
   <f:entry title="${%Description}" field="description">
           <f:textarea/>
