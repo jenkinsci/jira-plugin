@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.rmi.RemoteException;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.HashMap;
@@ -507,6 +508,25 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     	if(session == null) return;
     	
     	session.migrateIssuesToFixVersion(projectKey, versionName, query);
+    }
+
+    public Set<JiraIssue> getIssuesFromJqlSearch(String jqlSearch) throws IOException, ServiceException {
+        JiraSession session = createSession();
+
+        if (session == null) {
+            return null;
+        }
+
+        RemoteIssue[] issues = session.getIssuesFromJqlSearch(jqlSearch);
+
+        Set<JiraIssue> issueSet = new HashSet<JiraIssue>(issues.length);
+
+        for( int i = 0; i < issues.length; ++i) {
+            RemoteIssue issue = issues[i];
+            issueSet.add(new JiraIssue(issue));
+        }
+
+        return issueSet;
     }
 
     /**

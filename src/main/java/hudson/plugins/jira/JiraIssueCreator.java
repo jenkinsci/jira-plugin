@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import hudson.Extension;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -11,10 +12,12 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.PrintStream;
+import java.util.Set;
 
 /**
  * Task which creates a new jira issue.
@@ -32,16 +35,21 @@ public class JiraIssueCreator extends Notifier {
     private String component;
     private String priority;
     private String description;
+    private String jqlQuery;
 
 
 	@DataBoundConstructor
-	public JiraIssueCreator(String summary, String project, String issueType, String component, String priority, String description) {
+	public JiraIssueCreator(String summary, String project, String issueType, String component, String priority, String description, EnableCheckExistingBlock enableCheckExistingBlock) {
 		this.summary = summary;
 		this.project = project;
         this.issueType = issueType;
         this.component = component;
         this.priority = priority;
         this.description = description;
+        if (enableCheckExistingBlock != null)
+        {
+            this.jqlQuery = enableCheckExistingBlock.jqlQuery;
+        }
 	}
 
     public String getSummary() {
@@ -92,6 +100,27 @@ public class JiraIssueCreator extends Notifier {
         this.description = description;
     }
 
+    public String getJqlQuery() {
+        return jqlQuery;
+    }
+
+    public void setJqlQuery(String jqlQuery) {
+        this.jqlQuery = jqlQuery;
+    }
+
+
+
+    public static class EnableCheckExistingBlock
+    {
+        private String jqlQuery;
+
+        @DataBoundConstructor
+        public EnableCheckExistingBlock(String jqlQuery)
+        {
+            this.jqlQuery = jqlQuery;
+        }
+    }
+
     @Override
 	public BuildStepDescriptor<Publisher> getDescriptor() {
 		return DESCRIPTOR;
@@ -132,6 +161,7 @@ public class JiraIssueCreator extends Notifier {
         String realComponent = "";
         String realPriority = "";
         String realDescription = "";
+        String realJqlQuery = "";
 
 
 		try {
@@ -141,16 +171,27 @@ public class JiraIssueCreator extends Notifier {
             realComponent = build.getEnvironment(listener).expand(component);
             realPriority = build.getEnvironment(listener).expand(priority);
             realDescription = build.getEnvironment(listener).expand(description);
+            realJqlQuery =  Util.fixEmptyAndTrim(build.getEnvironment(listener).expand(jqlQuery));
+
 
             validate(realSummary, realProject, realIssueType, realComponent, realPriority, realDescription);
 
             PrintStream logger = listener.getLogger();
-            logger.printf("Going to create issue with values:  \nSummary: %s\nProject: %s\nIssueType: %s\nComponent: %s\nPriority: %s\nDescription: %s\n", realSummary,
-                    realProject, realIssueType, realComponent, realPriority, realDescription);
+            logger.printf("Going to create issue with values:  \nSummary: %s\nProject: %s\nIssueType: %s\nComponent: %s\nPriority: %s\nDescription: %s\nJqlQuery: %s\n", realSummary,
+                    realProject, realIssueType, realComponent, realPriority, realDescription, realJqlQuery);
 
-			JiraSite site = JiraSite.get(build.getProject());
+            JiraSite site = JiraSite.get(build.getProject());
+            if (StringUtils.isNotEmpty(realJqlQuery)) {
+                logger.printf("Checking for existing with query: %s\n", realJqlQuery);
+                Set<JiraIssue> issues = site.getIssuesFromJqlSearch(realJqlQuery);
+                if(null != issues && issues.size() > 0) {
+                    logger.printf("Existing issues found. No issue will be created\n");
+                    return true;
+                }
+            }
 
-			site.createIssue( realSummary, realProject, realIssueType, realComponent, realPriority, realDescription);
+
+			site.createIssue(realSummary, realProject, realIssueType, realComponent, realPriority, realDescription);
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
 					"Unable to create jira issue %s %s %s %s %s %s: %s", realSummary,

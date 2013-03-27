@@ -19,7 +19,7 @@ limitations under the License.
   </f:entry>
   <f:entry name="project" title="${%Project}" field="project">
               <select name="project">
-                  <option value="DEV">Operation O + T</option>
+                  <option value="DEV">Operations O + T</option>
                   <option value="DPI">DPI</option>
               </select>
   </f:entry>
@@ -48,4 +48,11 @@ limitations under the License.
   <f:entry title="${%Description}" field="description">
           <f:textarea/>
     </f:entry>
+    <f:block>
+        <f:optionalBlock name="enableCheckExistingBlock" title="${%Do not create if already exists}" checked="${instance.jqlQuery != null}">
+          <f:entry title="Jira Query" field="jqlQuery">
+            <f:textbox/>
+          </f:entry>
+        </f:optionalBlock>
+    </f:block>
 </j:jelly>
