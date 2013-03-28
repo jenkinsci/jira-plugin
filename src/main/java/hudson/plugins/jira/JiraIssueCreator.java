@@ -11,13 +11,23 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
+import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.PrintStream;
-import java.util.Set;
+import java.util.*;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static hudson.plugins.jira.util.ListBoxModelUtil.emptyModel;
+import static hudson.plugins.jira.util.ListBoxModelUtil.of;
+import static hudson.plugins.jira.util.ListBoxModelUtil.convertJiraIssueType;
+import static hudson.plugins.jira.util.ListBoxModelUtil.convertJiraPriority;
+import static hudson.plugins.jira.util.ListBoxModelUtil.convertJiraComponent;
 
 /**
  * Task which creates a new jira issue.
@@ -108,8 +118,6 @@ public class JiraIssueCreator extends Notifier {
         this.jqlQuery = jqlQuery;
     }
 
-
-
     public static class EnableCheckExistingBlock
     {
         private String jqlQuery;
@@ -125,11 +133,11 @@ public class JiraIssueCreator extends Notifier {
 	public BuildStepDescriptor<Publisher> getDescriptor() {
 		return DESCRIPTOR;
 	}
-	
+
 	@Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
-    private void validate(String realSummary, String realProject, String realIssueType, String realComponent, String realPriority, String realDescription) {
+    private void validate(String realSummary, String realProject, String realIssueType, String component, String realPriority, String realDescription) {
         if (realSummary == null || realSummary.isEmpty()) {
             throw new IllegalArgumentException("Summary is Empty");
         }
@@ -139,8 +147,8 @@ public class JiraIssueCreator extends Notifier {
         if (realIssueType == null || realIssueType.isEmpty()) {
             throw new IllegalArgumentException("Issue type is Empty");
         }
-        if (realComponent == null || realComponent.isEmpty()) {
-            throw new IllegalArgumentException("Component is Empty");
+        if (component == null || component.isEmpty()) {
+            throw new IllegalArgumentException("Components is Empty");
         }
         if (realPriority == null || realPriority.isEmpty()) {
             throw new IllegalArgumentException("Priority is Empty");
@@ -151,14 +159,12 @@ public class JiraIssueCreator extends Notifier {
 
     }
 
-
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) {
 		String realSummary = "";
         String realProject = "";
         String realIssueType = "";
-        String realComponent = "";
         String realPriority = "";
         String realDescription = "";
         String realJqlQuery = "";
@@ -168,17 +174,16 @@ public class JiraIssueCreator extends Notifier {
 			realSummary = build.getEnvironment(listener).expand(summary);
             realProject = build.getEnvironment(listener).expand(project);
             realIssueType = build.getEnvironment(listener).expand(issueType);
-            realComponent = build.getEnvironment(listener).expand(component);
             realPriority = build.getEnvironment(listener).expand(priority);
             realDescription = build.getEnvironment(listener).expand(description);
             realJqlQuery =  Util.fixEmptyAndTrim(build.getEnvironment(listener).expand(jqlQuery));
 
 
-            validate(realSummary, realProject, realIssueType, realComponent, realPriority, realDescription);
+            validate(realSummary, realProject, realIssueType, component, realPriority, realDescription);
 
             PrintStream logger = listener.getLogger();
             logger.printf("Going to create issue with values:  \nSummary: %s\nProject: %s\nIssueType: %s\nComponent: %s\nPriority: %s\nDescription: %s\nJqlQuery: %s\n", realSummary,
-                    realProject, realIssueType, realComponent, realPriority, realDescription, realJqlQuery);
+                    realProject, realIssueType, component, realPriority, realDescription, realJqlQuery);
 
             JiraSite site = JiraSite.get(build.getProject());
             if (StringUtils.isNotEmpty(realJqlQuery)) {
@@ -191,11 +196,11 @@ public class JiraIssueCreator extends Notifier {
             }
 
 
-			site.createIssue(realSummary, realProject, realIssueType, realComponent, realPriority, realDescription);
+			site.createIssue(realSummary, realProject, realIssueType, component, realPriority, realDescription);
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
 					"Unable to create jira issue %s %s %s %s %s %s: %s", realSummary,
-					realProject, realIssueType, realComponent, realPriority, realDescription, e));
+					realProject, realIssueType, component, realPriority, realDescription, e));
 			listener.finished(Result.FAILURE);
 			return false;
 		}
@@ -228,9 +233,44 @@ public class JiraIssueCreator extends Notifier {
 			return Messages.JiraIssueCreator_DisplayName();
 		}
 
+        public JiraSite getSite() {
+            // none is explicitly configured. try the default ---
+            // if only one is configured, that must be it.
+            JiraSite[] sites = JiraProjectProperty.DESCRIPTOR.getSites();
+            if(sites.length==1) return sites[0];
+
+            return null;
+        }
+
 		@Override
 		public String getHelpFile() {
 			return "/plugin/jira/help-create.html";
 		}
+
+        public ListBoxModel doFillProjectItems() {
+            JiraSite site = getSite();
+            Set<String> keys = site.getProjectKeys();
+            return CollectionUtils.isEmpty(keys) ? emptyModel() : of(keys);
+        }
+
+        public ListBoxModel doFillPriorityItems() {
+            JiraSite site = getSite();
+            Set<JiraPriority> priorities = site.getPriorities();
+            return CollectionUtils.isEmpty(priorities) ? emptyModel() : convertJiraPriority(priorities);
+        }
+
+        public ListBoxModel doFillIssueTypeItems(@QueryParameter String project) {
+            JiraSite site = getSite();
+            Set<JiraIssueType> issueTypes = site.getIssueTypes(project);
+            return CollectionUtils.isEmpty(issueTypes) ? emptyModel() : convertJiraIssueType(issueTypes);
+        }
+
+        public ListBoxModel doFillComponentItems(@QueryParameter String project) {
+            JiraSite site = getSite();
+            Set<JiraComponent> components = site.getComponents(project);
+            return CollectionUtils.isEmpty(components) ? emptyModel() : convertJiraComponent(components);
+        }
+
+
 	}
 }

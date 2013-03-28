@@ -20,12 +20,7 @@ import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.rmi.RemoteException;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -38,6 +33,7 @@ import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
 
 import org.apache.axis.AxisFault;
+import org.apache.axis.utils.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -118,10 +114,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     // should we implement to invalidate this (say every hour)?
     private transient volatile Set<String> projects;
 
+    private transient volatile Set<JiraPriority> priorities;
+
     /**
      * Used to guard the computation of {@link #projects}
      */
     private transient Lock projectUpdateLock = new ReentrantLock();
+
+    /**
+     * Used to guard the computation of {@link #priorities}
+     */
+    private transient Lock prioritiesUpdateLock = new ReentrantLock();
 
     @DataBoundConstructor
     public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern, 
@@ -151,6 +154,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     protected Object readResolve() {
         projectUpdateLock = new ReentrantLock();
+        prioritiesUpdateLock = new ReentrantLock();
         return this;
     }
 
@@ -215,6 +219,85 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     	}
     	
     	return DEFAULT_ISSUE_PATTERN;
+    }
+
+    public Set<JiraIssueType> getIssueTypes(String projectKey)  {
+        if(StringUtils.isEmpty(projectKey)) {
+            return Collections.emptySet();
+        }
+
+
+        Set<JiraIssueType> issueTypes = Collections.emptySet();
+        try {
+            JiraSession session = createSession();
+            if(session!=null) {
+                issueTypes = Collections.unmodifiableSet(session.getIssueTypes(projectKey));
+            }
+        } catch (IOException e) {
+                // in case of error, set empty set to avoid trying the same thing repeatedly.
+                LOGGER.log(Level.WARNING,"Failed to obtain issue types",e);
+        } catch (ServiceException e) {
+                LOGGER.log(Level.WARNING,"Failed to obtain issue types",e);
+        }
+
+        return issueTypes;
+
+    }
+
+    public Set<JiraComponent> getComponents(String projectKey)  {
+        if(StringUtils.isEmpty(projectKey)) {
+            return Collections.emptySet();
+        }
+
+
+        Set<JiraComponent> components = Collections.emptySet();
+        try {
+            JiraSession session = createSession();
+            if(session!=null) {
+                components = Collections.unmodifiableSet(session.getComponents(projectKey));
+            }
+        } catch (IOException e) {
+            // in case of error, set empty set to avoid trying the same thing repeatedly.
+            LOGGER.log(Level.WARNING,"Failed to obtain components",e);
+        } catch (ServiceException e) {
+            LOGGER.log(Level.WARNING,"Failed to obtain components",e);
+        }
+
+        return components;
+
+    }
+
+    public Set<JiraPriority> getPriorities()  {
+        if(priorities==null) {
+            try {
+                if (prioritiesUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
+                    try {
+                        if(priorities==null) {
+                            JiraSession session = createSession();
+                            if(session!=null)
+                                priorities = Collections.unmodifiableSet(session.getPriorities());
+                        }
+                    } catch (IOException e) {
+                        // in case of error, set empty set to avoid trying the same thing repeatedly.
+                        LOGGER.log(Level.WARNING,"Failed to obtain JIRA priorities list",e);
+                    } catch (ServiceException e) {
+                        LOGGER.log(Level.WARNING,"Failed to obtain JIRA priorities list",e);
+                    } finally {
+                        prioritiesUpdateLock.unlock();
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt(); // process this interruption later
+            }
+        }
+        // fall back to empty if failed to talk to the server
+        Set<JiraPriority> p = priorities;
+        if(p ==null) {
+            return Collections.emptySet();
+        }
+
+        return p;
+
     }
 
     /**
@@ -307,15 +390,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return null;
     }
 
-    public void createIssue(String realSummary, String realProject, String realIssueType, String realComponent, String realPriority, String realDescription) throws IOException, ServiceException {
+    public void createIssue(String realSummary, String realProject, String realIssueType, String componentId, String realPriority, String realDescription) throws IOException, ServiceException {
         RemoteIssue remoteIssueToBeCreated = new RemoteIssue();
-        String[] componentNames = realComponent.split(",");
-        RemoteComponent [] components = new RemoteComponent [componentNames.length];
-        for (int i = 0; i < componentNames.length; i++) {
-            components[i] = new RemoteComponent();
-            components[i].setId(componentNames[i]);
+        RemoteComponent [] components = new RemoteComponent [1];
+        components[0] = new RemoteComponent();
+        components[0].setId(componentId);
 
-        }
         remoteIssueToBeCreated.setSummary(realSummary);
         remoteIssueToBeCreated.setProject(realProject);
         remoteIssueToBeCreated.setType(realIssueType);

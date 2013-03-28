@@ -1,0 +1,12 @@
+<div>
+    When entered a jql search, if any issues match, no new issue will be created.
+    <p />
+    This can contain <strong>$PARAM</strong> values which will be replaced by the build parameters.
+
+    <p>
+        Example:
+    <blockquote><pre>project = JENKINS and fixVersion = "$RELEASE_VERSION" and status not in (Resolved, Closed)</pre></blockquote>
+    or (e.g., combined with a JIRA Issue Parameter, selecting one issue from a JQL result set):
+    <blockquote><pre>issue = $ISSUE_ID</pre></blockquote>
+    </p>
+</div>

@@ -18,38 +18,22 @@ limitations under the License.
         <f:textbox/>
   </f:entry>
   <f:entry name="project" title="${%Project}" field="project">
-              <select name="project">
-                  <option value="DEV">Operations O + T</option>
-                  <option value="DPI">DPI</option>
-              </select>
+              <f:select name="project" id="project" />
   </f:entry>
   <f:entry name="issueType" title="${%Issue type}" field="issueType">
-        <select name="issueType">
-                  <option value="6">Incident</option>
-                  <option value="7">ServiceRequest</option>
-                  <option value="8">Change</option>
-                  <option value="1">Finding</option>
-        </select>
+        <f:select name="issueType" id="issueType" />
   </f:entry>
   <f:entry name="component" title="${%Component}" field="component">
-          <select name="component">
-                    <option value="10011">TST Environment</option>
-          </select>
+          <f:select name="component" id="component" />
     </f:entry>
     <f:entry name="priority" title="${%Priority}" field="priority">
-             <select name="priority">
-                        <option value="5">ToBePlanned</option>
-                        <option value="4">Low</option>
-                        <option value="3">Medium</option>
-                        <option value="2">High</option>
-                        <option value="1">Emergency</option>
-              </select>
+             <f:select name="priority" id="priority" />
       </f:entry>
   <f:entry title="${%Description}" field="description">
           <f:textarea/>
     </f:entry>
     <f:block>
-        <f:optionalBlock name="enableCheckExistingBlock" title="${%Do not create if already exists}" checked="${instance.jqlQuery != null}">
+        <f:optionalBlock name="enableCheckExistingBlock" title="${%Do not create if already exists}" checked="${instance.jqlQuery != null}" >
           <f:entry title="Jira Query" field="jqlQuery">
             <f:textbox/>
           </f:entry>

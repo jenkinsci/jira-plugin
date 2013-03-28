@@ -7,6 +7,7 @@ import hudson.plugins.jira.soap.RemoteGroup;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.plugins.jira.soap.RemoteIssueType;
 import hudson.plugins.jira.soap.RemoteNamedObject;
+import hudson.plugins.jira.soap.RemotePriority;
 import hudson.plugins.jira.soap.RemoteProject;
 import hudson.plugins.jira.soap.RemoteProjectRole;
 import hudson.plugins.jira.soap.RemoteStatus;
@@ -45,6 +46,11 @@ public class JiraSession {
 	 */
 	private Set<String> projectKeys;
 
+    /**
+     * Lazily computed list of priorities
+     */
+    private Set<JiraPriority> priorities;
+
 	/**
 	 * This session is created for this site.
 	 */
@@ -56,6 +62,46 @@ public class JiraSession {
 		this.token = token;
 		this.site = site;
 	}
+
+    public Set<JiraComponent> getComponents(String projectKey) throws RemoteException {
+        RemoteComponent[] remoteComponents = service.getComponents(token, projectKey);
+
+        Set<JiraComponent> componentKeys = new HashSet<JiraComponent>(remoteComponents.length);
+        for(RemoteComponent remoteComponent : remoteComponents) {
+            componentKeys.add(new JiraComponent(remoteComponent));
+        }
+
+        return componentKeys;
+    }
+
+
+    public Set<JiraIssueType> getIssueTypes(String projectKey) throws RemoteException {
+        RemoteProject remoteProject = service.getProjectByKey(token, projectKey);
+
+        RemoteIssueType[] remoteIssueTypes = service.getIssueTypesForProject(token, remoteProject.getId());
+
+        Set<JiraIssueType> issueTypeKeys = new HashSet<JiraIssueType>(remoteIssueTypes.length);
+        for(RemoteIssueType remoteIssueType : remoteIssueTypes) {
+            issueTypeKeys.add(new JiraIssueType(remoteIssueType));
+        }
+
+        return issueTypeKeys;
+    }
+
+    public Set<JiraPriority> getPriorities() throws RemoteException {
+        if (priorities == null) {
+            LOGGER.fine("Fetching remote priorities list from "
+                    + site.getName());
+            RemotePriority[] remotePriorities = service
+                    .getPriorities(token);
+            priorities = new HashSet<JiraPriority>(remotePriorities.length);
+            for (RemotePriority p : remotePriorities) {
+                priorities.add(new JiraPriority(p));
+            }
+            LOGGER.fine("Priorities =" + priorities);
+        }
+        return priorities;
+    }
 
 	/**
 	 * Returns the set of project keys (like MNG, JENKINS, etc) that are
