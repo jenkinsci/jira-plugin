@@ -2,6 +2,9 @@
   <f:entry title="URL" field="url">
     <f:textbox />
   </f:entry>
+  <f:entry title="Replacement URL" field="replacementUrl">
+    <f:textbox />
+  </f:entry>
   <f:entry title="${%Supports Wiki notation}" field="supportsWikiStyleComment">
     <f:checkbox />
   </f:entry>

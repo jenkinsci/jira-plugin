@@ -63,6 +63,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public final URL url;
 
     /**
+     * URL of replacement JIRA, like <tt>http://jira-robot.codehaus.org/</tt>.
+     * Mandatory. Normalized to end with '/'
+     */
+    public final URL replacementUrl;
+
+    /**
      * User name needed to login. Optional.
      */
     public final String userName;
@@ -122,7 +128,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private transient Lock projectUpdateLock = new ReentrantLock();
 
     @DataBoundConstructor
-    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern, 
+    public JiraSite(URL url, URL replacementUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern, 
                     boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility) {
         if(!url.toExternalForm().endsWith("/"))
             try {
@@ -131,6 +137,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 throw new AssertionError(e); // impossible
             }
         this.url = url;
+        this.replacementUrl = replacementUrl;
         this.userName = Util.fixEmpty(userName);
         this.password = Util.fixEmpty(password);
         this.supportsWikiStyleComment = supportsWikiStyleComment;
@@ -186,7 +193,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public URL getUrl(String id) throws MalformedURLException {
         return new URL(url, "browse/" + id.toUpperCase());
     }
-    
+
+    /**
+     * Returns URL-replacement
+     */
+    public URL getReplacementUrl() throws MalformedURLException {
+        return replacementUrl;
+    }
+
     /**
      * Gets the user-defined issue pattern if any.
      * 
@@ -601,6 +615,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
          */
         public FormValidation doValidate(@QueryParameter String userName,
                                           @QueryParameter String url,
+                                          @QueryParameter String replacementUrl,
                                           @QueryParameter String password,
                                           @QueryParameter String groupVisibility,
                                           @QueryParameter String roleVisibility)
@@ -609,7 +624,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             if (url == null) {// URL not entered yet
                 return FormValidation.error("No URL given");
             }
-            JiraSite site = new JiraSite(new URL(url), userName, password, false,
+            JiraSite site = new JiraSite(new URL(url), new URL(replacementUrl), userName, password, false,
                     false, null, false, groupVisibility, roleVisibility);
             try {
                 site.createSession();
