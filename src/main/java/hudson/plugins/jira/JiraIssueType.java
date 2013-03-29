@@ -33,7 +33,7 @@ public final class JiraIssueType implements Comparable<JiraIssueType> {
     }
 
     public int compareTo(JiraIssueType that) {
-        return this.id.compareTo(that.id);
+        return this.name.compareTo(that.name);
     }
 
     @Override

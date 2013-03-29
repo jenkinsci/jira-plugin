@@ -33,7 +33,7 @@ public final class JiraComponent implements Comparable<JiraComponent> {
     }
 
     public int compareTo(JiraComponent that) {
-        return this.id.compareTo(that.id);
+        return this.name.compareTo(that.name);
     }
 
     @Override

@@ -20,6 +20,7 @@ import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /**
@@ -66,7 +67,7 @@ public class JiraSession {
     public Set<JiraComponent> getComponents(String projectKey) throws RemoteException {
         RemoteComponent[] remoteComponents = service.getComponents(token, projectKey);
 
-        Set<JiraComponent> componentKeys = new HashSet<JiraComponent>(remoteComponents.length);
+        Set<JiraComponent> componentKeys = new TreeSet<JiraComponent>();
         for(RemoteComponent remoteComponent : remoteComponents) {
             componentKeys.add(new JiraComponent(remoteComponent));
         }
@@ -80,7 +81,7 @@ public class JiraSession {
 
         RemoteIssueType[] remoteIssueTypes = service.getIssueTypesForProject(token, remoteProject.getId());
 
-        Set<JiraIssueType> issueTypeKeys = new HashSet<JiraIssueType>(remoteIssueTypes.length);
+        Set<JiraIssueType> issueTypeKeys = new TreeSet<JiraIssueType>();
         for(RemoteIssueType remoteIssueType : remoteIssueTypes) {
             issueTypeKeys.add(new JiraIssueType(remoteIssueType));
         }
@@ -94,7 +95,7 @@ public class JiraSession {
                     + site.getName());
             RemotePriority[] remotePriorities = service
                     .getPriorities(token);
-            priorities = new HashSet<JiraPriority>(remotePriorities.length);
+            priorities = new TreeSet<JiraPriority>();
             for (RemotePriority p : remotePriorities) {
                 priorities.add(new JiraPriority(p));
             }
@@ -115,7 +116,7 @@ public class JiraSession {
 					+ site.getName());
 			RemoteProject[] remoteProjects = service
 					.getProjectsNoSchemes(token);
-			projectKeys = new HashSet<String>(remoteProjects.length);
+			projectKeys = new TreeSet<String>();
 			for (RemoteProject p : remoteProjects) {
 				projectKeys.add(p.getKey().toUpperCase());
 			}

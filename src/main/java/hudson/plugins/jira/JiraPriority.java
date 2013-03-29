@@ -33,7 +33,7 @@ public final class JiraPriority implements Comparable<JiraPriority> {
     }
 
     public int compareTo(JiraPriority that) {
-        return this.id.compareTo(that.id);
+        return this.name.compareTo(that.name);
     }
 
     @Override
