@@ -94,7 +94,6 @@ public class JiraCreateIssueNotifier extends Notifier{
 
         try {
             EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
-            System.out.println("Env Variables::"+environmentVariable);
 
             Result currentBuildResult= build.getResult();
             System.out.println("current result::"+currentBuildResult);
@@ -118,7 +117,6 @@ public class JiraCreateIssueNotifier extends Notifier{
             }
        } catch(InterruptedException e) {
           System.out.print("Build is aborted..!!!");
-          e.printStackTrace();
        }
        return true;
     }
@@ -216,8 +214,10 @@ public class JiraCreateIssueNotifier extends Notifier{
 
         JiraSession session = getJiraSession(build);
         RemoteComponent availableComponents[]= session.getComponents(projectKey);
+
         //To store all the componets of the particular project
         HashMap<String,String> components=new HashMap<String, String>();
+
         //converting the user input as a string array
         String inputComponents[]=component.split(",");
         int numberOfComponents=inputComponents.length;
@@ -333,7 +333,6 @@ public class JiraCreateIssueNotifier extends Notifier{
         String buildURL=environmentVariable.get("BUILD_URL");
         String buildNumber=environmentVariable.get("BUILD_NUMBER");
         if (previousBuildResult==Result.FAILURE) {
-            System.out.println("Current result failed and previous built also failed");
             String comment="- Job is still failing."+"\n"+"- Failed run : ["+
                     buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
             //Get the issue-id which was filed when the previous built failed
@@ -344,13 +343,11 @@ public class JiraCreateIssueNotifier extends Notifier{
                 try {
                     //The status of the issue which was filed when the previous build failed
                     String Status=getStatus(build,issueId);
-                    System.out.println("In perform method Status::"+Status);
 
                     //Status=1=Open OR Status=5=Resolved
                     if (Status.equals("1")||Status.equals("5")) {
                         listener.getLogger().println("The previous build also failed creating issue with "+
                                 "issue ID"+" "+issueId);
-                        System.out.println("The status of the Issue is opened or resolved");
                         addComment(build,issueId,comment);
                     }
 
@@ -359,7 +356,7 @@ public class JiraCreateIssueNotifier extends Notifier{
                                 "is closed");
                         deleteFile(filename);
                         RemoteIssue issue=createJiraIssue(build,filename);
-                        listener.getLogger().println( "So Creating jira issue with issue ID"+
+                        listener.getLogger().println( "Creating jira issue with issue ID"+
                                 " "+issue.getKey());
                     }
                 } catch (ServiceException e) {
@@ -369,7 +366,6 @@ public class JiraCreateIssueNotifier extends Notifier{
         }
 
         if(previousBuildResult==Result.SUCCESS || previousBuildResult==Result.ABORTED) {
-            System.out.println("Creating issue");
             try {
                 RemoteIssue issue=createJiraIssue(build,filename);
                 listener.getLogger().println("**************************Test Fails************" +
@@ -377,7 +373,7 @@ public class JiraCreateIssueNotifier extends Notifier{
                 listener.getLogger().println( "Creating jira issue with issue ID"
                         +" "+issue.getKey());
 
-            } catch (ServiceException e) {
+            } catch(ServiceException e) {
                 System.out.print("Service Exception");
                 e.printStackTrace();
             }
@@ -413,13 +409,11 @@ public class JiraCreateIssueNotifier extends Notifier{
 
                     //Status=1=Open OR Status=5=Resolved
                     if (Status.equals("1") ||Status.equals("5")) {
-                        System.out.println("The Issue is in opened or resolved status");
                         addComment(build, issueId, comment);
                     }
 
                     //if issue is in closed status
                     if (Status.equals("6")) {
-                        System.out.println("The Issue is in closed status");
                         deleteFile(filename);
                     }
                 } catch(ServiceException e) {
