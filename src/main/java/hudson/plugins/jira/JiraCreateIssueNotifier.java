@@ -150,9 +150,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         checkDescription=(this.testDescription=="") ? "No description is provided" : this.testDescription;
         String description="The test "+jobName+" has failed."+"\n\n"+checkDescription+"\n\n"+
                 "* First failed run : ["+buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+
-                buildURL.concat("console")+"]"+"\n\n\n\n"+"If it is false alert please notify to QA tools :"
-                +"\n"+"# Move to the OTA project and"+"\n"
-                +"# Set the component to Tools-Jenkins-Jira Integration.";
+                buildURL.concat("console")+"]";
 
         String assignee = (this.assignee=="") ? "" : this.assignee;
 
