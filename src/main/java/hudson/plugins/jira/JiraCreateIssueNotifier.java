@@ -22,9 +22,13 @@ import java.util.HashMap;
 /**
  * <p>
  *  When a build fails it creates jira issues.
+ *  Repeated failures does not create a new issue but update the existing issue untill the issue is closed.
+ *
  * @author Rupali Behera
+ * @email rupali@vertisinfotech.com
+ *
  */
-public class JiraCreateIssueNotifier extends Notifier{
+public class JiraCreateIssueNotifier extends Notifier {
 
     private String projectKey;
     private String testDescription;
@@ -102,27 +106,28 @@ public class JiraCreateIssueNotifier extends Notifier{
             AbstractBuild previousBuild=build.getPreviousBuild();
 
             if (previousBuild!=null) {
-            previousBuildResult= previousBuild.getResult();
-            System.out.println("previous result::"+previousBuildResult);
+                previousBuildResult= previousBuild.getResult();
+                System.out.println("previous result::"+previousBuildResult);
             }
 
             if (currentBuildResult!=Result.ABORTED && previousBuild!=null) {
                 if (currentBuildResult==Result.FAILURE) {
-                currentBuildResultFailure(build,listener,previousBuildResult,filename,environmentVariable);
+                    currentBuildResultFailure(build,listener,previousBuildResult,filename,environmentVariable);
                 }
 
                 if (currentBuildResult==Result.SUCCESS) {
-                currentBuildResultSuccess(build,previousBuildResult,filename,environmentVariable);
+                    currentBuildResultSuccess(build,previousBuildResult,filename,environmentVariable);
                 }
             }
        } catch(InterruptedException e) {
-          System.out.print("Build is aborted..!!!");
+           System.out.print("Build is aborted..!!!");
        }
        return true;
     }
 
     /**
      * It creates a issue in the given project, with the given description, assignee,components and summary.
+     * The created issue ID is saved to the file at "filename".
      *
      * @param build
      * @param filename
@@ -396,8 +401,7 @@ public class JiraCreateIssueNotifier extends Notifier{
         String buildURL=environmentVariable.get("BUILD_URL");
         String buildNumber=environmentVariable.get("BUILD_NUMBER");
 
-        if(previousBuildResult==Result.FAILURE || previousBuildResult==Result.SUCCESS) {
-            System.out.println("Current result success and previous built also failed or success");
+        if (previousBuildResult==Result.FAILURE || previousBuildResult==Result.SUCCESS) {
             String comment="- Job is not falling but the issue is still open."+"\n"+"- Passed run : ["+
                     buildNumber+"|"+buildURL+"]"+"\n"+ "** [console log|"+buildURL.concat("console")+"]";
             String issueId=getIssue(filename);
