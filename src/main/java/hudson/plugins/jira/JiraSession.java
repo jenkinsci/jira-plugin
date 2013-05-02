@@ -383,8 +383,7 @@ public class JiraSession {
      * @return The issue id
      * @throws RemoteException
      */
-    public RemoteIssue createIssue(String projectKey,String description,String assignee,
-                                   RemoteComponent[] components,String summary) throws RemoteException{
+    public RemoteIssue createIssue(String projectKey,String description,String assignee,RemoteComponent[] components,String summary) throws RemoteException{
          RemoteIssue issue= new RemoteIssue();
          issue.setProject(projectKey.toUpperCase());
          issue.setDescription(description);
@@ -404,7 +403,7 @@ public class JiraSession {
      * @param comment
      * @throws RemoteException
      */
-    public void addCommentWithoutConstrains(String issueId, String comment) throws RemoteException{
+    public void addCommentWithoutConstrains(String issueId, String comment) throws RemoteException {
         RemoteComment rc = new RemoteComment();
         rc.setBody(comment);
         service.addComment(token, issueId, rc);
@@ -417,7 +416,7 @@ public class JiraSession {
      * @return issue object
      * @throws RemoteException
      */
-    public RemoteIssue getIssueByKey(String issueId)throws RemoteException{
+    public RemoteIssue getIssueByKey(String issueId)throws RemoteException {
         RemoteIssue issue=null;
         issue=service.getIssue(token,issueId);
         return issue;
@@ -430,7 +429,7 @@ public class JiraSession {
      * @return An array of componets
      * @throws RemoteException
      */
-    public RemoteComponent[] getComponents(String projectKey)throws RemoteException{
+    public RemoteComponent[] getComponents(String projectKey)throws RemoteException {
         RemoteComponent availableRemoteComponents[]= service.getComponents(token, projectKey);
         return availableRemoteComponents;
     }
