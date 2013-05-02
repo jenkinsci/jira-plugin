@@ -64,6 +64,15 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 	throw new AssertionError(e); // impossible
                 }
 
+                URL alternativeUrl = site.alternativeUrl;
+                if(alternativeUrl != null && !alternativeUrl.equals(null)) {
+                    try {
+                        url = new URL(alternativeUrl, url.getPath());
+                    } catch (MalformedURLException e) {
+                        LOGGER.log(Level.WARNING, "Failed to construct altenative URL for Jira link. " + e.getMessage());
+                    }
+                }
+
                 JiraIssue issue = null;
                 if (a != null) {
                     issue = a.getIssue(id);

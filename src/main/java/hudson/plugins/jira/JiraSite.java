@@ -57,10 +57,18 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     protected static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
 
     /**
-     * URL of JIRA, like <tt>http://jira.codehaus.org/</tt>.
+     * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
      */
     public final URL url;
+
+    /**
+     * URL of JIRA for normal access, like <tt>http://jira.codehaus.org/</tt>.
+     * Mandatory. Normalized to end with '/'
+     */
+    public final URL alternativeUrl;
+
+    public final boolean useHTTPAuth;
 
     /**
      * User name needed to login. Optional.
@@ -122,15 +130,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private transient Lock projectUpdateLock = new ReentrantLock();
 
     @DataBoundConstructor
-    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern, 
-                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility) {
+    public JiraSite(URL url, URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
         if(!url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm()+"/");
             } catch (MalformedURLException e) {
-                throw new AssertionError(e); // impossible
+                throw new AssertionError(e);
             }
+
+        if(!alternativeUrl.toExternalForm().endsWith("/"))
+            try {
+                alternativeUrl = new URL(alternativeUrl.toExternalForm()+"/");
+            } catch (MalformedURLException e) {
+                throw new AssertionError(e);
+            }
+
         this.url = url;
+        this.alternativeUrl = alternativeUrl;
         this.userName = Util.fixEmpty(userName);
         this.password = Util.fixEmpty(password);
         this.supportsWikiStyleComment = supportsWikiStyleComment;
@@ -145,6 +162,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
         this.groupVisibility = Util.fixEmpty(groupVisibility);
         this.roleVisibility = Util.fixEmpty(roleVisibility);
+        this.useHTTPAuth = useHTTPAuth;
     }
 
     protected Object readResolve() {
@@ -167,6 +185,18 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         if(userName==null || password==null)
             return null;    // remote access not supported
         JiraSoapServiceService jiraSoapServiceGetter = new JiraSoapServiceServiceLocator();
+
+        if(useHTTPAuth) {
+            StringBuilder newUrl = new StringBuilder();
+            newUrl.append(url.getProtocol()).append("://").append(userName);
+            newUrl.append(":").append(password).append("@").append(url.getHost());
+            if(url.getPort()>0) newUrl.append(":").append(url.getPort());
+            newUrl.append(url.getPath()).append("rpc/soap/jirasoapservice-v2");
+
+            JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
+                    new URL(newUrl.toString()));
+            return new JiraSession(this,service,null); //no need to login. no idea about tokens though...
+        }
 
         JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
             new URL(url, "rpc/soap/jirasoapservice-v2"));
@@ -603,14 +633,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                           @QueryParameter String url,
                                           @QueryParameter String password,
                                           @QueryParameter String groupVisibility,
-                                          @QueryParameter String roleVisibility)
+                                          @QueryParameter String roleVisibility,
+                                          @QueryParameter boolean useHTTPAuth,
+                                          @QueryParameter String alternateUrl)
                 throws IOException {
             url = Util.fixEmpty(url);
             if (url == null) {// URL not entered yet
                 return FormValidation.error("No URL given");
             }
-            JiraSite site = new JiraSite(new URL(url), userName, password, false,
-                    false, null, false, groupVisibility, roleVisibility);
+            JiraSite site = new JiraSite(new URL(url), new URL(alternateUrl), userName, password, false,
+                    false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
             try {
                 site.createSession();
                 return FormValidation.ok("Success");

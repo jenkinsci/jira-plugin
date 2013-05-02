@@ -2,6 +2,12 @@
   <f:entry title="URL" field="url">
     <f:textbox />
   </f:entry>
+  <f:entry title="Link URL" field="alternativeUrl" description="Alternative annotation link URL">
+    <f:textbox />
+  </f:entry>
+  <f:entry title="${%Use HTTP authentication instead of normal login}" field="useHTTPAuth">
+    <f:checkbox />
+  </f:entry>
   <f:entry title="${%Supports Wiki notation}" field="supportsWikiStyleComment">
     <f:checkbox />
   </f:entry>
@@ -29,7 +35,7 @@
   </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
-            method="validate" with="url,userName,password,groupVisibility,roleVisibility" />
+            method="validate" with="url,userName,password,groupVisibility,roleVisibility,useHTTPAuth" />
   </f:entry>
   <f:entry title="">
     <div align="right">
