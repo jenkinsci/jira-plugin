@@ -210,21 +210,7 @@ public class JiraChangeLogAnnotatorTest {
      */
     @Test
     public void testAlternativeURLAnnotate() throws Exception {
-        JiraSite alternativeSite;
-        JiraSession session = mock(JiraSession.class);
-        when(session.getProjectKeys()).thenReturn(
-                Sets.newHashSet("ALT"));
-        alternativeSite = mock(JiraSite.class);
-        when(alternativeSite.createSession()).thenReturn(session);
-        when(alternativeSite.getUrl(Mockito.anyString())).thenAnswer(
-                new Answer<URL>() {
-                    public URL answer(InvocationOnMock invocation)
-                            throws Throwable {
-                        String id = invocation.getArguments()[0].toString();
-                        return new URL("http://dummy/" + id);
-                    }
-                });
-        when(alternativeSite.getAlternativeUrl(Mockito.anyString())).thenAnswer(
+        when(site.getAlternativeUrl(Mockito.anyString())).thenAnswer(
                 new Answer<URL>() {
                     public URL answer(InvocationOnMock invocation)
                             throws Throwable {
@@ -232,23 +218,17 @@ public class JiraChangeLogAnnotatorTest {
                         return new URL("http://altdummy/" + id);
                     }
                 });
-        when(alternativeSite.existsIssue(Mockito.anyString())).thenCallRealMethod();
-        when(alternativeSite.getProjectKeys()).thenCallRealMethod();
-        when(alternativeSite.getIssuePattern()).thenCallRealMethod();
-        when(alternativeSite.readResolve()).thenCallRealMethod();
-        alternativeSite.readResolve(); // create the lock object
-
 
         FreeStyleBuild b = mock(FreeStyleBuild.class);
 
-        when(b.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(b, Collections.singleton(new JiraIssue("ALT-1", TITLE))));
-        MarkupText text = new MarkupText("marking up ALT-1.");
+        when(b.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(b, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+        MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(alternativeSite).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+        doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
 
         annotator.annotate(b,null, text);
 
-        Assert.assertTrue(text.toString(false).contains("<a href='http://altdummy/ALT-1'"));
+        Assert.assertTrue(text.toString(false).contains("<a href='http://altdummy/DUMMY-1'"));
     }
 
 }
