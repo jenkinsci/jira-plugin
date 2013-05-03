@@ -12,6 +12,7 @@ import hudson.plugins.jira.soap.RemoteProjectRole;
 import hudson.plugins.jira.soap.RemoteStatus;
 import hudson.plugins.jira.soap.RemoteValidationException;
 import hudson.plugins.jira.soap.RemoteVersion;
+import hudson.plugins.jira.soap.RemoteComponent;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
@@ -376,12 +377,72 @@ public class JiraSession {
         if (knownStatuses == null) {
             RemoteStatus[] statuses = service.getStatuses(token);
             knownStatuses = new HashMap<String, String>(statuses.length);
-
             for (RemoteStatus status : statuses) {
                 knownStatuses.put(status.getId(), status.getName());
             }
         }
-
         return knownStatuses;
+    }
+
+    /**
+     * Returns issue-id of the created issue
+     *
+     * @param projectKey
+     * @param description
+     * @param assignee
+     * @param components
+     * @param summary
+     * @return The issue id
+     * @throws RemoteException
+     */
+    public RemoteIssue createIssue(String projectKey,String description,String assignee,RemoteComponent[] components,String summary) throws RemoteException{
+         RemoteIssue issue= new RemoteIssue();
+         issue.setProject(projectKey.toUpperCase());
+         issue.setDescription(description);
+         issue.setSummary(summary);
+         issue.setAssignee(assignee);
+         issue.setType("1");
+         issue.setComponents(components);
+         RemoteIssue createdIssue;
+         createdIssue=service.createIssue(token,issue);
+         return createdIssue;
+    }
+
+    /**
+     *  Adds a comment to the existing issue.There is no constrains to the visibility of the comment.
+     *
+     * @param issueId
+     * @param comment
+     * @throws RemoteException
+     */
+    public void addCommentWithoutConstrains(String issueId, String comment) throws RemoteException {
+        RemoteComment rc = new RemoteComment();
+        rc.setBody(comment);
+        service.addComment(token, issueId, rc);
+    }
+
+    /**
+     * Returns information about the specific issue as identified by the issue id
+     *
+     * @param issueId
+     * @return issue object
+     * @throws RemoteException
+     */
+    public RemoteIssue getIssueByKey(String issueId)throws RemoteException {
+        RemoteIssue issue=null;
+        issue=service.getIssue(token,issueId);
+        return issue;
+    }
+
+    /**
+     * Returns all the components for the particular project
+     *
+     * @param projectKey
+     * @return An array of componets
+     * @throws RemoteException
+     */
+    public RemoteComponent[] getComponents(String projectKey)throws RemoteException {
+        RemoteComponent availableRemoteComponents[]= service.getComponents(token, projectKey);
+        return availableRemoteComponents;
     }
 }
