@@ -68,6 +68,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     public final URL alternativeUrl;
 
+    /**
+     * Jira requires HTTP Authentication for login
+     */
     public final boolean useHTTPAuth;
 
     /**
@@ -187,15 +190,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         JiraSoapServiceService jiraSoapServiceGetter = new JiraSoapServiceServiceLocator();
 
         if(useHTTPAuth) {
-            StringBuilder newUrl = new StringBuilder();
-            newUrl.append(url.getProtocol()).append("://").append(userName);
-            newUrl.append(":").append(password).append("@").append(url.getHost());
-            if(url.getPort()>0) newUrl.append(":").append(url.getPort());
-            newUrl.append(url.getPath()).append("rpc/soap/jirasoapservice-v2");
-
+            String httpAuthUrl = url.toExternalForm().replace(
+                    url.getHost(),
+                    userName+":"+password+"@"+url.getHost())+"rpc/soap/jirasoapservice-v2";
             JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
-                    new URL(newUrl.toString()));
-            return new JiraSession(this,service,null); //no need to login. no idea about tokens though...
+                    new URL(httpAuthUrl));
+            return new JiraSession(this,service,null); //no need to login
         }
 
         JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
@@ -216,7 +216,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public URL getUrl(String id) throws MalformedURLException {
         return new URL(url, "browse/" + id.toUpperCase());
     }
-    
+
+    /**
+     * Computes the alternative link URL to the given issue.
+     */
+    public URL getAlternativeUrl(String id) throws MalformedURLException {
+        return new URL(alternativeUrl, "browse/" + id.toUpperCase());
+    }
+
     /**
      * Gets the user-defined issue pattern if any.
      * 
@@ -635,13 +642,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                           @QueryParameter String groupVisibility,
                                           @QueryParameter String roleVisibility,
                                           @QueryParameter boolean useHTTPAuth,
-                                          @QueryParameter String alternateUrl)
+                                          @QueryParameter String alternativeUrl)
                 throws IOException {
             url = Util.fixEmpty(url);
+            alternativeUrl = Util.fixEmpty(alternativeUrl);
             if (url == null) {// URL not entered yet
                 return FormValidation.error("No URL given");
             }
-            JiraSite site = new JiraSite(new URL(url), new URL(alternateUrl), userName, password, false,
+            JiraSite site = new JiraSite(new URL(url), new URL(alternativeUrl), userName, password, false,
                     false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
             try {
                 site.createSession();

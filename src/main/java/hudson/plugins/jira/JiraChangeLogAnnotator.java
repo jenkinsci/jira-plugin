@@ -57,20 +57,22 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 
                 LOGGER.log(Level.INFO, "Annotating JIRA id: ''{0}''", id);
 
-                URL url;
+                URL url, alternativeUrl;
                 try {
                 	url = site.getUrl(id);
                 } catch (MalformedURLException e) {
                 	throw new AssertionError(e); // impossible
                 }
 
-                URL alternativeUrl = site.alternativeUrl;
-                if(alternativeUrl != null && !alternativeUrl.equals(null)) {
-                    try {
-                        url = new URL(alternativeUrl, url.getPath());
-                    } catch (MalformedURLException e) {
-                        LOGGER.log(Level.WARNING, "Failed to construct altenative URL for Jira link. " + e.getMessage());
+                try {
+                    alternativeUrl = site.getAlternativeUrl(id);
+                    if(alternativeUrl != null) {
+                        url = alternativeUrl;
                     }
+                } catch (MalformedURLException e) {
+                    LOGGER.log(Level.WARNING, "Failed to construct alternative URL for Jira link. " + e.getMessage());
+                    // This should not fail, since we already have an URL object. Exceptions would happen elsewhere.
+                    throw new AssertionError(e);
                 }
 
                 JiraIssue issue = null;
