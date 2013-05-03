@@ -57,19 +57,19 @@ public class JiraChangeLogAnnotatorTest {
     @Test
     public void testAnnotate() throws Exception {
         FreeStyleBuild b = mock(FreeStyleBuild.class);
-        
+
         when(b.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(b, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 
         MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
-        
+
         annotator.annotate(b,null, text);
 
         // make sure '$' didn't confuse the JiraChangeLogAnnotator
         Assert.assertTrue(text.toString(false).contains(TITLE));
     }
-    
+
     /**
      * Jenkins' MarkupText#findTokens() doesn't work in our case if
      * the whole pattern matches the following word boundary character
@@ -202,4 +202,33 @@ public class JiraChangeLogAnnotatorTest {
         annotator.annotate(mock(FreeStyleBuild.class), null, text);
         Assert.assertEquals("fixed <a href='http://dummy/DUMMY-42' tooltip='title with $sign to confuse TextMarkup.replace'>DUMMY-42</a>abc", text.toString(false));
     }
+
+    /**
+     * Tests that setting the "alternative Url" property actually
+     * changes the link also.
+     * @throws Exception
+     */
+    @Test
+    public void testAlternativeURLAnnotate() throws Exception {
+        when(site.getAlternativeUrl(Mockito.anyString())).thenAnswer(
+                new Answer<URL>() {
+                    public URL answer(InvocationOnMock invocation)
+                            throws Throwable {
+                        String id = invocation.getArguments()[0].toString();
+                        return new URL("http://altdummy/" + id);
+                    }
+                });
+
+        FreeStyleBuild b = mock(FreeStyleBuild.class);
+
+        when(b.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(b, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+        MarkupText text = new MarkupText("marking up DUMMY-1.");
+        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+        doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+
+        annotator.annotate(b,null, text);
+
+        Assert.assertTrue(text.toString(false).contains("<a href='http://altdummy/DUMMY-1'"));
+    }
+
 }
