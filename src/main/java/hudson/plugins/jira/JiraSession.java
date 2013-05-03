@@ -1,6 +1,18 @@
 package hudson.plugins.jira;
 
-import hudson.plugins.jira.soap.*;
+import hudson.plugins.jira.soap.JiraSoapService;
+import hudson.plugins.jira.soap.RemoteComment;
+import hudson.plugins.jira.soap.RemoteFieldValue;
+import hudson.plugins.jira.soap.RemoteGroup;
+import hudson.plugins.jira.soap.RemoteIssue;
+import hudson.plugins.jira.soap.RemoteIssueType;
+import hudson.plugins.jira.soap.RemoteNamedObject;
+import hudson.plugins.jira.soap.RemoteProject;
+import hudson.plugins.jira.soap.RemoteProjectRole;
+import hudson.plugins.jira.soap.RemoteStatus;
+import hudson.plugins.jira.soap.RemoteValidationException;
+import hudson.plugins.jira.soap.RemoteVersion;
+import hudson.plugins.jira.soap.RemoteComponent;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
