@@ -57,10 +57,21 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     protected static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
 
     /**
-     * URL of JIRA, like <tt>http://jira.codehaus.org/</tt>.
+     * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
      */
     public final URL url;
+
+    /**
+     * URL of JIRA for normal access, like <tt>http://jira.codehaus.org/</tt>.
+     * Mandatory. Normalized to end with '/'
+     */
+    public final URL alternativeUrl;
+
+    /**
+     * Jira requires HTTP Authentication for login
+     */
+    public final boolean useHTTPAuth;
 
     /**
      * User name needed to login. Optional.
@@ -122,15 +133,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private transient Lock projectUpdateLock = new ReentrantLock();
 
     @DataBoundConstructor
-    public JiraSite(URL url, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern, 
-                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility) {
+    public JiraSite(URL url, URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
         if(!url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm()+"/");
             } catch (MalformedURLException e) {
-                throw new AssertionError(e); // impossible
+                throw new AssertionError(e);
             }
+
+        if(!alternativeUrl.toExternalForm().endsWith("/"))
+            try {
+                alternativeUrl = new URL(alternativeUrl.toExternalForm()+"/");
+            } catch (MalformedURLException e) {
+                throw new AssertionError(e);
+            }
+
         this.url = url;
+        this.alternativeUrl = alternativeUrl;
         this.userName = Util.fixEmpty(userName);
         this.password = Util.fixEmpty(password);
         this.supportsWikiStyleComment = supportsWikiStyleComment;
@@ -145,6 +165,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
         this.groupVisibility = Util.fixEmpty(groupVisibility);
         this.roleVisibility = Util.fixEmpty(roleVisibility);
+        this.useHTTPAuth = useHTTPAuth;
     }
 
     protected Object readResolve() {
@@ -168,6 +189,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return null;    // remote access not supported
         JiraSoapServiceService jiraSoapServiceGetter = new JiraSoapServiceServiceLocator();
 
+        if(useHTTPAuth) {
+            String httpAuthUrl = url.toExternalForm().replace(
+                    url.getHost(),
+                    userName+":"+password+"@"+url.getHost())+"rpc/soap/jirasoapservice-v2";
+            JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
+                    new URL(httpAuthUrl));
+            return new JiraSession(this,service,null); //no need to login
+        }
+
         JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
             new URL(url, "rpc/soap/jirasoapservice-v2"));
         return new JiraSession(this,service,service.login(userName,password));
@@ -186,7 +216,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public URL getUrl(String id) throws MalformedURLException {
         return new URL(url, "browse/" + id.toUpperCase());
     }
-    
+
+    /**
+     * Computes the alternative link URL to the given issue.
+     */
+    public URL getAlternativeUrl(String id) throws MalformedURLException {
+        return new URL(alternativeUrl, "browse/" + id.toUpperCase());
+    }
+
     /**
      * Gets the user-defined issue pattern if any.
      * 
@@ -603,14 +640,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                           @QueryParameter String url,
                                           @QueryParameter String password,
                                           @QueryParameter String groupVisibility,
-                                          @QueryParameter String roleVisibility)
+                                          @QueryParameter String roleVisibility,
+                                          @QueryParameter boolean useHTTPAuth,
+                                          @QueryParameter String alternativeUrl)
                 throws IOException {
             url = Util.fixEmpty(url);
+            alternativeUrl = Util.fixEmpty(alternativeUrl);
             if (url == null) {// URL not entered yet
                 return FormValidation.error("No URL given");
             }
-            JiraSite site = new JiraSite(new URL(url), userName, password, false,
-                    false, null, false, groupVisibility, roleVisibility);
+            JiraSite site = new JiraSite(new URL(url), new URL(alternativeUrl), userName, password, false,
+                    false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
             try {
                 site.createSession();
                 return FormValidation.ok("Success");
