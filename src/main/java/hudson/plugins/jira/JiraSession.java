@@ -268,8 +268,12 @@ public class JiraSession {
 		RemoteFieldValue value = new RemoteFieldValue("fixVersions", new String[] { newVersion.getId() } );
 		for( RemoteIssue issue : issues ) {
 			LOGGER.fine("Migrating issue: " + issue.getKey());
-			service.updateIssue(token, issue.getKey(), new RemoteFieldValue[] { value });
-		}
+            try {
+                service.updateIssue(token, issue.getKey(), new RemoteFieldValue[]{value});
+            } catch (Exception e) {
+                LOGGER.warning(String.format("Unable to update %s", issue.getKey()));
+            }
+        }
 	}
 	
 	/**
