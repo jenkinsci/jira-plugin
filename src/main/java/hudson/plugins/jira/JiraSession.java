@@ -64,7 +64,7 @@ public class JiraSession {
 		this.site = site;
 	}
 
-    public Set<JiraComponent> getComponents(String projectKey) throws RemoteException {
+    public Set<JiraComponent> getJiraComponents(String projectKey) throws RemoteException {
         RemoteComponent[] remoteComponents = service.getComponents(token, projectKey);
 
         Set<JiraComponent> componentKeys = new TreeSet<JiraComponent>();

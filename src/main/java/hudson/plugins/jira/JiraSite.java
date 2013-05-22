@@ -254,7 +254,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         try {
             JiraSession session = createSession();
             if(session!=null) {
-                components = Collections.unmodifiableSet(session.getComponents(projectKey));
+                components = Collections.unmodifiableSet(session.getJiraComponents(projectKey));
             }
         } catch (IOException e) {
             // in case of error, set empty set to avoid trying the same thing repeatedly.
