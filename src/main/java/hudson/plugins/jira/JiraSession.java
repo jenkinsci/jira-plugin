@@ -7,17 +7,20 @@ import hudson.plugins.jira.soap.RemoteGroup;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.plugins.jira.soap.RemoteIssueType;
 import hudson.plugins.jira.soap.RemoteNamedObject;
+import hudson.plugins.jira.soap.RemotePriority;
 import hudson.plugins.jira.soap.RemoteProject;
 import hudson.plugins.jira.soap.RemoteProjectRole;
 import hudson.plugins.jira.soap.RemoteStatus;
 import hudson.plugins.jira.soap.RemoteValidationException;
 import hudson.plugins.jira.soap.RemoteVersion;
 import hudson.plugins.jira.soap.RemoteComponent;
+import org.apache.commons.lang.StringEscapeUtils;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /**
@@ -44,6 +47,11 @@ public class JiraSession {
 	 */
 	private Set<String> projectKeys;
 
+    /**
+     * Lazily computed list of priorities
+     */
+    private Set<JiraPriority> priorities;
+
 	/**
 	 * This session is created for this site.
 	 */
@@ -55,6 +63,46 @@ public class JiraSession {
 		this.token = token;
 		this.site = site;
 	}
+
+    public Set<JiraComponent> getJiraComponents(String projectKey) throws RemoteException {
+        RemoteComponent[] remoteComponents = service.getComponents(token, projectKey);
+
+        Set<JiraComponent> componentKeys = new TreeSet<JiraComponent>();
+        for(RemoteComponent remoteComponent : remoteComponents) {
+            componentKeys.add(new JiraComponent(remoteComponent));
+        }
+
+        return componentKeys;
+    }
+
+
+    public Set<JiraIssueType> getIssueTypes(String projectKey) throws RemoteException {
+        RemoteProject remoteProject = service.getProjectByKey(token, projectKey);
+
+        RemoteIssueType[] remoteIssueTypes = service.getIssueTypesForProject(token, remoteProject.getId());
+
+        Set<JiraIssueType> issueTypeKeys = new TreeSet<JiraIssueType>();
+        for(RemoteIssueType remoteIssueType : remoteIssueTypes) {
+            issueTypeKeys.add(new JiraIssueType(remoteIssueType));
+        }
+
+        return issueTypeKeys;
+    }
+
+    public Set<JiraPriority> getPriorities() throws RemoteException {
+        if (priorities == null) {
+            LOGGER.fine("Fetching remote priorities list from "
+                    + site.getName());
+            RemotePriority[] remotePriorities = service
+                    .getPriorities(token);
+            priorities = new TreeSet<JiraPriority>();
+            for (RemotePriority p : remotePriorities) {
+                priorities.add(new JiraPriority(p));
+            }
+            LOGGER.fine("Priorities =" + priorities);
+        }
+        return priorities;
+    }
 
 	/**
 	 * Returns the set of project keys (like MNG, JENKINS, etc) that are
@@ -68,7 +116,7 @@ public class JiraSession {
 					+ site.getName());
 			RemoteProject[] remoteProjects = service
 					.getProjectsNoSchemes(token);
-			projectKeys = new HashSet<String>(remoteProjects.length);
+			projectKeys = new TreeSet<String>();
 			for (RemoteProject p : remoteProjects) {
 				projectKeys.add(p.getKey().toUpperCase());
 			}
@@ -123,6 +171,10 @@ public class JiraSession {
 			return null;
 	}
 
+    public void createIssue(RemoteIssue remoteIssue) throws RemoteException {
+        service.createIssue(token, remoteIssue);
+    }
+
 	/**
 	 * Gets all issues that match the given JQL filter
 	 * 
@@ -133,7 +185,7 @@ public class JiraSession {
 	 */
 	public RemoteIssue[] getIssuesFromJqlSearch(final String jqlSearch)
 			throws RemoteException {
-		return service.getIssuesFromJqlSearch(token, jqlSearch, 50);
+        return service.getIssuesFromJqlSearch(token, jqlSearch, 50);
 	}
 
 	/**
