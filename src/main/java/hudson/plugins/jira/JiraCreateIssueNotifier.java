@@ -1,21 +1,14 @@
 package hudson.plugins.jira;
 
-import java.util.HashMap;
-import java.util.logging.Logger;
-import java.io.*;
-
-import javax.xml.rpc.ServiceException;
-
-import net.sf.json.JSONObject;
-
-import org.kohsuke.stapler.*;
-
-import jenkins.model.Jenkins;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.plugins.jira.soap.RemoteComponent;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.tasks.BuildStepDescriptor;
@@ -23,6 +16,21 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+
+import javax.xml.rpc.ServiceException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.logging.Logger;
 
 /**
  * <p>

@@ -10,7 +10,8 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.xml.rpc.ServiceException;
 
-/** Resolve user email by searching his userId as username in JIRA.
+/**
+ * Resolve user email by searching his userId as username in JIRA.
  *
  * @author Honza Brázdil <jbrazdil@redhat.com>
  */
