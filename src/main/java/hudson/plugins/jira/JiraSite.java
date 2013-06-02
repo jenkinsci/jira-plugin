@@ -16,6 +16,7 @@ import hudson.util.FormValidation;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Calendar;
@@ -24,6 +25,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -32,12 +35,17 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
 
 import org.apache.axis.AxisFault;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 /**
  * Represents an external JIRA installation and configuration
@@ -126,11 +134,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     // TODO: seems like this is never invalidated (never set to null)
     // should we implement to invalidate this (say every hour)?
     private transient volatile Set<String> projects;
+    
+    private transient Cache<String,RemoteIssue> issueCache = makeIssueCache();
 
     /**
      * Used to guard the computation of {@link #projects}
      */
     private transient Lock projectUpdateLock = new ReentrantLock();
+    
+    private transient ThreadLocal<WeakReference<JiraSession>> jiraSession = new ThreadLocal<WeakReference<JiraSession>>();
 
     @DataBoundConstructor
     public JiraSite(URL url, URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
@@ -166,11 +178,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.groupVisibility = Util.fixEmpty(groupVisibility);
         this.roleVisibility = Util.fixEmpty(roleVisibility);
         this.useHTTPAuth = useHTTPAuth;
+        this.jiraSession.set(new WeakReference<JiraSession>(null));
     }
 
     protected Object readResolve() {
         projectUpdateLock = new ReentrantLock();
+        issueCache = makeIssueCache();
+        jiraSession = new ThreadLocal<WeakReference<JiraSession>>();
+        jiraSession.set(new WeakReference<JiraSession>(null));
         return this;
+    }
+
+    private static Cache<String, RemoteIssue> makeIssueCache() {
+        return CacheBuilder.newBuilder().concurrencyLevel(2).expireAfterAccess(2, TimeUnit.MINUTES).build();
     }
 
 
@@ -179,11 +199,32 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Creates a remote access session to this JIRA.
+     * Gets a remote access session to this JIRA site.
+     * Creates one if none exists already.
      *
      * @return
      *      null if remote access is not supported.
      */
+    @Nullable
+    public JiraSession getSession() throws IOException, ServiceException {
+        JiraSession session = jiraSession.get().get();
+        if (session == null) {
+            // TODO: we should check for session timeout, too (but there's no method for that on JiraSoapService)
+            // Currently no real problem, as we're using a weak reference for the session, so it will be GC'ed very quickly
+            session = createSession();
+            jiraSession.set(new WeakReference<JiraSession>(session));
+        }
+        return session;
+    }
+    
+    /**
+     * Creates a remote access session to this JIRA.
+     *
+     * @return
+     *      null if remote access is not supported.
+     * @deprecated please use {@link #getSession()} unless you really want a NEW session
+     */
+    @Deprecated
     public JiraSession createSession() throws IOException, ServiceException {
         if(userName==null || password==null)
             return null;    // remote access not supported
@@ -262,7 +303,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 if (projectUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
                     try {
                         if(projects==null) {
-                            JiraSession session = createSession();
+                            JiraSession session = getSession();
                             if(session!=null)
                                 projects = Collections.unmodifiableSet(session.getProjectKeys());
                         }
@@ -328,18 +369,35 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return keys.contains(id.substring(0,idx).toUpperCase());
     }
     
+    private static final RemoteIssue NULL = new RemoteIssue();
+    
     /**
      * Returns the remote issue with the given id or <code>null</code> if it wasn't found.
      */
-    public JiraIssue getIssue(String id) throws IOException, ServiceException {
-        JiraSession session = createSession();
-        if (session != null) {
-            RemoteIssue remoteIssue = session.getIssue(id);
-            if (remoteIssue != null) {
-                return new JiraIssue(remoteIssue);
+    @CheckForNull
+    public JiraIssue getIssue(final String id) throws IOException, ServiceException {
+        
+        try {
+            RemoteIssue remoteIssue = issueCache.get(id, new Callable<RemoteIssue>() {
+                public RemoteIssue call() throws Exception {
+                    JiraSession session = getSession();
+                    RemoteIssue issue = null;
+                    if (session != null) {
+                        issue = session.getIssue(id);
+                    }
+                    
+                    return issue != null ? issue : NULL;
+                }
+            });
+            
+            if (remoteIssue == NULL) {
+                return null;
             }
+            
+            return new JiraIssue(remoteIssue);
+        } catch (ExecutionException e) {
+            throw new ServiceException(e);
         }
-        return null;
     }
     
     /**
@@ -351,7 +409,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws ServiceException
      */
     public void releaseVersion(String projectKey, String versionName) throws IOException, ServiceException {
-        JiraSession session = createSession();
+        JiraSession session = getSession();
         if (session != null) {
             RemoteVersion[] versions = session.getVersions(projectKey);
             if(versions == null ) return;
@@ -375,7 +433,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws ServiceException
      */
     public Set<JiraVersion> getVersions(String projectKey) throws IOException, ServiceException {
-    	JiraSession session = createSession();
+    	JiraSession session = getSession();
     	if(session == null) return Collections.emptySet();
     	
     	RemoteVersion[] versions = session.getVersions(projectKey);
@@ -416,7 +474,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws ServiceException
      */
     public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException, ServiceException {
-    	JiraSession session = createSession();
+    	JiraSession session = getSession();
     	if(session == null) return "";
     	
     	RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
@@ -475,7 +533,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws ServiceException
      */
     public Set<JiraIssue> getIssueWithFixVersion(String projectKey, String versionName) throws IOException, ServiceException {
-    	JiraSession session = createSession();
+    	JiraSession session = getSession();
     	if(session == null) return Collections.emptySet();
     	
     	RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName);
@@ -502,7 +560,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws ServiceException
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException, ServiceException {
-    	JiraSession session = createSession();
+    	JiraSession session = getSession();
     	if(session == null) return;
     	
     	session.replaceFixVersion(projectKey, fromVersion, toVersion, query);
@@ -518,7 +576,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws ServiceException
      */
     public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException, ServiceException {
-    	JiraSession session = createSession();
+    	JiraSession session = getSession();
     	if(session == null) return;
     	
     	session.migrateIssuesToFixVersion(projectKey, versionName, query);
@@ -537,7 +595,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException,
             ServiceException {
-        JiraSession session = createSession();
+        JiraSession session = getSession();
 
         if (session == null) {
             console.println(Messages.Updater_FailedToConnect());
