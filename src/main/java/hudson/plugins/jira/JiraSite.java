@@ -13,6 +13,7 @@ import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.plugins.jira.soap.RemoteIssueType;
 import hudson.plugins.jira.soap.RemoteVersion;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -81,7 +82,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Password needed to login. Optional.
      */
-    public final String password;
+    public final Secret password;
 
     /**
      * Group visibility to constrain the visibility of the added comment. Optional.
@@ -152,7 +153,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.url = url;
         this.alternativeUrl = alternativeUrl;
         this.userName = Util.fixEmpty(userName);
-        this.password = Util.fixEmpty(password);
+        this.password = Secret.fromString(Util.fixEmpty(password));
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
         this.userPattern = Util.fixEmpty(userPattern);
@@ -200,7 +201,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
             new URL(url, "rpc/soap/jirasoapservice-v2"));
-        return new JiraSession(this,service,service.login(userName,password));
+        return new JiraSession(this,service,service.login(userName,password.getPlainText()));
     }
 
     /**
@@ -648,6 +649,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             alternativeUrl = Util.fixEmpty(alternativeUrl);
             if (url == null) {// URL not entered yet
                 return FormValidation.error("No URL given");
+            }
+            if (alternativeUrl == null) { // Link URL not entered yet
+                return FormValidation.error("No Link URL given");
             }
             JiraSite site = new JiraSite(new URL(url), new URL(alternativeUrl), userName, password, false,
                     false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
