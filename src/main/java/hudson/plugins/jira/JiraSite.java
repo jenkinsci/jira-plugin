@@ -650,6 +650,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             if (url == null) {// URL not entered yet
                 return FormValidation.error("No URL given");
             }
+            if (alternativeUrl == null) { // Link URL not entered yet
+                return FormValidation.error("No Link URL given");
+            }
             JiraSite site = new JiraSite(new URL(url), new URL(alternativeUrl), userName, password, false,
                     false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
             try {
