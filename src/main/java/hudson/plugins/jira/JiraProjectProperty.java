@@ -107,6 +107,8 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject formData) {
             //Fix^H^H^HDirty hack for empty string to URL conversion error
+            //Should check for existing handler etc, but since this is a dirty hack,
+            //we won't
             Stapler.CONVERT_UTILS.deregister(java.net.URL.class);
             Converter tmpUrlConverter = new Converter() {
                 public Object convert(Class aClass, Object o) {
@@ -114,7 +116,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
                     try {
                         return new URL((String) o);
                     } catch (MalformedURLException e) {
-                        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                        LOGGER.warning(String.format("%s is not a valid URL.", o.toString()));
                         return null;
                     }
                 }
