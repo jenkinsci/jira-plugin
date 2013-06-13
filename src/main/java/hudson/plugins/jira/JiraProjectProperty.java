@@ -110,7 +110,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
             //Should check for existing handler etc, but since this is a dirty hack,
             //we won't
             Stapler.CONVERT_UTILS.deregister(java.net.URL.class);
-            Converter tmpUrlConverter = new Converter() {
+            Stapler.CONVERT_UTILS.register(new Converter() {
                 public Object convert(Class aClass, Object o) {
                     if(o == null || "".equals(o) || "null".equals(o)) return null;
                     try {
@@ -120,8 +120,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
                         return null;
                     }
                 }
-            };
-            Stapler.CONVERT_UTILS.register(tmpUrlConverter, java.net.URL.class);
+            }, java.net.URL.class);
             //End hack
 
             sites.replaceBy(req.bindJSONToList(JiraSite.class, formData.get("sites")));
