@@ -5,4 +5,5 @@ build
 target
 bin
 *.iml
+.idea/
 work
