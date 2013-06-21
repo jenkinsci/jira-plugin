@@ -36,6 +36,7 @@ import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
 
 import org.apache.axis.AxisFault;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -142,7 +143,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 throw new AssertionError(e);
             }
 
-        if(!alternativeUrl.toExternalForm().endsWith("/"))
+        if(alternativeUrl!=null && !alternativeUrl.toExternalForm().endsWith("/"))
             try {
                 alternativeUrl = new URL(alternativeUrl.toExternalForm()+"/");
             } catch (MalformedURLException e) {
@@ -221,7 +222,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Computes the alternative link URL to the given issue.
      */
     public URL getAlternativeUrl(String id) throws MalformedURLException {
-        return new URL(alternativeUrl, "browse/" + id.toUpperCase());
+        return alternativeUrl == null ? null : new URL(alternativeUrl, "browse/" + id.toUpperCase());
     }
 
     /**
@@ -649,7 +650,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             if (url == null) {// URL not entered yet
                 return FormValidation.error("No URL given");
             }
-            JiraSite site = new JiraSite(new URL(url), new URL(alternativeUrl), userName, password, false,
+
+            URL altUrl = null;
+
+            if ( StringUtils.isNotEmpty( alternativeUrl )) {
+                altUrl = new URL(alternativeUrl);
+            }
+
+
+            JiraSite site = new JiraSite(new URL(url), altUrl, userName, password, false,
                     false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
             try {
                 site.createSession();
