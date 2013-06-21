@@ -7,9 +7,13 @@ import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.util.CopyOnWriteList;
 import net.sf.json.JSONObject;
+import org.apache.commons.beanutils.Converter;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.logging.Logger;
 
 /**
@@ -102,7 +106,24 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
 
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject formData) {
-			sites.replaceBy(req.bindJSONToList(JiraSite.class, formData.get("sites")));
+            //Fix^H^H^HDirty hack for empty string to URL conversion error
+            //Should check for existing handler etc, but since this is a dirty hack,
+            //we won't
+            Stapler.CONVERT_UTILS.deregister(java.net.URL.class);
+            Stapler.CONVERT_UTILS.register(new Converter() {
+                public Object convert(Class aClass, Object o) {
+                    if(o == null || "".equals(o) || "null".equals(o)) return null;
+                    try {
+                        return new URL((String) o);
+                    } catch (MalformedURLException e) {
+                        LOGGER.warning(String.format("%s is not a valid URL.", o.toString()));
+                        return null;
+                    }
+                }
+            }, java.net.URL.class);
+            //End hack
+
+            sites.replaceBy(req.bindJSONToList(JiraSite.class, formData.get("sites")));
 			save();
 			return true;
 		}
