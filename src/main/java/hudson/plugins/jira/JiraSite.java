@@ -207,7 +207,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     @Nullable
     public JiraSession getSession() throws IOException, ServiceException {
-        JiraSession session = jiraSession.get().get();
+    	JiraSession session = null;
+    	
+        WeakReference<JiraSession> weakReference = jiraSession.get();
+        if (weakReference != null) {
+        	session = weakReference.get();
+        }
+
         if (session == null) {
             // TODO: we should check for session timeout, too (but there's no method for that on JiraSoapService)
             // Currently no real problem, as we're using a weak reference for the session, so it will be GC'ed very quickly
