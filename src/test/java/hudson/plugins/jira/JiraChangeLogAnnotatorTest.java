@@ -38,7 +38,7 @@ public class JiraChangeLogAnnotatorTest {
                 Sets.newHashSet("DUMMY", "JENKINS"));
         
         this.site = mock(JiraSite.class);
-        when(site.createSession()).thenReturn(session);
+        when(site.getSession()).thenReturn(session);
         when(site.getUrl(Mockito.anyString())).thenAnswer(
         		new Answer<URL>() {
 					public URL answer(InvocationOnMock invocation)
