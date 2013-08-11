@@ -740,4 +740,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
     
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
+
+	public void addVersion(String version, String projectKey) throws IOException, ServiceException {
+    	JiraSession session = getSession();
+    	if(session == null) return;
+    	
+    	session.addVersion(version, projectKey);
+		
+	}
 }
