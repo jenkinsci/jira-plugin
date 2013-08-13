@@ -16,16 +16,16 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
-import hudson.EnvVars;
 import hudson.Extension;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Hudson;
 import hudson.model.ParameterDefinition;
-import hudson.model.EnvironmentContributingAction;
 import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.soap.RemoteVersion;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class JiraVersionParameterDefinition extends ParameterDefinition {
 	private static final long serialVersionUID = 3927562542249244416L;
@@ -60,13 +60,34 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
 		return value;
 	}
 
-	public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException, ServiceException {
-		AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+   @Override
+   public ParameterValue getDefaultParameterValue() {
+      try {
+         if (!getVersions().isEmpty()) {
+            return new JiraVersionParameterValue(getName(), getVersions().get(0).name);
+         }
+      } catch (IOException ex) {
+         Logger.getLogger(JiraVersionParameterDefinition.class.getName()).log(Level.WARNING, null, ex);
+      } catch (ServiceException ex) {
+         Logger.getLogger(JiraVersionParameterDefinition.class.getName()).log(Level.WARNING, null, ex);
+      }
+      return null;
+   }
 
+	public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException, ServiceException {
+         AbstractProject<?, ?> context = null;
+         if (Stapler.getCurrentRequest() != null) {
+            context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+         } else {
+            final List<AbstractProject> items = Hudson.getInstance().getItems(AbstractProject.class);
+            if (!items.isEmpty()) {
+               context = items.get(0);
+            }
+        }
 		JiraSite site = JiraSite.get(context);
         if (site==null)  throw new IllegalStateException("JIRA site needs to be configured in the project "+context.getFullDisplayName());
 
-        JiraSession session = site.createSession();
+        JiraSession session = site.getSession();
         if (session==null)  throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
 
         RemoteVersion[] versions = session.getVersions(projectKey);
