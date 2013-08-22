@@ -15,6 +15,11 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+/**
+ * A build step which creates new jira version
+ * @author Artem Koshelev artkoshelev@gmail.com
+ *
+ */
 public class JiraVersionCreator extends Notifier {
 
 	private String jiraVersion;
@@ -57,7 +62,7 @@ public class JiraVersionCreator extends Notifier {
 				throw new IllegalArgumentException("No version specified");
 			}
 			
-			JiraSite site = JiraSite.get(build.getProject());
+			JiraSite site = getSiteForProject(build.getProject());
 
 			site.addVersion(realVersion, jiraProjectKey);
 		} catch (Exception e) {
@@ -69,6 +74,10 @@ public class JiraVersionCreator extends Notifier {
 		}
 		return true;
 	}
+	
+    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
+        return JiraSite.get(project);
+    }
 
 	@Override
 	public BuildStepDescriptor<Publisher> getDescriptor() {

@@ -6,6 +6,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
+import hudson.plugins.jira.JiraVersionCreator.DescriptorImpl;
 import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.JiraSoapServiceService;
 import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
@@ -636,7 +637,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         return success;
     }
-
+    
     @Extension
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
