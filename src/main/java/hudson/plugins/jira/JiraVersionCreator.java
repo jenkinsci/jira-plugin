@@ -1,11 +1,17 @@
 package hudson.plugins.jira;
 
+import static ch.lambdaj.Lambda.filter;
+import static hudson.plugins.jira.JiraVersionMatcher.hasName;
+import static org.hamcrest.Matchers.equalTo;
+
+import java.util.List;
+
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -21,6 +27,8 @@ import org.kohsuke.stapler.StaplerRequest;
  *
  */
 public class JiraVersionCreator extends Notifier {
+	private static final String VERSION_EXISTS = 
+			"A version with name %s already exists in project %s, so nothing to do.";
 
 	private String jiraVersion;
 	private String jiraProjectKey;
@@ -63,8 +71,16 @@ public class JiraVersionCreator extends Notifier {
 			}
 			
 			JiraSite site = getSiteForProject(build.getProject());
-
-			site.addVersion(realVersion, jiraProjectKey);
+			List<JiraVersion> sameNamedVersions = filter(
+					hasName(equalTo(jiraVersion)), 
+					site.getVersions(jiraProjectKey));
+			
+			if (sameNamedVersions.size() == 0) {
+				site.addVersion(realVersion, jiraProjectKey);
+			} else {
+				listener.getLogger().println(
+						String.format(VERSION_EXISTS, jiraVersion, jiraProjectKey));
+			}
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
 					"Unable to add version %s to jira project %s", realVersion,
