@@ -445,4 +445,20 @@ public class JiraSession {
         RemoteComponent availableRemoteComponents[]= service.getComponents(token, projectKey);
         return availableRemoteComponents;
     }
+    
+    /**
+     * Creates a new version and returns it
+     * 
+     * @param version version id to create
+     * @param projectKey
+     * @return
+     * @throws hudson.plugins.jira.soap.RemoteException
+     * @throws RemoteException
+     */
+    public RemoteVersion addVersion(String version, String projectKey) throws hudson.plugins.jira.soap.RemoteException, RemoteException {
+    	RemoteVersion newVersion = new RemoteVersion();
+    	newVersion.setName(version);
+    	RemoteVersion createdVersion = service.addVersion(token, projectKey, newVersion);
+    	return createdVersion;
+    }
 }
