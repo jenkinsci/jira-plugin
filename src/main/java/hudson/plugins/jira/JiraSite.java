@@ -6,6 +6,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
+import hudson.plugins.jira.JiraVersionCreator.DescriptorImpl;
 import hudson.plugins.jira.soap.JiraSoapService;
 import hudson.plugins.jira.soap.JiraSoapServiceService;
 import hudson.plugins.jira.soap.JiraSoapServiceServiceLocator;
@@ -636,7 +637,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         return success;
     }
-
+    
     @Extension
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
@@ -740,4 +741,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
     
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
+
+	public void addVersion(String version, String projectKey) throws IOException, ServiceException {
+    	JiraSession session = getSession();
+    	if(session == null) return;
+    	
+    	session.addVersion(version, projectKey);
+		
+	}
 }
