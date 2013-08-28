@@ -21,6 +21,7 @@ import java.util.Set;
 
 import javax.xml.rpc.ServiceException;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -30,24 +31,36 @@ import org.mockito.Mockito;
  *
  */
 public class VersionCreatorTest {
-	AbstractBuild build = mock(AbstractBuild.class);;
-	Launcher launcher = mock(Launcher.class);
-	BuildListener listener = mock(BuildListener.class);
-	EnvVars env = mock(EnvVars.class);
-	AbstractProject project = mock(AbstractProject.class);
-	JiraSite site = mock(JiraSite.class);
-
 	private static final String JIRA_VER = Long.toString(System.currentTimeMillis());
-	private static final String JIRA_PRJ = "TEST_PRJ";
+	private static final String JIRA_PRJ = "TEST_PRJ";	
 	
-	@Test
-	public void jiraApiCalledWithSpecifiedParameters() throws InterruptedException, IOException, ServiceException {
-		JiraVersionCreator jvc = spy(new JiraVersionCreator(JIRA_VER, JIRA_PRJ));
+	AbstractBuild build;
+	Launcher launcher;
+	BuildListener listener;
+	EnvVars env;
+	AbstractProject project;
+	JiraSite site;
+	JiraVersionCreator jvc;
+	
+	@Before
+	public void createCommonMocks() throws IOException, InterruptedException {
+		build = mock(AbstractBuild.class);;
+		launcher = mock(Launcher.class);
+		listener = mock(BuildListener.class);
+		env = mock(EnvVars.class);
+		project = mock(AbstractProject.class);
+		site = mock(JiraSite.class);		
+		jvc = spy(new JiraVersionCreator(JIRA_VER, JIRA_PRJ));
+		
 		doReturn(site).when(jvc).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
 		
 		when(build.getProject()).thenReturn(project);
 		when(build.getEnvironment(listener)).thenReturn(env);
 		when(env.expand(Mockito.anyString())).thenReturn(JIRA_VER);
+	}
+	
+	@Test
+	public void jiraApiCalledWithSpecifiedParameters() throws InterruptedException, IOException, ServiceException {
 		when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<JiraVersion>());
 		
 		boolean result = jvc.perform(build, launcher, listener);
@@ -57,13 +70,6 @@ public class VersionCreatorTest {
 	
 	@Test
 	public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException, ServiceException {
-		JiraVersionCreator jvc = spy(new JiraVersionCreator(JIRA_VER, JIRA_PRJ));
-		doReturn(site).when(jvc).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
-		
-		when(build.getProject()).thenReturn(project);
-		when(build.getEnvironment(listener)).thenReturn(env);
-		when(env.expand(Mockito.anyString())).thenReturn(JIRA_VER);
-		
 		Set<JiraVersion> existingVersions = new HashSet<JiraVersion>();
 		existingVersions.add(new JiraVersion(JIRA_VER, null, false, false));
 		
