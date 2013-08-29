@@ -1,5 +1,11 @@
 package hudson.plugins.jira;
 
+import static ch.lambdaj.Lambda.filter;
+import static hudson.plugins.jira.JiraVersionMatcher.hasName;
+import static org.hamcrest.Matchers.equalTo;
+
+import java.util.List;
+
 import net.sf.json.JSONObject;
 
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -25,6 +31,8 @@ import hudson.tasks.Publisher;
  */
 public class JiraReleaseVersionUpdater extends Notifier {
 
+	private static final String VERSION_ALREADY_RELEASED = 
+			"The version %s is already released in project %s, so nothing to do.";
 	private static final long serialVersionUID = 699563338312232811L;
 
 	private String jiraProjectKey;
@@ -73,8 +81,16 @@ public class JiraReleaseVersionUpdater extends Notifier {
 			}
 
 			JiraSite site = JiraSite.get(build.getProject());
-
-			site.releaseVersion(jiraProjectKey, realRelease);
+			List<JiraVersion> sameNamedVersions = filter(
+					hasName(equalTo(realRelease)), 
+					site.getVersions(jiraProjectKey));
+			
+			if (sameNamedVersions.size() == 1 && sameNamedVersions.get(0).isReleased()) {
+				listener.getLogger().println(
+						String.format(VERSION_ALREADY_RELEASED, realRelease, jiraProjectKey));
+			} else {
+				site.releaseVersion(jiraProjectKey, realRelease);
+			}		
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
 					"Unable to release jira version %s/%s: %s", realRelease,
