@@ -72,7 +72,7 @@ public class JiraVersionCreator extends Notifier {
 			
 			JiraSite site = getSiteForProject(build.getProject());
 			List<JiraVersion> sameNamedVersions = filter(
-					hasName(equalTo(jiraVersion)), 
+					hasName(equalTo(realVersion)), 
 					site.getVersions(jiraProjectKey));
 			
 			if (sameNamedVersions.size() == 0) {
