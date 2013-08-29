@@ -79,7 +79,7 @@ public class JiraVersionCreator extends Notifier {
 				site.addVersion(realVersion, jiraProjectKey);
 			} else {
 				listener.getLogger().println(
-						String.format(VERSION_EXISTS, jiraVersion, jiraProjectKey));
+						String.format(VERSION_EXISTS, realVersion, jiraProjectKey));
 			}
 		} catch (Exception e) {
 			e.printStackTrace(listener.fatalError(
