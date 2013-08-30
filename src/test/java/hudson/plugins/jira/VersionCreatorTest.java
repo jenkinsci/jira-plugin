@@ -33,6 +33,7 @@ import org.mockito.Mockito;
 public class VersionCreatorTest {
 	private static final String JIRA_VER = Long.toString(System.currentTimeMillis());
 	private static final String JIRA_PRJ = "TEST_PRJ";	
+	private static final String JIRA_VER_PARAM = "${JIRA_VER}";
 	
 	AbstractBuild build;
 	Launcher launcher;
@@ -82,5 +83,28 @@ public class VersionCreatorTest {
 		verify(site, times(0)).addVersion(JIRA_VER, JIRA_PRJ);
 		assertThat(result, is(true));
 	}
+	
+	@Test
+	public void buildDidNotFailWhenVersionExistsExpanded() throws IOException, InterruptedException, ServiceException {
+		// Same test as the previous one but here the version is contained in a Jenkins parameter
+		JiraVersionCreator jvc = spy(new JiraVersionCreator(JIRA_VER_PARAM, JIRA_PRJ));
+		doReturn(site).when(jvc).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+		
+		when(build.getProject()).thenReturn(project);
+		when(build.getEnvironment(listener)).thenReturn(env);
+		when(env.expand(JIRA_VER_PARAM)).thenReturn(JIRA_VER);
+		
+		Set<JiraVersion> existingVersions = new HashSet<JiraVersion>();
+		existingVersions.add(new JiraVersion(JIRA_VER, null, false, false));
+		
+		when(site.getVersions(JIRA_PRJ)).thenReturn(existingVersions);
+		
+		PrintStream logger = mock(PrintStream.class);
+		when(listener.getLogger()).thenReturn(logger);
+		
+		boolean result = jvc.perform(build, launcher, listener);
+		verify(site, times(0)).addVersion(JIRA_VER, JIRA_PRJ);
+		assertThat(result, is(true));
+	}	
 }
 
