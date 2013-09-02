@@ -80,7 +80,7 @@ public class JiraReleaseVersionUpdater extends Notifier {
 				throw new IllegalArgumentException("Release is Empty");
 			}
 
-			JiraSite site = JiraSite.get(build.getProject());
+			JiraSite site = getSiteForProject(build.getProject());
 			List<JiraVersion> sameNamedVersions = filter(
 					hasName(equalTo(realRelease)), 
 					site.getVersions(jiraProjectKey));
@@ -101,6 +101,10 @@ public class JiraReleaseVersionUpdater extends Notifier {
 		return true;
 	}
 
+    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
+        return JiraSite.get(project);
+    }	
+	
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.BUILD;
 	}
