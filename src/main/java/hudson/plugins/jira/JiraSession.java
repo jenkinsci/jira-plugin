@@ -332,7 +332,7 @@ public class JiraSession {
 
         if (actions != null) {
             for (RemoteNamedObject action : actions) {
-                if (action.getName().equalsIgnoreCase(workflowAction)) {
+                if (action.getName() != null && action.getName().equalsIgnoreCase(workflowAction)) {
                     return action.getId();
                 }
             }
