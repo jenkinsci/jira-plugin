@@ -68,10 +68,10 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable {
         }
 
         @Override
-		public String getDisplayName() {
+        public String getDisplayName() {
             // Displayed in the publisher section
             return Messages.JiraIssueUpdater_DisplayName();
-           
+
         }
 
         @Override
