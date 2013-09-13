@@ -25,6 +25,7 @@ import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -87,7 +88,10 @@ public class JiraIssueUpdateBuilder extends Builder {
             return true;
         }
 
-        listener.getLogger().println(Messages.JiraIssueUpdateBuilder_UpdatingWithAction(workflowActionName));
+        if (StringUtils.isNotEmpty(workflowActionName)) {
+            listener.getLogger().println(Messages.JiraIssueUpdateBuilder_UpdatingWithAction(workflowActionName));
+        }
+
         listener.getLogger().println("[JIRA] JQL: " + realJql);
 
         try {
@@ -130,7 +134,7 @@ public class JiraIssueUpdateBuilder extends Builder {
 
         public FormValidation doCheckWorkflowActionName(@QueryParameter String value) {
             if (Util.fixNull(value).trim().length() == 0) {
-                return FormValidation.error(Messages.JiraIssueUpdateBuilder_NoWorkflowAction());
+                return FormValidation.warning(Messages.JiraIssueUpdateBuilder_NoWorkflowAction());
             }
 
             return FormValidation.ok();
