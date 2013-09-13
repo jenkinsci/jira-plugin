@@ -45,27 +45,36 @@ public class JiraVersion implements Comparable<JiraVersion> {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         JiraVersion other = (JiraVersion) obj;
-        if (archived != other.archived)
+        if (archived != other.archived) {
             return false;
+        }
         if (name == null) {
-            if (other.name != null)
+            if (other.name != null) {
                 return false;
-        } else if (!name.equals(other.name))
+            }
+        } else if (!name.equals(other.name)) {
             return false;
+        }
         if (releaseDate == null) {
-            if (other.releaseDate != null)
+            if (other.releaseDate != null) {
                 return false;
-        } else if (!releaseDate.equals(other.releaseDate))
+            }
+        } else if (!releaseDate.equals(other.releaseDate)) {
             return false;
-        if (released != other.released)
+        }
+        if (released != other.released) {
             return false;
+        }
         return true;
     }
 

@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
+
 public class JiraCreateReleaseNotes extends BuildWrapper {
 
     @Extension
@@ -53,12 +55,7 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
         this.jiraRelease = jiraRelease;
         this.jiraProjectKey = jiraProjectKey;
         this.jiraEnvironmentVariable = jiraEnvironmentVariable;
-        if (jiraFilter.equalsIgnoreCase("") || jiraFilter.isEmpty()) {
-            this.jiraFilter = DEFAULT_FILTER;
-        } else {
-            this.jiraFilter = jiraFilter;
-        }
-
+        this.jiraFilter = defaultIfEmpty(jiraFilter, DEFAULT_FILTER);
     }
 
     public String getJiraEnvironmentVariable() {
@@ -129,12 +126,10 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
         final Map<String, String> envMap = new HashMap<String, String>();
         envMap.put(jiraEnvironmentVariable, releaseNotes);
 
-        final Map<String, String> resultVariables = envMap;
-
         return new Environment() {
             @Override
             public void buildEnvVars(final Map<String, String> env) {
-                env.putAll(resultVariables);
+                env.putAll(envMap);
             }
         };
     }

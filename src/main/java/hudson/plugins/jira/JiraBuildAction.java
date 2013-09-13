@@ -38,8 +38,9 @@ public class JiraBuildAction implements Action {
      */
     public JiraIssue getIssue(String id) {
         for (JiraIssue issue : issues) {
-            if (issue.id.equals(id))
+            if (issue.id.equals(id)) {
                 return issue;
+            }
         }
         return null;
     }

@@ -24,6 +24,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static java.lang.String.format;
+
 /**
  * Actual JIRA update logic.
  *
@@ -144,8 +146,9 @@ class Updater {
         List<JiraIssue> issues = new ArrayList<JiraIssue>(ids.size());
         for (String id : ids) {
             if (!session.existsIssue(id)) {
-                if (debug)
+                if (debug) {
                     logger.println(id + " looked like a JIRA issue but it wasn't");
+                }
                 continue;   // token looked like a JIRA issue but it's actually not.
             }
 
@@ -160,7 +163,7 @@ class Updater {
      */
     private static String createComment(AbstractBuild<?, ?> build,
                                         boolean wikiStyle, String jenkinsRootUrl, boolean recordScmChanges, JiraIssue jiraIssue) {
-        String comment = String.format(
+        return format(
                 wikiStyle ?
                         "%6$s: Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n%5$s" :
                         "%6$s: Integrated in %2$s (See [%4$s])\n%5$s",
@@ -170,7 +173,6 @@ class Updater {
                 Util.encode(jenkinsRootUrl + build.getUrl()),
                 getScmComments(wikiStyle, build, recordScmChanges, jiraIssue),
                 build.getResult().toString());
-        return comment;
     }
 
     private static String getScmComments(boolean wikiStyle,
@@ -272,18 +274,20 @@ class Updater {
         Run<?, ?> prev = build.getPreviousBuild();
         if (prev != null) {
             JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
-            if (a != null)
+            if (a != null) {
                 ids.addAll(a.getIDs());
+            }
         }
 
         // then issues in this build
         findIssues(build, ids, pattern, listener);
 
         // check for issues fixed in dependencies
-        for (DependencyChange depc : build.getDependencyChanges(build.getPreviousBuild()).values())
-            for (AbstractBuild<?, ?> b : depc.getBuilds())
+        for (DependencyChange depc : build.getDependencyChanges(build.getPreviousBuild()).values()) {
+            for (AbstractBuild<?, ?> b : depc.getBuilds()) {
                 findIssues(b, ids, pattern, listener);
-
+            }
+        }
         return ids;
     }
 

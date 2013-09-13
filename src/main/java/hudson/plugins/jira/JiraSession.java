@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 /**
  * Connection to JIRA.
  * JIRA has a built-in timeout for a session, so after some inactive period the
@@ -17,6 +19,8 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  */
 public class JiraSession {
+    private static final Logger LOGGER = Logger.getLogger(JiraSession.class.getName());
+
     public final JiraSoapService service;
 
     /**
@@ -74,8 +78,7 @@ public class JiraSession {
         rc.setBody(comment);
 
         try {
-            if (roleVisibility != null && roleVisibility.equals("") == false
-                    && getRole(roleVisibility) != null) {
+            if (isNotEmpty(roleVisibility) && getRole(roleVisibility) != null) {
                 rc.setRoleLevel(roleVisibility);
             }
         } catch (RemoteValidationException rve) {
@@ -83,8 +86,7 @@ public class JiraSession {
         }
 
         try {
-            if (groupVisibility != null && groupVisibility.equals("") == false
-                    && getGroup(groupVisibility) != null) {
+            if (isNotEmpty(groupVisibility) && getGroup(groupVisibility) != null) {
                 rc.setGroupLevel(groupVisibility);
             }
         } catch (RemoteValidationException rve) {
@@ -101,10 +103,11 @@ public class JiraSession {
      * @return null if no such issue exists.
      */
     public RemoteIssue getIssue(String id) throws RemoteException {
-        if (existsIssue(id))
+        if (existsIssue(id)) {
             return service.getIssue(token, id);
-        else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -123,7 +126,7 @@ public class JiraSession {
      * Gets the details of a group, given a groupId. Used for validating group
      * visibility.
      *
-     * @param Group ID like "Software Development"
+     * @param groupId like "Software Development"
      * @return null if no such group exists
      */
     public RemoteGroup getGroup(String groupId) throws RemoteException {
@@ -137,7 +140,7 @@ public class JiraSession {
      * TODO: Cannot validate against the real project role the user have in the project,
      * jira soap api has no such function!
      *
-     * @param Role ID like "Software Development"
+     * @param roleId like "Software Development"
      * @return null if no such role exists
      */
     public RemoteProjectRole getRole(String roleId) throws RemoteException {
@@ -182,7 +185,9 @@ public class JiraSession {
     public RemoteVersion getVersionByName(String projectKey, String name) throws RemoteException {
         LOGGER.fine("Fetching versions from project: " + projectKey);
         RemoteVersion[] versions = getVersions(projectKey);
-        if (versions == null) return null;
+        if (versions == null) {
+            return null;
+        }
         for (RemoteVersion version : versions) {
             if (version.getName().equals(name)) {
                 return version;
@@ -197,8 +202,9 @@ public class JiraSession {
 
     public RemoteIssue[] getIssuesWithFixVersion(String projectKey, String version, String filter) throws RemoteException {
         LOGGER.fine("Fetching versions from project: " + projectKey + " with fixVersion:" + version);
-        if (filter != null && !filter.isEmpty())
+        if (isNotEmpty(filter)) {
             return service.getIssuesFromJqlSearch(token, String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version), Integer.MAX_VALUE);
+        }
         return service.getIssuesFromJqlSearch(token, String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), Integer.MAX_VALUE);
     }
 
@@ -218,8 +224,7 @@ public class JiraSession {
         return site.existsIssue(id);
     }
 
-    private static final Logger LOGGER = Logger.getLogger(JiraSession.class
-            .getName());
+
 
     public void releaseVersion(String projectKey, RemoteVersion version) throws RemoteException {
         LOGGER.fine("Releaseing version: " + version.getName());
@@ -238,11 +243,15 @@ public class JiraSession {
     public void migrateIssuesToFixVersion(String projectKey, String version, String query) throws RemoteException {
 
         RemoteVersion newVersion = getVersionByName(projectKey, version);
-        if (newVersion == null) return;
+        if (newVersion == null) {
+            return;
+        }
 
         LOGGER.fine("Fetching versions with JQL:" + query);
         RemoteIssue[] issues = service.getIssuesFromJqlSearch(token, query, Integer.MAX_VALUE);
-        if (issues == null) return;
+        if (issues == null) {
+            return;
+        }
         LOGGER.fine("Found issues: " + issues.length);
 
         RemoteFieldValue value = new RemoteFieldValue("fixVersions", new String[]{newVersion.getId()});
@@ -264,11 +273,15 @@ public class JiraSession {
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws RemoteException {
 
         RemoteVersion newVersion = getVersionByName(projectKey, toVersion);
-        if (newVersion == null) return;
+        if (newVersion == null) {
+            return;
+        }
 
         LOGGER.fine("Fetching versions with JQL:" + query);
         RemoteIssue[] issues = service.getIssuesFromJqlSearch(token, query, Integer.MAX_VALUE);
-        if (issues == null) return;
+        if (issues == null) {
+            return;
+        }
         LOGGER.fine("Found issues: " + issues.length);
 
         for (RemoteIssue issue : issues) {
@@ -409,9 +422,7 @@ public class JiraSession {
      * @throws RemoteException
      */
     public RemoteIssue getIssueByKey(String issueId) throws RemoteException {
-        RemoteIssue issue = null;
-        issue = service.getIssue(token, issueId);
-        return issue;
+        return service.getIssue(token, issueId);
     }
 
     /**
@@ -422,8 +433,7 @@ public class JiraSession {
      * @throws RemoteException
      */
     public RemoteComponent[] getComponents(String projectKey) throws RemoteException {
-        RemoteComponent availableRemoteComponents[] = service.getComponents(token, projectKey);
-        return availableRemoteComponents;
+        return service.getComponents(token, projectKey);
     }
 
     /**

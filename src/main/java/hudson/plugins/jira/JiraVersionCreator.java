@@ -11,6 +11,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -18,6 +19,7 @@ import java.util.List;
 
 import static ch.lambdaj.Lambda.filter;
 import static hudson.plugins.jira.JiraVersionMatcher.hasName;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.hamcrest.Matchers.equalTo;
 
 /**
@@ -65,7 +67,7 @@ public class JiraVersionCreator extends Notifier {
         try {
             realVersion = build.getEnvironment(listener).expand(jiraVersion);
 
-            if (realVersion == null || realVersion.isEmpty()) {
+            if (isEmpty(realVersion)) {
                 throw new IllegalArgumentException("No version specified");
             }
 

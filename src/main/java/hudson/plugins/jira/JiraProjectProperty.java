@@ -35,8 +35,9 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
         if (siteName == null) {
             // defaults to the first one
             JiraSite[] sites = DESCRIPTOR.getSites();
-            if (sites.length > 0)
+            if (sites.length > 0) {
                 siteName = sites[0].getName();
+            }
         }
         this.siteName = siteName;
     }
@@ -48,13 +49,15 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
      */
     public JiraSite getSite() {
         JiraSite[] sites = DESCRIPTOR.getSites();
-        if (siteName == null && sites.length > 0)
+        if (siteName == null && sites.length > 0) {
             // default
             return sites[0];
+        }
 
         for (JiraSite site : sites) {
-            if (site.getName().equals(siteName))
+            if (site.getName().equals(siteName)) {
                 return site;
+            }
         }
         return null;
     }
@@ -97,10 +100,10 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
         @Override
         public JobProperty<?> newInstance(StaplerRequest req, JSONObject formData)
                 throws FormException {
-            JiraProjectProperty jpp = req.bindParameters(
-                    JiraProjectProperty.class, "jira.");
-            if (jpp.siteName == null)
+            JiraProjectProperty jpp = req.bindParameters(JiraProjectProperty.class, "jira.");
+            if (jpp.siteName == null) {
                 jpp = null; // not configured
+            }
             return jpp;
         }
 
@@ -112,7 +115,9 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
             Stapler.CONVERT_UTILS.deregister(java.net.URL.class);
             Stapler.CONVERT_UTILS.register(new Converter() {
                 public Object convert(Class aClass, Object o) {
-                    if (o == null || "".equals(o) || "null".equals(o)) return null;
+                    if (o == null || "".equals(o) || "null".equals(o)) {
+                        return null;
+                    }
                     try {
                         return new URL((String) o);
                     } catch (MalformedURLException e) {

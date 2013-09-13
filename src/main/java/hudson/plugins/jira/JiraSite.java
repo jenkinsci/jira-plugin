@@ -11,7 +11,6 @@ import hudson.model.Hudson;
 import hudson.plugins.jira.soap.*;
 import hudson.util.FormValidation;
 import org.apache.axis.AxisFault;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -34,6 +33,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * Represents an external JIRA installation and configuration
@@ -273,8 +274,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             // We don't care about any thread race- or visibility issues here.
             // The worst thing which could happen, is that the pattern
             // is compiled multiple times.
-            Pattern p = Pattern.compile(userPattern);
-            userPat = p;
+            userPat = Pattern.compile(userPattern);
         }
         return userPat;
     }
@@ -298,8 +298,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     try {
                         if (projects == null) {
                             JiraSession session = getSession();
-                            if (session != null)
+                            if (session != null) {
                                 projects = Collections.unmodifiableSet(session.getProjectKeys());
+                            }
                         }
                     } catch (IOException e) {
                         // in case of error, set empty set to avoid trying the same thing repeatedly.
@@ -333,14 +334,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         JiraProjectProperty jpp = p.getProperty(JiraProjectProperty.class);
         if (jpp != null) {
             JiraSite site = jpp.getSite();
-            if (site != null)
+            if (site != null) {
                 return site;
+            }
         }
 
         // none is explicitly configured. try the default ---
         // if only one is configured, that must be it.
         JiraSite[] sites = JiraProjectProperty.DESCRIPTOR.getSites();
-        if (sites.length == 1) return sites[0];
+        if (sites.length == 1) {
+            return sites[0];
+        }
 
         return null;
     }
@@ -354,7 +358,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     public boolean existsIssue(String id) {
         int idx = id.indexOf('-');
-        if (idx == -1) return false;
+        if (idx == -1) {
+            return false;
+        }
 
         Set<String> keys = getProjectKeys();
         return keys.contains(id.substring(0, idx).toUpperCase());
@@ -403,7 +409,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         JiraSession session = getSession();
         if (session != null) {
             RemoteVersion[] versions = session.getVersions(projectKey);
-            if (versions == null) return;
+            if (versions == null) {
+                return;
+            }
             for (RemoteVersion version : versions) {
                 if (version.getName().equals(versionName)) {
                     version.setReleased(true);
@@ -425,16 +433,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     public Set<JiraVersion> getVersions(String projectKey) throws IOException, ServiceException {
         JiraSession session = getSession();
-        if (session == null) return Collections.emptySet();
+        if (session == null) {
+            return Collections.emptySet();
+        }
 
         RemoteVersion[] versions = session.getVersions(projectKey);
 
-        if (versions == null) return Collections.emptySet();
+        if (versions == null) {
+            return Collections.emptySet();
+        }
 
         Set<JiraVersion> versionsSet = new HashSet<JiraVersion>(versions.length);
 
-        for (int i = 0; i < versions.length; ++i) {
-            RemoteVersion version = versions[i];
+        for (RemoteVersion version : versions) {
             versionsSet.add(new JiraVersion(version));
         }
 
@@ -466,7 +477,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException, ServiceException {
         JiraSession session = getSession();
-        if (session == null) return "";
+        if (session == null) {
+            return "";
+        }
 
         RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
         RemoteIssueType[] types = session.getIssueTypes();
@@ -477,12 +490,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             typeNameMap.put(type.getId(), type.getName());
         }
 
-        if (issues == null) return "";
+        if (issues == null) {
+            return "";
+        }
 
         Map<String, Set<String>> releaseNotes = new HashMap<String, Set<String>>();
 
-        for (int i = 0; i < issues.length; ++i) {
-            RemoteIssue issue = issues[i];
+        for (RemoteIssue issue : issues) {
             String key = issue.getKey();
             String summary = issue.getSummary();
             String type = "UNKNOWN";
@@ -525,16 +539,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     public Set<JiraIssue> getIssueWithFixVersion(String projectKey, String versionName) throws IOException, ServiceException {
         JiraSession session = getSession();
-        if (session == null) return Collections.emptySet();
+        if (session == null) {
+            return Collections.emptySet();
+        }
 
         RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName);
 
-        if (issues == null) return Collections.emptySet();
+        if (issues == null) {
+            return Collections.emptySet();
+        }
 
         Set<JiraIssue> issueSet = new HashSet<JiraIssue>(issues.length);
 
-        for (int i = 0; i < issues.length; ++i) {
-            RemoteIssue issue = issues[i];
+        for (RemoteIssue issue : issues) {
             issueSet.add(new JiraIssue(issue));
         }
 
@@ -544,15 +561,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Migrates issues matching the jql query provided to a new fix version.
      *
-     * @param projectKey  The project key
-     * @param toVersion The new fixVersion
-     * @param query       A JQL Query
+     * @param projectKey The project key
+     * @param toVersion  The new fixVersion
+     * @param query      A JQL Query
      * @throws IOException
      * @throws ServiceException
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException, ServiceException {
         JiraSession session = getSession();
-        if (session == null) return;
+        if (session == null) {
+            return;
+        }
 
         session.replaceFixVersion(projectKey, fromVersion, toVersion, query);
     }
@@ -568,7 +587,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException, ServiceException {
         JiraSession session = getSession();
-        if (session == null) return;
+        if (session == null) {
+            return;
+        }
 
         session.migrateIssuesToFixVersion(projectKey, versionName, query);
     }
@@ -596,13 +617,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         boolean success = true;
         RemoteIssue[] issues = session.getIssuesFromJqlSearch(jqlSearch);
 
-        for (int i = 0; i < issues.length; i++) {
-            String issueKey = issues[i].getKey();
+        for (RemoteIssue issue : issues) {
+            String issueKey = issue.getKey();
 
             String actionId = session.getActionIdForIssue(issueKey, workflowActionName);
 
             if (actionId == null) {
-                LOGGER.fine("Invalid workflow action " + workflowActionName + " for issue " + issueKey + "; issue status = " + issues[i].getStatus());
+                LOGGER.fine("Invalid workflow action " + workflowActionName + " for issue " + issueKey + "; issue status = " + issue.getStatus());
                 console.println(Messages.JiraIssueUpdateBuilder_UnknownWorkflowAction(issueKey, workflowActionName));
                 success = false;
                 continue;
@@ -613,7 +634,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             console.println("[JIRA] Issue " + issueKey + " transitioned to \"" + newStatus
                     + "\" due to action \"" + workflowActionName + "\".");
 
-            if (comment != null && !comment.isEmpty()) {
+            if (isNotEmpty(comment)) {
                 session.addComment(issueKey, comment, null, null);
             }
         }
@@ -650,19 +671,20 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
                     // call the wsdl uri to check if the jira soap service can be reached
                     try {
-                        if (!findText(open(new URL(url)), "Atlassian JIRA"))
+                        if (!findText(open(new URL(url)), "Atlassian JIRA")) {
                             return FormValidation.error(Messages
                                     .JiraProjectProperty_NotAJiraUrl());
+                        }
 
                         URL soapUrl = new URL(new URL(url), "rpc/soap/jirasoapservice-v2?wsdl");
-                        if (!findText(open(soapUrl), "wsdl:definitions"))
+                        if (!findText(open(soapUrl), "wsdl:definitions")) {
                             return FormValidation.error(Messages
                                     .JiraProjectProperty_NoWsdlAvailable());
+                        }
 
                         return FormValidation.ok();
                     } catch (IOException e) {
-                        LOGGER.log(Level.WARNING,
-                                "Unable to connect to " + url, e);
+                        LOGGER.log(Level.WARNING, "Unable to connect to " + url, e);
                         return handleIOException(url, e);
                     }
                 }
@@ -701,7 +723,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
             URL altUrl = null;
 
-            if (StringUtils.isNotEmpty(alternativeUrl)) {
+            if (isNotEmpty(alternativeUrl)) {
                 altUrl = new URL(alternativeUrl);
             }
 
@@ -727,7 +749,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     public void addVersion(String version, String projectKey) throws IOException, ServiceException {
         JiraSession session = getSession();
-        if (session == null) return;
+        if (session == null) {
+            return;
+        }
 
         session.addVersion(version, projectKey);
 
