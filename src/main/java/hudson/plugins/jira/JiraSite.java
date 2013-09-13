@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
@@ -617,13 +618,29 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         boolean success = true;
         RemoteIssue[] issues = session.getIssuesFromJqlSearch(jqlSearch);
 
+
+        if (isEmpty(workflowActionName)) {
+            console.println("[JIRA] No workflow action was specified, " +
+                    "thus no status update will be made for any of the matching issues.");
+        }
+
         for (RemoteIssue issue : issues) {
             String issueKey = issue.getKey();
+
+            if (isNotEmpty(comment)) {
+                session.addComment(issueKey, comment, null, null);
+            }
+
+
+            if (isEmpty(workflowActionName)) {
+                continue;
+            }
 
             String actionId = session.getActionIdForIssue(issueKey, workflowActionName);
 
             if (actionId == null) {
-                LOGGER.fine("Invalid workflow action " + workflowActionName + " for issue " + issueKey + "; issue status = " + issue.getStatus());
+                LOGGER.fine(String.format("Invalid workflow action %s for issue %s; issue status = %s",
+                        workflowActionName, issueKey, issue.getStatus()));
                 console.println(Messages.JiraIssueUpdateBuilder_UnknownWorkflowAction(issueKey, workflowActionName));
                 success = false;
                 continue;
@@ -631,12 +648,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
             String newStatus = session.progressWorkflowAction(issueKey, actionId, null);
 
-            console.println("[JIRA] Issue " + issueKey + " transitioned to \"" + newStatus
-                    + "\" due to action \"" + workflowActionName + "\".");
-
-            if (isNotEmpty(comment)) {
-                session.addComment(issueKey, comment, null, null);
-            }
+            console.println(String.format("[JIRA] Issue %s transitioned to \"%s\" due to action \"%s\".",
+                    issueKey, newStatus, workflowActionName));
         }
 
         return success;
