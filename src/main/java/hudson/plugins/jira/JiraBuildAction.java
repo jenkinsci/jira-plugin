@@ -3,11 +3,7 @@ package hudson.plugins.jira;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * JIRA issues related to the build.
@@ -42,8 +38,9 @@ public class JiraBuildAction implements Action {
      */
     public JiraIssue getIssue(String id) {
         for (JiraIssue issue : issues) {
-            if(issue.id.equals(id))
+            if (issue.id.equals(id)) {
                 return issue;
+            }
         }
         return null;
     }
@@ -52,7 +49,7 @@ public class JiraBuildAction implements Action {
         SortedSet<JiraIssue> allIssues = new TreeSet<JiraIssue>();
         allIssues.addAll(issuesToBeSaved);
         allIssues.addAll(Arrays.asList(this.issues));
-        
+
         this.issues = allIssues.toArray(new JiraIssue[allIssues.size()]);
     }
 }
