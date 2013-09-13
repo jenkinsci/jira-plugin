@@ -18,21 +18,19 @@ package hudson.plugins.jira;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
-
-import java.io.IOException;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import javax.servlet.ServletException;
 import javax.xml.rpc.ServiceException;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
+import java.io.IOException;
 
 /**
  * Build step that will mass-update all issues matching a JQL query, using the specified workflow

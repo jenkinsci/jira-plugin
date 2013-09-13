@@ -4,13 +4,11 @@ import hudson.plugins.jira.soap.RemoteIssue;
 
 /**
  * One JIRA issue.
- *
- * <p>
  * This class is used to persist crucial issue information
  * so that Jenkins can display it without talking to JIRA.
  *
  * @author Kohsuke Kawaguchi
- * @see JiraSite#getUrl(JiraIssue) 
+ * @see JiraSite#getUrl(JiraIssue)
  */
 public final class JiraIssue implements Comparable<JiraIssue> {
     /**
@@ -30,7 +28,7 @@ public final class JiraIssue implements Comparable<JiraIssue> {
     }
 
     public JiraIssue(RemoteIssue issue) {
-        this(issue.getKey(),issue.getSummary());
+        this(issue.getKey(), issue.getSummary());
     }
 
     public int compareTo(JiraIssue that) {
