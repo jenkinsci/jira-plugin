@@ -34,15 +34,6 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-
-import org.apache.axis.AxisFault;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
@@ -628,7 +619,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         RemoteIssue[] issues = session.getIssuesFromJqlSearch(jqlSearch);
 
 
-        if(isEmpty(workflowActionName)) {
+        if (isEmpty(workflowActionName)) {
             console.println("[JIRA] No workflow action was specified, " +
                     "thus no status update will be made for any of the matching issues.");
         }
@@ -641,7 +632,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
 
-            if(isEmpty(workflowActionName)) {
+            if (isEmpty(workflowActionName)) {
                 continue;
             }
 
