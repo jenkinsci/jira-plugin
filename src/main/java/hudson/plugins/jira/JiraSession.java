@@ -225,7 +225,6 @@ public class JiraSession {
     }
 
 
-
     public void releaseVersion(String projectKey, RemoteVersion version) throws RemoteException {
         LOGGER.fine("Releaseing version: " + version.getName());
 
@@ -329,7 +328,7 @@ public class JiraSession {
 
         if (actions != null) {
             for (RemoteNamedObject action : actions) {
-                if (workflowAction.equalsIgnoreCase(action.getName())) {
+                if (action.getName() != null && action.getName().equalsIgnoreCase(workflowAction)) {
                     return action.getId();
                 }
             }
