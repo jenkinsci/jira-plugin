@@ -38,7 +38,6 @@ public class VersionCreatorTest {
     @Before
     public void createCommonMocks() throws IOException, InterruptedException {
         build = mock(AbstractBuild.class);
-        ;
         launcher = mock(Launcher.class);
         listener = mock(BuildListener.class);
         env = mock(EnvVars.class);
