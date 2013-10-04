@@ -1,5 +1,11 @@
 package hudson.plugins.jira;
 
+import static ch.lambdaj.Lambda.filter;
+import static hudson.plugins.jira.JiraVersionMatcher.hasName;
+import static org.hamcrest.Matchers.equalTo;
+
+import java.util.List;
+
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -20,96 +26,109 @@ import org.kohsuke.stapler.StaplerRequest;
  * @author Justen Walker <justen.walker@gmail.com>
  */
 public class JiraReleaseVersionUpdater extends Notifier {
+	private static final String VERSION_ALREADY_RELEASED = 
+			"The version %s is already released in project %s, so nothing to do.";
+	private static final long serialVersionUID = 699563338312232811L;
 
-    private static final long serialVersionUID = 699563338312232811L;
+	private String jiraProjectKey;
+	private String jiraRelease;
 
-    private String jiraProjectKey;
-    private String jiraRelease;
+	@DataBoundConstructor
+	public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease) {
+		this.jiraRelease = jiraRelease;
+		this.jiraProjectKey = jiraProjectKey;
+	}
+	
+	public String getJiraRelease() {
+		return jiraRelease;
+	}
 
-    @DataBoundConstructor
-    public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease) {
-        this.jiraRelease = jiraRelease;
-        this.jiraProjectKey = jiraProjectKey;
-    }
+	public void setJiraRelease(String jiraRelease) {
+		this.jiraRelease = jiraRelease;
+	}
 
-    public String getJiraRelease() {
-        return jiraRelease;
-    }
+	public String getJiraProjectKey() {
+		return jiraProjectKey;
+	}
 
-    public void setJiraRelease(String jiraRelease) {
-        this.jiraRelease = jiraRelease;
-    }
-
-    public String getJiraProjectKey() {
-        return jiraProjectKey;
-    }
-
-    public void setJiraProjectKey(String jiraProjectKey) {
-        this.jiraProjectKey = jiraProjectKey;
-    }
-
-    @Override
-    public BuildStepDescriptor<Publisher> getDescriptor() {
-        return DESCRIPTOR;
-    }
-
-    @Extension
+	public void setJiraProjectKey(String jiraProjectKey) {
+		this.jiraProjectKey = jiraProjectKey;
+	}
+	
+	@Override
+	public BuildStepDescriptor<Publisher> getDescriptor() {
+		return DESCRIPTOR;
+	}
+	
+	@Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
-    @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
-                           BuildListener listener) {
-        String realRelease = "NOT_SET";
+	@Override
+	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
+			BuildListener listener) {
+		String realRelease = "NOT_SET";
 
-        try {
-            realRelease = build.getEnvironment(listener).expand(jiraRelease);
+		try {
+			realRelease = build.getEnvironment(listener).expand(jiraRelease);
 
-            if (realRelease == null || realRelease.isEmpty()) {
-                throw new IllegalArgumentException("Release is Empty");
-            }
+			if (realRelease == null || realRelease.isEmpty()) {
+				throw new IllegalArgumentException("Release is Empty");
+			}
 
-            JiraSite site = JiraSite.get(build.getProject());
+			JiraSite site = getSiteForProject(build.getProject());
+			List<JiraVersion> sameNamedVersions = filter(
+					hasName(equalTo(realRelease)), 
+					site.getVersions(jiraProjectKey));
+			
+			if (sameNamedVersions.size() == 1 && sameNamedVersions.get(0).isReleased()) {
+				listener.getLogger().println(
+						String.format(VERSION_ALREADY_RELEASED, realRelease, jiraProjectKey));
+			} else {
+				site.releaseVersion(jiraProjectKey, realRelease);
+			}		
+		} catch (Exception e) {
+			e.printStackTrace(listener.fatalError(
+					"Unable to release jira version %s/%s: %s", realRelease,
+					jiraProjectKey, e));
+			listener.finished(Result.FAILURE);
+			return false;
+		}
+		return true;
+	}
 
-            site.releaseVersion(jiraProjectKey, realRelease);
-        } catch (Exception e) {
-            e.printStackTrace(listener.fatalError(
-                    "Unable to release jira version %s/%s: %s", realRelease,
-                    jiraProjectKey, e));
-            listener.finished(Result.FAILURE);
-            return false;
-        }
-        return true;
-    }
+    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
+        return JiraSite.get(project);
+    }	
+	
+	public BuildStepMonitor getRequiredMonitorService() {
+		return BuildStepMonitor.BUILD;
+	}
+	
+	public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
-    public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
-    }
+		public DescriptorImpl() {
+			super(JiraReleaseVersionUpdater.class);
+		}
 
-    public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+		@Override
+		public JiraReleaseVersionUpdater newInstance(StaplerRequest req,
+				JSONObject formData) throws FormException {
+			return req.bindJSON(JiraReleaseVersionUpdater.class, formData);
+		}
 
-        public DescriptorImpl() {
-            super(JiraReleaseVersionUpdater.class);
-        }
+		@Override
+		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+			return true;
+		}
 
-        @Override
-        public JiraReleaseVersionUpdater newInstance(StaplerRequest req,
-                                                     JSONObject formData) throws FormException {
-            return req.bindJSON(JiraReleaseVersionUpdater.class, formData);
-        }
+		@Override
+		public String getDisplayName() {
+			return Messages.JiraReleaseVersionBuilder_DisplayName();
+		}
 
-        @Override
-        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            return true;
-        }
-
-        @Override
-        public String getDisplayName() {
-            return Messages.JiraReleaseVersionBuilder_DisplayName();
-        }
-
-        @Override
-        public String getHelpFile() {
-            return "/plugin/jira/help-release.html";
-        }
-    }
+		@Override
+		public String getHelpFile() {
+			return "/plugin/jira/help-release.html";
+		}
+	}
 }
