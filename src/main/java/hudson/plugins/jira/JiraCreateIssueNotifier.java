@@ -390,7 +390,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         String buildNumber = environmentVariable.get("BUILD_NUMBER");
 
         if (previousBuildResult == Result.FAILURE || previousBuildResult == Result.SUCCESS) {
-            String comment = "- Job is not falling but the issue is still open." + "\n" + "- Passed run : [" +
+            String comment = "- Job is not failing but the issue is still open." + "\n" + "- Passed run : [" +
                     buildNumber + "|" + buildURL + "]" + "\n" + "** [console log|" + buildURL.concat("console") + "]";
             String issueId = getIssue(filename);
 
