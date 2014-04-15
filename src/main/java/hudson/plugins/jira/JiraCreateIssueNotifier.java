@@ -144,8 +144,8 @@ public class JiraCreateIssueNotifier extends Notifier {
         String jenkinsURL = Jenkins.getInstance().getRootUrl();
 
         String checkDescription = (this.testDescription == "") ? "No description is provided" : this.testDescription;
-        String description = "The test " + jobName + " has failed." + "\n\n" + checkDescription + "\n\n" + "* First failed run : [" +
-                buildNumber + "|" + buildURL + "]" + "\n" + "** [console log|" + buildURL.concat("console") + "]";
+        String description = String.format("The test %s has failed. \n\n%s\n\n* First failed run : [%s|%s]\n** [console log|%s]",
+                jobName, checkDescription, buildNumber, buildURL, buildURL.concat("console"));
 
         RemoteComponent[] components = getJiraComponents(build, this.component);
 
@@ -331,8 +331,8 @@ public class JiraCreateIssueNotifier extends Notifier {
         String buildURL = environmentVariable.get("BUILD_URL");
         String buildNumber = environmentVariable.get("BUILD_NUMBER");
         if (previousBuildResult == Result.FAILURE) {
-            String comment = "- Job is still failing." + "\n" + "- Failed run : [" +
-                    buildNumber + "|" + buildURL + "]" + "\n" + "** [console log|" + buildURL.concat("console") + "]";
+            String comment = String.format("- Job is still failing.\n- Failed run : [%s|%s]\n** [console log|%s]",
+                    buildNumber, buildURL, buildURL.concat("console"));
             //Get the issue-id which was filed when the previous built failed
             String issueId = getIssue(filename);
             if (issueId != null) {
@@ -390,8 +390,8 @@ public class JiraCreateIssueNotifier extends Notifier {
         String buildNumber = environmentVariable.get("BUILD_NUMBER");
 
         if (previousBuildResult == Result.FAILURE || previousBuildResult == Result.SUCCESS) {
-            String comment = "- Job is not failing but the issue is still open." + "\n" + "- Passed run : [" +
-                    buildNumber + "|" + buildURL + "]" + "\n" + "** [console log|" + buildURL.concat("console") + "]";
+            String comment = String.format("- Job is not failing but the issue is still open \n - Passed run : [%s|%s]\n **[console log|%s]",
+                    buildNumber, buildURL, buildURL.concat("console"));
             String issueId = getIssue(filename);
 
             //if issue exists it will check the status and comment or delete the file accordingly
