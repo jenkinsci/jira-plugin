@@ -203,9 +203,9 @@ public class JiraSession {
     public RemoteIssue[] getIssuesWithFixVersion(String projectKey, String version, String filter) throws RemoteException {
         LOGGER.fine("Fetching versions from project: " + projectKey + " with fixVersion:" + version);
         if (isNotEmpty(filter)) {
-            return service.getIssuesFromJqlSearch(token, String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version), Integer.MAX_VALUE);
+            return service.getIssuesFromJqlSearch(token, String.format("project = \"%s\" and %s = \"%s\" and " + filter, projectKey, FIXED_VERSION_FIELD, version), Integer.MAX_VALUE);
         }
-        return service.getIssuesFromJqlSearch(token, String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), Integer.MAX_VALUE);
+        return service.getIssuesFromJqlSearch(token, String.format("project = \"%s\" and %s = \"%s\"", projectKey, FIXED_VERSION_FIELD, version), Integer.MAX_VALUE);
     }
 
     /**
@@ -450,4 +450,10 @@ public class JiraSession {
         newVersion.setName(version);
         return service.addVersion(token, projectKey, newVersion);
     }
+
+    /**
+     * Some users have modified the field definition to allow multiple versions, so accomodate that need without
+     * cluttering UI for everyone else.
+     */
+    public static String FIXED_VERSION_FIELD = System.getProperty(JiraSession.class.getName()+".fixedVersion","fixedVersion");
 }
