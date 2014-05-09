@@ -532,6 +532,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Gets a set of issues that have the given fixVersion associated with them.
      *
+     * <p>
+     * Kohsuke: this seems to fail if {@link JiraSite#useHTTPAuth} is on. What is the motivation behind JIRA site?
+     *
      * @param projectKey  The project key
      * @param versionName The fixVersion
      * @return A set of JiraIssues
