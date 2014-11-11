@@ -1,28 +1,25 @@
 package hudson.plugins.jira.versionparameter;
 
-import static hudson.Util.fixNull;
-import static java.util.Arrays.asList;
 import hudson.Extension;
-import hudson.cli.CLICommand;
-import hudson.model.ParameterValue;
 import hudson.model.AbstractProject;
 import hudson.model.ParameterDefinition;
+import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.soap.RemoteVersion;
+import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 
+import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import javax.xml.rpc.ServiceException;
-
-import net.sf.json.JSONObject;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import static hudson.Util.fixNull;
+import static java.util.Arrays.asList;
 
 public class JiraVersionParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 3927562542249244416L;
@@ -56,33 +53,23 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         JiraVersionParameterValue value = req.bindJSON(JiraVersionParameterValue.class, formData);
         return value;
     }
-    
-    @Override
-	public ParameterValue createValue(CLICommand command, String value) throws IOException, InterruptedException {
-		return new JiraVersionParameterValue(getName(), value);
-	}
 
     public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException, ServiceException {
         AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
 
         JiraSite site = JiraSite.get(context);
-        if (site == null) {
-			throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
-		}
+        if (site == null)
+            throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
 
         JiraSession session = site.createSession();
-        if (session == null) {
-			throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
-		}
+        if (session == null) throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
 
         RemoteVersion[] versions = session.getVersions(projectKey);
 
         List<Result> projectVersions = new ArrayList<Result>();
 
         for (RemoteVersion version : fixNull(asList(versions))) {
-            if (match(version)) {
-				projectVersions.add(new Result(version));
-			}
+            if (match(version)) projectVersions.add(new Result(version));
         }
 
         return projectVersions;
@@ -91,28 +78,20 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
     private boolean match(RemoteVersion version) {
         // Match regex if it exists
         if (pattern != null) {
-            if (!pattern.matcher(version.getName()).matches()) {
-				return false;
-			}
+            if (!pattern.matcher(version.getName()).matches()) return false;
         }
 
         // Filter released versions
-        if (!showReleased && version.isReleased()) {
-			return false;
-		}
+        if (!showReleased && version.isReleased()) return false;
 
         // Filter archived versions
-        if (!showArchived && version.isArchived()) {
-			return false;
-		}
+        if (!showArchived && version.isArchived()) return false;
 
         return true;
     }
 
     public String getJiraReleasePattern() {
-        if (pattern == null) {
-			return "";
-		}
+        if (pattern == null) return "";
         return pattern.pattern();
     }
 
@@ -167,5 +146,4 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
             this.id = version.getId();
         }
     }
-
 }
