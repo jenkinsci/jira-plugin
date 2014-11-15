@@ -204,7 +204,7 @@ class Updater {
                         comment.append("[").append(revision).append("|");
                         comment.append(url.toExternalForm()).append("]");
                     } else {
-                        comment.append(url.toExternalForm());
+                        comment.append("[").append(url.toExternalForm()).append("]");
                     }
                 } else {
                     comment.append("rev ").append(revision);
