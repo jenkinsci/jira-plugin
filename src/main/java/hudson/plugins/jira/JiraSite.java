@@ -500,6 +500,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         for (RemoteIssue issue : issues) {
             String key = issue.getKey();
             String summary = issue.getSummary();
+            String status = issue.getStatus();
             String type = "UNKNOWN";
 
             if (typeNameMap.containsKey(issue.getType())) {
@@ -514,7 +515,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 issueSet = releaseNotes.get(type);
             }
 
-            issueSet.add(String.format(" - [%s] %s", key, summary));
+            issueSet.add(String.format(" - [%s] %s (%s)", key, summary, status));
         }
 
         StringBuilder sb = new StringBuilder();
