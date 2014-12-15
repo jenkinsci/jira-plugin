@@ -1,16 +1,19 @@
 package hudson.plugins.jira;
 
 import hudson.Util;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractBuild.DependencyChange;
+import hudson.model.BuildListener;
+import hudson.model.Hudson;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.Result;
+import hudson.model.Run;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.plugins.jira.soap.RemotePermissionException;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.RepositoryBrowser;
-import org.apache.commons.lang.StringUtils;
-
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -23,6 +26,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.xml.rpc.ServiceException;
+import org.apache.commons.lang.StringUtils;
 
 import static java.lang.String.format;
 
@@ -160,6 +165,12 @@ class Updater {
 
     /**
      * Creates a comment to be used in JIRA for the build.
+     * For example:
+     * <pre>
+     *  SUCCESS: Integrated in Job #nnnn (See [http://jenkins.domain/job/Job/nnnn/])\r
+     *  JIRA-XXXX: Commit message. (Author _author@email.domain_:
+     *  [https://bitbucket.org/user/repo/changeset/9af8e4c4c909/])\r
+     * </pre>
      */
     private static String createComment(AbstractBuild<?, ?> build,
                                         boolean wikiStyle, String jenkinsRootUrl, boolean recordScmChanges, JiraIssue jiraIssue) {
@@ -204,7 +215,7 @@ class Updater {
                         comment.append("[").append(revision).append("|");
                         comment.append(url.toExternalForm()).append("]");
                     } else {
-                        comment.append(url.toExternalForm());
+                        comment.append("[").append(url.toExternalForm()).append("]");
                     }
                 } else {
                     comment.append("rev ").append(revision);
