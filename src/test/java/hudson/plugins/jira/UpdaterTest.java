@@ -9,6 +9,7 @@ import hudson.plugins.jira.soap.RemoteGroup;
 import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
+import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
@@ -195,6 +196,71 @@ public class UpdaterTest {
         Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
         Assert.assertEquals(1, ids.size());
         Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
+    }
+
+    @Test
+    public void testGetScmCommentsFromPreviousBuilds() throws Exception {
+        final FreeStyleProject project = mock(FreeStyleProject.class);
+        final FreeStyleBuild build1 = mock(FreeStyleBuild.class);
+        final MockEntry entry1 = new MockEntry("FOOBAR-1: The first build");
+        {
+            ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+            when(build1.getChangeSet()).thenReturn(changeLogSet);
+            when(build1.getResult()).thenReturn(Result.FAILURE);
+            doReturn(project).when(build1).getProject();
+
+            doReturn(new JiraCarryOverAction(Lists.newArrayList(new JiraIssue("FOOBAR-1", null))))
+                    .when(build1).getAction(JiraCarryOverAction.class);
+
+            final Set<? extends Entry> entries = Sets.newHashSet(entry1);
+            when(changeLogSet.iterator()).thenAnswer(new Answer<Object>() {
+
+                public Object answer(final InvocationOnMock invocation) throws Throwable {
+                    return entries.iterator();
+                }
+            });
+        }
+
+        final FreeStyleBuild build2 = mock(FreeStyleBuild.class);
+        final MockEntry entry2 = new MockEntry("FOOBAR-2: The next build");
+        {
+            ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+            when(build2.getChangeSet()).thenReturn(changeLogSet);
+            when(build2.getPreviousBuild()).thenReturn(build1);
+            when(build2.getResult()).thenReturn(Result.SUCCESS);
+            doReturn(project).when(build2).getProject();
+
+            final Set<? extends Entry> entries = Sets.newHashSet(entry2);
+            when(changeLogSet.iterator()).thenAnswer(new Answer<Object>() {
+
+                public Object answer(final InvocationOnMock invocation) throws Throwable {
+                    return entries.iterator();
+                }
+
+            });
+        }
+
+        final List<RemoteComment> comments = Lists.newArrayList();
+        final JiraSession session = mock(JiraSession.class);
+        doAnswer(new Answer<Object>() {
+
+            public Object answer(final InvocationOnMock invocation) throws Throwable {
+                RemoteComment rc = new RemoteComment();
+                rc.setId((String) invocation.getArguments()[0]);
+                rc.setBody((String) invocation.getArguments()[1]);
+                rc.setGroupLevel((String) invocation.getArguments()[2]);
+                comments.add(rc);
+                return null;
+            }
+
+        }).when(session).addComment(anyString(), anyString(), anyString(), anyString());
+
+        final List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-1", null), new JiraIssue("FOOBAR-2", null));
+        Updater.submitComments(build2, System.out, "http://jenkins", ids, session, false, false, "", "");
+
+        Assert.assertEquals(2, comments.size());
+        Assert.assertThat(comments.get(0).getBody(), Matchers.containsString(entry1.getMsg()));
+        Assert.assertThat(comments.get(1).getBody(), Matchers.containsString(entry2.getMsg()));
     }
 
     /**
