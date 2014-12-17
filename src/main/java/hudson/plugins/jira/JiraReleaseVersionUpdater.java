@@ -1,11 +1,5 @@
 package hudson.plugins.jira;
 
-import static ch.lambdaj.Lambda.filter;
-import static hudson.plugins.jira.JiraVersionMatcher.hasName;
-import static org.hamcrest.Matchers.equalTo;
-
-import java.util.List;
-
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -14,18 +8,24 @@ import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
+import hudson.tasks.Recorder;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+
+import java.util.List;
+
+import static ch.lambdaj.Lambda.filter;
+import static hudson.plugins.jira.JiraVersionMatcher.hasName;
+import static org.hamcrest.Matchers.equalTo;
 
 /**
  * Task which releases the jira version specified in the parameters when the build completes.
  *
  * @author Justen Walker <justen.walker@gmail.com>
  */
-public class JiraReleaseVersionUpdater extends Notifier {
+public class JiraReleaseVersionUpdater extends Recorder {
 	private static final String VERSION_ALREADY_RELEASED = 
 			"The version %s is already released in project %s, so nothing to do.";
 	private static final long serialVersionUID = 699563338312232811L;
