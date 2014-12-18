@@ -7,3 +7,4 @@ bin
 *.iml
 .idea/
 work
+atlassian-ide-plugin.xml
