@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -20,6 +21,9 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder {
 
     private String jiraProjectKey;
     private String jiraRelease;
+
+    @Extension
+    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     @DataBoundConstructor
     public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease) {
@@ -54,11 +58,10 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder {
 
     @Override
     public Descriptor<Builder> getDescriptor() {
-        return DescriptorImpl.DESCRIPTOR;
+        return DESCRIPTOR;
     }
 
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-        public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
         private DescriptorImpl() {
             super(JiraReleaseVersionUpdaterBuilder.class);
