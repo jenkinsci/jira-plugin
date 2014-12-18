@@ -75,7 +75,7 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder {
         @Override
         public String getDisplayName() {
             // Placed in the build settings section
-            return Messages.JiraIssueUpdater_DisplayName();
+            return Messages.JiraReleaseVersionBuilder_DisplayName();
         }
 
         @Override
