@@ -6,10 +6,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Publisher;
-import hudson.tasks.Recorder;
+import hudson.tasks.*;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -25,7 +22,7 @@ import static org.hamcrest.Matchers.equalTo;
  *
  * @author Justen Walker <justen.walker@gmail.com>
  */
-public class JiraReleaseVersionUpdater extends Recorder {
+public class JiraReleaseVersionUpdater extends Notifier {
 	private static final String VERSION_ALREADY_RELEASED = 
 			"The version %s is already released in project %s, so nothing to do.";
 	private static final long serialVersionUID = 699563338312232811L;
