@@ -1,11 +1,12 @@
 package hudson.plugins.jira;
 
 import hudson.Launcher;
-import hudson.maven.MavenBuild;
-import hudson.maven.MavenReporter;
-import hudson.maven.MavenReporterDescriptor;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Descriptor;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Builder;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -15,13 +16,13 @@ import java.io.IOException;
 /**
  * Created by Reda on 18/12/2014.
  */
-public class MavenJiraReleaseVersionUpdater extends MavenReporter {
+public class JiraReleaseVersionUpdaterBuilder extends Builder {
 
     private String jiraProjectKey;
     private String jiraRelease;
 
     @DataBoundConstructor
-    public MavenJiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease) {
+    public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease) {
         this.jiraRelease = jiraRelease;
         this.jiraProjectKey = jiraProjectKey;
     }
@@ -43,7 +44,7 @@ public class MavenJiraReleaseVersionUpdater extends MavenReporter {
     }
 
     @Override
-    public boolean end(MavenBuild build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         return Releaser.perform(getSiteForProject(build.getProject()), jiraProjectKey, jiraRelease, build, listener);
     }
 
@@ -52,15 +53,20 @@ public class MavenJiraReleaseVersionUpdater extends MavenReporter {
     }
 
     @Override
-    public MavenReporterDescriptor getDescriptor() {
+    public Descriptor<Builder> getDescriptor() {
         return DescriptorImpl.DESCRIPTOR;
     }
 
-    public static final class DescriptorImpl extends MavenReporterDescriptor {
+    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
         private DescriptorImpl() {
-            super(MavenJiraReleaseVersionUpdater.class);
+            super(JiraReleaseVersionUpdaterBuilder.class);
+        }
+
+        @Override
+        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
         }
 
         @Override
@@ -75,9 +81,9 @@ public class MavenJiraReleaseVersionUpdater extends MavenReporter {
         }
 
         @Override
-        public MavenJiraReleaseVersionUpdater newInstance(StaplerRequest req, JSONObject formData)
+        public JiraReleaseVersionUpdaterBuilder newInstance(StaplerRequest req, JSONObject formData)
                 throws FormException {
-            return req.bindJSON(MavenJiraReleaseVersionUpdater.class, formData);
+            return req.bindJSON(JiraReleaseVersionUpdaterBuilder.class, formData);
         }
     }
 }
