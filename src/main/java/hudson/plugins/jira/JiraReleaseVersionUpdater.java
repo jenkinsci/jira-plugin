@@ -59,7 +59,7 @@ public class JiraReleaseVersionUpdater extends Notifier {
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
 			BuildListener listener) {
-		return Releaser.perform(getSiteForProject(build.getProject()), jiraProjectKey, jiraRelease, build, listener);
+		return VersionReleaser.perform(getSiteForProject(build.getProject()), jiraProjectKey, jiraRelease, build, listener);
 	}
 
     JiraSite getSiteForProject(AbstractProject<?, ?> project) {

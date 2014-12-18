@@ -13,7 +13,7 @@ import static org.hamcrest.Matchers.equalTo;
 /**
  * Created by Reda on 18/12/2014.
  */
-public class Releaser {
+public class VersionReleaser {
 
     private static final String VERSION_ALREADY_RELEASED =
             "The version %s is already released in project %s, so nothing to do.";

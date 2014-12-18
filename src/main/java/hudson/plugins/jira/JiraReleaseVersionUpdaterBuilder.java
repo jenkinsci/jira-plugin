@@ -49,7 +49,7 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        return Releaser.perform(getSiteForProject(build.getProject()), jiraProjectKey, jiraRelease, build, listener);
+        return VersionReleaser.perform(getSiteForProject(build.getProject()), jiraProjectKey, jiraRelease, build, listener);
     }
 
     JiraSite getSiteForProject(AbstractProject<?, ?> project) {
