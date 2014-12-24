@@ -16,7 +16,7 @@ import org.kohsuke.stapler.StaplerRequest;
 /**
  * Task which releases the jira version specified in the parameters when the build completes.
  *
- * @author Justen Walker <justen.walker@gmail.com>
+ * @author Justen Walker justen.walker@gmail.com
  * @deprecated Replaced by {@link JiraReleaseVersionUpdaterBuilder} which can be used as a PostBuild step with conditional triggering.<br>
  *     Kept for backward compatibility.
  */

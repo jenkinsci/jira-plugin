@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 /**
  * Resolve user email by searching his userId as username in JIRA.
  *
- * @author Honza Brázdil <jbrazdil@redhat.com>
+ * @author Honza Brázdil jbrazdil@redhat.com
  */
 @Extension
 public class JiraMailAddressResolver extends MailAddressResolver {

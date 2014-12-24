@@ -24,12 +24,10 @@ import java.util.HashMap;
 import java.util.logging.Logger;
 
 /**
- * <p/>
  * When a build fails it creates jira issues.
  * Repeated failures does not create a new issue but update the existing issue until the issue is closed.
  *
- * @author Rupali Behera
- * @email rupali@vertisinfotech.com
+ * @author Rupali Behera rupali@vertisinfotech.com
  */
 public class JiraCreateIssueNotifier extends Notifier {
 
