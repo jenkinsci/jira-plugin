@@ -127,22 +127,38 @@ class Updater {
             boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RemoteException {
         // copy to prevent ConcurrentModificationException
         List<JiraIssue> copy = new ArrayList<JiraIssue>(issues);
+        StringBuilder issuesWithExceptions = new StringBuilder();
         for (JiraIssue issue : copy) {
-            try {
                 logger.println(Messages.Updater_Updating(issue.id));
-                session.addComment(
+                
+                try {
+                    session.addComment(
                         issue.id,
                         createComment(build, useWikiStyleComments, jenkinsRootUrl, recordScmChanges, issue),
                         groupVisibility, roleVisibility);
-            } catch (RemotePermissionException e) {
-                // Seems like RemotePermissionException can mean 'no permission' as well as
-                // 'issue doesn't exist'.
-                // To prevent carrying forward invalid issues forever, we have to drop them
-                // even if the cause of the exception was different.
-                logger.println("Looks like " + issue.id + " is no valid JIRA issue or you don't have permission to update the issue.\n" +
-                        "Issue will not be updated.\n" + e);
+                } catch (RemotePermissionException e) {
+                    // Seems like RemotePermissionException can mean 'no permission' as well as
+                    // 'issue doesn't exist'.
+                    // To prevent carrying forward invalid issues forever, we have to drop them
+                    // even if the cause of the exception was different.
+                    logger.println("Looks like " + issue.id + " is no valid JIRA issue or you don't have permission to update the issue.\n" +
+                            "Issue will not be updated.\n" + e);
+                } catch (RemoteException e) {
+                    if( issuesWithExceptions.length() > 0) {
+                        issuesWithExceptions.append(", ");
+                    }
+                    issuesWithExceptions.append(issue.id);
+                    logger.println(e.getLocalizedMessage());
+                    logger.println(Messages.Updater_FailedToCommentOnIssue(issue.id));
+                    continue;
+                }
+                
                 issues.remove(issue);
-            }
+        }
+        
+        //    throw RemoteException if problems occured
+        if( issuesWithExceptions.length() > 0) {
+            throw new RemoteException(Messages.Updater_ErrorCommentingIssues(issuesWithExceptions.toString()));
         }
     }
 

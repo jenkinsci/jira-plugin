@@ -7,6 +7,7 @@ import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.plugins.jira.soap.RemoteComment;
 import hudson.plugins.jira.soap.RemoteGroup;
 import hudson.plugins.jira.soap.RemoteIssue;
+import hudson.plugins.jira.soap.RemotePermissionException;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 import org.junit.Assert;
@@ -18,10 +19,12 @@ import org.mockito.stubbing.Answer;
 
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.*;
 import java.util.regex.Pattern;
-
 import static org.mockito.Mockito.*;
+import static org.hamcrest.CoreMatchers.*;
+
 
 /**
  * Test case for the JIRA {@link Updater}.
@@ -352,5 +355,73 @@ public class UpdaterTest {
         Assert.assertTrue(ids.contains("FOOBAR-4711"));
         Assert.assertTrue(ids.contains("FOOBAR-21"));
     }
+    
+    /**
+     * Checks if issues are correctly removed from the carry over list.
+     * @throws RemoteException
+     */
+    @Test
+    @Bug(17156)
+    public void testIssueIsRemovedFromCarryOverListAfterSubmission() throws RemoteException {
 
+        final JiraIssue brokenIssue = new JiraIssue("FOOBAR-2", "Title");
+        final JiraIssue forbiddenIssue = new JiraIssue("LASSO-17", "Title");
+        final JiraIssue firstIssue = new JiraIssue("FOOBAR-1", "Title");
+        final JiraIssue secondIssue = new JiraIssue("ALIBA-1", "Title");
+        final JiraIssue thirdIssue = new JiraIssue("MOONA-1", "Title");
+
+        // assume that there is a following list of jira issues from scm commit messages out of hudson.plugins.jira.JiraCarryOverAction
+        List<JiraIssue> issues = Lists.newArrayList(firstIssue, brokenIssue, secondIssue, forbiddenIssue, thirdIssue);
+
+        // mock JIRA session:
+        JiraSession session = mock(JiraSession.class);
+        when(session.existsIssue(Mockito.anyString())).thenReturn(Boolean.TRUE);
+        when(session.getIssue(Mockito.anyString())).thenReturn(new RemoteIssue());
+        when(session.getGroup(Mockito.anyString())).thenReturn(new RemoteGroup("Software Development", null));
+
+        final List<RemoteComment> comments = new ArrayList<RemoteComment>();
+
+        Answer answer = new Answer<Object>() {
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                RemoteComment rc = new RemoteComment();
+                rc.setId((String) invocation.getArguments()[0]);
+                rc.setBody((String) invocation.getArguments()[1]);
+                rc.setGroupLevel((String) invocation.getArguments()[2]);
+                comments.add(rc);
+                return null;
+            }
+        };
+        doAnswer(answer).when(session).addComment(eq(firstIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doAnswer(answer).when(session).addComment(eq(secondIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doAnswer(answer).when(session).addComment(eq(thirdIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+
+        // issue for the catched exception
+        doThrow(new RemotePermissionException()).when(session).addComment(eq(forbiddenIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        // issue for the exception that has not been catched
+        doThrow(new RemoteException("an error occured")).when(session).addComment(eq(brokenIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+
+        // mock build:
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        FreeStyleProject project = mock(FreeStyleProject.class);
+        when(build.getProject()).thenReturn(project);
+        ChangeLogSet changeLogSet = ChangeLogSet.createEmpty(build);
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+        when(build.getResult()).thenReturn(Result.SUCCESS);
+
+        final String groupVisibility = "";
+        final String roleVisibility = "";
+
+        try {
+            Updater.submitComments(build,
+                System.out, "http://jenkins", issues, session, false, false, groupVisibility, roleVisibility);
+
+            Assert.fail("Did not throw expected exception");
+        } catch (RemoteException e)
+        {
+            // expected issue list
+            final List<JiraIssue> expectedIssuesToCarryOver = Lists.newArrayList(brokenIssue);
+
+            Assert.assertThat(issues, is(expectedIssuesToCarryOver));
+        }
+    }
 }
