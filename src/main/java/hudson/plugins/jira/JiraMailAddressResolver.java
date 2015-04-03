@@ -20,8 +20,18 @@ import java.util.regex.Pattern;
 public class JiraMailAddressResolver extends MailAddressResolver {
     private static final Logger LOGGER = Logger.getLogger(JiraMailAddressResolver.class.getName());
 
+    /**
+     * Boolean to disable the Jira mail address resolver.
+     *
+     * To disable set the System property "-Dhudson.plugins.jira.JiraMailAddressResolver.DISABLE=true"
+     */
+    public static final boolean DISABLE = Boolean.getBoolean(JiraMailAddressResolver.class.getName() + ".DISABLE");
+
     @Override
     public String findMailAddressFor(User u) {
+        if (DISABLE)
+            return null;
+
         String username = u.getId();
 
         for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
