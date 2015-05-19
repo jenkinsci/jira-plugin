@@ -6,16 +6,22 @@ import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.JiraVersion;
 import hudson.plugins.jira.soap.RemoteVersion;
 import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.xml.rpc.ServiceException;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import static hudson.Util.fixNull;
@@ -65,10 +71,12 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         if (session == null) throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
 
         RemoteVersion[] versions = session.getVersions(projectKey);
-
+        SortedSet<RemoteVersion> orderVersions = new TreeSet<RemoteVersion>(new CompRemoteVersion());
+        orderVersions.addAll(fixNull(asList(versions)));
+        
         List<Result> projectVersions = new ArrayList<Result>();
 
-        for (RemoteVersion version : fixNull(asList(versions))) {
+        for (RemoteVersion version : orderVersions) {
             if (match(version)) projectVersions.add(new Result(version));
         }
 
