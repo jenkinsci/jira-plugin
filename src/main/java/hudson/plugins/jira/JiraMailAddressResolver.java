@@ -23,13 +23,13 @@ public class JiraMailAddressResolver extends MailAddressResolver {
     /**
      * Boolean to disable the Jira mail address resolver.
      *
-     * To disable set the System property "-Dhudson.plugins.jira.JiraMailAddressResolver.DISABLE=true"
+     * To disable set the System property "-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true"
      */
-    public static boolean DISABLE = Boolean.getBoolean(JiraMailAddressResolver.class.getName() + ".DISABLE");
+    public static boolean disabled = Boolean.getBoolean(JiraMailAddressResolver.class.getName() + ".disabled");
 
     @Override
     public String findMailAddressFor(User u) {
-        if (DISABLE)
+        if (disabled)
             return null;
 
         String username = u.getId();
