@@ -43,7 +43,7 @@ public class MailResolverTest extends JenkinsRule {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        System.setProperty(JiraMailAddressResolver.class.getName() + ".DISABLE", "true");
+        System.setProperty("hudson.plugins.jira.JiraMailAddressResolver.disabled", "true");
     }
 
     @Test
