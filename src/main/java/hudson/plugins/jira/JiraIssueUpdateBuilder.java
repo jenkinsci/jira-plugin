@@ -79,6 +79,7 @@ public class JiraIssueUpdateBuilder extends Builder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         String realComment = Util.fixEmptyAndTrim(build.getEnvironment(listener).expand(comment));
         String realJql = Util.fixEmptyAndTrim(build.getEnvironment(listener).expand(jqlSearch));
+        String realWorkflowActionName = Util.fixEmptyAndTrim(build.getEnvironment(listener).expand(workflowActionName));
 
         JiraSite site = JiraSite.get(build.getProject());
 
@@ -88,14 +89,14 @@ public class JiraIssueUpdateBuilder extends Builder {
             return true;
         }
 
-        if (StringUtils.isNotEmpty(workflowActionName)) {
-            listener.getLogger().println(Messages.JiraIssueUpdateBuilder_UpdatingWithAction(workflowActionName));
+        if (StringUtils.isNotEmpty(realWorkflowActionName)) {
+            listener.getLogger().println(Messages.JiraIssueUpdateBuilder_UpdatingWithAction(realWorkflowActionName));
         }
 
         listener.getLogger().println("[JIRA] JQL: " + realJql);
 
         try {
-            if (!site.progressMatchingIssues(realJql, workflowActionName, realComment, listener.getLogger())) {
+            if (!site.progressMatchingIssues(realJql, realWorkflowActionName, realComment, listener.getLogger())) {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
                 build.setResult(Result.UNSTABLE);
             }
