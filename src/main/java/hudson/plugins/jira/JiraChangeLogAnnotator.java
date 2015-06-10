@@ -7,6 +7,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet.Entry;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -52,7 +53,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
                 String id = m.group(1);
 
-                if (!site.existsIssue(id)) {
+                if (StringUtils.isNotBlank(site.userName) && !site.existsIssue(id)) {
                     LOGGER.log(Level.INFO, "No known JIRA project corresponding to id: ''{0}''", id);
                     continue;
                 }
