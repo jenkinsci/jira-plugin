@@ -2,7 +2,6 @@ package hudson.plugins.jira;
 
 import hudson.Extension;
 import hudson.model.User;
-import hudson.plugins.jira.soap.RemoteUser;
 import hudson.tasks.MailAddressResolver;
 
 import javax.xml.rpc.ServiceException;
@@ -38,9 +37,9 @@ public class JiraMailAddressResolver extends MailAddressResolver {
             try {
                 JiraSession session = site.createSession();
                 if (session != null) {
-                    RemoteUser user = session.service.getUser(session.token, username);
+                    com.atlassian.jira.rest.client.api.domain.User user = session.service.getUser(username);
                     if (user != null) {
-                        String email = user.getEmail();
+                        String email = user.getEmailAddress();
                         if (email != null) {
                             email = unmaskEmail(email);
                             return email;

@@ -15,6 +15,7 @@
  */
 package hudson.plugins.jira.listissuesparameter;
 
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import hudson.Extension;
 import hudson.model.AbstractProject;
 import hudson.model.ParameterDefinition;
@@ -74,11 +75,11 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         JiraSession session = site.createSession();
         if (session == null) throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
 
-        RemoteIssue[] issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
+        List<Issue> issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
 
         List<Result> issueValues = new ArrayList<Result>();
 
-        for (RemoteIssue issue : fixNull(asList(issues))) {
+        for (Issue issue : fixNull(issues)) {
             issueValues.add(new Result(issue));
         }
 
@@ -105,7 +106,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         public final String key;
         public final String summary;
 
-        public Result(final RemoteIssue issue) {
+        public Result(final Issue issue) {
             this.key = issue.getKey();
             this.summary = issue.getSummary();
         }

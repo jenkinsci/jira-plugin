@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.plugins.jira.soap.RemoteVersion;
 
 import java.util.Calendar;
@@ -19,8 +20,8 @@ public class JiraVersion implements Comparable<JiraVersion> {
         this.archived = archived;
     }
 
-    public JiraVersion(RemoteVersion version) {
-        this(version.getName(), version.getReleaseDate(), version.isReleased(), version.isArchived());
+    public JiraVersion(Version version) {
+        this(version.getName(), version.getReleaseDate() == null ? null : version.getReleaseDate().toGregorianCalendar(), version.isReleased(), version.isArchived());
     }
 
     public int compareTo(JiraVersion that) {

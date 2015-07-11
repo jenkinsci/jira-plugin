@@ -1,9 +1,9 @@
 package hudson.plugins.jira;
 
-import hudson.plugins.jira.soap.JiraSoapService;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.google.common.collect.Lists;
 import hudson.plugins.jira.soap.RemoteFieldValue;
-import hudson.plugins.jira.soap.RemoteIssue;
-import hudson.plugins.jira.soap.RemoteNamedObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,15 +14,15 @@ import org.mockito.runners.MockitoJUnitRunner;
 import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.rmi.RemoteException;
 
-import static org.apache.commons.lang.RandomStringUtils.randomAlphanumeric;
+import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNull;
+import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.*;
 
 /**
@@ -34,7 +34,6 @@ import static org.mockito.Mockito.*;
 public class ChangingWorkflowTest {
 
     public static final String NON_EMPTY_COMMENT = "Non empty comment";
-    private final String TOKEN = "TOKEN";
     private final String ISSUE_JQL = "jql";
     private final String NON_EMPTY_WORKFLOW_LOWERCASE = "workflow";
 
@@ -42,7 +41,7 @@ public class ChangingWorkflowTest {
     private JiraSite site;
 
     @Mock
-    private JiraSoapService service;
+    private JiraRestService restService;
 
     @Mock
     private JiraSession mockSession;
@@ -51,32 +50,32 @@ public class ChangingWorkflowTest {
     private JiraSession spySession;
 
     @Before
-    public void setupSpy() {
-        spySession = spy(new JiraSession(site, service, TOKEN));
+    public void setupSpy() throws Exception {
+        spySession = spy(new JiraSession(site, restService));
     }
 
     @Test
-    public void onGetActionItInvokesServiceMethod() throws RemoteException {
+    public void onGetActionItInvokesServiceMethod() throws Exception {
         spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE);
-        verify(service, times(1)).getAvailableActions(eq(TOKEN), eq(ISSUE_JQL));
+        verify(restService, times(1)).getAvailableActions(eq(ISSUE_JQL));
     }
 
     @Test
-    public void getActionIdReturnsNullWhenServiceReturnsNull() throws RemoteException {
-        when(service.getAvailableActions(TOKEN, ISSUE_JQL)).thenReturn(null);
+    public void getActionIdReturnsNullWhenServiceReturnsNull() throws Exception {
+        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(null);
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), nullValue());
     }
 
 
     @Test
-    public void getActionIdIteratesOverAllActionsEvenOneOfNamesIsNull() throws RemoteException {
-        RemoteNamedObject action1 = mock(RemoteNamedObject.class);
-        RemoteNamedObject action2 = mock(RemoteNamedObject.class);
+    public void getActionIdIteratesOverAllActionsEvenOneOfNamesIsNull() throws Exception {
+        Transition action1 = mock(Transition.class);
+        Transition action2 = mock(Transition.class);
 
         when(action1.getName()).thenReturn(null);
         when(action2.getName()).thenReturn("name");
 
-        when(service.getAvailableActions(TOKEN, ISSUE_JQL)).thenReturn(new RemoteNamedObject[]{action1, action2});
+        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(Lists.newArrayList(action1, action2));
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), nullValue());
 
         verify(action1, times(1)).getName();
@@ -84,33 +83,33 @@ public class ChangingWorkflowTest {
     }
 
     @Test
-    public void getActionIdReturnsNullWhenNullWorkflowUsed() throws RemoteException {
+    public void getActionIdReturnsNullWhenNullWorkflowUsed() throws Exception {
         String workflowAction = null;
-        RemoteNamedObject action1 = mock(RemoteNamedObject.class);
+        Transition action1 = mock(Transition.class);
         when(action1.getName()).thenReturn("name");
 
-        when(service.getAvailableActions(TOKEN, ISSUE_JQL)).thenReturn(new RemoteNamedObject[]{action1});
+        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(Lists.newArrayList(action1));
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, workflowAction), nullValue());
     }
 
     @Test
-    public void getActionIdReturnsIdWhenFoundIgnorecaseWorkflow() throws RemoteException {
-        String id = randomAlphanumeric(5);
-        RemoteNamedObject action1 = mock(RemoteNamedObject.class);
+    public void getActionIdReturnsIdWhenFoundIgnorecaseWorkflow() throws Exception {
+        String id = randomNumeric(5);
+        Transition action1 = mock(Transition.class);
         when(action1.getName()).thenReturn(NON_EMPTY_WORKFLOW_LOWERCASE.toUpperCase());
-        when(service.getAvailableActions(TOKEN, ISSUE_JQL)).thenReturn(new RemoteNamedObject[]{action1});
-        when(action1.getId()).thenReturn(id);
+        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(Lists.newArrayList(action1));
+        when(action1.getId()).thenReturn(Integer.valueOf(id));
 
-        assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), equalTo(id));
+        assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), equalTo(Integer.valueOf(id)));
     }
 
 
     @Test
     public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws IOException, ServiceException {
         when(site.getSession()).thenReturn(mockSession);
-        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(new RemoteIssue[]{mock(RemoteIssue.class)});
+        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
         when(mockSession.getActionIdForIssue(anyString(),
-                eq(NON_EMPTY_WORKFLOW_LOWERCASE))).thenReturn(randomAlphanumeric(5));
+                eq(NON_EMPTY_WORKFLOW_LOWERCASE))).thenReturn(Integer.valueOf(randomNumeric(5)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
                 .thenCallRealMethod();
 
@@ -119,7 +118,7 @@ public class ChangingWorkflowTest {
 
         verify(mockSession, times(1)).addComment(anyString(), eq(NON_EMPTY_COMMENT),
                 isNull(String.class), isNull(String.class));
-        verify(mockSession, times(1)).progressWorkflowAction(anyString(), anyString(),
+        verify(mockSession, times(1)).progressWorkflowAction(anyString(), anyInt(),
                 Matchers.any(RemoteFieldValue[].class));
     }
 
@@ -127,7 +126,7 @@ public class ChangingWorkflowTest {
     @Test
     public void addCommentsOnNullWorkflowAndNonEmptyComment() throws IOException, ServiceException {
         when(site.getSession()).thenReturn(mockSession);
-        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(new RemoteIssue[]{mock(RemoteIssue.class)});
+        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
                 .thenCallRealMethod();
 
@@ -141,7 +140,7 @@ public class ChangingWorkflowTest {
     @Test
     public void dontAddCommentsOnNullWorkflowAndNullComment() throws IOException, ServiceException {
         when(site.getSession()).thenReturn(mockSession);
-        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(new RemoteIssue[]{mock(RemoteIssue.class)});
+        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
                 .thenCallRealMethod();
 

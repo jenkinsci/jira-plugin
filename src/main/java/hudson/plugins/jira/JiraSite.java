@@ -1,16 +1,22 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
-import hudson.plugins.jira.soap.*;
 import hudson.util.FormValidation;
 import org.apache.axis.AxisFault;
+import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -22,6 +28,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -127,7 +135,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     // should we implement to invalidate this (say every hour)?
     private transient volatile Set<String> projects;
 
-    private transient Cache<String, RemoteIssue> issueCache = makeIssueCache();
+    private transient Cache<String, Issue> issueCache = makeIssueCache();
 
     /**
      * Used to guard the computation of {@link #projects}
@@ -181,7 +189,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return this;
     }
 
-    private static Cache<String, RemoteIssue> makeIssueCache() {
+    private static Cache<String, Issue> makeIssueCache() {
         return CacheBuilder.newBuilder().concurrencyLevel(2).expireAfterAccess(2, TimeUnit.MINUTES).build();
     }
 
@@ -224,20 +232,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public JiraSession createSession() throws IOException, ServiceException {
         if (userName == null || password == null)
             return null;    // remote access not supported
-        JiraSoapServiceService jiraSoapServiceGetter = new JiraSoapServiceServiceLocator();
 
-        if (useHTTPAuth) {
-            String httpAuthUrl = url.toExternalForm().replace(
-                    url.getHost(),
-                    userName + ":" + password + "@" + url.getHost()) + "rpc/soap/jirasoapservice-v2";
-            JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
-                    new URL(httpAuthUrl));
-            return new JiraSession(this, service, null); //no need to login
+        final URI uri;
+        try {
+            uri = url.toURI();
+        } catch (URISyntaxException e) {
+            LOGGER.warning("convert URL to URI error: " + e.getMessage());
+            throw new RuntimeException("failed to create JiraSession due to convert URI error");
         }
 
-        JiraSoapService service = jiraSoapServiceGetter.getJirasoapserviceV2(
-                new URL(url, "rpc/soap/jirasoapservice-v2"));
-        return new JiraSession(this, service, service.login(userName, password));
+        final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
+                .createWithBasicHttpAuthentication(uri, userName, password);
+
+        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password));
     }
 
     /**
@@ -367,32 +374,30 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return keys.contains(id.substring(0, idx).toUpperCase());
     }
 
-    private static final RemoteIssue NULL = new RemoteIssue();
-
     /**
      * Returns the remote issue with the given id or <code>null</code> if it wasn't found.
      */
     @CheckForNull
     public JiraIssue getIssue(final String id) throws IOException, ServiceException {
-
         try {
-            RemoteIssue remoteIssue = issueCache.get(id, new Callable<RemoteIssue>() {
-                public RemoteIssue call() throws Exception {
+
+            Issue issue = issueCache.get(id, new Callable<Issue>() {
+                public Issue call() throws Exception {
                     JiraSession session = getSession();
-                    RemoteIssue issue = null;
+                    Issue issue = null;
                     if (session != null) {
                         issue = session.getIssue(id);
                     }
 
-                    return issue != null ? issue : NULL;
+                    return issue != null ? issue : null;
                 }
             });
 
-            if (remoteIssue == NULL) {
+            if (issue == null) {
                 return null;
             }
 
-            return new JiraIssue(remoteIssue);
+            return new JiraIssue(issue);
         } catch (ExecutionException e) {
             throw new ServiceException(e);
         }
@@ -409,15 +414,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void releaseVersion(String projectKey, String versionName) throws IOException, ServiceException {
         JiraSession session = getSession();
         if (session != null) {
-            RemoteVersion[] versions = session.getVersions(projectKey);
-            if (versions == null) {
+            List<Version> versions = session.getVersions(projectKey);
+            if (versions == null || versions.isEmpty()) {
                 return;
             }
-            for (RemoteVersion version : versions) {
+            for (Version version : versions) {
                 if (version.getName().equals(versionName)) {
-                    version.setReleased(true);
-                    version.setReleaseDate(Calendar.getInstance());
-                    session.releaseVersion(projectKey, version);
+                    Version releaseVersion = new Version(version.getSelf(), version.getId(), version.getName(),
+                        version.getDescription(), version.isArchived(), true, new DateTime());
+                    session.releaseVersion(projectKey, releaseVersion);
                     return;
                 }
             }
@@ -438,15 +443,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return Collections.emptySet();
         }
 
-        RemoteVersion[] versions = session.getVersions(projectKey);
+        List<Version> versions = session.getVersions(projectKey);
 
         if (versions == null) {
             return Collections.emptySet();
         }
 
-        Set<JiraVersion> versionsSet = new HashSet<JiraVersion>(versions.length);
+        Set<JiraVersion> versionsSet = new HashSet<JiraVersion>(versions.size());
 
-        for (RemoteVersion version : versions) {
+        for (Version version : versions) {
             versionsSet.add(new JiraVersion(version));
         }
 
@@ -482,12 +487,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return "";
         }
 
-        RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
-        RemoteIssueType[] types = session.getIssueTypes();
+        List<Issue> issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
+        List<IssueType> types = session.getIssueTypes();
 
-        HashMap<String, String> typeNameMap = new HashMap<String, String>();
+        HashMap<Long, String> typeNameMap = new HashMap<Long, String>();
 
-        for (RemoteIssueType type : types) {
+        for (IssueType type : types) {
             typeNameMap.put(type.getId(), type.getName());
         }
 
@@ -497,14 +502,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         Map<String, Set<String>> releaseNotes = new HashMap<String, Set<String>>();
 
-        for (RemoteIssue issue : issues) {
+        for (Issue issue : issues) {
             String key = issue.getKey();
             String summary = issue.getSummary();
-            String status = issue.getStatus();
+            String status = issue.getStatus().getName();
             String type = "UNKNOWN";
 
-            if (typeNameMap.containsKey(issue.getType())) {
-                type = typeNameMap.get(issue.getType());
+            final String issueTypeName = issue.getIssueType() == null ? null : issue.getIssueType().getName();
+
+            if (typeNameMap.containsKey(issueTypeName)) {
+                type = typeNameMap.get(issueTypeName);
             }
 
             Set<String> issueSet;
@@ -548,15 +555,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return Collections.emptySet();
         }
 
-        RemoteIssue[] issues = session.getIssuesWithFixVersion(projectKey, versionName);
+        List<Issue> issues = session.getIssuesWithFixVersion(projectKey, versionName);
 
-        if (issues == null) {
+        if (issues == null || issues.isEmpty()) {
             return Collections.emptySet();
         }
 
-        Set<JiraIssue> issueSet = new HashSet<JiraIssue>(issues.length);
+        Set<JiraIssue> issueSet = new HashSet<JiraIssue>(issues.size());
 
-        for (RemoteIssue issue : issues) {
+        for (Issue issue : issues) {
             issueSet.add(new JiraIssue(issue));
         }
 
@@ -610,8 +617,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws IOException
      * @throws ServiceException
      */
-    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException,
-            ServiceException {
+    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException, ServiceException {
         JiraSession session = getSession();
 
         if (session == null) {
@@ -620,7 +626,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
 
         boolean success = true;
-        RemoteIssue[] issues = session.getIssuesFromJqlSearch(jqlSearch);
+        List<Issue> issues = session.getIssuesFromJqlSearch(jqlSearch);
 
 
         if (isEmpty(workflowActionName)) {
@@ -628,7 +634,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     "thus no status update will be made for any of the matching issues.");
         }
 
-        for (RemoteIssue issue : issues) {
+        for (Issue issue : issues) {
             String issueKey = issue.getKey();
 
             if (isNotEmpty(comment)) {
@@ -640,7 +646,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 continue;
             }
 
-            String actionId = session.getActionIdForIssue(issueKey, workflowActionName);
+            Integer actionId = session.getActionIdForIssue(issueKey, workflowActionName);
 
             if (actionId == null) {
                 LOGGER.fine(String.format("Invalid workflow action %s for issue %s; issue status = %s",

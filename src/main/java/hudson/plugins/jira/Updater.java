@@ -134,7 +134,7 @@ class Updater {
                         issue.id,
                         createComment(build, useWikiStyleComments, jenkinsRootUrl, recordScmChanges, issue),
                         groupVisibility, roleVisibility);
-            } catch (RemotePermissionException e) {
+            } catch (Exception e) {
                 // Seems like RemotePermissionException can mean 'no permission' as well as
                 // 'issue doesn't exist'.
                 // To prevent carrying forward invalid issues forever, we have to drop them

@@ -1,5 +1,8 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+import com.atlassian.jira.rest.client.api.domain.Comment;
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import hudson.model.*;
@@ -203,22 +206,18 @@ public class UpdaterTest {
      */
     @Test
     @Bug(4572)
-    public void testComment() throws IOException, ServiceException, InterruptedException {
+    public void testComment() throws Exception {
         // mock JIRA session:
         JiraSession session = mock(JiraSession.class);
         when(session.existsIssue(Mockito.anyString())).thenReturn(Boolean.TRUE);
-        when(session.getIssue(Mockito.anyString())).thenReturn(new RemoteIssue());
-        when(session.getGroup(Mockito.anyString())).thenReturn(new RemoteGroup("Software Development", null));
+        final Issue mockIssue = Mockito.mock(Issue.class);
+        when(session.getIssue(Mockito.anyString())).thenReturn(mockIssue);
 
-        final List<RemoteComment> comments = new ArrayList<RemoteComment>();
+        final List<String> comments = new ArrayList<String>();
 
         Answer answer = new Answer<Object>() {
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                RemoteComment rc = new RemoteComment();
-                rc.setId((String) invocation.getArguments()[0]);
-                rc.setBody((String) invocation.getArguments()[1]);
-                rc.setGroupLevel((String) invocation.getArguments()[2]);
-                comments.add(rc);
+                comments.add((String) invocation.getArguments()[1]);
                 return null;
             }
         };
@@ -241,10 +240,9 @@ public class UpdaterTest {
                 System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(1, comments.size());
-        RemoteComment comment = comments.get(0);
+        String comment = comments.get(0);
 
-        Assert.assertTrue(comment.getBody().contains("FOOBAR-4711"));
-        Assert.assertTrue(comment.getGroupLevel().equals(""));
+        Assert.assertTrue(comment.contains("FOOBAR-4711"));
 
 
         // must also work case-insensitively (JENKINS-4132)
@@ -258,7 +256,7 @@ public class UpdaterTest {
         Assert.assertEquals(1, comments.size());
         comment = comments.get(0);
 
-        Assert.assertTrue(comment.getBody().contains("Foobar-4711"));
+        Assert.assertTrue(comment.contains("Foobar-4711"));
 
     }
 
