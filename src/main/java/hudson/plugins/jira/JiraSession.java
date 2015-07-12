@@ -2,7 +2,6 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.domain.*;
 import com.google.common.collect.Lists;
-import hudson.plugins.jira.soap.RemoteFieldValue;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -87,45 +86,6 @@ public class JiraSession {
     public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) {
         return service.getIssuesFromJqlSearch(jqlSearch, 50);
     }
-
-//    /**
-//     * Gets the details of a group, given a groupId. Used for validating group
-//     * visibility.
-//     *
-//     * @param groupId like "Software Development"
-//     * @return null if no such group exists
-//     */
-//    public RemoteGroup getGroup(String groupId) throws RemoteException {
-//        LOGGER.fine("Fetching groupInfo from " + groupId);
-//        return service.getGroup(token, groupId);
-//    }
-//
-//    /**
-//     * Gets the details of a role, given a roleId. Used for validating role
-//     * visibility.
-//     * TODO: Cannot validate against the real project role the user have in the project,
-//     * jira soap api has no such function!
-//     *
-//     * @param roleId like "Software Development"
-//     * @return null if no such role exists
-//     */
-//    public RemoteProjectRole getRole(String roleId) throws RemoteException {
-//        LOGGER.fine("Fetching roleInfo from " + roleId);
-//
-//        RemoteProjectRole[] roles = service.getProjectRoles(token);
-//
-//        if (roles != null && roles.length > 0) {
-//            for (RemoteProjectRole role : roles) {
-//                if (role != null && role.getName() != null && role.getName().equals(roleId)) {
-//                    return role;
-//                }
-//            }
-//        }
-//
-//        LOGGER.info("Did not find role named " + roleId + ".");
-//
-//        return null;
-//    }
 
     /**
      * Get all versions from the given project
@@ -262,10 +222,9 @@ public class JiraSession {
      *
      * @param issueKey
      * @param actionId
-     * @param fields
      * @return The new status
      */
-    public String progressWorkflowAction(String issueKey, Integer actionId, RemoteFieldValue[] fields) {
+    public String progressWorkflowAction(String issueKey, Integer actionId) {
         LOGGER.fine("Progressing issue " + issueKey + " with workflow action: " + actionId);
         final Issue issue = service.progressWorkflowAction(issueKey, actionId);
         getStatusById(issue.getStatus().getId());
@@ -387,7 +346,6 @@ public class JiraSession {
      * @param version    version id to create
      * @param projectKey
      * @return
-     * @throws hudson.plugins.jira.soap.RemoteException
      *
      */
     public Version addVersion(String version, String projectKey) {

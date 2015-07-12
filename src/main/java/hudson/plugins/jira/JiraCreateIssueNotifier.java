@@ -18,7 +18,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.xml.rpc.ServiceException;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -130,11 +129,10 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param build
      * @param filename
      * @return issue id
-     * @throws ServiceException
      * @throws IOException
      * @throws InterruptedException
      */
-    private Issue createJiraIssue(AbstractBuild<?, ?> build, String filename) throws ServiceException, IOException, InterruptedException {
+    private Issue createJiraIssue(AbstractBuild<?, ?> build, String filename) throws IOException, InterruptedException {
 
         EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
 
@@ -165,10 +163,9 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param build
      * @param id
      * @return Status of the issue
-     * @throws ServiceException
      * @throws IOException
      */
-    private String getStatus(AbstractBuild<?, ?> build, String id) throws ServiceException, IOException {
+    private String getStatus(AbstractBuild<?, ?> build, String id) throws IOException {
 
         JiraSession session = getJiraSession(build);
         Issue issue = session.getIssueByKey(id);
@@ -181,10 +178,9 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param build
      * @param id
      * @param comment
-     * @throws ServiceException
      * @throws IOException
      */
-    private void addComment(AbstractBuild<?, ?> build, String id, String comment) throws ServiceException, IOException {
+    private void addComment(AbstractBuild<?, ?> build, String id, String comment) throws IOException {
 
         JiraSession session = getJiraSession(build);
         session.addCommentWithoutConstrains(id, comment);
@@ -196,10 +192,9 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param build
      * @param component
      * @return Array of component
-     * @throws ServiceException
      * @throws IOException
      */
-    private List<Component> getJiraComponents(AbstractBuild<?, ?> build, String component) throws ServiceException, IOException {
+    private List<Component> getJiraComponents(AbstractBuild<?, ?> build, String component) throws IOException {
 
         if (Util.fixEmpty(component) == null) {
             return null;
@@ -259,10 +254,9 @@ public class JiraCreateIssueNotifier extends Notifier {
      *
      * @param build
      * @return JiraSession
-     * @throws ServiceException
      * @throws IOException
      */
-    private JiraSession getJiraSession(AbstractBuild<?, ?> build) throws ServiceException, IOException {
+    private JiraSession getJiraSession(AbstractBuild<?, ?> build) throws IOException {
 
         JiraSite site = JiraSite.get(build.getProject());
         if (site == null) {
@@ -271,7 +265,7 @@ public class JiraCreateIssueNotifier extends Notifier {
 
         JiraSession session = site.createSession();
         if (session == null) {
-            throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+            throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
         }
 
         return session;
@@ -338,7 +332,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                         Issue issue = createJiraIssue(build, filename);
                         listener.getLogger().println("Creating jira issue with issue ID " + issue.getKey());
                     }
-                } catch (ServiceException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
@@ -351,7 +345,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                 listener.getLogger().println("Creating jira issue with issue ID"
                         + " " + issue.getKey());
 
-            } catch (ServiceException e) {
+            } catch (IOException e) {
                 listener.error("Error creating JIRA issue : " + e.getMessage());
                 LOG.warning("Error creating JIRA issue\n" + e);
             }
@@ -393,7 +387,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                     if (status.equals("6")) {
                         deleteFile(filename, listener);
                     }
-                } catch (ServiceException e) {
+                } catch (IOException e) {
                     listener.error("Error updating JIRA issue " + issueId + " : " + e.getMessage());
                     LOG.warning("Error updating JIRA issue " + issueId + "\n" + e);
                 }

@@ -9,7 +9,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashSet;
@@ -53,7 +52,7 @@ public class VersionCreatorTest {
     }
 
     @Test
-    public void jiraApiCalledWithSpecifiedParameters() throws InterruptedException, IOException, ServiceException {
+    public void jiraApiCalledWithSpecifiedParameters() throws InterruptedException, IOException {
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<JiraVersion>());
 
         boolean result = jvc.perform(build, launcher, listener);
@@ -62,7 +61,7 @@ public class VersionCreatorTest {
     }
 
     @Test
-    public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException, ServiceException {
+    public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
         Set<JiraVersion> existingVersions = new HashSet<JiraVersion>();
         existingVersions.add(new JiraVersion(JIRA_VER, null, false, false));
 
@@ -77,7 +76,7 @@ public class VersionCreatorTest {
     }
 
     @Test
-    public void buildDidNotFailWhenVersionExistsExpanded() throws IOException, InterruptedException, ServiceException {
+    public void buildDidNotFailWhenVersionExistsExpanded() throws IOException, InterruptedException {
         // Same test as the previous one but here the version is contained in a Jenkins parameter
         JiraVersionCreator jvc = spy(new JiraVersionCreator(JIRA_VER_PARAM, JIRA_PRJ));
         doReturn(site).when(jvc).getSiteForProject((AbstractProject<?, ?>) Mockito.any());

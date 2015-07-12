@@ -1,7 +1,6 @@
 package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import hudson.plugins.jira.soap.RemoteIssue;
 
 /**
  * One JIRA issue.

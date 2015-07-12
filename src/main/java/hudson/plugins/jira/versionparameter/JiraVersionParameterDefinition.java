@@ -12,9 +12,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -54,7 +52,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         return value;
     }
 
-    public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException, ServiceException {
+    public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException {
         AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
 
         JiraSite site = JiraSite.get(context);
@@ -62,7 +60,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
             throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
 
         JiraSession session = site.createSession();
-        if (session == null) throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
         List<Version> versions = session.getVersions(projectKey);
 

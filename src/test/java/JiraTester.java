@@ -1,6 +1,12 @@
-import hudson.plugins.jira.soap.*;
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import hudson.plugins.jira.JiraRestService;
 
+import java.net.URI;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Test bed to play with JIRA.
@@ -9,47 +15,28 @@ import java.net.URL;
  */
 public class JiraTester {
     public static void main(String[] args) throws Exception {
-        JiraSoapServiceService jiraSoapServiceGetter = new JiraSoapServiceServiceLocator();
 
-        JiraSoapService service = jiraSoapServiceGetter
-                .getJirasoapserviceV2(new URL(JiraConfig.getUrl()));
-        String token = service.login(JiraConfig.getUsername(),
-                JiraConfig.getPassword());
+        final URI uri = new URL(JiraConfig.getUrl()).toURI();
+        final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
+                .createWithBasicHttpAuthentication(uri, JiraConfig.getUsername(), JiraConfig.getPassword());
 
-        // key can be used.
-        // RemoteProject[] projects = service.getProjectsNoSchemes(token);
-        // for (RemoteProject p : projects) {
-        // System.out.println(p.getKey());
-        // }
+        final JiraRestService restService = new JiraRestService(uri, jiraRestClient, JiraConfig.getUsername(), JiraConfig.getPassword());
 
-        String issueId = "TESTPROJEKT-60";
-        String actionId = "21";
+        String issueId = "TESTPROJECT-60";
+        Integer actionId = 21;
 
-        RemoteIssue issue = service.getIssue(token, "TESTPROJEKT-61");
-        System.out.println("Issue Status: " + issue.getStatus());
+        final Issue issue = restService.getIssue(issueId);
+        System.out.println("issue:" + issue);
 
-        RemoteNamedObject[] actions = service.getAvailableActions(token,
-                issueId);
-        for (RemoteNamedObject action : actions) {
-            System.out.println("Action: " + action.getId() + " - "
-                    + action.getName());
+
+        final List<Transition> availableActions = restService.getAvailableActions(issueId);
+        for (Transition action : availableActions) {
+            System.out.println("Action:" + action);
         }
 
-        RemoteField[] actionFields = service.getFieldsForAction(token, issueId,
-                actionId);
-        for (RemoteField actionField : actionFields) {
-            System.out.println("ActionField: " + actionField.getId() + " - "
-                    + actionField.getName());
-        }
 
-        RemoteField[] customFields = service.getCustomFields(token);
-        for (RemoteField field : customFields) {
-            System.out.println("Field: " + field.getId() + " - " + field.getName());
-        }
-
-        RemoteIssue updatedIssues = service.progressWorkflowAction(token,
-                issueId, actionId, null);
-        System.out.println("Issue Status: " + updatedIssues.getStatus());
+//        final Issue updatedIssue = restService.progressWorkflowAction(issueId, actionId);
+//        System.out.println("Updated issue:" + updatedIssue);
 
     }
 }

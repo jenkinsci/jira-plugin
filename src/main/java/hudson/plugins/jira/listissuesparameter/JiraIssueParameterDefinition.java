@@ -22,19 +22,16 @@ import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
-import hudson.plugins.jira.soap.RemoteIssue;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static hudson.Util.fixNull;
-import static java.util.Arrays.asList;
 
 public class JiraIssueParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 3927562542249244416L;
@@ -65,7 +62,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         return value;
     }
 
-    public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException, ServiceException {
+    public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException {
         AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
 
         JiraSite site = JiraSite.get(context);
@@ -73,7 +70,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
             throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
 
         JiraSession session = site.createSession();
-        if (session == null) throw new IllegalStateException("Remote SOAP access for JIRA isn't configured in Jenkins");
+        if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
         List<Issue> issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
 

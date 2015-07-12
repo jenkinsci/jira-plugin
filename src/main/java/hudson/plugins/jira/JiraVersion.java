@@ -1,7 +1,6 @@
 package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.domain.Version;
-import hudson.plugins.jira.soap.RemoteVersion;
 
 import java.util.Calendar;
 

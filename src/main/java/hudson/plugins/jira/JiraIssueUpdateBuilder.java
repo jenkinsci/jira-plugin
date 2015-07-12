@@ -30,7 +30,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.servlet.ServletException;
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 
 /**
@@ -100,7 +99,7 @@ public class JiraIssueUpdateBuilder extends Builder {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
                 build.setResult(Result.UNSTABLE);
             }
-        } catch (ServiceException e) {
+        } catch (IOException e) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
             return false;

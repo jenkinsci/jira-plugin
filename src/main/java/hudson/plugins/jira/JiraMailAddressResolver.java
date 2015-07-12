@@ -4,7 +4,6 @@ import hudson.Extension;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
 
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,8 +46,6 @@ public class JiraMailAddressResolver extends MailAddressResolver {
                     }
                 }
             } catch (IOException ex) {
-                LOGGER.log(Level.WARNING, "Unable to create session with " + site.getName(), ex);
-            } catch (ServiceException ex) {
                 LOGGER.log(Level.WARNING, "Unable to create session with " + site.getName(), ex);
             }
         }

@@ -1,15 +1,10 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.BasicIssue;
-import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import hudson.model.*;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
-import hudson.plugins.jira.soap.RemoteComment;
-import hudson.plugins.jira.soap.RemoteGroup;
-import hudson.plugins.jira.soap.RemoteIssue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 import org.junit.Assert;
@@ -19,8 +14,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import javax.xml.rpc.ServiceException;
-import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
 

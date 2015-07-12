@@ -12,7 +12,6 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
@@ -28,7 +27,7 @@ public class JiraChangeLogAnnotatorTest {
     private JiraSite site;
 
     @Before
-    public void before() throws IOException, ServiceException {
+    public void before() throws IOException {
         JiraSession session = mock(JiraSession.class);
         when(session.getProjectKeys()).thenReturn(
                 Sets.newHashSet("DUMMY", "JENKINS"));
@@ -122,7 +121,7 @@ public class JiraChangeLogAnnotatorTest {
 
     @Test
     @Bug(4132)
-    public void testCaseInsensitiveAnnotate() throws IOException, ServiceException {
+    public void testCaseInsensitiveAnnotate() throws IOException {
 
         Assert.assertTrue(site.existsIssue("JENKINS-123"));
         Assert.assertTrue(site.existsIssue("jenKiNs-123"));
@@ -143,7 +142,7 @@ public class JiraChangeLogAnnotatorTest {
      */
     @Test
     @Bug(5252)
-    public void testGetIssueDetailsForMissingIssues() throws IOException, ServiceException {
+    public void testGetIssueDetailsForMissingIssues() throws IOException {
         FreeStyleBuild b = mock(FreeStyleBuild.class);
 
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
@@ -161,7 +160,7 @@ public class JiraChangeLogAnnotatorTest {
      * Tests that no exception is thrown if user issue pattern is invalid (contains no groups)
      */
     @Test
-    public void testInvalidUserPattern() throws IOException, ServiceException {
+    public void testInvalidUserPattern() throws IOException {
         when(site.getIssuePattern()).thenReturn(Pattern.compile("[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"));
 
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
@@ -179,7 +178,7 @@ public class JiraChangeLogAnnotatorTest {
      * Previous implementation did so.
      */
     @Test
-    public void testMatchOnlyMatchGroup1() throws IOException, ServiceException {
+    public void testMatchOnlyMatchGroup1() throws IOException {
 
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());

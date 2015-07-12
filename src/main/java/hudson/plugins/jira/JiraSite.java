@@ -7,7 +7,6 @@ import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
@@ -15,7 +14,6 @@ import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
 import hudson.util.FormValidation;
-import org.apache.axis.AxisFault;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -23,7 +21,6 @@ import org.kohsuke.stapler.QueryParameter;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import javax.servlet.ServletException;
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
@@ -205,7 +202,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null if remote access is not supported.
      */
     @Nullable
-    public JiraSession getSession() throws IOException, ServiceException {
+    public JiraSession getSession() throws IOException {
         JiraSession session = null;
 
         WeakReference<JiraSession> weakReference = jiraSession.get();
@@ -214,7 +211,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
 
         if (session == null) {
-            // TODO: we should check for session timeout, too (but there's no method for that on JiraSoapService)
+            // TODO: we should check for session timeout, too
             // Currently no real problem, as we're using a weak reference for the session, so it will be GC'ed very quickly
             session = createSession();
             jiraSession.set(new WeakReference<JiraSession>(session));
@@ -229,7 +226,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @deprecated please use {@link #getSession()} unless you really want a NEW session
      */
     @Deprecated
-    public JiraSession createSession() throws IOException, ServiceException {
+    public JiraSession createSession() throws IOException {
         if (userName == null || password == null)
             return null;    // remote access not supported
 
@@ -313,8 +310,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     } catch (IOException e) {
                         // in case of error, set empty set to avoid trying the same thing repeatedly.
                         LOGGER.log(Level.WARNING, "Failed to obtain JIRA project list", e);
-                    } catch (ServiceException e) {
-                        LOGGER.log(Level.WARNING, "Failed to obtain JIRA project list", e);
                     } finally {
                         projectUpdateLock.unlock();
                     }
@@ -378,7 +373,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Returns the remote issue with the given id or <code>null</code> if it wasn't found.
      */
     @CheckForNull
-    public JiraIssue getIssue(final String id) throws IOException, ServiceException {
+    public JiraIssue getIssue(final String id) throws IOException {
         try {
 
             Issue issue = issueCache.get(id, new Callable<Issue>() {
@@ -399,7 +394,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
             return new JiraIssue(issue);
         } catch (ExecutionException e) {
-            throw new ServiceException(e);
+            throw new IOException(e);
         }
     }
 
@@ -409,9 +404,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey  The Project Key
      * @param versionName The name of the version
      * @throws IOException
-     * @throws ServiceException
      */
-    public void releaseVersion(String projectKey, String versionName) throws IOException, ServiceException {
+    public void releaseVersion(String projectKey, String versionName) throws IOException {
         JiraSession session = getSession();
         if (session != null) {
             List<Version> versions = session.getVersions(projectKey);
@@ -435,9 +429,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey Project Key
      * @return A set of JiraVersions
      * @throws IOException
-     * @throws ServiceException
      */
-    public Set<JiraVersion> getVersions(String projectKey) throws IOException, ServiceException {
+    public Set<JiraVersion> getVersions(String projectKey) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
             return Collections.emptySet();
@@ -465,9 +458,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param versionName
      * @return release notes
      * @throws IOException
-     * @throws ServiceException
      */
-    public String getReleaseNotesForFixVersion(String projectKey, String versionName) throws IOException, ServiceException {
+    public String getReleaseNotesForFixVersion(String projectKey, String versionName) throws IOException {
         return getReleaseNotesForFixVersion(projectKey, versionName, "");
     }
 
@@ -479,9 +471,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
      * @return release notes
      * @throws IOException
-     * @throws ServiceException
      */
-    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException, ServiceException {
+    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
             return "";
@@ -547,9 +538,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param versionName The fixVersion
      * @return A set of JiraIssues
      * @throws IOException
-     * @throws ServiceException
      */
-    public Set<JiraIssue> getIssueWithFixVersion(String projectKey, String versionName) throws IOException, ServiceException {
+    public Set<JiraIssue> getIssueWithFixVersion(String projectKey, String versionName) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
             return Collections.emptySet();
@@ -577,9 +567,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param toVersion  The new fixVersion
      * @param query      A JQL Query
      * @throws IOException
-     * @throws ServiceException
      */
-    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException, ServiceException {
+    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
             return;
@@ -595,9 +584,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param versionName The new fixVersion
      * @param query       A JQL Query
      * @throws IOException
-     * @throws ServiceException
      */
-    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException, ServiceException {
+    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
             return;
@@ -615,9 +603,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param comment
      * @param console
      * @throws IOException
-     * @throws ServiceException
      */
-    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException, ServiceException {
+    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException {
         JiraSession session = getSession();
 
         if (session == null) {
@@ -656,7 +643,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 continue;
             }
 
-            String newStatus = session.progressWorkflowAction(issueKey, actionId, null);
+            String newStatus = session.progressWorkflowAction(issueKey, actionId);
 
             console.println(String.format("[JIRA] Issue %s transitioned to \"%s\" due to action \"%s\".",
                     issueKey, newStatus, workflowActionName));
@@ -697,12 +684,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                         if (!findText(open(new URL(url)), "Atlassian JIRA")) {
                             return FormValidation.error(Messages
                                     .JiraProjectProperty_NotAJiraUrl());
-                        }
-
-                        URL soapUrl = new URL(new URL(url), "rpc/soap/jirasoapservice-v2?wsdl");
-                        if (!findText(open(soapUrl), "wsdl:definitions")) {
-                            return FormValidation.error(Messages
-                                    .JiraProjectProperty_NoWsdlAvailable());
                         }
 
                         return FormValidation.ok();
@@ -756,11 +737,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             try {
                 site.createSession();
                 return FormValidation.ok("Success");
-            } catch (AxisFault e) {
-                LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url,
-                        e);
-                return FormValidation.error(e.getFaultString());
-            } catch (ServiceException e) {
+            } catch (IOException e) {
                 LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url,
                         e);
                 return FormValidation.error(e.getMessage());
@@ -770,7 +747,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
 
-    public void addVersion(String version, String projectKey) throws IOException, ServiceException {
+    public void addVersion(String version, String projectKey) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
             return;

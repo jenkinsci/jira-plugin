@@ -10,7 +10,6 @@ import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
-import hudson.plugins.jira.soap.RemotePermissionException;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.RepositoryBrowser;
@@ -26,7 +25,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.xml.rpc.ServiceException;
 import org.apache.commons.lang.StringUtils;
 
 import static java.lang.String.format;
@@ -67,7 +65,7 @@ class Updater {
             JiraSession session = null;
             try {
                 session = site.createSession();
-            } catch (ServiceException e) {
+            } catch (IOException e) {
                 listener.getLogger().println(Messages.Updater_FailedToConnect());
                 e.printStackTrace(listener.getLogger());
             }

@@ -3,7 +3,6 @@ package hudson.plugins.jira;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.google.common.collect.Lists;
-import hudson.plugins.jira.soap.RemoteFieldValue;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -11,7 +10,6 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import javax.xml.rpc.ServiceException;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -105,7 +103,7 @@ public class ChangingWorkflowTest {
 
 
     @Test
-    public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws IOException, ServiceException {
+    public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws IOException {
         when(site.getSession()).thenReturn(mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
         when(mockSession.getActionIdForIssue(anyString(),
@@ -118,13 +116,12 @@ public class ChangingWorkflowTest {
 
         verify(mockSession, times(1)).addComment(anyString(), eq(NON_EMPTY_COMMENT),
                 isNull(String.class), isNull(String.class));
-        verify(mockSession, times(1)).progressWorkflowAction(anyString(), anyInt(),
-                Matchers.any(RemoteFieldValue[].class));
+        verify(mockSession, times(1)).progressWorkflowAction(anyString(), anyInt());
     }
 
 
     @Test
-    public void addCommentsOnNullWorkflowAndNonEmptyComment() throws IOException, ServiceException {
+    public void addCommentsOnNullWorkflowAndNonEmptyComment() throws IOException {
         when(site.getSession()).thenReturn(mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
@@ -138,7 +135,7 @@ public class ChangingWorkflowTest {
 
 
     @Test
-    public void dontAddCommentsOnNullWorkflowAndNullComment() throws IOException, ServiceException {
+    public void dontAddCommentsOnNullWorkflowAndNullComment() throws IOException {
         when(site.getSession()).thenReturn(mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))

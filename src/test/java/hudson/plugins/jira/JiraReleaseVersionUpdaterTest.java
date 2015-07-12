@@ -19,7 +19,6 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.xml.rpc.ServiceException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +46,8 @@ public class JiraReleaseVersionUpdaterTest {
 	}
 	
 	@Test
-	public void jiraApiCalledWithSpecifiedParameters() throws InterruptedException, IOException, ServiceException {
+	public void jiraApiCalledWithSpecifiedParameters() throws InterruptedException, IOException
+	{
 		JiraReleaseVersionUpdater jvu = spy(new JiraReleaseVersionUpdater(JIRA_PRJ, JIRA_VER));
 		doReturn(site).when(jvu).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
 		
@@ -66,7 +66,7 @@ public class JiraReleaseVersionUpdaterTest {
 	}	
 	
 	@Test
-	public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException, ServiceException {
+	public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
 		JiraReleaseVersionUpdater jvu = spy(new JiraReleaseVersionUpdater(JIRA_PRJ, JIRA_VER));
 		doReturn(site).when(jvu).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
 		
