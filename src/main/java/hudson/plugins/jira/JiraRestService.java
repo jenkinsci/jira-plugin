@@ -196,6 +196,7 @@ public class JiraRestService {
                                                         .setDescription(description)
                                                         .setAssigneeName(assignee)
                                                         .setComponents(components)
+                                                        .setIssueTypeId(1L) // BUG
                                                         .setSummary(summary)
                                                         .build();
         try {
