@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 import static hudson.Util.fixNull;
 
 public class JiraVersionParameterDefinition extends ParameterDefinition {
-    private static final long serialVersionUID = 3927562542249244416L;
+    private static final long serialVersionUID = 4232979892748310160L;
 
     private String projectKey;
     private boolean showReleased = false;
