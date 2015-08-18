@@ -97,30 +97,31 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
     @Override
     public Environment setUp(final AbstractBuild build, final Launcher launcher, final BuildListener listener)
             throws IOException, InterruptedException {
+
+        final JiraSite site = JiraSite.get(build.getProject());
+
         String realRelease = null;
         String releaseNotes = "No Release Notes";
         String realFilter = DEFAULT_FILTER;
+
         try {
             realRelease = build.getEnvironment(listener).expand(jiraRelease);
-
-            if ((realRelease == null) || realRelease.isEmpty()) {
-                throw new IllegalArgumentException("Release is Empty");
-            }
 
             if (jiraFilter != null) {
                 realFilter = build.getEnvironment(listener).expand(jiraFilter);
             }
 
-            final JiraSite site = JiraSite.get(build.getProject());
+            if ((realRelease != null) && !realRelease.isEmpty()) {
+                releaseNotes = site.getReleaseNotesForFixVersion(jiraProjectKey, realRelease, realFilter);
+            } else {
+                listener.getLogger().printf("No release version found, skipping Release Notes generation\n");
+            }
 
-            releaseNotes = site.getReleaseNotesForFixVersion(jiraProjectKey, realRelease, realFilter);
-
-        } catch (final Exception e) {
+        } catch (Exception e) {
             e.printStackTrace(listener.fatalError("Unable to generate release notes for JIRA version %s/%s: %s",
                     realRelease, jiraProjectKey, e));
             listener.finished(Result.FAILURE);
-            return new Environment() {
-            };
+            return new Environment() {};
         }
 
         final Map<String, String> envMap = new HashMap<String, String>();
