@@ -31,6 +31,9 @@ import org.kohsuke.stapler.QueryParameter;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+
+import java.util.List;
 
 /**
  * Build step that will mass-update all issues matching a JQL query, using the specified workflow
@@ -94,8 +97,22 @@ public class JiraIssueUpdateBuilder extends Builder {
 
         listener.getLogger().println("[JIRA] JQL: " + realJql);
 
+            JiraSession session = null;
+            try {
+                session = site.createSession();
+            } catch (IOException e) {
+                listener.getLogger().println(Messages.Updater_FailedToConnect());
+                e.printStackTrace(listener.getLogger());
+            }
+            if (session == null) {
+                build.setResult(Result.FAILURE);
+                return true;
+            }
+
+	List<JiraIssue> issues = Updater.getJiraIssues(build, site, session, listener);
+
         try {
-            if (!site.progressMatchingIssues(realJql, realWorkflowActionName, realComment, listener.getLogger())) {
+            if (!site.progressIssues(issues, realWorkflowActionName, realComment, listener.getLogger())) {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
                 build.setResult(Result.UNSTABLE);
             }
