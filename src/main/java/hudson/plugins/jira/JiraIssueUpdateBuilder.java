@@ -42,15 +42,21 @@ import java.util.List;
  * @author Joe Hansche jhansche@myyearbook.com
  */
 public class JiraIssueUpdateBuilder extends Builder {
+    private final boolean updateRelatedIssues;
     private final String jqlSearch;
     private final String workflowActionName;
     private final String comment;
 
     @DataBoundConstructor
-    public JiraIssueUpdateBuilder(String jqlSearch, String workflowActionName, String comment) {
+    public JiraIssueUpdateBuilder(boolean updateRelatedIssues, String jqlSearch, String workflowActionName, String comment) {
+	this.updateRelatedIssues = updateRelatedIssues;
         this.jqlSearch = Util.fixEmptyAndTrim(jqlSearch);
         this.workflowActionName = Util.fixEmptyAndTrim(workflowActionName);
         this.comment = Util.fixEmptyAndTrim(comment);
+    }
+
+    public boolean isUpdateRelatedIssues() {
+        return updateRelatedIssues;
     }
 
     /**
@@ -112,10 +118,17 @@ public class JiraIssueUpdateBuilder extends Builder {
         List<JiraIssue> issues = Updater.getJiraIssues(build, site, session, listener);
 
         try {
-            if (!site.progressIssues(issues, realWorkflowActionName, realComment, listener.getLogger())) {
-                listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
-                build.setResult(Result.UNSTABLE);
-            }
+		if(this.updateRelatedIssues) {
+			if(!site.progressIssues(issues, realWorkflowActionName, realComment, listener.getLogger())) {
+				listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
+				build.setResult(Result.UNSTABLE);
+			}
+		}else{
+			if (!site.progressMatchingIssues(realJql, realWorkflowActionName, realComment, listener.getLogger())){
+				listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
+				build.setResult(Result.UNSTABLE);
+			}
+		}
         } catch (IOException e) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
