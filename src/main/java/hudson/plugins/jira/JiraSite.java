@@ -644,6 +644,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         return success;
     }
+
     /**
      * Progresses all issues matching the JQL search, using the given workflow action. Optionally
      * adds a comment to the issue(s) at the same time.

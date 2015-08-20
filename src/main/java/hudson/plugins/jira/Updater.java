@@ -145,11 +145,10 @@ class Updater {
     }
 
     public static List<JiraIssue> getJiraIssues(AbstractBuild<?, ?> build, JiraSite site, JiraSession session, BuildListener listener) throws RemoteException{
-
         Set<String> ids = findIssueIdsRecursive(build, site.getIssuePattern(), listener);
-	return getJiraIssues(ids, session, listener.getLogger());
-	
-}
+        return getJiraIssues(ids, session, listener.getLogger());
+
+    }
 
     private static List<JiraIssue> getJiraIssues(
             Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {

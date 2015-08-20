@@ -97,19 +97,19 @@ public class JiraIssueUpdateBuilder extends Builder {
 
         listener.getLogger().println("[JIRA] JQL: " + realJql);
 
-            JiraSession session = null;
-            try {
-                session = site.createSession();
-            } catch (IOException e) {
-                listener.getLogger().println(Messages.Updater_FailedToConnect());
-                e.printStackTrace(listener.getLogger());
-            }
-            if (session == null) {
-                build.setResult(Result.FAILURE);
-                return true;
-            }
+        JiraSession session = null;
+        try {
+            session = site.createSession();
+        } catch (IOException e) {
+            listener.getLogger().println(Messages.Updater_FailedToConnect());
+            e.printStackTrace(listener.getLogger());
+        }
+        if (session == null) {
+            build.setResult(Result.FAILURE);
+            return true;
+        }
 
-	List<JiraIssue> issues = Updater.getJiraIssues(build, site, session, listener);
+        List<JiraIssue> issues = Updater.getJiraIssues(build, site, session, listener);
 
         try {
             if (!site.progressIssues(issues, realWorkflowActionName, realComment, listener.getLogger())) {
