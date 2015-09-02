@@ -119,7 +119,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
                         return null;
                     }
                     try {
-                        return new URL((String) o);
+                        return new URL(o.toString());
                     } catch (MalformedURLException e) {
                         LOGGER.warning(String.format("%s is not a valid URL.", o.toString()));
                         return null;
