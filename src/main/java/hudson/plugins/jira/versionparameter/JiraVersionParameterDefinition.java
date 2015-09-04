@@ -2,12 +2,14 @@ package hudson.plugins.jira.versionparameter;
 
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.Extension;
+import hudson.cli.CLICommand;
 import hudson.model.AbstractProject;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -51,6 +53,11 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         JiraVersionParameterValue value = req.bindJSON(JiraVersionParameterValue.class, formData);
         return value;
     }
+    
+    @Override
+	public ParameterValue createValue(CLICommand command, String value) throws IOException, InterruptedException {
+		return new JiraVersionParameterValue(getName(), value);
+	}
 
     public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException {
         AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
