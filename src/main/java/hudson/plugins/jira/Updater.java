@@ -1,5 +1,7 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.google.common.base.Joiner;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractBuild.DependencyChange;
@@ -17,6 +19,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -107,41 +110,59 @@ class Updater {
 
     /**
      * Submits comments for the given issues.
-     * Removes from <code>issues</code> the ones which appear to be invalid.
+     * Remvoes from <code>issues</code> issues which have been successfully updated or are invalid
      *
      * @param build
      * @param logger
      * @param jenkinsRootUrl
-     * @param issues
      * @param session
      * @param useWikiStyleComments
      * @param recordScmChanges
      * @param groupVisibility
-     * @throws RemoteException
+     * @throws RestClientException
      */
     static void submitComments(
             AbstractBuild<?, ?> build, PrintStream logger, String jenkinsRootUrl,
             List<JiraIssue> issues, JiraSession session,
-            boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RemoteException {
+            boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RestClientException {
+
         // copy to prevent ConcurrentModificationException
         List<JiraIssue> copy = new ArrayList<JiraIssue>(issues);
+
         for (JiraIssue issue : copy) {
+            logger.println(Messages.Updater_Updating(issue.id));
+
             try {
-                logger.println(Messages.Updater_Updating(issue.id));
                 session.addComment(
                         issue.id,
                         createComment(build, useWikiStyleComments, jenkinsRootUrl, recordScmChanges, issue),
-                        groupVisibility, roleVisibility);
-            } catch (Exception e) {
-                // Seems like RemotePermissionException can mean 'no permission' as well as
-                // 'issue doesn't exist'.
-                // To prevent carrying forward invalid issues forever, we have to drop them
-                // even if the cause of the exception was different.
-                logger.println("Looks like " + issue.id + " is no valid JIRA issue or you don't have permission to update the issue.\n" +
-                        "Issue will not be updated.\n" + e);
-                issues.remove(issue);
+                        groupVisibility, roleVisibility
+                );
+
+            } catch (RestClientException e) {
+
+                if (e.getStatusCode().or(0).equals(404)) {
+                    logger.println(issue.id + " - Issue not found. Dropping comment from update queue.");
+                }
+
+                if (e.getStatusCode().or(0).equals(403)) {
+                    logger.println(issue.id + " - Jenkins JIRA user does not have permissions to comment on this issue. Preserving comment for future update.");
+                    continue;
+                }
+
+                if (e.getStatusCode().or(0).equals(401)) {
+                    logger.println(issue.id + " - Jenkins JIRA authentication problem. Preserving comment for future update.");
+                    continue;
+                }
+
+                logger.println(Messages.Updater_FailedToCommentOnIssue(issue.id));
+                logger.println(e.getLocalizedMessage());
             }
+
+            // if no exception is thrown during update, remove from the list as succesfully updated
+            issues.remove(issue);
         }
+
     }
 
     private static List<JiraIssue> getJiraIssues(
