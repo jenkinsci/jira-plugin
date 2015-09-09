@@ -1,18 +1,15 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.Util;
-import hudson.model.AbstractBuild;
+import hudson.model.*;
 import hudson.model.AbstractBuild.DependencyChange;
-import hudson.model.BuildListener;
-import hudson.model.Hudson;
-import hudson.model.ParameterValue;
-import hudson.model.ParametersAction;
-import hudson.model.Result;
-import hudson.model.Run;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.RepositoryBrowser;
+import org.apache.commons.lang.StringUtils;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.reflect.Method;
@@ -25,7 +22,6 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.lang.StringUtils;
 
 import static java.lang.String.format;
 
@@ -64,7 +60,7 @@ class Updater {
 
             JiraSession session = null;
             try {
-                session = site.createSession();
+                session = site.getSession();
             } catch (IOException e) {
                 listener.getLogger().println(Messages.Updater_FailedToConnect());
                 e.printStackTrace(listener.getLogger());

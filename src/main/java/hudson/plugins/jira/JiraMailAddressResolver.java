@@ -34,7 +34,7 @@ public class JiraMailAddressResolver extends MailAddressResolver {
 
         for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
             try {
-                JiraSession session = site.createSession();
+                JiraSession session = site.getSession();
                 if (session != null) {
                     com.atlassian.jira.rest.client.api.domain.User user = session.service.getUser(username);
                     if (user != null) {

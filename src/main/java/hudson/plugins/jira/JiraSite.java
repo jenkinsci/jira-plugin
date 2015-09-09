@@ -226,7 +226,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @deprecated please use {@link #getSession()} unless you really want a NEW session
      */
     @Deprecated
-    public JiraSession createSession() throws IOException {
+    private JiraSession createSession() throws IOException {
         if (userName == null || password == null)
             return null;    // remote access not supported
 
