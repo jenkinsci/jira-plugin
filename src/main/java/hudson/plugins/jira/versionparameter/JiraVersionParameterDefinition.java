@@ -9,7 +9,6 @@ import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import net.sf.json.JSONObject;
-
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -66,7 +65,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         if (site == null)
             throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
 
-        JiraSession session = site.createSession();
+        JiraSession session = site.getSession();
         if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
         List<Version> versions = session.getVersions(projectKey);
