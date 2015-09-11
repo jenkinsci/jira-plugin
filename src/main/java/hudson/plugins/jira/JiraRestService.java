@@ -50,6 +50,12 @@ public class JiraRestService {
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
 
+    /**
+     * Base URI path for a REST API call. It must be relative to site's base
+     * URI.
+     */
+    public static final String BASE_API_PATH = "rest/api/2";
+
     private final URI uri;
 
     private final JiraRestClient jiraRestClient;
@@ -57,6 +63,8 @@ public class JiraRestService {
     private final ObjectMapper objectMapper;
 
     private final String authHeader;
+
+    private final String baseApiPath;
 
     public JiraRestService(URI uri, JiraRestClient jiraRestClient, String username, String password) {
         this.uri = uri;
@@ -70,12 +78,24 @@ public class JiraRestService {
             throw new RuntimeException("failed to encode username:password using Base64");
         }
         this.jiraRestClient = jiraRestClient;
+
+        final StringBuilder builder = new StringBuilder();
+        if (uri.getPath() != null) {
+            builder.append(uri.getPath());
+            if (!uri.getPath().endsWith("/")) {
+                builder.append('/');
+            }
+        } else {
+            builder.append('/');
+        }
+        builder.append(BASE_API_PATH);
+        baseApiPath = builder.toString();
     }
 
     public void addComment(String issueId, String commentBody,
                                          String groupVisibility, String roleVisibility) {
         final URIBuilder builder = new URIBuilder(uri)
-                .setPath(String.format("/rest/api/2/issue/%s/comment", issueId));
+                .setPath(String.format("%s/issue/%s/comment", baseApiPath, issueId));
 
         final Comment comment;
         if (StringUtils.isNotBlank(groupVisibility)) {
@@ -139,7 +159,7 @@ public class JiraRestService {
 
     public List<Version> getVersions(String projectKey) {
         final URIBuilder builder = new URIBuilder(uri)
-                .setPath(String.format("/rest/api/2/project/%s/versions", projectKey));
+                .setPath(String.format("%s/project/%s/versions", baseApiPath, projectKey));
 
         List<Map<String, Object>> decoded = Collections.emptyList();
         try {
@@ -179,7 +199,7 @@ public class JiraRestService {
 
     public void releaseVersion(String projectKey, Version version) {
         final URIBuilder builder = new URIBuilder(uri)
-            .setPath(String.format("/rest/api/2/version/%s", version.getId()));
+            .setPath(String.format("%s/version/%s", baseApiPath, version.getId()));
 
         final VersionInput versionInput = new VersionInput(projectKey, version.getName(), version.getDescription(), version
             .getReleaseDate(), version.isArchived(), version.isReleased());
@@ -266,7 +286,7 @@ public class JiraRestService {
 
     public List<Component> getComponents(String projectKey) {
         final URIBuilder builder = new URIBuilder(uri)
-            .setPath(String.format("/rest/api/2/project/%s/components", projectKey));
+            .setPath(String.format("%s/project/%s/components", baseApiPath, projectKey));
 
         try {
             final Content content = buildGetRequest(builder.build()).execute().returnContent();
@@ -306,4 +326,7 @@ public class JiraRestService {
                 .addHeader("Content-Type", "application/json");
     }
 
+    public String getBaseApiPath() {
+        return baseApiPath;
+    }
 }
