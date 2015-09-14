@@ -16,6 +16,7 @@
 package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.*;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
@@ -328,5 +329,13 @@ public class JiraRestService {
 
     public String getBaseApiPath() {
         return baseApiPath;
+    }
+
+    /**
+     * Get User's permissions
+     *
+     */
+    public Permissions getMyPermissions() throws RestClientException {
+        return jiraRestClient.getMyPermissionsRestClient().getMyPermissions(null).claim();
     }
 }

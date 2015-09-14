@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Version;
@@ -12,7 +13,6 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
-import hudson.model.Hudson;
 import hudson.util.FormValidation;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -20,7 +20,6 @@ import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.lang.ref.WeakReference;
@@ -37,7 +36,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -49,6 +47,8 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
  * @author Kohsuke Kawaguchi
  */
 public class JiraSite extends AbstractDescribableImpl<JiraSite> {
+
+    private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
 
     /**
      * Regexp pattern that identifies JIRA issue token.
@@ -205,17 +205,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public JiraSession getSession() throws IOException {
         JiraSession session = null;
 
-        WeakReference<JiraSession> weakReference = jiraSession.get();
-        if (weakReference != null) {
-            session = weakReference.get();
-        }
-
         if (session == null) {
             // TODO: we should check for session timeout, too
             // Currently no real problem, as we're using a weak reference for the session, so it will be GC'ed very quickly
             session = createSession();
             jiraSession.set(new WeakReference<JiraSession>(session));
         }
+
         return session;
     }
 
@@ -223,10 +219,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Creates a remote access session to this JIRA.
      *
      * @return null if remote access is not supported.
-     * @deprecated please use {@link #getSession()} unless you really want a NEW session
      */
-    @Deprecated
-    private JiraSession createSession() throws IOException {
+    protected JiraSession createSession() throws IOException {
         if (userName == null || password == null)
             return null;    // remote access not supported
 
@@ -660,55 +654,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
 
         /**
-         * Checks if the JIRA URL is accessible and exists.
-         */
-        public FormValidation doUrlCheck(@QueryParameter final String value)
-                throws IOException, ServletException {
-            // this can be used to check existence of any file in any URL, so
-            // admin only
-            if (!Hudson.getInstance().hasPermission(Hudson.ADMINISTER))
-                return FormValidation.ok();
-
-            return new FormValidation.URLCheck() {
-                @Override
-                protected FormValidation check() throws IOException,
-                        ServletException {
-                    String url = Util.fixEmpty(value);
-                    if (url == null) {
-                        return FormValidation.error(Messages
-                                .JiraProjectProperty_JiraUrlMandatory());
-                    }
-
-                    // call the wsdl uri to check if the jira soap service can be reached
-                    try {
-                        if (!findText(open(new URL(url)), "Atlassian JIRA")) {
-                            return FormValidation.error(Messages
-                                    .JiraProjectProperty_NotAJiraUrl());
-                        }
-
-                        return FormValidation.ok();
-                    } catch (IOException e) {
-                        LOGGER.log(Level.WARNING, "Unable to connect to " + url, e);
-                        return handleIOException(url, e);
-                    }
-                }
-            }.check();
-        }
-
-        public FormValidation doCheckUserPattern(@QueryParameter String value) throws IOException {
-            String userPattern = Util.fixEmpty(value);
-            if (userPattern == null) {// userPattern not entered yet
-                return FormValidation.ok();
-            }
-            try {
-                Pattern.compile(userPattern);
-                return FormValidation.ok();
-            } catch (PatternSyntaxException e) {
-                return FormValidation.error(e.getMessage());
-            }
-        }
-
-        /**
          * Checks if the user name and password are valid.
          */
         public FormValidation doValidate(@QueryParameter String userName,
@@ -717,35 +662,42 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                          @QueryParameter String groupVisibility,
                                          @QueryParameter String roleVisibility,
                                          @QueryParameter boolean useHTTPAuth,
-                                         @QueryParameter String alternativeUrl)
-                throws IOException {
+                                         @QueryParameter String alternativeUrl) throws IOException {
             url = Util.fixEmpty(url);
             alternativeUrl = Util.fixEmpty(alternativeUrl);
-            if (url == null) {// URL not entered yet
-                return FormValidation.error("No URL given");
+            URL mainURL, alternativeURL = null;
+
+            try{
+                if (url == null) {
+                    return FormValidation.error("No URL given");
+                }
+                mainURL = new URL(url);
+            } catch (MalformedURLException e){
+                return FormValidation.error(String.format("Malformed URL (%s)", url), e );
             }
 
-            URL altUrl = null;
-
-            if (isNotEmpty(alternativeUrl)) {
-                altUrl = new URL(alternativeUrl);
+            try {
+                if (alternativeUrl != null) {
+                    alternativeURL = new URL(alternativeUrl);
+                }
+            }catch (MalformedURLException e){
+                return FormValidation.error(String.format("Malformed alternative URL (%s)",alternativeUrl), e );
             }
 
 
-            JiraSite site = new JiraSite(new URL(url), altUrl, userName, password, false,
+            JiraSite site = new JiraSite(mainURL, alternativeURL, userName, password, false,
                     false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
             try {
-                site.createSession();
+                JiraSession session = site.createSession();
+                session.getMyPermissions();
                 return FormValidation.ok("Success");
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url,
-                        e);
-                return FormValidation.error(e.getMessage());
+            } catch (RestClientException e) {
+                LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url, e);
             }
+
+            return FormValidation.error("Failed to login to JIRA");
         }
     }
-
-    private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
 
     public void addVersion(String version, String projectKey) throws IOException {
         JiraSession session = getSession();

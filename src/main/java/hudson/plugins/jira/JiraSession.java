@@ -351,4 +351,10 @@ public class JiraSession {
     public Version addVersion(String version, String projectKey) {
         return service.addVersion(projectKey, version);
     }
+
+    /**
+     * Get User's permissions
+     */
+    public Permissions getMyPermissions(){ return service.getMyPermissions(); }
+
 }
