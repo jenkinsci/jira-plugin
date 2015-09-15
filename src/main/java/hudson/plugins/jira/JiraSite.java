@@ -22,7 +22,6 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -139,7 +138,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     private transient Lock projectUpdateLock = new ReentrantLock();
 
-    private transient ThreadLocal<WeakReference<JiraSession>> jiraSession = new ThreadLocal<WeakReference<JiraSession>>();
+    private transient JiraSession jiraSession = null;
 
     @DataBoundConstructor
     public JiraSite(URL url, URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
@@ -175,14 +174,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.groupVisibility = Util.fixEmpty(groupVisibility);
         this.roleVisibility = Util.fixEmpty(roleVisibility);
         this.useHTTPAuth = useHTTPAuth;
-        this.jiraSession.set(new WeakReference<JiraSession>(null));
+        this.jiraSession = null;
     }
 
     protected Object readResolve() {
         projectUpdateLock = new ReentrantLock();
         issueCache = makeIssueCache();
-        jiraSession = new ThreadLocal<WeakReference<JiraSession>>();
-        jiraSession.set(new WeakReference<JiraSession>(null));
+        jiraSession = null;
         return this;
     }
 
@@ -203,16 +201,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     @Nullable
     public JiraSession getSession() throws IOException {
-        JiraSession session = null;
-
-        if (session == null) {
-            // TODO: we should check for session timeout, too
-            // Currently no real problem, as we're using a weak reference for the session, so it will be GC'ed very quickly
-            session = createSession();
-            jiraSession.set(new WeakReference<JiraSession>(session));
+        if (jiraSession == null) {
+            jiraSession = createSession();
         }
 
-        return session;
+        return jiraSession;
     }
 
     /**
@@ -231,6 +224,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             LOGGER.warning("convert URL to URI error: " + e.getMessage());
             throw new RuntimeException("failed to create JiraSession due to convert URI error");
         }
+	LOGGER.info("creating Jira Session: " + uri);
 
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(uri, userName, password);
