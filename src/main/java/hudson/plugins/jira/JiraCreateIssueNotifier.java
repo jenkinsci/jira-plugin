@@ -1,7 +1,10 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Lists;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -12,7 +15,6 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
-import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -20,7 +22,7 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -96,7 +98,7 @@ public class JiraCreateIssueNotifier extends Notifier {
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
 
-        String jobDirPath = Jenkins.getInstance().getBuildDirFor(build.getProject()).getPath();
+        String jobDirPath = build.getProject().getBuildDir().getPath();
         String filename = jobDirPath + File.separator + "issue.txt";
 
         EnvVars environmentVariable = build.getEnvironment(TaskListener.NULL);
@@ -139,15 +141,15 @@ public class JiraCreateIssueNotifier extends Notifier {
         String buildURL = environmentVariable.get("BUILD_URL");
         String buildNumber = environmentVariable.get("BUILD_NUMBER");
         String jobName = environmentVariable.get("JOB_NAME");
-        String jenkinsURL = Jenkins.getInstance().getRootUrl();
 
         String checkDescription = (this.testDescription.equals("")) ? "No description is provided" : this.testDescription;
-        String description = String.format("The test %s has failed. \n\n%s\n\n* First failed run : [%s|%s]\n** [console log|%s]",
-                jobName, checkDescription, buildNumber, buildURL, buildURL.concat("console"));
+        String description = String.format("The job %s #%s has failed. \n\n%s\n\n" +
+                        "First failed run : [%s#%s|%s]  [console log|%s]",
+                jobName, buildNumber, checkDescription, jobName, buildNumber, buildURL, buildURL.concat("console"));
 
-        List<Component> components = getJiraComponents(build, this.component);
+        List<BasicComponent> components = getJiraComponents(build, this.component);
 
-        String summary = "Test " + jobName + " failure - " + jenkinsURL;
+        String summary = String.format("Build %s #%s failed",jobName , buildNumber);
 
         JiraSession session = getJiraSession(build);
         Issue issue = session.createIssue(projectKey, description, assignee, components, summary);
@@ -194,22 +196,23 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @return Array of component
      * @throws IOException
      */
-    private List<Component> getJiraComponents(AbstractBuild<?, ?> build, String component) throws IOException {
+    private List<BasicComponent> getJiraComponents(AbstractBuild<?, ?> build, String component) throws IOException {
 
         if (Util.fixEmpty(component) == null) {
-            return null;
+            return Collections.emptyList();
         }
 
         JiraSession session = getJiraSession(build);
         List<Component> availableComponents = session.getComponents(projectKey);
 
         //converting the user input as a string array
-        List<String> inputComponents = Arrays.asList(component.split(","));
+        Splitter splitter = Splitter.on(",").trimResults().omitEmptyStrings();
+        List<String> inputComponents = Lists.newArrayList(splitter.split(component));
         int numberOfComponents = inputComponents.size();
 
-        final List<Component> jiraComponents = new ArrayList<Component>(numberOfComponents);
+        final List<BasicComponent> jiraComponents = new ArrayList<BasicComponent>(numberOfComponents);
 
-        for (final Component availableComponent : availableComponents) {
+        for (final BasicComponent availableComponent : availableComponents) {
             if (inputComponents.contains(availableComponent.getName())) {
                 jiraComponents.add(availableComponent);
             }
@@ -239,7 +242,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             }
             return issueId;
         } catch (FileNotFoundException e) {
-            System.out.println("There is no such file...!!");
+            LOG.warning(String.format("Expected status file %s to exist because of previous build failure", filename));
             return null;
         } finally {
             if (br != null) {
@@ -247,6 +250,10 @@ public class JiraCreateIssueNotifier extends Notifier {
             }
         }
 
+    }
+
+    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
+        return JiraSite.get(project);
     }
 
     /**
@@ -258,7 +265,8 @@ public class JiraCreateIssueNotifier extends Notifier {
      */
     private JiraSession getJiraSession(AbstractBuild<?, ?> build) throws IOException {
 
-        JiraSite site = JiraSite.get(build.getProject());
+        JiraSite site = getSiteForProject(build.getProject());
+
         if (site == null) {
             throw new IllegalStateException("JIRA site needs to be configured in the project " + build.getFullDisplayName());
         }
@@ -274,15 +282,10 @@ public class JiraCreateIssueNotifier extends Notifier {
     /**
      * @param filename
      */
-    private void deleteFile(String filename, TaskListener listener) {
+    private void deleteFile(String filename) {
         File file = new File(filename);
-        if (file.exists()) {
-            if (!file.delete()) {
-                if (file.exists()) {
-                    listener.getLogger().println("WARNING: couldn't delete file: " + filename);
-                }
-                // else: race condition? Someone else deleted it for us
-            }
+        if (file.exists() && !file.delete()) {
+            LOG.warning("WARNING: couldn't delete file: " + filename);
         }
     }
 
@@ -328,7 +331,7 @@ public class JiraCreateIssueNotifier extends Notifier {
 
                     if (Status.equals("6")) {
                         listener.getLogger().println("The previous build also failed but the issue is closed");
-                        deleteFile(filename, listener);
+                        deleteFile(filename);
                         Issue issue = createJiraIssue(build, filename);
                         listener.getLogger().println("Creating jira issue with issue ID " + issue.getKey());
                     }
@@ -385,7 +388,7 @@ public class JiraCreateIssueNotifier extends Notifier {
 
                     //if issue is in closed status
                     if (status.equals("6")) {
-                        deleteFile(filename, listener);
+                        deleteFile(filename);
                     }
                 } catch (IOException e) {
                     listener.error("Error updating JIRA issue " + issueId + " : " + e.getMessage());
