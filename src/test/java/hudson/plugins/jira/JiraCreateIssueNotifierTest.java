@@ -1,16 +1,20 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import hudson.EnvVars;
-import hudson.model.*;
 import hudson.Launcher;
-import org.junit.*;
-import org.junit.rules.RuleChain;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.FreeStyleBuild;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.rules.TestRule;
 import org.mockito.Mockito;
 
 import java.io.File;
@@ -18,15 +22,15 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
-/**
- * Created by warden on 17.09.15.
- */
+
 public class JiraCreateIssueNotifierTest {
 
     private static final String JIRA_PROJECT = "PROJECT";
@@ -58,7 +62,7 @@ public class JiraCreateIssueNotifierTest {
         env.put("BUILD_URL", "/some/url/to/job");
         env.put("JOB_NAME", "Some job");
 
-        jiraComponents.add(new Component(null,null, "componentA", null, null));
+        jiraComponents.add(new Component(null, null, "componentA", null, null));
 
         when(site.getSession()).thenReturn(session);
 
@@ -87,7 +91,7 @@ public class JiraCreateIssueNotifierTest {
         Issue issue = mock(Issue.class);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString())).thenReturn(issue);
 
-        Assert.assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
     }
 
     @Test
@@ -101,25 +105,24 @@ public class JiraCreateIssueNotifierTest {
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
 
-        Assert.assertEquals(temporaryDirectory.list().length, 0);
+        assertEquals(0, temporaryDirectory.list().length);
 
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
-        Assert.assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        Assert.assertEquals(temporaryDirectory.list().length, 1);
+        assertEquals(1, temporaryDirectory.list().length);
 
         when(previousBuild.getResult()).thenReturn(Result.FAILURE);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
-        Assert.assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        Assert.assertEquals(temporaryDirectory.list().length, 1);
+        assertEquals(1, temporaryDirectory.list().length);
 
-//        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString())).thenReturn(issue);
-        when(issue.getStatus()).thenReturn( new Status(null, null, "6","Closed",null));
-        Assert.assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+        when(issue.getStatus()).thenReturn( new Status(null, null, "6", JiraCreateIssueNotifier.finishedStatuses.Closed.toString() ,null));
+        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        Assert.assertEquals(temporaryDirectory.list().length, 1);
+        assertEquals(1, temporaryDirectory.list().length);
     }
 
     @Test
@@ -134,19 +137,19 @@ public class JiraCreateIssueNotifierTest {
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 
 
-        Assert.assertEquals(temporaryDirectory.list().length, 0);
+        assertEquals(0, temporaryDirectory.list().length);
 
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
-        Assert.assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        Assert.assertEquals(temporaryDirectory.list().length, 1);
+        assertEquals(1, temporaryDirectory.list().length);
 
         when(previousBuild.getResult()).thenReturn(Result.FAILURE);
         when(currentBuild.getResult()).thenReturn(Result.SUCCESS);
-        Assert.assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        Assert.assertEquals(temporaryDirectory.list().length, 1);
+        assertEquals(1, temporaryDirectory.list().length);
     }
 
     @Test
@@ -155,26 +158,26 @@ public class JiraCreateIssueNotifierTest {
         doReturn(site).when(notifier).getSiteForProject((AbstractProject) Mockito.any());
 
         Issue issue = mock(Issue.class);
-        Status status = new Status(null, null, "6","Closed",null);
+        Status status = new Status(null, null, JiraCreateIssueNotifier.finishedStatuses.Closed.toString() , null, null);
 
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 
-        Assert.assertEquals(temporaryDirectory.list().length, 0);
+        assertEquals(0, temporaryDirectory.list().length);
 
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
-        Assert.assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        Assert.assertEquals(temporaryDirectory.list().length, 1);
+        assertEquals(1, temporaryDirectory.list().length);
 
         when(previousBuild.getResult()).thenReturn(Result.FAILURE);
         when(currentBuild.getResult()).thenReturn(Result.SUCCESS);
-        Assert.assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
         // file should be deleted
-        Assert.assertEquals(temporaryDirectory.list().length, 0);
+        assertEquals(0, temporaryDirectory.list().length);
     }
 
 }
