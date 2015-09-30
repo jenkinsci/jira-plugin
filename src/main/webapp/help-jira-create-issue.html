@@ -1,3 +1,7 @@
 <div>
-    Creates a JIRA issue in the project with the given key
+    Creates a JIRA issue in the project with the given key. <br />
+    <ul>
+        <li> If current build failed, checks if issue was already created. If yes, adds a comment, if not, creates a new JIRA issue.</li>
+        <li> If current build passed, checks if issue from p.1 is Closed or Done. If not, adds a comment.</li>
+    </ul>
 </div>

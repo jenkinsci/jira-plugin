@@ -3,7 +3,10 @@ package hudson.plugins.jira;
 import com.atlassian.jira.rest.client.api.domain.*;
 import com.google.common.collect.Lists;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -299,14 +302,8 @@ public class JiraSession {
      * @param summary
      * @return The issue id
      */
-    public Issue createIssue(String projectKey, String description, String assignee, List<Component> components, String summary) {
-
-        final List<BasicComponent> basicComponents = new ArrayList<BasicComponent>();
-        for (final Component component : components) {
-            basicComponents.add(component);
-        }
-
-        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, basicComponents, summary);
+    public Issue createIssue(String projectKey, String description, String assignee, List<BasicComponent> components, String summary) {
+        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary);
         return service.getIssue(basicIssue.getKey());
     }
 
