@@ -33,15 +33,16 @@ public class VersionReleaser {
                     site.getVersions(jiraProjectKey));
 
             if (sameNamedVersions.size() == 1 && sameNamedVersions.get(0).isReleased()) {
-                listener.getLogger().println(
-                        String.format(VERSION_ALREADY_RELEASED, realRelease, jiraProjectKey));
+                listener.getLogger().println(String.format(VERSION_ALREADY_RELEASED, realRelease, jiraProjectKey));
             } else {
                 site.releaseVersion(jiraProjectKey, realRelease);
             }
         } catch (Exception e) {
             e.printStackTrace(listener.fatalError(
-                    "Unable to release jira version %s/%s: %s", realRelease,
-                    jiraProjectKey, e));
+                    "Unable to release jira version %s/%s: %s",
+                    realRelease,
+                    jiraProjectKey,
+                    e));
             listener.finished(Result.FAILURE);
             return false;
         }

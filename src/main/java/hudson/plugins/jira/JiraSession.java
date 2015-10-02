@@ -142,7 +142,6 @@ public class JiraSession {
      */
     public List<IssueType> getIssueTypes() {
         LOGGER.fine("Fetching issue types");
-
         return service.getIssueTypes();
     }
 
@@ -152,8 +151,7 @@ public class JiraSession {
 
 
     public void releaseVersion(String projectKey, Version version) {
-        LOGGER.fine("Releaseing version: " + version.getName());
-
+        LOGGER.fine("Releasing version: " + version.getName());
         service.releaseVersion(projectKey, version);
     }
 
