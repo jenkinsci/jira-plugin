@@ -8,6 +8,8 @@ import hudson.model.BuildListener;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -25,6 +27,7 @@ public class VersionCreatorTest {
     private static final String JIRA_VER = Long.toString(System.currentTimeMillis());
     private static final String JIRA_PRJ = "TEST_PRJ";
     private static final String JIRA_VER_PARAM = "${JIRA_VER}";
+    private static final String JIRA_PRJ_PARAM = "${JIRA_PRJ}";
 
     AbstractBuild build;
     Launcher launcher;
@@ -48,7 +51,19 @@ public class VersionCreatorTest {
 
         when(build.getProject()).thenReturn(project);
         when(build.getEnvironment(listener)).thenReturn(env);
-        when(env.expand(Mockito.anyString())).thenReturn(JIRA_VER);
+        when(env.expand(Mockito.anyString())).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocationOnMock) throws Throwable {
+                Object[] args = invocationOnMock.getArguments();
+                String expanded = (String) args[0];
+               if (expanded.equals(JIRA_PRJ_PARAM))
+                    return JIRA_PRJ;
+               else if (expanded.equals(JIRA_VER_PARAM))
+                   return JIRA_VER;
+               else
+                   return expanded;
+            }
+        });
     }
 
     @Test
@@ -77,8 +92,8 @@ public class VersionCreatorTest {
 
     @Test
     public void buildDidNotFailWhenVersionExistsExpanded() throws IOException, InterruptedException {
-        // Same test as the previous one but here the version is contained in a Jenkins parameter
-        JiraVersionCreator jvc = spy(new JiraVersionCreator(JIRA_VER_PARAM, JIRA_PRJ));
+        // Same test as the previous one but here the version and project are contained in a Jenkins parameter
+        JiraVersionCreator jvc = spy(new JiraVersionCreator(JIRA_VER_PARAM, JIRA_PRJ_PARAM));
         doReturn(site).when(jvc).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
 
         when(build.getProject()).thenReturn(project);
