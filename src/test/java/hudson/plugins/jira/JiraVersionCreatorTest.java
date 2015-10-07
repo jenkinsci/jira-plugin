@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 /**
  * @author Artem Koshelev artkoshelev@gmail.com
  */
-public class VersionCreatorTest {
+public class JiraVersionCreatorTest {
     private static final String JIRA_VER = Long.toString(System.currentTimeMillis());
     private static final String JIRA_PRJ = "TEST_PRJ";
     private static final String JIRA_VER_PARAM = "${JIRA_VER}";

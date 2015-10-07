@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 public class JiraCreateReleaseNotes extends BuildWrapper {
 
@@ -37,7 +38,6 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
     private String jiraEnvironmentVariable;
     private String jiraProjectKey;
     private String jiraRelease;
-
     private String jiraFilter;
 
     // not in use anymore, as it always resets the given filter with the DEFAULT_FILTER
@@ -94,32 +94,46 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
         this.jiraRelease = jiraRelease;
     }
 
+
+    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
+        return JiraSite.get(project);
+    }
+
     @Override
     public Environment setUp(final AbstractBuild build, final Launcher launcher, final BuildListener listener)
             throws IOException, InterruptedException {
 
-        final JiraSite site = JiraSite.get(build.getProject());
+        final JiraSite site = getSiteForProject(build.getProject());
 
         String realRelease = null;
+        String realProjectKey = null;
         String releaseNotes = "No Release Notes";
         String realFilter = DEFAULT_FILTER;
 
         try {
             realRelease = build.getEnvironment(listener).expand(jiraRelease);
+            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
+            realFilter = build.getEnvironment(listener).expand(jiraFilter);
 
-            if (jiraFilter != null) {
-                realFilter = build.getEnvironment(listener).expand(jiraFilter);
+            if (isEmpty(realRelease)) {
+                throw new IllegalArgumentException("No version specified");
+            }
+            if (isEmpty(realProjectKey)) {
+                throw new IllegalArgumentException("No project specified");
             }
 
             if ((realRelease != null) && !realRelease.isEmpty()) {
-                releaseNotes = site.getReleaseNotesForFixVersion(jiraProjectKey, realRelease, realFilter);
+                releaseNotes = site.getReleaseNotesForFixVersion(realProjectKey, realRelease, realFilter);
             } else {
                 listener.getLogger().printf("No release version found, skipping Release Notes generation\n");
             }
 
         } catch (Exception e) {
             e.printStackTrace(listener.fatalError("Unable to generate release notes for JIRA version %s/%s: %s",
-                    realRelease, jiraProjectKey, e));
+                    realRelease,
+                    realProjectKey,
+                    e
+            ));
             listener.finished(Result.FAILURE);
             return new Environment() {};
         }
