@@ -14,6 +14,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.util.FormValidation;
+import hudson.util.Secret;
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -26,7 +27,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -82,7 +88,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Password needed to login. Optional.
      */
-    public final String password;
+    public final Secret password;
 
     /**
      * Group visibility to constrain the visibility of the added comment. Optional.
@@ -160,7 +166,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.url = url;
         this.alternativeUrl = alternativeUrl;
         this.userName = Util.fixEmpty(userName);
-        this.password = Util.fixEmpty(password);
+        this.password = Secret.fromString(Util.fixEmpty(password));
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
         this.userPattern = Util.fixEmpty(userPattern);
@@ -227,9 +233,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 	LOGGER.info("creating Jira Session: " + uri);
 
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
-                .createWithBasicHttpAuthentication(uri, userName, password);
+                .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());
 
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password));
+        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText()));
     }
 
     /**
