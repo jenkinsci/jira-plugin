@@ -16,9 +16,9 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
-
-import static hudson.Util.fixNull;
 
 public class JiraVersionParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 4232979892748310160L;
@@ -69,10 +69,12 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
         List<Version> versions = session.getVersions(projectKey);
+        SortedSet<Version> orderedVersions = new TreeSet<Version>(new VersionComparator());
+        orderedVersions.addAll(versions);
 
         List<Result> projectVersions = new ArrayList<Result>();
 
-        for (Version version : fixNull(versions)) {
+        for (Version version : orderedVersions) {
             if (match(version)) projectVersions.add(new Result(version));
         }
 
