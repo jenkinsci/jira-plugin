@@ -21,7 +21,8 @@ public class VersionComparator implements Comparator<Version> {
 
     public int compare(Version rev1, Version rev2) {
         int result = 0;
-        boolean startWithoutLetters = true;
+        boolean rev1WithoutLetters = true;
+        boolean rev2WithoutLetters = true;
 
         List<String> listRev1 = Arrays.asList(rev1.getName().split("\\."));
         String oldRev1 = listRev1.get(0);
@@ -32,9 +33,13 @@ public class VersionComparator implements Comparator<Version> {
         listRev1.set(0, getNumberVersion(listRev1.get(0)));
         listRev2.set(0, getNumberVersion(listRev2.get(0)));
 
-        if (oldRev1.equals(listRev1.get(0)) && oldRev2.equals(listRev2.get(0))) {
-            startWithoutLetters = false;
+        if (oldRev1.equals(listRev1.get(0))) {
+            rev1WithoutLetters = false;
         }
+        if (oldRev2.equals(listRev2.get(0))) {
+            rev2WithoutLetters = false;
+        }
+
 
         int lenRev1 = listRev1.size();
         int lenRev2 = listRev2.size();
@@ -58,10 +63,15 @@ public class VersionComparator implements Comparator<Version> {
         if (result == 0) {
             if (lenRev1 > lenRev2) {
                 result = -1;
-            } else if (lenRev2 > lenRev1) {
+            } else if (lenRev1 < lenRev2) {
                 result = 1;
-            } else if (startWithoutLetters) {
-                result = 1;
+            } else {
+                if (rev1WithoutLetters && ! rev2WithoutLetters)
+                    result = -1;
+                else if (!rev1WithoutLetters && rev2WithoutLetters)
+                    result = 1;
+                else
+                    result = 0;
             }
 
         }
