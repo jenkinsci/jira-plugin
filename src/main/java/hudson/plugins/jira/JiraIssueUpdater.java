@@ -13,9 +13,11 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 
+import org.kohsuke.stapler.DataBoundConstructor;
 import java.io.IOException;
 import java.io.PrintStream;
 
@@ -26,7 +28,12 @@ import java.io.PrintStream;
  * @author Kohsuke Kawaguchi
  */
 public class JiraIssueUpdater extends Recorder implements MatrixAggregatable {
-    public JiraIssueUpdater() {
+
+    private UpdaterIssueSelector issueSelector;
+
+    @DataBoundConstructor
+    public JiraIssueUpdater(UpdaterIssueSelector issueSelector) {
+        this.issueSelector = issueSelector;
     }
 
     @Override
@@ -36,7 +43,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable {
             return true;
         }
 
-        return Updater.perform(build, listener);
+        return Updater.perform(build, listener, getIssueSelector());
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
@@ -48,6 +55,12 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable {
         return DESCRIPTOR;
     }
 
+    public UpdaterIssueSelector getIssueSelector() {
+        UpdaterIssueSelector uis = this.issueSelector;
+        if (uis == null) uis = new DefaultUpdaterIssueSelector();
+        return (this.issueSelector = uis);
+    }
+
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
@@ -57,7 +70,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable {
             public boolean endBuild() throws InterruptedException, IOException {
                 PrintStream logger = listener.getLogger();
                 logger.println("End of Matrix Build. Updating JIRA.");
-                return Updater.perform(this.build, this.listener);
+                return Updater.perform(this.build, this.listener, getIssueSelector());
             }
         };
     }
@@ -80,14 +93,13 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable {
         }
 
         @Override
-        public Publisher newInstance(StaplerRequest req, JSONObject formData) {
-            return new JiraIssueUpdater();
-        }
-
-        @Override
         @SuppressWarnings("unchecked")
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
+        }
+
+        public boolean hasIssueSelectors() {
+            return Jenkins.getActiveInstance().getDescriptorList(UpdaterIssueSelector.class).size() > 1;
         }
     }
 }
