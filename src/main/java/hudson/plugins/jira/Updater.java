@@ -31,7 +31,7 @@ import static java.lang.String.format;
  * @author Kohsuke Kawaguchi
  */
 class Updater {
-    static boolean perform(AbstractBuild<?, ?> build, BuildListener listener) {
+    static boolean perform(AbstractBuild<?, ?> build, BuildListener listener, UpdaterIssueSelector selector) {
         PrintStream logger = listener.getLogger();
         List<JiraIssue> issues = null;
 
@@ -50,7 +50,7 @@ class Updater {
                 return true;
             }
 
-            Set<String> ids = findIssueIdsRecursive(build, site.getIssuePattern(), listener);
+            Set<String> ids = selector.findIssueIds(build, site, listener);
 
             if (ids.isEmpty()) {
                 if (debug)
@@ -289,8 +289,8 @@ class Updater {
      * {@link JiraSite#existsIssue(String)} here so that new projects
      * in JIRA can be detected.
      */
-    private static Set<String> findIssueIdsRecursive(AbstractBuild<?, ?> build, Pattern pattern,
-                                                     BuildListener listener) {
+    static Set<String> findIssueIdsRecursive(AbstractBuild<?, ?> build, Pattern pattern,
+                                                     TaskListener listener) {
         Set<String> ids = new HashSet<String>();
 
         // first, issues that were carried forward.
@@ -318,7 +318,7 @@ class Updater {
      * @param pattern pattern to use to match issue ids
      */
     static void findIssues(AbstractBuild<?, ?> build, Set<String> ids, Pattern pattern,
-                           BuildListener listener) {
+                           TaskListener listener) {
         for (Entry change : build.getChangeSet()) {
             LOGGER.fine("Looking for JIRA ID in " + change.getMsg());
             Matcher m = pattern.matcher(change.getMsg());
