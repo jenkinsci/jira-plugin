@@ -5,6 +5,9 @@ Jenkins JIRA Plugin
 [![Build Status](https://travis-ci.org/jenkinsci/jira-plugin.svg?branch=master)](https://travis-ci.org/jenkinsci/jira-plugin)
 [![Coverage Status](https://coveralls.io/repos/jenkinsci/jira-plugin/badge.svg?branch=master&service=github)](https://coveralls.io/github/jenkinsci/jira-plugin?branch=master)
 
+[![Issue Stats](http://issuestats.com/github/jenkinsci/jira-plugin/badge/pr?style=flat)](http://issuestats.com/github/jenkinsci/jira-plugin)
+[![Issue Stats](http://issuestats.com/github/jenkinsci/jira-plugin/badge/issue?style=flat)](http://issuestats.com/github/jenkinsci/jira-plugin)
+
 See [Wiki page](https://wiki.jenkins-ci.org/display/JENKINS/JIRA+Plugin) for more information.
 
 Reported Issues: [by Votes](https://issues.jenkins-ci.org/browse/JENKINS-6110?jql=project%20%3D%20JENKINS%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20jira-plugin%20ORDER%20BY%20votes%20DESC%2C%20updated%20ASC%2C%20priority%20DESC%2C%20created%20ASC), [by Priority](https://issues.jenkins-ci.org/browse/JENKINS-26962?jql=project%20%3D%20JENKINS%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20jira-plugin%20ORDER%20BY%20priority%20DESC%2C%20votes%20ASC%2C%20updated%20ASC%2C%20created%20ASC)
