@@ -153,6 +153,7 @@ public class JiraCreateIssueNotifier extends Notifier {
     private Issue createJiraIssue(AbstractBuild<?, ?> build, String filename) throws IOException, InterruptedException {
 
         EnvVars vars = build.getEnvironment(TaskListener.NULL);
+        JiraSession session = getJiraSession(build);
 
         String buildName = getBuildName(vars);
         String summary = String.format("Build %s failed", buildName);
@@ -162,9 +163,8 @@ public class JiraCreateIssueNotifier extends Notifier {
                 buildName,
                 getBuildDetailsString(vars)
         );
-        List<BasicComponent> components = getJiraComponents(build, this.component);
+        Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
 
-        JiraSession session = getJiraSession(build);
         Issue issue = session.createIssue(projectKey, description, assignee, components, summary);
 
         writeInFile(filename, issue);

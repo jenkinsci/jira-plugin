@@ -300,7 +300,7 @@ public class JiraSession {
      * @param summary
      * @return The issue id
      */
-    public Issue createIssue(String projectKey, String description, String assignee, List<BasicComponent> components, String summary) {
+    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
         final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary);
         return service.getIssue(basicIssue.getKey());
     }
