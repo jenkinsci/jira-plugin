@@ -299,14 +299,8 @@ public class JiraSession {
      * @param summary
      * @return The issue id
      */
-    public Issue createIssue(String projectKey, String description, String assignee, List<Component> components, String summary) {
-
-        final List<BasicComponent> basicComponents = new ArrayList<BasicComponent>();
-        for (final Component component : components) {
-            basicComponents.add(component);
-        }
-
-        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, basicComponents, summary);
+    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
+        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary);
         return service.getIssue(basicIssue.getKey());
     }
 
