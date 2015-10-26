@@ -23,6 +23,7 @@ import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.api.domain.input.VersionInput;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
@@ -211,18 +212,25 @@ public class JiraRestService {
         }
     }
 
-    public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<BasicComponent> components, String summary) {
-        final IssueInput issueInput = new IssueInputBuilder().setProjectKey(projectKey)
-                                                        .setDescription(description)
-                                                        .setAssigneeName(assignee)
-                                                        .setComponents(components)
-                                                        .setIssueTypeId(1L) // BUG
-                                                        .setSummary(summary)
-                                                        .build();
+    public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
+        IssueInputBuilder builder = new IssueInputBuilder();
+        builder.setProjectKey(projectKey)
+                .setDescription(description)
+                .setIssueTypeId(1L) // BUG
+                .setSummary(summary);
+
+        if (!assignee.equals(""))
+            builder.setAssigneeName(assignee);
+        if (Iterators.size(components.iterator()) > 0){
+            builder.setComponentsNames(components);
+        }
+
+        final IssueInput issueInput = builder.build();
+
         try {
             return jiraRestClient.getIssueClient().createIssue(issueInput).get(10, TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOGGER.warning("jira rest client create issue error. cause: " + e.getMessage());
+            LOGGER.warning("JIRA REST createIssue error: " + e.getMessage());
             return null;
         }
     }

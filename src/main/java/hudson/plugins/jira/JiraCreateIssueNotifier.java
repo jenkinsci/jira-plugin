@@ -2,11 +2,16 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.google.common.base.Splitter;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -18,7 +23,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -145,11 +155,11 @@ public class JiraCreateIssueNotifier extends Notifier {
         String description = String.format("The test %s has failed. \n\n%s\n\n* First failed run : [%s|%s]\n** [console log|%s]",
                 jobName, checkDescription, buildNumber, buildURL, buildURL.concat("console"));
 
-        List<Component> components = getJiraComponents(build, this.component);
-
+        JiraSession session = getJiraSession(build);
         String summary = "Test " + jobName + " failure - " + jenkinsURL;
 
-        JiraSession session = getJiraSession(build);
+        Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
+
         Issue issue = session.createIssue(projectKey, description, assignee, components, summary);
 
         //writing the issue-id to the file, which is present in job's directory.
