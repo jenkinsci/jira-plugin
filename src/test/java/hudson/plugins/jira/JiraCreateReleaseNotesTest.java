@@ -22,7 +22,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JiraCreateReleaseNotesTest {
@@ -72,6 +72,12 @@ public class JiraCreateReleaseNotesTest {
 
     }
 
+    @Test
+    public void testDefaults(){
+        JiraCreateReleaseNotes jcrn = new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,"");
+        assertEquals(JiraCreateReleaseNotes.DEFAULT_ENVVAR_NAME, jcrn.getJiraEnvironmentVariable());
+        assertEquals(JiraCreateReleaseNotes.DEFAULT_FILTER, jcrn.getJiraFilter());
+    }
 
     @Test
     public void jiraApiCallDefaultFilter() throws InterruptedException, IOException {

@@ -32,9 +32,12 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
         public boolean isApplicable(final AbstractProject<?, ?> item) {
             return true;
         }
+
     }
 
     public static final String DEFAULT_FILTER = "status in (Resolved, Closed)";
+    public static final String DEFAULT_ENVVAR_NAME = "RELEASE_NOTES";
+
     private String jiraEnvironmentVariable;
     private String jiraProjectKey;
     private String jiraRelease;
@@ -54,7 +57,7 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
                                   final String jiraFilter) {
         this.jiraRelease = jiraRelease;
         this.jiraProjectKey = jiraProjectKey;
-        this.jiraEnvironmentVariable = jiraEnvironmentVariable;
+        this.jiraEnvironmentVariable = defaultIfEmpty(jiraEnvironmentVariable, DEFAULT_ENVVAR_NAME);
         this.jiraFilter = defaultIfEmpty(jiraFilter, DEFAULT_FILTER);
     }
 
