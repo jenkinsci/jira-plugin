@@ -1,6 +1,8 @@
 Jenkins JIRA Plugin
 ===================
 
+[![Join the chat at https://gitter.im/jenkinsci/jira-plugin](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/jenkinsci/jira-plugin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Build Status](https://jenkins.ci.cloudbees.com/buildStatus/icon?job=plugins/jira-plugin)](https://jenkins.ci.cloudbees.com/job/plugins/job/jira-plugin/)
 [![Build Status](https://travis-ci.org/jenkinsci/jira-plugin.svg?branch=master)](https://travis-ci.org/jenkinsci/jira-plugin)
 [![Coverage Status](https://coveralls.io/repos/jenkinsci/jira-plugin/badge.svg?branch=master&service=github)](https://coveralls.io/github/jenkinsci/jira-plugin?branch=master)
