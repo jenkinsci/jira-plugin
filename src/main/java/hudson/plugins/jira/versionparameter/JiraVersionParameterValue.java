@@ -32,8 +32,7 @@ public class JiraVersionParameterValue extends ParameterValue {
             final AbstractBuild<?, ?> build) {
         return new VariableResolver<String>() {
             public String resolve(final String name) {
-                return JiraVersionParameterValue.this.name.equals(name) ? getVersion()
-                        : null;
+                return JiraVersionParameterValue.this.name.equals(name) ? getVersion() : null;
             }
         };
     }
