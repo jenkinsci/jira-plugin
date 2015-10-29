@@ -341,7 +341,7 @@ class Updater {
         if (parameters != null) {
             for (ParameterValue val : parameters.getParameters()) {
                 if (val instanceof JiraIssueParameterValue) {
-                    ids.add(((JiraIssueParameterValue) val).getIssue());
+                    ids.add(((JiraIssueParameterValue) val).getValue());
                 }
             }
         }

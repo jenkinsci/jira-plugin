@@ -27,7 +27,7 @@ limitations under the License.
         </j:when>
         <j:otherwise>
           <!-- everything is fine, we can display the drop-down list to the user -->
-          <select name="issue">
+          <select name="value">
             <j:forEach var="issue" items="${it.issues}">
               <option value="${issue.key}">${issue.key}: ${issue.summary}</option>
             </j:forEach>

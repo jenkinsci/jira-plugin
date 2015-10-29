@@ -230,7 +230,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             LOGGER.warning("convert URL to URI error: " + e.getMessage());
             throw new RuntimeException("failed to create JiraSession due to convert URI error");
         }
-	LOGGER.info("creating Jira Session: " + uri);
+	LOGGER.fine("creating Jira Session: " + uri);
 
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());
