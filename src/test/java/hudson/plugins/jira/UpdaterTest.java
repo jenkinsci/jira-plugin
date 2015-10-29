@@ -55,45 +55,6 @@ public class UpdaterTest {
         }
     }
 
-    @Test
-    public void testFindIssues() {
-        FreeStyleBuild build = mock(FreeStyleBuild.class);
-        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
-        BuildListener listener = mock(BuildListener.class);
-
-        when(changeLogSet.iterator()).thenReturn(Collections.EMPTY_LIST.iterator());
-        when(build.getChangeSet()).thenReturn(changeLogSet);
-
-        Set<String> ids = new HashSet<String>();
-        Updater.findIssues(build, ids, null, listener);
-        Assert.assertTrue(ids.isEmpty());
-
-
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed JIRA-4711"));
-        when(changeLogSet.iterator()).thenReturn(entries.iterator());
-
-        ids = new HashSet<String>();
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("JIRA-4711", ids.iterator().next());
-
-        // now test multiple ids
-        entries = Sets.newHashSet(
-                new MockEntry("Fixed BL-4711"),
-                new MockEntry("TR-123: foo"),
-                new MockEntry("[ABC-42] hallo"),
-                new MockEntry("#123: this one must not match"),
-                new MockEntry("ABC-: this one must also not match"));
-        when(changeLogSet.iterator()).thenReturn(entries.iterator());
-
-        ids = new TreeSet<String>();
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
-        Assert.assertEquals(3, ids.size());
-        Set<String> expected = Sets.newTreeSet(Sets.newHashSet(
-                "BL-4711", "TR-123", "ABC-42"));
-        Assert.assertEquals(expected, ids);
-    }
-
     /**
      * Tests that the JiraIssueParameters are identified as updateable JIRA
      * issues.
@@ -115,8 +76,8 @@ public class UpdaterTest {
         when(build.getChangeSet()).thenReturn(changeLogSet);
         when(build.getAction(ParametersAction.class)).thenReturn(action);
         when(action.getParameters()).thenReturn(parameters);
-        when(parameter.getIssue()).thenReturn("JIRA-123");
-        when(parameterTwo.getIssue()).thenReturn("JIRA-321");
+        when(parameter.getValue()).thenReturn("JIRA-123");
+        when(parameterTwo.getValue()).thenReturn("JIRA-321");
 
         Set<String> ids = new HashSet<String>();
 
@@ -140,61 +101,51 @@ public class UpdaterTest {
     }
 
     @Test
-    @Bug(729)
-    public void testDigitsInProjectNameAllowed() {
-        FreeStyleBuild build = mock(FreeStyleBuild.class);
-        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
-        when(build.getChangeSet()).thenReturn(changeLogSet);
-
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed JI123-4711"));
-        when(changeLogSet.iterator()).thenReturn(entries.iterator());
-
-        Set<String> ids = new HashSet<String>();
-        BuildListener listener = mock(BuildListener.class);
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("JI123-4711", ids.iterator().next());
-    }
-
-    @Test
-    @Bug(4092)
-    public void testUnderscoreInProjectNameAllowed() {
-        FreeStyleBuild build = mock(FreeStyleBuild.class);
-        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
-        when(build.getChangeSet()).thenReturn(changeLogSet);
-
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOO_BAR-4711"));
-        when(changeLogSet.iterator()).thenReturn(entries.iterator());
-
-        Set<String> ids = new HashSet<String>();
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, mock(BuildListener.class));
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
-    }
-
-    @Test
     @Bug(4132)
-    public void testLowercaseProjectNameAllowed() {
+    public void testProjectNamesAllowed() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
-        when(build.getChangeSet()).thenReturn(changeLogSet);
-
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed foo_bar-4711"));
-        when(changeLogSet.iterator()).thenReturn(entries.iterator());
-
-        Set<String> ids = new HashSet<String>();
         BuildListener listener = mock(BuildListener.class);
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
 
-        entries = Sets.newHashSet(new MockEntry("Fixed FoO_bAr-4711"));
+        Set<? extends Entry> entries = Sets.newHashSet(
+                new MockEntry("Fixed JI123-4711"),
+                new MockEntry("Fixed foo_bar-4710"),
+                new MockEntry("Fixed FoO_bAr-4711"),
+                new MockEntry("Fixed someting.\nJFoO_bAr_MULTI-4718"),
+                new MockEntry("TR-123: foo"),
+                new MockEntry("[ABC-42] hallo"),
+                new MockEntry("#123: this one must not match"),
+                new MockEntry("ABC-: this one must also not match"),
+                new MockEntry("ABC-: \n\nABC-127:\nthis one should match"),
+                new MockEntry("ABC-: \n\nABC-128:\nthis one should match"),
+                new MockEntry("ABC-: \n\nXYZ-10:\nXYZ-20 this one too"),
+                new MockEntry("Fixed DOT-4."),
+                new MockEntry("Fixed DOT-5. Did it right this time")
+        );
+
+        when(build.getChangeSet()).thenReturn(changeLogSet);
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        ids = new HashSet<String>();
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("FOO_BAR-4711", ids.iterator().next());
+        Set<String> expected = Sets.newHashSet(
+                "JI123-4711",
+                "FOO_BAR-4710",
+                "FOO_BAR-4711",
+                "JFOO_BAR_MULTI-4718",
+                "TR-123",
+                "ABC-42",
+                "ABC-127",
+                "ABC-128",
+                "XYZ-10",
+                "XYZ-20",
+                "DOT-4",
+                "DOT-5"
+        );
+
+        Set<String> result = new HashSet<String>();
+        Updater.findIssues(build, result, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
+
+        Assert.assertEquals(expected.size(), result.size());
+        Assert.assertEquals(expected,result);
     }
 
     /**
@@ -263,7 +214,7 @@ public class UpdaterTest {
      * These patterns are used e.g. by the maven release plugin.
      */
     @Test
-    public void testDoNotMatchDotsInIssueId() {
+    public void testDefaultPattertNotToMatchMavenRelease() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -275,24 +226,6 @@ public class UpdaterTest {
         Set<String> ids = new HashSet<String>();
         Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         Assert.assertEquals(0, ids.size());
-
-        // but ids with just a full-stop after it must still match
-        entries = Sets.newHashSet(new MockEntry("Fixed FOO-4. Did it right this time"));
-        when(changeLogSet.iterator()).thenReturn(entries.iterator());
-
-        ids = new HashSet<String>();
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("FOO-4", ids.iterator().next());
-
-        // as well as messages with a full-stop as last character after an issue id
-        entries = Sets.newHashSet(new MockEntry("Fixed FOO-4."));
-        when(changeLogSet.iterator()).thenReturn(entries.iterator());
-
-        ids = new HashSet<String>();
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("FOO-4", ids.iterator().next());
     }
 
     @Test
@@ -355,6 +288,13 @@ public class UpdaterTest {
     @Test
     @Bug(17156)
     public void testIssueIsRemovedFromCarryOverListAfterSubmission() throws RestClientException {
+        // mock build:
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        FreeStyleProject project = mock(FreeStyleProject.class);
+        when(build.getProject()).thenReturn(project);
+        ChangeLogSet changeLogSet = ChangeLogSet.createEmpty(build);
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+        when(build.getResult()).thenReturn(Result.SUCCESS);
 
         final JiraIssue firstIssue = new JiraIssue("FOOBAR-1", "Title");
         final JiraIssue secondIssue = new JiraIssue("ALIBA-1", "Title");
@@ -389,13 +329,6 @@ public class UpdaterTest {
         doThrow(new RestClientException(new Throwable(), 404)).when(session).addComment(eq(deletedIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
         doThrow(new RestClientException(new Throwable(), 403)).when(session).addComment(eq(forbiddenIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 
-        // mock build:
-        FreeStyleBuild build = mock(FreeStyleBuild.class);
-        FreeStyleProject project = mock(FreeStyleProject.class);
-        when(build.getProject()).thenReturn(project);
-        ChangeLogSet changeLogSet = ChangeLogSet.createEmpty(build);
-        when(build.getChangeSet()).thenReturn(changeLogSet);
-        when(build.getResult()).thenReturn(Result.SUCCESS);
 
         final String groupVisibility = "";
         final String roleVisibility = "";
