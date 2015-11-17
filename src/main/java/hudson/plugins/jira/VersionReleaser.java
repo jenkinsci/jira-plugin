@@ -20,28 +20,34 @@ public class VersionReleaser {
 
     static boolean perform(JiraSite site, String jiraProjectKey, String jiraRelease, AbstractBuild<?, ?> build, BuildListener listener) {
         String realRelease = "NOT_SET";
+        String realProjectKey = null;
 
         try {
             realRelease = build.getEnvironment(listener).expand(jiraRelease);
+            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
 
             if (realRelease == null || realRelease.isEmpty()) {
                 throw new IllegalArgumentException("Release is Empty");
             }
 
+            if (realProjectKey == null || realProjectKey.isEmpty()) {
+                throw new IllegalArgumentException("No project specified");
+            }
+
             List<JiraVersion> sameNamedVersions = filter(
                     hasName(equalTo(realRelease)),
-                    site.getVersions(jiraProjectKey));
+                    site.getVersions(realProjectKey));
 
             if (sameNamedVersions.size() == 1 && sameNamedVersions.get(0).isReleased()) {
-                listener.getLogger().println(String.format(VERSION_ALREADY_RELEASED, realRelease, jiraProjectKey));
+                listener.getLogger().println(String.format(VERSION_ALREADY_RELEASED, realRelease, realProjectKey));
             } else {
-                site.releaseVersion(jiraProjectKey, realRelease);
+                site.releaseVersion(realProjectKey, realRelease);
             }
         } catch (Exception e) {
             e.printStackTrace(listener.fatalError(
                     "Unable to release jira version %s/%s: %s",
                     realRelease,
-                    jiraProjectKey,
+                    realProjectKey,
                     e));
             listener.finished(Result.FAILURE);
             return false;

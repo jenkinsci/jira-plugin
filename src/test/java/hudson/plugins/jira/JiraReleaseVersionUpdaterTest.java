@@ -23,18 +23,22 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 public class JiraReleaseVersionUpdaterTest {
 	private static final String JIRA_VER = Long.toString(System.currentTimeMillis());
 	private static final String JIRA_PRJ = "TEST_PRJ";
-	
+	private static final String JIRA_VER_PARAM = "${JIRA_VER}";
+	private static final String JIRA_PRJ_PARAM = "${JIRA_PRJ}";
+
     AbstractBuild build;
     Launcher launcher;
     BuildListener listener;
     EnvVars env;
     AbstractProject project;
     JiraSite site;
-	
+
 	@Before
 	public void createMocks() {
 		build = mock(AbstractBuild.class);;
@@ -43,45 +47,97 @@ public class JiraReleaseVersionUpdaterTest {
 		env = mock(EnvVars.class);
 		project = mock(AbstractProject.class);
 		site = mock(JiraSite.class);
+
+		when(env.expand(Mockito.anyString())).thenAnswer(new Answer<String>() {
+				@Override
+				public String answer(InvocationOnMock invocationOnMock) throws Throwable {
+						Object[] args = invocationOnMock.getArguments();
+						String expanded = (String) args[0];
+					 if (expanded.equals(JIRA_PRJ_PARAM))
+								return JIRA_PRJ;
+					 else if (expanded.equals(JIRA_VER_PARAM))
+							 return JIRA_VER;
+					 else
+							 return expanded;
+				}
+		});
 	}
-	
+
 	@Test
-	public void jiraApiCalledWithSpecifiedParameters() throws InterruptedException, IOException
-	{
+	public void jiraApiCalledWithSpecifiedParameters() throws InterruptedException, IOException {
 		JiraReleaseVersionUpdater jvu = spy(new JiraReleaseVersionUpdater(JIRA_PRJ, JIRA_VER));
 		doReturn(site).when(jvu).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
-		
+
 		when(build.getProject()).thenReturn(project);
 		when(build.getEnvironment(listener)).thenReturn(env);
-		when(env.expand(Mockito.anyString())).thenReturn(JIRA_VER);
 		when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<JiraVersion>());
-		
+
 		Set<JiraVersion> existingVersions = new HashSet<JiraVersion>();
 		existingVersions.add(new JiraVersion(JIRA_VER, null, false, false));
 		when(site.getVersions(JIRA_PRJ)).thenReturn(existingVersions);
-		
+
 		boolean result = jvu.perform(build, launcher, listener);
 		verify(site).releaseVersion(JIRA_PRJ, JIRA_VER);
 		assertThat(result, is(true));
-	}	
-	
+	}
+
+	@Test
+	public void jiraApiCalledWithSpecifiedParametersExpanded() throws InterruptedException, IOException {
+		JiraReleaseVersionUpdater jvu = spy(new JiraReleaseVersionUpdater(JIRA_PRJ_PARAM, JIRA_VER_PARAM));
+		doReturn(site).when(jvu).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+
+		when(build.getProject()).thenReturn(project);
+		when(build.getEnvironment(listener)).thenReturn(env);
+		when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<JiraVersion>());
+
+		Set<JiraVersion> existingVersions = new HashSet<JiraVersion>();
+		existingVersions.add(new JiraVersion(JIRA_VER, null, false, false));
+		when(site.getVersions(JIRA_PRJ)).thenReturn(existingVersions);
+
+		boolean result = jvu.perform(build, launcher, listener);
+		verify(site).releaseVersion(JIRA_PRJ, JIRA_VER);
+		assertThat(result, is(true));
+	}
+
 	@Test
 	public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
 		JiraReleaseVersionUpdater jvu = spy(new JiraReleaseVersionUpdater(JIRA_PRJ, JIRA_VER));
 		doReturn(site).when(jvu).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
-		
+
 		when(build.getProject()).thenReturn(project);
 		when(build.getEnvironment(listener)).thenReturn(env);
 		when(env.expand(Mockito.anyString())).thenReturn(JIRA_VER);
-		
+
 		Set<JiraVersion> existingVersions = new HashSet<JiraVersion>();
 		existingVersions.add(new JiraVersion(JIRA_VER, null, true, false));
-		
+
 		when(site.getVersions(JIRA_PRJ)).thenReturn(existingVersions);
-		
+
 		PrintStream logger = mock(PrintStream.class);
 		when(listener.getLogger()).thenReturn(logger);
-		
+
+		boolean result = jvu.perform(build, launcher, listener);
+		verify(site, times(0)).releaseVersion(JIRA_PRJ, JIRA_VER);
+		assertThat(result, is(true));
+	}
+
+	@Test
+	public void buildDidNotFailWhenVersionExistsExpanded() throws IOException, InterruptedException {
+		JiraReleaseVersionUpdater jvu = spy(new JiraReleaseVersionUpdater(JIRA_PRJ_PARAM, JIRA_VER_PARAM));
+		doReturn(site).when(jvu).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+
+		when(build.getProject()).thenReturn(project);
+		when(build.getEnvironment(listener)).thenReturn(env);
+		when(env.expand(Mockito.anyString())).thenReturn(JIRA_VER);
+
+		Set<JiraVersion> existingVersions = new HashSet<JiraVersion>();
+		existingVersions.add(new JiraVersion(JIRA_VER, null, true, false));
+
+		when(site.getVersions(JIRA_PRJ)).thenReturn(existingVersions);
+
+		PrintStream logger = mock(PrintStream.class);
+		when(listener.getLogger()).thenReturn(logger);
+
 		boolean result = jvu.perform(build, launcher, listener);
 		verify(site, times(0)).releaseVersion(JIRA_PRJ, JIRA_VER);
 		assertThat(result, is(true));

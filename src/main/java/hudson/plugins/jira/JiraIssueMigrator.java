@@ -77,12 +77,18 @@ public class JiraIssueMigrator extends Notifier {
         String realRelease = null;
         String realReplace = null;
         String realQuery = "";
+        String realProjectKey = null;
         try {
             realRelease = build.getEnvironment(listener).expand(jiraRelease);
             realReplace = build.getEnvironment(listener).expand(jiraReplaceVersion);
+            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
 
             if (realRelease == null || realRelease.isEmpty()) {
                 throw new IllegalArgumentException("Release is Empty");
+            }
+
+            if (realProjectKey == null || realProjectKey.isEmpty()) {
+                throw new IllegalArgumentException("No project specified");
             }
 
             realQuery = build.getEnvironment(listener).expand(jiraQuery);
@@ -93,14 +99,14 @@ public class JiraIssueMigrator extends Notifier {
             JiraSite site = JiraSite.get(build.getProject());
 
             if (realReplace == null || realReplace.isEmpty()) {
-                site.migrateIssuesToFixVersion(jiraProjectKey, realRelease, realQuery);
+                site.migrateIssuesToFixVersion(realProjectKey, realRelease, realQuery);
             } else {
-                site.replaceFixVersion(jiraProjectKey, realReplace, realRelease, realQuery);
+                site.replaceFixVersion(realProjectKey, realReplace, realRelease, realQuery);
             }
         } catch (Exception e) {
             e.printStackTrace(listener.fatalError(
                     "Unable to release jira version %s/%s: %s", realRelease,
-                    jiraProjectKey, e));
+                    realProjectKey, e));
             listener.finished(Result.FAILURE);
             return false;
         }
