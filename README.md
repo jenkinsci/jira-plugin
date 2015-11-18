@@ -11,7 +11,21 @@ Jenkins JIRA Plugin
 
 See [Wiki page](https://wiki.jenkins-ci.org/display/JENKINS/JIRA+Plugin) for more information.
 
-Reported Issues: [by Votes](https://issues.jenkins-ci.org/browse/JENKINS-6110?jql=project%20%3D%20JENKINS%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20jira-plugin%20ORDER%20BY%20votes%20DESC%2C%20updated%20ASC%2C%20priority%20DESC%2C%20created%20ASC), [by Priority](https://issues.jenkins-ci.org/browse/JENKINS-26962?jql=project%20%3D%20JENKINS%20AND%20resolution%20%3D%20Unresolved%20AND%20component%20%3D%20jira-plugin%20ORDER%20BY%20priority%20DESC%2C%20votes%20ASC%2C%20updated%20ASC%2C%20created%20ASC)
+Reported Issues:
+
+* Next Release: 
+[[ToDo]](https://issues.jenkins-ci.org/issues/?filter=14997)
+[[Done]](https://issues.jenkins-ci.org/issues/?filter=14998)
+
+* Bugs: [[All]](https://issues.jenkins-ci.org/issues/?filter=14761) [[Confirmed]](https://issues.jenkins-ci.org/issues/?filter=14996)
+
+* Other: [[All Non-Bugs]](https://issues.jenkins-ci.org/issues/?filter=14762)
+[[All Unresolved]](https://issues.jenkins-ci.org/issues/?filter=14956)
+* Categorized:
+[[by Votes]](https://issues.jenkins-ci.org/issues/?filter=15156)
+[[by Priority]](https://issues.jenkins-ci.org/issues/?filter=15157)
+
+
 
 Contributing to the Plugin
 ==========================
