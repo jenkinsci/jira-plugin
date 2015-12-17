@@ -1,0 +1,14 @@
+<div>
+  Extracts relevant JIRA issues (i.e. those referenced in the the SCM comments in the build's changeset) to a Java
+  style properties file for use in later build steps
+  <p>
+      Typical usage:
+      <ol>
+          <li>Use this build step to extract related JIRA issues to a properties file</li>
+          <li>Use the <a href="https://wiki.jenkins-ci.org/display/JENKINS/EnvInject+Plugin">EnvInject plugin</a>
+          to load the properties file and set an environment variable with the related issues</li>
+          <li>Use the "Progress JIRA issues by workflow action" or "Move issues matching JQL to the specified version" with JQL like:
+              <blockquote><pre>issue in (${JIRA_ISSUES})</pre></blockquote></li>
+      </ol>
+  </p>
+</div>
