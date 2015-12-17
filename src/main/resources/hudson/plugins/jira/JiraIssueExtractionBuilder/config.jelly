@@ -1,0 +1,11 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:entry title="${%Issues Property Name}" field="issuesPropertyName">
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="${%Properties File Path}" field="propertiesFilePath">
+        <f:textbox/>
+    </f:entry>    
+    <j:if test="${descriptor.hasIssueSelectors()}">
+        <f:dropdownDescriptorSelector field="issueSelector" title="${%Issue selector}"/>
+    </j:if>  
+</j:jelly>
