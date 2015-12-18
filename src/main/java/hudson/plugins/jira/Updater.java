@@ -248,6 +248,7 @@ class Updater {
                         comment.append("* ").append(affectedPath).append("\n");
                     }
                 }
+                comment.append("\n");
             }
         }
         return comment.toString();
