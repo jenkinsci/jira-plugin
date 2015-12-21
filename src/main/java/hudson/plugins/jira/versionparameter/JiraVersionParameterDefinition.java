@@ -4,6 +4,7 @@ import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
@@ -59,8 +60,8 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
 	}
 
     public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException {
-        AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
-
+    	Job<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(Job.class);
+    	
         JiraSite site = JiraSite.get(context);
         if (site == null)
             throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
