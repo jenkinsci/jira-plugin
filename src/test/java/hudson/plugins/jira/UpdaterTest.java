@@ -1,26 +1,47 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.domain.Comment;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import hudson.model.*;
-import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.Entry;
+import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.rmi.RemoteException;
-import java.util.*;
-import java.util.regex.Pattern;
-import static org.mockito.Mockito.*;
-import static org.hamcrest.CoreMatchers.*;
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.Comment;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+
+import hudson.model.BuildListener;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.Result;
+import hudson.model.User;
+import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.SCM;
+import hudson.scm.ChangeLogSet.Entry;
 
 
 /**
@@ -31,6 +52,8 @@ import static org.hamcrest.CoreMatchers.*;
 @SuppressWarnings("unchecked")
 public class UpdaterTest {
 
+	private Updater updater;
+	
     private static class MockEntry extends Entry {
 
         private final String msg;
@@ -55,6 +78,12 @@ public class UpdaterTest {
         }
     }
 
+    @Before
+    public void prepare()
+    {
+    	this.updater = new Updater(mock(SCM.class));
+    }
+    
     /**
      * Tests that the JiraIssueParameters are identified as updateable JIRA
      * issues.
@@ -82,18 +111,18 @@ public class UpdaterTest {
         Set<String> ids = new HashSet<String>();
 
         // Initial state contains zero parameters
-        Updater.findIssues(build, ids, null, listener);
+        updater.findIssues(build, ids, null, listener);
         Assert.assertTrue(ids.isEmpty());
 
         ids = new HashSet<String>();
         parameters.add(parameter);
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
+        updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
         Assert.assertEquals(1, ids.size());
         Assert.assertEquals("JIRA-123", ids.iterator().next());
 
         ids = new TreeSet<String>();
         parameters.add(parameterTwo);
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
+        updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
         Assert.assertEquals(2, ids.size());
         Set<String> expected = Sets.newTreeSet(Sets.newHashSet("JIRA-123",
                 "JIRA-321"));
@@ -125,6 +154,10 @@ public class UpdaterTest {
 
         when(build.getChangeSet()).thenReturn(changeLogSet);
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
 
         Set<String> expected = Sets.newHashSet(
                 "JI123-4711",
@@ -142,7 +175,7 @@ public class UpdaterTest {
         );
 
         Set<String> result = new HashSet<String>();
-        Updater.findIssues(build, result, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
+        updater.findIssues(build, result, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 
         Assert.assertEquals(expected.size(), result.size());
         Assert.assertEquals(expected,result);
@@ -182,9 +215,14 @@ public class UpdaterTest {
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOOBAR-4711"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
+        
         // test:
         List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
-        Updater.submitComments(build,
+        Updater updaterCurrent = new Updater(build.getParent().getScm());
+        updaterCurrent.submitComments(build,
                 System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(1, comments.size());
@@ -192,13 +230,13 @@ public class UpdaterTest {
 
         Assert.assertTrue(comment.contains("FOOBAR-4711"));
 
-
         // must also work case-insensitively (JENKINS-4132)
         comments.clear();
         entries = Sets.newHashSet(new MockEntry("Fixed Foobar-4711"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
         ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
-        Updater.submitComments(build,
+                
+        updaterCurrent.submitComments(build,
                 System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(1, comments.size());
@@ -224,7 +262,7 @@ public class UpdaterTest {
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
         Set<String> ids = new HashSet<String>();
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
+        updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         Assert.assertEquals(0, ids.size());
     }
 
@@ -239,7 +277,7 @@ public class UpdaterTest {
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
         Set<String> ids = new HashSet<String>();
-        Updater.findIssues(build, ids, Pattern.compile("[(w)]"), mock(BuildListener.class));
+        updater.findIssues(build, ids, Pattern.compile("[(w)]"), mock(BuildListener.class));
 
         Assert.assertEquals(0, ids.size());
     }
@@ -253,10 +291,14 @@ public class UpdaterTest {
 
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]"), new MockEntry("[TEST-9] with [dede]"), new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
-
+        
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
+        
         Set<String> ids = new HashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
-        Updater.findIssues(build, ids, pat, mock(BuildListener.class));
+        updater.findIssues(build, ids, pat, mock(BuildListener.class));
         Assert.assertEquals(2, ids.size());
         Assert.assertTrue(ids.contains("TEST-9"));
         Assert.assertTrue(ids.contains("FOOBAR-4711"));
@@ -272,9 +314,13 @@ public class UpdaterTest {
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]  [FOOBAR-21] "), new MockEntry("[TEST-9] with [dede]"), new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
+        
         Set<String> ids = new HashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
-        Updater.findIssues(build, ids, pat, mock(BuildListener.class));
+        updater.findIssues(build, ids, pat, mock(BuildListener.class));
         Assert.assertEquals(3, ids.size());
         Assert.assertTrue(ids.contains("TEST-9"));
         Assert.assertTrue(ids.contains("FOOBAR-4711"));
@@ -333,7 +379,9 @@ public class UpdaterTest {
         final String groupVisibility = "";
         final String roleVisibility = "";
 
-        Updater.submitComments(
+        Updater updaterCurrent = new Updater(build.getParent().getScm());
+        
+        updaterCurrent.submitComments(
                 build, System.out, "http://jenkins", issues, session, false, false, groupVisibility, roleVisibility
         );
 

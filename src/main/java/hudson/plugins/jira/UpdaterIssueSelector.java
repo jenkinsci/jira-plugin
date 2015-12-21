@@ -27,6 +27,6 @@ public abstract class UpdaterIssueSelector extends AbstractDescribableImpl<Updat
      * @param listener Current's run listener.
      * @return Set of ids of issues which should be updated.
      */
-    public abstract Set<String> findIssueIds(@Nonnull Run<?, ?> run, @Nonnull JiraSite site, @Nonnull TaskListener listener);
+    public abstract Set<String> findIssueIds(@Nonnull Run<?, ?> run, @Nonnull Updater updater, @Nonnull JiraSite site, @Nonnull TaskListener listener);
 
 }

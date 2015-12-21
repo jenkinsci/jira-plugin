@@ -14,10 +14,10 @@ public final class DefaultUpdaterIssueSelector extends UpdaterIssueSelector {
     @DataBoundConstructor
     public DefaultUpdaterIssueSelector() {
     }
-
+    
     @Override
-    public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull final JiraSite site, @Nonnull final TaskListener listener) {
-        return Updater.findIssueIdsRecursive((AbstractBuild<?, ?>) run, site.getIssuePattern(), listener);
+    public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull Updater updater, @Nonnull final JiraSite site, @Nonnull final TaskListener listener) {
+        return updater.findIssueIdsRecursive(run, site.getIssuePattern(), listener);
     }
 
     @Extension

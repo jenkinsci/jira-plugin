@@ -1,9 +1,17 @@
 package hudson.plugins.jira;
 
-import com.google.common.collect.Sets;
-import hudson.MarkupText;
-import hudson.model.AbstractProject;
-import hudson.model.FreeStyleBuild;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.net.URL;
+import java.util.Collections;
+import java.util.regex.Pattern;
+
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,12 +20,14 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.io.IOException;
-import java.net.URL;
-import java.util.Collections;
-import java.util.regex.Pattern;
+import com.google.common.collect.Sets;
 
-import static org.mockito.Mockito.*;
+import hudson.MarkupText;
+import hudson.model.AbstractProject;
+import hudson.model.FreeStyleBuild;
+import hudson.model.ItemGroup;
+import hudson.model.Run;
+import jenkins.model.Jenkins;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -65,6 +75,22 @@ public class JiraChangeLogAnnotatorTest {
         Assert.assertTrue(text.toString(false).contains(TITLE));
     }
 
+    @Test
+    public void testAnnotateWf() throws Exception {
+    	Run b = mock(Run.class);
+
+        when(b.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(b, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+
+        MarkupText text = new MarkupText("marking up DUMMY-1.");
+        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+        doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+
+        annotator.annotate(b, null, text);
+
+        // make sure '$' didn't confuse the JiraChangeLogAnnotator
+        Assert.assertTrue(text.toString(false).contains(TITLE));
+    }
+    
     /**
      * Jenkins' MarkupText#findTokens() doesn't work in our case if
      * the whole pattern matches the following word boundary character

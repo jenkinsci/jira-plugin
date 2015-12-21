@@ -1,9 +1,13 @@
 package hudson.plugins.jira;
 
-import hudson.model.AbstractBuild;
-import hudson.model.Action;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
-import java.util.*;
+import hudson.model.Action;
+import hudson.model.Run;
 
 /**
  * JIRA issues related to the build.
@@ -11,11 +15,12 @@ import java.util.*;
  * @author Kohsuke Kawaguchi
  */
 public class JiraBuildAction implements Action {
-    public final AbstractBuild<?, ?> owner;
+    
+	public final Run<?, ?> owner;
 
     public JiraIssue[] issues;
 
-    public JiraBuildAction(AbstractBuild<?, ?> owner, Collection<JiraIssue> issues) {
+    public JiraBuildAction(Run<?, ?> owner, Collection<JiraIssue> issues) {
         this.owner = owner;
         this.issues = issues.toArray(new JiraIssue[issues.size()]);
         Arrays.sort(this.issues);

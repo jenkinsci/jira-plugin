@@ -255,6 +255,17 @@ public class JiraRestService {
         }
     }
 
+    public void setIssueLabels(String issueKey, List<String> labels) {
+        final IssueInput issueInput = new IssueInputBuilder()
+        		.setFieldValue(IssueFieldId.LABELS_FIELD.id, labels)
+                .build();
+        try {
+            jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(10, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOGGER.warning("jira rest client update issue error. cause: " + e.getMessage());
+        }
+    }
+    
     public Issue progressWorkflowAction(String issueKey, Integer actionId) {
         final TransitionInput transitionInput = new TransitionInput(actionId);
 
