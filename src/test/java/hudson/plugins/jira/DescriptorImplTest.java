@@ -29,13 +29,13 @@ public class DescriptorImplTest {
 
     @Test
     public void testDoValidate() throws Exception {
-        FormValidation validation = descriptor.doValidate(null, null, null, null, null, false, null);
+        FormValidation validation = descriptor.doValidate(null, null, null, null, null, false, null, null);
         assertEquals(validation.kind, FormValidation.Kind.ERROR);
 
-        validation = descriptor.doValidate("user", "invalid", "pass", null, null, false, null);
+        validation = descriptor.doValidate("user", "invalid", "pass", null, null, false, null, null);
         assertEquals(validation.kind, FormValidation.Kind.ERROR);
 
-        validation = descriptor.doValidate("user", "http://valid/", "pass", null, null, false, "invalid");
+        validation = descriptor.doValidate("user", "http://valid/", "pass", null, null, false, "invalid", null);
         assertEquals(validation.kind, FormValidation.Kind.ERROR);
     }
 
@@ -43,7 +43,7 @@ public class DescriptorImplTest {
     public void testValidateConnectionError() throws Exception {
         when(jiraSession.getMyPermissions()).thenThrow(RestClientException.class);
         when(jiraSite.createSession()).thenReturn(jiraSession);
-        FormValidation validation = descriptor.doValidate("user", "http://localhost:8080", "pass", null, null, false, " ");
+        FormValidation validation = descriptor.doValidate("user", "http://localhost:8080", "pass", null, null, false, " ", null);
         assertEquals(validation.kind, FormValidation.Kind.ERROR);
     }
 

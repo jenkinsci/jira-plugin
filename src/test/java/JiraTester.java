@@ -19,7 +19,7 @@ public class JiraTester {
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(uri, JiraConfig.getUsername(), JiraConfig.getPassword());
 
-        final JiraRestService restService = new JiraRestService(uri, jiraRestClient, JiraConfig.getUsername(), JiraConfig.getPassword());
+        final JiraRestService restService = new JiraRestService(uri, jiraRestClient, JiraConfig.getUsername(), JiraConfig.getPassword(), 10);
 
         final String projectKey = "TESTPROJECT";
         final String issueId = "TESTPROJECT-425";

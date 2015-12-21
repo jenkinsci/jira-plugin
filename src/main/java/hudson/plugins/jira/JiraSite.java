@@ -1,26 +1,8 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-import com.atlassian.jira.rest.client.api.domain.Version;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import hudson.Extension;
-import hudson.Util;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.AbstractProject;
-import hudson.model.Descriptor;
-import hudson.util.FormValidation;
-import hudson.util.Secret;
-import org.joda.time.DateTime;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
@@ -42,8 +24,29 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
+
+import org.joda.time.DateTime;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+
+import hudson.Extension;
+import hudson.Util;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import hudson.model.Job;
+import hudson.util.FormValidation;
+import hudson.util.Secret;
 
 /**
  * Represents an external JIRA installation and configuration
@@ -127,7 +130,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @since 1.22
      */
     public final boolean updateJiraIssueForAllStatus;
-
+    
+    /**
+     * timeout used when calling jira rest api, in seconds
+     */
+    public final Integer timeout;
 
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
@@ -148,7 +155,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     @DataBoundConstructor
     public JiraSite(URL url, URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
-                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, Integer timeout) {
         if (!url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm() + "/");
@@ -164,6 +171,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
         this.url = url;
+        if(timeout != null)
+        	this.timeout = timeout;
+        else
+        	this.timeout = 10;
         this.alternativeUrl = alternativeUrl;
         this.userName = Util.fixEmpty(userName);
         this.password = Secret.fromString(Util.fixEmpty(password));
@@ -230,12 +241,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             LOGGER.warning("convert URL to URI error: " + e.getMessage());
             throw new RuntimeException("failed to create JiraSession due to convert URI error");
         }
-	LOGGER.fine("creating Jira Session: " + uri);
+        LOGGER.fine("creating Jira Session: " + uri);
 
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());
-
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText()));
+        int usedTimeout = timeout != null ? timeout : 10;
+        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), usedTimeout));
     }
 
     /**
@@ -327,7 +338,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null
      *         if no such was found.
      */
-    public static JiraSite get(AbstractProject<?, ?> p) {
+    public static JiraSite get(Job<?, ?> p) {
         JiraProjectProperty jpp = p.getProperty(JiraProjectProperty.class);
         if (jpp != null) {
             JiraSite site = jpp.getSite();
@@ -662,7 +673,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                          @QueryParameter String groupVisibility,
                                          @QueryParameter String roleVisibility,
                                          @QueryParameter boolean useHTTPAuth,
-                                         @QueryParameter String alternativeUrl) throws IOException {
+                                         @QueryParameter String alternativeUrl,
+                                         @QueryParameter Integer timeout) throws IOException {
             url = Util.fixEmpty(url);
             alternativeUrl = Util.fixEmpty(alternativeUrl);
             URL mainURL, alternativeURL = null;
@@ -684,9 +696,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 return FormValidation.error(String.format("Malformed alternative URL (%s)",alternativeUrl), e );
             }
 
-
             JiraSite site = new JiraSite(mainURL, alternativeURL, userName, password, false,
-                    false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
+                    false, null, false, groupVisibility, roleVisibility, useHTTPAuth, timeout);
             try {
                 JiraSession session = site.createSession();
                 session.getMyPermissions();
