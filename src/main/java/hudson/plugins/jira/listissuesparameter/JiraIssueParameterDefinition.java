@@ -15,23 +15,25 @@
  */
 package hudson.plugins.jira.listissuesparameter;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import hudson.Extension;
-import hudson.model.AbstractProject;
-import hudson.model.ParameterDefinition;
-import hudson.model.ParameterValue;
-import hudson.plugins.jira.JiraSession;
-import hudson.plugins.jira.JiraSite;
-import net.sf.json.JSONObject;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import static hudson.Util.fixNull;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static hudson.Util.fixNull;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
+
+import com.atlassian.jira.rest.client.api.domain.Issue;
+
+import hudson.Extension;
+import hudson.model.Job;
+import hudson.model.ParameterDefinition;
+import hudson.model.ParameterValue;
+import hudson.plugins.jira.JiraSession;
+import hudson.plugins.jira.JiraSite;
+import net.sf.json.JSONObject;
 
 public class JiraIssueParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 3927562542249244416L;
@@ -63,7 +65,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     }
 
     public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException {
-        AbstractProject<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+    	Job<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(Job.class);
 
         JiraSite site = JiraSite.get(context);
         if (site == null)
