@@ -2,6 +2,7 @@ import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.*;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import hudson.plugins.jira.JiraRestService;
+import hudson.plugins.jira.JiraSite;
 
 import java.net.URI;
 import java.net.URL;
@@ -19,7 +20,7 @@ public class JiraTester {
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(uri, JiraConfig.getUsername(), JiraConfig.getPassword());
 
-        final JiraRestService restService = new JiraRestService(uri, jiraRestClient, JiraConfig.getUsername(), JiraConfig.getPassword());
+        final JiraRestService restService = new JiraRestService(uri, jiraRestClient, JiraConfig.getUsername(), JiraConfig.getPassword(), JiraSite.DEFAULT_TIMEOUT);
 
         final String projectKey = "TESTPROJECT";
         final String issueId = "TESTPROJECT-425";
