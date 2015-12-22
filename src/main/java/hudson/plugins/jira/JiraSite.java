@@ -65,7 +65,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * See issue JENKINS-729, JENKINS-4092
      */
     protected static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
-
+    
+    /**
+     * Default rest api client calls timeout, in seconds
+     * See issue JENKINS-31113 
+     */
+    public static final int DEFAULT_TIMEOUT = 10;
+    
     /**
      * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
@@ -171,16 +177,20 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
         this.url = url;
-        if(timeout != null)
+        
+        if(timeout != null) {
         	this.timeout = timeout;
-        else
-        	this.timeout = 10;
+        } else {
+        	this.timeout = JiraSite.DEFAULT_TIMEOUT;
+        }
+        
         this.alternativeUrl = alternativeUrl;
         this.userName = Util.fixEmpty(userName);
         this.password = Secret.fromString(Util.fixEmpty(password));
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
         this.userPattern = Util.fixEmpty(userPattern);
+        
         if (this.userPattern != null) {
             this.userPat = Pattern.compile(this.userPattern);
         } else {
@@ -245,7 +255,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());
-        int usedTimeout = timeout != null ? timeout : 10;
+        int usedTimeout = timeout != null ? timeout : JiraSite.DEFAULT_TIMEOUT;
         return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), usedTimeout));
     }
 

@@ -48,7 +48,7 @@ public class JiraRestService {
 
     private static final Logger LOGGER = Logger.getLogger(JiraRestService.class.getName());
 
-    public static final int TIMEOUT_IN_10_SECONDS = 10000;
+    public static final int MILIS_IN_ONE_SECOND = 1000;
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
 
@@ -263,7 +263,7 @@ public class JiraRestService {
         		.setFieldValue(IssueFieldId.LABELS_FIELD.id, labels)
                 .build();
         try {
-            jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(10, TimeUnit.SECONDS);
+            jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.warning("jira rest client update issue error. cause: " + e.getMessage());
         }
@@ -343,11 +343,15 @@ public class JiraRestService {
 
     private Request buildGetRequest(URI uri) {
         return Request.Get(uri)
-                .connectTimeout(TIMEOUT_IN_10_SECONDS)
-                .socketTimeout(TIMEOUT_IN_10_SECONDS)
+                .connectTimeout(timeoutInMiliseconds())
+                .socketTimeout(timeoutInMiliseconds())
                 .addHeader("Authorization", authHeader)
                 .addHeader("Content-Type", "application/json");
     }
+
+	protected int timeoutInMiliseconds() {
+		return timeout*MILIS_IN_ONE_SECOND;
+	}
 
     public String getBaseApiPath() {
         return baseApiPath;
