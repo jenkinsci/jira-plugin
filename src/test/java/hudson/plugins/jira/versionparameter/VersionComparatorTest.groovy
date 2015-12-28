@@ -27,7 +27,7 @@ class VersionComparatorTest extends Specification {
                 "V-5.2.3",
         ]
 
-        SortedSet<Version> sorted = new TreeSet<Version>();
+        SortedSet<Version> sorted = new TreeSet<Version>(new VersionComparator());
         sorted.addAll(input);
 
         assert sorted == expected;
@@ -58,9 +58,11 @@ class VersionComparatorTest extends Specification {
         "2.0"             | false | false  | "1.0.15.3"  | false | false  | -1
         "2.0.5.4"         | false | false  | "4.0"       | false | false  | 1
         "1.12.1.1"        | false | false  | "1.1.1.2"   | false | false  | -1
+        "1.1.1-RC1"       | false | false  | "1.1.1-RC2" | false | false  | 1
         "PDFREPORT-2.3.4" | false | false  | "1.2.3"     | false | false  | -1
         "PDFREPORT-2.3.4" | false | false  | "4.5.6"     | false | false  | 1
         "PDFREPORT-2.3.4" | false | false  | "x"         | false | false  | -1 //exception
+
     }
 
     def getNumberVersionTest() {

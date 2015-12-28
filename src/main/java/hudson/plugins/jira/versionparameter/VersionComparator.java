@@ -2,9 +2,9 @@ package hudson.plugins.jira.versionparameter;
 
 import com.atlassian.jira.rest.client.api.domain.Version;
 
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
+
+import org.apache.maven.artifact.versioning.ComparableVersion;
 
 /**
  * This comparator can ordering the following formats versions:
@@ -20,63 +20,15 @@ import java.util.List;
 public class VersionComparator implements Comparator<Version> {
 
     public int compare(Version rev1, Version rev2) {
-        int result = 0;
-        boolean rev1WithoutLetters = true;
-        boolean rev2WithoutLetters = true;
-
-        List<String> listRev1 = Arrays.asList(rev1.getName().split("\\."));
-        String oldRev1 = listRev1.get(0);
-
-        List<String> listRev2 = Arrays.asList(rev2.getName().split("\\."));
-        String oldRev2 = listRev2.get(0);
-
-        listRev1.set(0, getNumberVersion(listRev1.get(0)));
-        listRev2.set(0, getNumberVersion(listRev2.get(0)));
-
-        if (oldRev1.equals(listRev1.get(0))) {
-            rev1WithoutLetters = false;
+        ComparableVersion comparableVersion1 = new ComparableVersion(getNumberVersion(rev1.getName()));
+        ComparableVersion comparableVersion2 = new ComparableVersion(getNumberVersion(rev2.getName()));
+        int comparisonResult = comparableVersion2.compareTo(comparableVersion1);
+        if (comparisonResult == 0) {
+            comparableVersion1 = new ComparableVersion(rev1.getName());
+            comparableVersion2 = new ComparableVersion(rev2.getName());
+            comparisonResult = comparableVersion1.compareTo(comparableVersion2);
         }
-        if (oldRev2.equals(listRev2.get(0))) {
-            rev2WithoutLetters = false;
-        }
-
-
-        int lenRev1 = listRev1.size();
-        int lenRev2 = listRev2.size();
-
-        Integer min = Math.min(lenRev1, lenRev2);
-
-        for (int i = 0; i < min; i++) {
-            String s1 = listRev1.get(i);
-            String s2 = listRev2.get(i);
-            try {
-                Integer coor1 = Integer.parseInt(s1);
-                Integer coor2 = Integer.parseInt(s2);
-                result = coor2.compareTo(coor1);
-                if (result != 0) {
-                    break;
-                }
-            } catch (Exception e) {
-            }
-        }
-
-        if (result == 0) {
-            if (lenRev1 > lenRev2) {
-                result = -1;
-            } else if (lenRev1 < lenRev2) {
-                result = 1;
-            } else {
-                if (rev1WithoutLetters && ! rev2WithoutLetters)
-                    result = -1;
-                else if (!rev1WithoutLetters && rev2WithoutLetters)
-                    result = 1;
-                else
-                    result = 0;
-            }
-
-        }
-
-        return result;
+        return comparisonResult;
     }
 
     /**
