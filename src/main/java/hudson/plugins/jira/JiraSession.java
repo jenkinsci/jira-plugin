@@ -89,7 +89,7 @@ public class JiraSession {
     		}
     	}
     	if(changed)
-    		service.setIssueLabels(issueId, labels);    	
+    		service.setIssueLabels(issueId, newLabels);    	
     }
     
     /**
