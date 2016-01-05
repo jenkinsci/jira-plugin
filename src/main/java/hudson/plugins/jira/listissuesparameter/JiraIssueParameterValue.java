@@ -36,7 +36,7 @@ public class JiraIssueParameterValue extends ParameterValue {
 
     @Override
     public void buildEnvironment(final Run<?, ?> run, final EnvVars env) {
-        env.put(getName(), getValue());
+        env.put(getName(), getValue().toString());
     }
 
     @Override
@@ -44,7 +44,7 @@ public class JiraIssueParameterValue extends ParameterValue {
             final AbstractBuild<?, ?> build) {
         return new VariableResolver<String>() {
             public String resolve(final String name) {
-                return JiraIssueParameterValue.this.name.equals(name) ? getValue() : null;
+                return JiraIssueParameterValue.this.name.equals(name) ? getValue().toString() : null;
             }
         };
     }
@@ -54,7 +54,7 @@ public class JiraIssueParameterValue extends ParameterValue {
     }
 
     @Exported
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
 
