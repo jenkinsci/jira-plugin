@@ -5,7 +5,9 @@ import spock.lang.*
 
 class VersionComparatorTest extends Specification {
 
-    void testComplexCompare() {
+    void complexCompare() {
+
+        given:
         def input = [
                 "9.9.9.9.9",
                 "V-5.2.3",
@@ -14,23 +16,29 @@ class VersionComparatorTest extends Specification {
                 "1.12.2.3.4",
                 "1.3.4",
                 "1.1.1.2",
+                "VER 1.0",
                 "1.1.1.1"
         ]
         def expected = [
-                "1.1.1.1",
-                "1.1.1.2",
-                "1.3.4",
-                "1.12.2.3.4",
                 "9.9.9.9.9",
-                "PDFREPORT-2.3",
-                "PDFREPORT-2.3.4",
                 "V-5.2.3",
+                "PDFREPORT-2.3.4",
+                "PDFREPORT-2.3",
+                "1.12.2.3.4",
+                "1.3.4",
+                "1.1.1.2",
+                "1.1.1.1",
+                "VER 1.0",
         ]
+        def output = []
 
+        when:
         SortedSet<Version> sorted = new TreeSet<Version>(new VersionComparator());
-        sorted.addAll(input);
+        input.each { sorted.add( new Version(null,null, it, null, false, false, null)) }
+        sorted.each { output << it.getName() }
 
-        assert sorted == expected;
+        then:
+        output == expected
     }
 
     def singleComparisonsTests() {
@@ -46,7 +54,7 @@ class VersionComparatorTest extends Specification {
         comparator.compare(o1, o2) == expected
 
         where:
-        v1                | v1rel | v1arch | v2          | v2rel | v2arch | expected
+        v1                | v1arch | v1rel | v2          | v2arch | v2rel | expected
         "1.1.1.1"         | false | false  | "1.1.1.1"   | false | false  | 0
         "A-1.1.1.1"       | false | false  | "1.1.1.1"   | false | false  | -1
         "1.1.1.1"         | false | false  | "A-1.1.1.1" | false | false  | 1
