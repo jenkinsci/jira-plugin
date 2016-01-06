@@ -27,9 +27,6 @@ import static org.hamcrest.Matchers.equalTo;
  * @author Artem Koshelev artkoshelev@gmail.com
  */
 public class JiraVersionCreator extends Notifier {
-    private static final String VERSION_EXISTS =
-            "A version with name %s already exists in project %s, so nothing to do.";
-
     private String jiraVersion;
     private String jiraProjectKey;
 
@@ -81,9 +78,10 @@ public class JiraVersionCreator extends Notifier {
                     site.getVersions(realProjectKey));
 
             if (sameNamedVersions.size() == 0) {
+                listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
                 site.addVersion(realVersion, realProjectKey);
             } else {
-                listener.getLogger().println(String.format(VERSION_EXISTS, realVersion, realProjectKey));
+                listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
             }
 
         } catch (Exception e) {
