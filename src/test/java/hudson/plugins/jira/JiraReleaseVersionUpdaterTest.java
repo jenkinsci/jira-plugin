@@ -35,6 +35,7 @@ public class JiraReleaseVersionUpdaterTest {
     AbstractBuild build;
     Launcher launcher;
     BuildListener listener;
+    PrintStream logger;
     EnvVars env;
     AbstractProject project;
     JiraSite site;
@@ -47,6 +48,7 @@ public class JiraReleaseVersionUpdaterTest {
 		env = mock(EnvVars.class);
 		project = mock(AbstractProject.class);
 		site = mock(JiraSite.class);
+      logger = mock(PrintStream.class);
 
 		when(env.expand(Mockito.anyString())).thenAnswer(new Answer<String>() {
 				@Override
@@ -61,6 +63,7 @@ public class JiraReleaseVersionUpdaterTest {
 							 return expanded;
 				}
 		});
+      when(listener.getLogger()).thenReturn(logger);
 	}
 
 	@Test
