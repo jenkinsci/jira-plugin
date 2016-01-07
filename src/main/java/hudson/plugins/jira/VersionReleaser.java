@@ -11,12 +11,9 @@ import static hudson.plugins.jira.JiraVersionMatcher.hasName;
 import static org.hamcrest.Matchers.equalTo;
 
 /**
- * Created by Reda on 18/12/2014.
+ * used by JiraReleaseVersionUpdaterBuilder to mark a version as released
  */
 public class VersionReleaser {
-
-    private static final String VERSION_ALREADY_RELEASED =
-            "The version %s is already released in project %s, so nothing to do.";
 
     static boolean perform(JiraSite site, String jiraProjectKey, String jiraRelease, AbstractBuild<?, ?> build, BuildListener listener) {
         String realRelease = "NOT_SET";
@@ -39,8 +36,9 @@ public class VersionReleaser {
                     site.getVersions(realProjectKey));
 
             if (sameNamedVersions.size() == 1 && sameNamedVersions.get(0).isReleased()) {
-                listener.getLogger().println(String.format(VERSION_ALREADY_RELEASED, realRelease, realProjectKey));
+                listener.getLogger().println(Messages.VersionReleaser_AlreadyReleased(realRelease, realProjectKey));
             } else {
+                listener.getLogger().println(Messages.VersionReleaser_MarkingReleased(realRelease, realProjectKey));
                 site.releaseVersion(realProjectKey, realRelease);
             }
         } catch (Exception e) {
