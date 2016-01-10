@@ -4,6 +4,7 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -18,8 +19,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.google.common.collect.Maps;
 
@@ -51,6 +50,9 @@ public class Updater {
 	private List<String> labels;
 	
     private final Logger LOGGER = Logger.getLogger(Updater.class.getName());
+    //for reflection, until JENKINS-24141
+    private static final String GET_CHANGESET_METHOD = "getChangeSets";
+    private static final String CANNOT_ACCESS_GET_CHANGESET_METHOD = "cannot call "+GET_CHANGESET_METHOD;
     
     /**
      * Debug flag.
@@ -406,18 +408,55 @@ public class Updater {
         }
     }
 
-    private List<ChangeLogSet<? extends Entry>> getChanges(Run<?,?> run)
-    {
-        if(run instanceof AbstractBuild)
+    private List<ChangeLogSet<? extends Entry>> getChanges(Run<?,?> run) {
+        if(run instanceof AbstractBuild) {
         	return ((AbstractBuild<?,?>) run).getChangeSets();
-        else if(run instanceof WorkflowRun)
-        	return ((WorkflowRun)run).getChangeSets();
-        else 
-        	throw new IllegalArgumentException("Unsupported job type "+run.getClass().getName());
+        } else if(run == null) {
+        	throw new IllegalStateException("run cannot be null!");
+        } else {
+        	return getChangesUsingReflection(run);
+        }        
     }
-    
-    private Map<AbstractProject,DependencyChange> getDependencyChanges(Run<?,?> run)
-    {
+
+    /**
+     * return changeSets using java reflection api, for example
+     * for workflow jobs.
+     * 
+     * until JENKINS-24141
+     * 
+     * @param run - run that imlement some type with GET_CHANGESET_METHOD
+     * @return collection of scm ChangeLogSet entries
+     */
+    @SuppressWarnings("unchecked")
+	static List<ChangeLogSet<? extends Entry>> getChangesUsingReflection(Run<?, ?> run) {
+    	Method getChangeSetMethod = null;
+		for(Method method : run.getClass().getMethods())
+		{
+			if(method.getName().equals(GET_CHANGESET_METHOD) && List.class.isAssignableFrom(method.getReturnType()))
+			{
+				getChangeSetMethod = method;
+				break;
+			}
+		}
+		if(getChangeSetMethod != null)
+		{
+			try {
+				Object result = getChangeSetMethod.invoke(run, new Object[]{});
+				return (List<ChangeLogSet<? extends Entry>>) result;
+			} catch (IllegalAccessException e) {
+				throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
+			} catch (IllegalArgumentException e) {
+				throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
+			} catch (InvocationTargetException e) {
+				throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
+			}
+		} else {
+			//if run don't have  GET_CHANGESET_METHOD, we don't support it
+			throw new IllegalArgumentException("Unsupported Run type "+run.getClass().getName());
+		}
+	}
+
+	private Map<AbstractProject,DependencyChange> getDependencyChanges(Run<?,?> run) {
     	AbstractBuild<?,?> build = null;
         if(run instanceof AbstractBuild)
         	return ((AbstractBuild) run).getDependencyChanges((AbstractBuild)run);
@@ -425,7 +464,7 @@ public class Updater {
         else 
         	return Maps.newHashMap();
     }
-        
+
     private SCM getScm()
     {
     	return scm;

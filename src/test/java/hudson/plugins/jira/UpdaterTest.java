@@ -7,6 +7,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,9 +18,13 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Bug;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -37,11 +42,15 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
 import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TopLevelItem;
 import hudson.model.User;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.SCM;
 import hudson.scm.ChangeLogSet.Entry;
+import jenkins.model.Jenkins;
+import jenkins.model.Jenkins.JenkinsHolder;
 
 
 /**
@@ -390,4 +399,37 @@ public class UpdaterTest {
         expectedIssuesToCarryOver.add(forbiddenIssue);
         Assert.assertThat(issues, is(expectedIssuesToCarryOver));
     }
+    
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+    
+    /**
+     * Test that workflow job - run instance of type WorkflowJob - can
+     * return changeSets using java reflection api
+     * @throws IOException 
+     *
+     */
+    @Test
+    public void testGetChangesUsingReflectionForWorkflowJob() throws IOException
+    {
+    	Jenkins jenkins = mock(Jenkins.class);
+    	
+    	when(jenkins.getRootDirFor(Mockito.<TopLevelItem>anyObject())).thenReturn(folder.getRoot());
+    	WorkflowJob workflowJob = new WorkflowJob(jenkins, "job");
+    	WorkflowRun workflowRun = new WorkflowRun(workflowJob);
+    	
+    	ChangeLogSet changeLogSet = ChangeLogSet.createEmpty(workflowRun);
+    	
+    	List<ChangeLogSet<? extends Entry>> changesUsingReflection = Updater.getChangesUsingReflection(workflowRun);
+    	Assert.assertNotNull(changesUsingReflection);
+    	Assert.assertTrue(changesUsingReflection.isEmpty());
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testGetChangesUsingReflectionForunknownJob() throws IOException
+    {
+    	Run run = mock(Run.class);
+    	List<ChangeLogSet<? extends Entry>> changesUsingReflection = Updater.getChangesUsingReflection(run);
+    }
+    
 }

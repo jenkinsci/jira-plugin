@@ -224,12 +224,6 @@
       <artifactId>mailer</artifactId>
       <version>1.15</version>
     </dependency>
-   	<dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-job</artifactId>
-      <version>1.12</version>
-	  <optional>true</optional>
-    </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
@@ -283,7 +277,12 @@
       <version>1.12</version>
       <scope>test</scope>
     </dependency>
-
+   	<dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-job</artifactId>
+      <version>1.12</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   
   <repositories>
