@@ -114,7 +114,7 @@ public class Updater {
             if (site.updateJiraIssueForAllStatus || build.getResult() == null) {
                 doUpdate = true;
             } else {
-                doUpdate =  build.getResult().isBetterOrEqualTo(Result.UNSTABLE);
+                doUpdate = build.getResult().isBetterOrEqualTo(Result.UNSTABLE);
             }
             boolean useWikiStyleComments = site.supportsWikiStyleComment;
 
@@ -164,15 +164,16 @@ public class Updater {
 
         for (JiraIssue issue : copy) {
             logger.println(Messages.Updater_Updating(issue.id));
-            
+
             try {
                 session.addComment(
                         issue.id,
                         createComment(build, useWikiStyleComments, jenkinsRootUrl, recordScmChanges, issue),
                         groupVisibility, roleVisibility
                 );
-                if(!labels.isEmpty())
-                	session.addLabels(issue.id, labels);                
+                if (!labels.isEmpty()) {
+                	session.addLabels(issue.id, labels);
+                }
 
             } catch (RestClientException e) {
 

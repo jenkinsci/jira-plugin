@@ -42,13 +42,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class JiraRestService {
 
     private static final Logger LOGGER = Logger.getLogger(JiraRestService.class.getName());
-
-    public static final int MILIS_IN_ONE_SECOND = 1000;
 
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
 
@@ -69,6 +68,11 @@ public class JiraRestService {
     private final String baseApiPath;
     
     private final int timeout;
+
+    @Deprecated
+    public JiraRestService(URI uri, JiraRestClient jiraRestClient, String username, String password) {
+    	this(uri, jiraRestClient, username, password, JiraSite.DEFAULT_TIMEOUT);
+    }
 
     public JiraRestService(URI uri, JiraRestClient jiraRestClient, String username, String password, int timeout) {
         this.uri = uri;
@@ -253,7 +257,7 @@ public class JiraRestService {
                                                              .build();
         try {
             jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
-        } catch (Exception e) {
+        } catch (Exception e) {        	
             LOGGER.warning("jira rest client update issue error. cause: " + e.getMessage());
         }
     }
@@ -265,7 +269,7 @@ public class JiraRestService {
         try {
             jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOGGER.warning("jira rest client update issue error. cause: " + e.getMessage());
+        	LOGGER.log(Level.WARNING, "jira rest client update labels error for issue "+issueKey, e);
         }
     }    
 
@@ -350,7 +354,7 @@ public class JiraRestService {
     }
 
 	protected int timeoutInMiliseconds() {
-		return timeout*MILIS_IN_ONE_SECOND;
+		return (int) TimeUnit.SECONDS.toMillis(timeout);
 	}
 
     public String getBaseApiPath() {

@@ -29,6 +29,7 @@ import javax.annotation.Nullable;
 
 import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
@@ -140,7 +141,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * timeout used when calling jira rest api, in seconds
      */
-    public final Integer timeout;
+    public Integer timeout;
 
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
@@ -161,7 +162,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     @DataBoundConstructor
     public JiraSite(URL url, URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
-                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, Integer timeout) {
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
         if (!url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm() + "/");
@@ -176,13 +177,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 throw new AssertionError(e);
             }
 
-        this.url = url;
-        
-        if(timeout != null) {
-        	this.timeout = timeout;
-        } else {
-        	this.timeout = JiraSite.DEFAULT_TIMEOUT;
-        }
+        this.url = url;        
+    	this.timeout = JiraSite.DEFAULT_TIMEOUT;
         
         this.alternativeUrl = alternativeUrl;
         this.userName = Util.fixEmpty(userName);
@@ -204,6 +200,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.jiraSession = null;
     }
 
+    @DataBoundSetter
+    public void setTimeout(Integer timeout) {
+		this.timeout = timeout;
+	}
+    
     protected Object readResolve() {
         projectUpdateLock = new ReentrantLock();
         issueCache = makeIssueCache();
@@ -707,7 +708,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
             JiraSite site = new JiraSite(mainURL, alternativeURL, userName, password, false,
-                    false, null, false, groupVisibility, roleVisibility, useHTTPAuth, timeout);
+                    false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
+            site.setTimeout(timeout);            
             try {
                 JiraSession session = site.createSession();
                 session.getMyPermissions();

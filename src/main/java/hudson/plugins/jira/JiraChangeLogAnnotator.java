@@ -33,29 +33,19 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
     public JiraChangeLogAnnotator()
     {
         super();
-        if(LOGGER.isLoggable(Level.FINE))
-        {
-        	LOGGER.info("JiraChangeLogAnnotator registered");
-        }
+    	LOGGER.info("JiraChangeLogAnnotator created");
     }
     
     @Override
     public void annotate(Run<?, ?> build, Entry change, MarkupText text) {
         JiraSite site = getSiteForProject(build.getParent());
         
-        if (site == null)
-    	{
-        	if(LOGGER.isLoggable(Level.FINE))
-            {
-        		LOGGER.fine("not configured with JIRA");
-            }
+        if (site == null) {
+        	LOGGER.fine("not configured with JIRA");
         	return;    // not configured with JIRA
     	}
         
-        if(LOGGER.isLoggable(Level.FINE))
-        {
-        	LOGGER.fine("Using site: " + site.url);
-        }
+        LOGGER.log(Level.FINE, "Using site: {0}", site.url);
         
         // if there's any recorded detail information, try to use that, too.
         JiraBuildAction a = build.getAction(JiraBuildAction.class);

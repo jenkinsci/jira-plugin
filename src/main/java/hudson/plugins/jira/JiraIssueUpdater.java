@@ -14,6 +14,7 @@ import hudson.Launcher;
 import hudson.matrix.MatrixAggregatable;
 import hudson.matrix.MatrixAggregator;
 import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixRun;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -53,8 +54,10 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
 	@Override
 	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException 
 	{
-		if(run instanceof AbstractBuild)
-		{
+		// Don't do anything for individual matrix runs.
+        if (run instanceof MatrixRun) {
+            return;
+        } else if(run instanceof AbstractBuild) {
 			AbstractBuild<?,?> abstractBuild = (AbstractBuild<?,?>) run;
 			Updater updater = new Updater(abstractBuild.getParent().getScm(), labels);
 			updater.perform(run, listener, getIssueSelector());
