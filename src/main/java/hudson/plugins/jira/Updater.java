@@ -431,16 +431,13 @@ public class Updater {
     @SuppressWarnings("unchecked")
 	static List<ChangeLogSet<? extends Entry>> getChangesUsingReflection(Run<?, ?> run) {
     	Method getChangeSetMethod = null;
-		for(Method method : run.getClass().getMethods())
-		{
-			if(method.getName().equals(GET_CHANGESET_METHOD) && List.class.isAssignableFrom(method.getReturnType()))
-			{
+		for(Method method : run.getClass().getMethods()) {
+			if(method.getName().equals(GET_CHANGESET_METHOD) && List.class.isAssignableFrom(method.getReturnType())) {
 				getChangeSetMethod = method;
 				break;
 			}
 		}
-		if(getChangeSetMethod != null)
-		{
+		if(getChangeSetMethod != null) {
 			try {
 				Object result = getChangeSetMethod.invoke(run, new Object[]{});
 				return (List<ChangeLogSet<? extends Entry>>) result;
