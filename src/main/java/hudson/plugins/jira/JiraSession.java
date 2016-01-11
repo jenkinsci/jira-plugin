@@ -73,8 +73,7 @@ public class JiraSession {
         service.addComment(issueId, comment, groupVisibility, roleVisibility);
     }
 
-    public void addLabels(String issueId, List<String> labels)
-    {
+    public void addLabels(String issueId, List<String> labels) {
     	List<String> newLabels = Lists.newArrayList();
     	Issue existingIssue = service.getIssue(issueId);
     	if(existingIssue.getLabels() != null) {

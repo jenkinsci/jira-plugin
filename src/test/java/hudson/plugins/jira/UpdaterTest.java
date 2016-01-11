@@ -88,8 +88,7 @@ public class UpdaterTest {
     }
 
     @Before
-    public void prepare()
-    {
+    public void prepare() {
     	this.updater = new Updater(mock(SCM.class));
     }
     
@@ -410,8 +409,7 @@ public class UpdaterTest {
      *
      */
     @Test
-    public void testGetChangesUsingReflectionForWorkflowJob() throws IOException
-    {
+    public void testGetChangesUsingReflectionForWorkflowJob() throws IOException {
     	Jenkins jenkins = mock(Jenkins.class);
     	
     	when(jenkins.getRootDirFor(Mockito.<TopLevelItem>anyObject())).thenReturn(folder.getRoot());
@@ -426,8 +424,7 @@ public class UpdaterTest {
     }
     
     @Test(expected=IllegalArgumentException.class)
-    public void testGetChangesUsingReflectionForunknownJob() throws IOException
-    {
+    public void testGetChangesUsingReflectionForunknownJob() throws IOException {
     	Run run = mock(Run.class);
     	List<ChangeLogSet<? extends Entry>> changesUsingReflection = Updater.getChangesUsingReflection(run);
     }

@@ -466,8 +466,7 @@ public class Updater {
         	return Maps.newHashMap();
     }
 
-    private SCM getScm()
-    {
+    private SCM getScm() {
     	return scm;
     }
     
