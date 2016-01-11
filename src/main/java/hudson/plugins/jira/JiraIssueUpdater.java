@@ -52,8 +52,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
 	}
 	
 	@Override
-	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException 
-	{
+	public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
 		// Don't do anything for individual matrix runs.
         if (run instanceof MatrixRun) {
             return;

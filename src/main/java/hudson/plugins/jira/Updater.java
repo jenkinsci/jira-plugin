@@ -256,8 +256,7 @@ public class Updater {
     			Run<?, ?> run, boolean recordScmChanges, JiraIssue jiraIssue) {
         StringBuilder comment = new StringBuilder();
         RepositoryBrowser repoBrowser = getRepositoryBrowser(run);
-        for(ChangeLogSet<? extends Entry> set : getChanges(run))
-    	{
+        for(ChangeLogSet<? extends Entry> set : getChanges(run)) {
 	        for (Entry change : set) {
 	            if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.id)) {
 	                continue;
@@ -378,12 +377,11 @@ public class Updater {
      */
     void findIssues(Run<?, ?> build, Set<String> ids, Pattern pattern,
                            TaskListener listener) {
-    	for(ChangeLogSet<? extends Entry> set : getChanges(build))
-    	{
+    	for(ChangeLogSet<? extends Entry> set : getChanges(build)) {
 	        for (Entry change : set) {
 	            LOGGER.fine("Looking for JIRA ID in " + change.getMsg());
 	            Matcher m = pattern.matcher(change.getMsg());
-	
+
 	            while (m.find()) {
 	                if (m.groupCount() >= 1) {
 	                    String content = StringUtils.upperCase(m.group(1));
@@ -391,8 +389,7 @@ public class Updater {
 	                } else {
 	                    listener.getLogger().println("Warning: The JIRA pattern " + pattern + " doesn't define a capturing group!");
 	                }
-	            }
-	
+	            }	
 	        }
     	}
     

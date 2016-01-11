@@ -13,13 +13,12 @@ import hudson.util.XStream2;
 public class JiraBuildActionTest {
 
 	@Test
-	public void testBinaryCompatibility()
-	{
+	public void testBinaryCompatibility() {
 		XStream2 xStream2 = new XStream2();
-		
+
 		FreeStyleBuild b = mock(FreeStyleBuild.class);
 		DeprecatedJiraBuildAction deprecatedJiraBuildAction = new DeprecatedJiraBuildAction(b, new ArrayList<JiraIssue>());
-		
+
 		String xml = xStream2.toXML(deprecatedJiraBuildAction);
 		System.out.println(xml);
 		xml = xml.replaceAll("hudson.plugins.jira.deprecated.DeprecatedJiraBuildAction", "hudson.plugins.jira.JiraBuildAction");
@@ -28,5 +27,5 @@ public class JiraBuildActionTest {
 		JiraBuildAction jiraBuildAction = (JiraBuildAction) fromXML;
 		System.out.println(jiraBuildAction.getDisplayName());
 	}
-	
+
 }
