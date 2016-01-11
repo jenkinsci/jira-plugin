@@ -77,19 +77,19 @@ public class JiraSession {
     {
     	List<String> newLabels = Lists.newArrayList();
     	Issue existingIssue = service.getIssue(issueId);
-    	if(existingIssue.getLabels() != null)
+    	if(existingIssue.getLabels() != null) {
     		newLabels.addAll(existingIssue.getLabels());
+    	}
     	boolean changed = false;
-    	for(String label : labels)
-    	{
-    		if(!newLabels.contains(label))
-    		{    		
+    	for(String label : labels) {
+    		if(!newLabels.contains(label)) {    		
     			newLabels.add(label);
     			changed = true;
     		}
     	}
-    	if(changed)
-    		service.setIssueLabels(issueId, newLabels);    	
+    	if(changed) {
+    		service.setIssueLabels(issueId, newLabels);
+    	}
     }
     
     /**
