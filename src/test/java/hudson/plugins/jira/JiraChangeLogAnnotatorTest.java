@@ -1,5 +1,7 @@
 package hudson.plugins.jira;
 
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -10,8 +12,6 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,9 +25,7 @@ import com.google.common.collect.Sets;
 import hudson.MarkupText;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleBuild;
-import hudson.model.ItemGroup;
 import hudson.model.Run;
-import jenkins.model.Jenkins;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -88,7 +86,7 @@ public class JiraChangeLogAnnotatorTest {
         annotator.annotate(b, null, text);
 
         // make sure '$' didn't confuse the JiraChangeLogAnnotator
-        Assert.assertTrue(text.toString(false).contains(TITLE));
+        assertThat(text.toString(false), containsString(TITLE));
     }
     
     /**
