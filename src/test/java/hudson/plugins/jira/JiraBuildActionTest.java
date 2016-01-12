@@ -10,6 +10,12 @@ import hudson.model.FreeStyleBuild;
 import hudson.plugins.jira.deprecated.DeprecatedJiraBuildAction;
 import hudson.util.XStream2;
 
+/**
+ * Test if existing serialized JiraBuildAction information
+ * will be loaded after upgrading jira plugin version to with
+ * new JiraBuildAction class version introduced in PR-72.
+ *
+ */
 public class JiraBuildActionTest {
 
 	@Test

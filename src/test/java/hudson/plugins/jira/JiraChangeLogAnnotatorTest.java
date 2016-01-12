@@ -75,7 +75,7 @@ public class JiraChangeLogAnnotatorTest {
 
     @Test
     public void testAnnotateWf() throws Exception {
-    	Run b = mock(Run.class);
+        Run b = mock(Run.class);
 
         when(b.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(b, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 

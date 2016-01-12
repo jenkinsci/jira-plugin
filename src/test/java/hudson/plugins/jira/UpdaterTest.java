@@ -61,9 +61,9 @@ import jenkins.model.Jenkins.JenkinsHolder;
 @SuppressWarnings("unchecked")
 public class UpdaterTest {
 
-	private Updater updater;
-	
-    private static class MockEntry extends Entry {
+        private Updater updater;
+
+        private static class MockEntry extends Entry {
 
         private final String msg;
 

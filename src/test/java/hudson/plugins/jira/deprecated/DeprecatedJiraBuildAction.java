@@ -8,9 +8,10 @@ import hudson.plugins.jira.Messages;
 import java.util.*;
 
 /**
- * JIRA issues related to the build.
+ * Old version of class JIRA issues related to the build.
+ * Used only in junit test JiraBuildActionTest for
+ * testing version transition compatibility of PR-72.
  *
- * @author Kohsuke Kawaguchi
  */
 public class DeprecatedJiraBuildAction implements Action {
     public final AbstractBuild<?, ?> owner;
