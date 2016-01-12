@@ -251,6 +251,17 @@ class Updater {
                 comment.append("\n");
             }
         }
+
+        if (jiraIssue != null) {
+            final AbstractBuild<?, ?> prev = build.getPreviousBuild();
+            if (prev != null) {
+                final JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
+                if (a != null && a.getIDs().contains(jiraIssue.id)) {
+                    comment.append(getScmComments(wikiStyle, prev, recordScmChanges, jiraIssue));
+                }
+            }
+        }
+
         return comment.toString();
     }
 
