@@ -1,5 +1,14 @@
 package hudson.plugins.jira;
 
+import hudson.scm.SCM;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.rules.TemporaryFolder;
+import java.io.IOException;
+import jenkins.model.Jenkins;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
@@ -31,7 +40,9 @@ import static org.hamcrest.CoreMatchers.*;
 @SuppressWarnings("unchecked")
 public class UpdaterTest {
 
-    private static class MockEntry extends Entry {
+        private Updater updater;
+
+        private static class MockEntry extends Entry {
 
         private final String msg;
 
@@ -55,6 +66,11 @@ public class UpdaterTest {
         }
     }
 
+    @Before
+    public void prepare() {
+        this.updater = new Updater(mock(SCM.class));
+    }
+    
     /**
      * Tests that the JiraIssueParameters are identified as updateable JIRA
      * issues.
@@ -82,18 +98,18 @@ public class UpdaterTest {
         Set<String> ids = new HashSet<String>();
 
         // Initial state contains zero parameters
-        Updater.findIssues(build, ids, null, listener);
+        updater.findIssues(build, ids, null, listener);
         Assert.assertTrue(ids.isEmpty());
 
         ids = new HashSet<String>();
         parameters.add(parameter);
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
+        updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
         Assert.assertEquals(1, ids.size());
         Assert.assertEquals("JIRA-123", ids.iterator().next());
 
         ids = new TreeSet<String>();
         parameters.add(parameterTwo);
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
+        updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
         Assert.assertEquals(2, ids.size());
         Set<String> expected = Sets.newTreeSet(Sets.newHashSet("JIRA-123",
                 "JIRA-321"));
@@ -125,6 +141,10 @@ public class UpdaterTest {
 
         when(build.getChangeSet()).thenReturn(changeLogSet);
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
 
         Set<String> expected = Sets.newHashSet(
                 "JI123-4711",
@@ -142,7 +162,7 @@ public class UpdaterTest {
         );
 
         Set<String> result = new HashSet<String>();
-        Updater.findIssues(build, result, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
+        updater.findIssues(build, result, JiraSite.DEFAULT_ISSUE_PATTERN, listener);
 
         Assert.assertEquals(expected.size(), result.size());
         Assert.assertEquals(expected,result);
@@ -182,9 +202,14 @@ public class UpdaterTest {
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOOBAR-4711"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
+
         // test:
         List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
-        Updater.submitComments(build,
+        Updater updaterCurrent = new Updater(build.getParent().getScm());
+        updaterCurrent.submitComments(build,
                 System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(1, comments.size());
@@ -192,13 +217,13 @@ public class UpdaterTest {
 
         Assert.assertTrue(comment.contains("FOOBAR-4711"));
 
-
         // must also work case-insensitively (JENKINS-4132)
         comments.clear();
         entries = Sets.newHashSet(new MockEntry("Fixed Foobar-4711"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
         ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
-        Updater.submitComments(build,
+
+        updaterCurrent.submitComments(build,
                 System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(1, comments.size());
@@ -224,7 +249,7 @@ public class UpdaterTest {
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
         Set<String> ids = new HashSet<String>();
-        Updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
+        updater.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         Assert.assertEquals(0, ids.size());
     }
 
@@ -239,7 +264,7 @@ public class UpdaterTest {
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
         Set<String> ids = new HashSet<String>();
-        Updater.findIssues(build, ids, Pattern.compile("[(w)]"), mock(BuildListener.class));
+        updater.findIssues(build, ids, Pattern.compile("[(w)]"), mock(BuildListener.class));
 
         Assert.assertEquals(0, ids.size());
     }
@@ -253,10 +278,14 @@ public class UpdaterTest {
 
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]"), new MockEntry("[TEST-9] with [dede]"), new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
 
         Set<String> ids = new HashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
-        Updater.findIssues(build, ids, pat, mock(BuildListener.class));
+        updater.findIssues(build, ids, pat, mock(BuildListener.class));
         Assert.assertEquals(2, ids.size());
         Assert.assertTrue(ids.contains("TEST-9"));
         Assert.assertTrue(ids.contains("FOOBAR-4711"));
@@ -272,9 +301,13 @@ public class UpdaterTest {
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]  [FOOBAR-21] "), new MockEntry("[TEST-9] with [dede]"), new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
+
         Set<String> ids = new HashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
-        Updater.findIssues(build, ids, pat, mock(BuildListener.class));
+        updater.findIssues(build, ids, pat, mock(BuildListener.class));
         Assert.assertEquals(3, ids.size());
         Assert.assertTrue(ids.contains("TEST-9"));
         Assert.assertTrue(ids.contains("FOOBAR-4711"));
@@ -333,7 +366,9 @@ public class UpdaterTest {
         final String groupVisibility = "";
         final String roleVisibility = "";
 
-        Updater.submitComments(
+        Updater updaterCurrent = new Updater(build.getParent().getScm());
+
+        updaterCurrent.submitComments(
                 build, System.out, "http://jenkins", issues, session, false, false, groupVisibility, roleVisibility
         );
 
@@ -342,4 +377,35 @@ public class UpdaterTest {
         expectedIssuesToCarryOver.add(forbiddenIssue);
         Assert.assertThat(issues, is(expectedIssuesToCarryOver));
     }
+    
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
+    /**
+     * Test that workflow job - run instance of type WorkflowJob - can
+     * return changeSets using java reflection api
+     * @throws IOException 
+     *
+     */
+    @Test
+    public void testGetChangesUsingReflectionForWorkflowJob() throws IOException {
+        Jenkins jenkins = mock(Jenkins.class);
+        
+        when(jenkins.getRootDirFor(Mockito.<TopLevelItem>anyObject())).thenReturn(folder.getRoot());
+        WorkflowJob workflowJob = new WorkflowJob(jenkins, "job");
+        WorkflowRun workflowRun = new WorkflowRun(workflowJob);
+        
+        ChangeLogSet changeLogSet = ChangeLogSet.createEmpty(workflowRun);
+        
+        List<ChangeLogSet<? extends Entry>> changesUsingReflection = Updater.getChangesUsingReflection(workflowRun);
+        Assert.assertNotNull(changesUsingReflection);
+        Assert.assertTrue(changesUsingReflection.isEmpty());
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testGetChangesUsingReflectionForunknownJob() throws IOException {
+        Run run = mock(Run.class);
+        List<ChangeLogSet<? extends Entry>> changesUsingReflection = Updater.getChangesUsingReflection(run);
+    }
+    
 }

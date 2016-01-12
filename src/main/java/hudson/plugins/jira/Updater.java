@@ -1,29 +1,43 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.RestClientException;
-import hudson.Util;
-import hudson.model.*;
-import hudson.model.AbstractBuild.DependencyChange;
-import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
-import hudson.scm.ChangeLogSet.AffectedFile;
-import hudson.scm.ChangeLogSet.Entry;
-import hudson.scm.RepositoryBrowser;
-import org.apache.commons.lang.StringUtils;
+import static java.lang.String.format;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static java.lang.String.format;
+import org.apache.commons.lang.StringUtils;
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.google.common.collect.Maps;
+
+import hudson.Util;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Hudson;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.model.AbstractBuild.DependencyChange;
+import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCM;
+import hudson.scm.ChangeLogSet.AffectedFile;
+import hudson.scm.ChangeLogSet.Entry;
 
 /**
  * Actual JIRA update logic.
@@ -31,12 +45,36 @@ import static java.lang.String.format;
  * @author Kohsuke Kawaguchi
  */
 class Updater {
-    static boolean perform(AbstractBuild<?, ?> build, BuildListener listener, UpdaterIssueSelector selector) {
+
+    private SCM scm;
+    private List<String> labels;
+
+    private static final Logger LOGGER = Logger.getLogger(Updater.class.getName());
+    //for reflection, until JENKINS-24141
+    private static final String GET_CHANGESET_METHOD = "getChangeSets";
+    private static final String CANNOT_ACCESS_GET_CHANGESET_METHOD = "cannot call "+GET_CHANGESET_METHOD;
+
+    /**
+     * Debug flag.
+     */
+    public static boolean debug = false;
+
+    public Updater(SCM scm) {
+        this(scm, new ArrayList<String>());
+    }
+
+    public Updater(SCM scm, List<String> labels) {
+        super();
+        this.scm = scm;
+        this.labels = labels;
+    }
+
+    boolean perform(Run<?, ?> build, TaskListener listener, UpdaterIssueSelector selector) {
         PrintStream logger = listener.getLogger();
         List<JiraIssue> issues = null;
 
         try {
-            JiraSite site = JiraSite.get(build.getProject());
+            JiraSite site = JiraSite.get(build.getParent());
             if (site == null) {
                 logger.println(Messages.Updater_NoJiraSite());
                 build.setResult(Result.FAILURE);
@@ -72,7 +110,8 @@ class Updater {
             }
 
             boolean doUpdate = false;
-            if (site.updateJiraIssueForAllStatus) {
+            //in case of workflow, it may be null
+            if (site.updateJiraIssueForAllStatus || build.getResult() == null) {
                 doUpdate = true;
             } else {
                 doUpdate = build.getResult().isBetterOrEqualTo(Result.UNSTABLE);
@@ -90,6 +129,7 @@ class Updater {
                 build.addAction(new JiraCarryOverAction(issues));
             }
         } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "Error updating JIRA issues. Saving issues for next build.", e);
             logger.println("Error updating JIRA issues. Saving issues for next build.\n" + e);
             if (issues != null && !issues.isEmpty()) {
                 // updating issues failed, so carry forward issues to the next build
@@ -114,8 +154,8 @@ class Updater {
      * @param groupVisibility
      * @throws RestClientException
      */
-    static void submitComments(
-            AbstractBuild<?, ?> build, PrintStream logger, String jenkinsRootUrl,
+    void submitComments(
+            Run<?, ?> build, PrintStream logger, String jenkinsRootUrl,
             List<JiraIssue> issues, JiraSession session,
             boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RestClientException {
 
@@ -131,6 +171,9 @@ class Updater {
                         createComment(build, useWikiStyleComments, jenkinsRootUrl, recordScmChanges, issue),
                         groupVisibility, roleVisibility
                 );
+                if (!labels.isEmpty()) {
+                    session.addLabels(issue.id, labels);
+                }
 
             } catch (RestClientException e) {
 
@@ -184,79 +227,93 @@ class Updater {
      *  [https://bitbucket.org/user/repo/changeset/9af8e4c4c909/])\r
      * </pre>
      */
-    private static String createComment(AbstractBuild<?, ?> build,
-                                        boolean wikiStyle, String jenkinsRootUrl, boolean recordScmChanges, JiraIssue jiraIssue) {
-        return format(
+    private String createComment(Run<?, ?> build, boolean wikiStyle, String jenkinsRootUrl, boolean recordScmChanges, JiraIssue jiraIssue) {
+        Result result = build.getResult();
+        //if we run from workflow we dont known final result  
+        if(result == null)
+            return format(
+                    wikiStyle ?
+                            "Integrated in [%2$s|%3$s]\n%4$s" :
+                            "Integrated in Jenkins build %2$s (See [%3$s])\n%4$s",
+                    jenkinsRootUrl,
+                    build,
+                    Util.encode(jenkinsRootUrl + build.getUrl()),
+                    getScmComments(wikiStyle, build, recordScmChanges, jiraIssue));
+        else
+            return format(
                 wikiStyle ?
                         "%6$s: Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n%5$s" :
                         "%6$s: Integrated in Jenkins build %2$s (See [%4$s])\n%5$s",
                 jenkinsRootUrl,
                 build,
-                build.getResult().color.getImage(),
+                result != null ? result.color.getImage() : null,
                 Util.encode(jenkinsRootUrl + build.getUrl()),
                 getScmComments(wikiStyle, build, recordScmChanges, jiraIssue),
-                build.getResult().toString());
+                result.toString());
     }
 
-    private static String getScmComments(boolean wikiStyle,
-                                         AbstractBuild<?, ?> build, boolean recordScmChanges, JiraIssue jiraIssue) {
+    private String getScmComments(boolean wikiStyle,
+                                         Run<?, ?> run, boolean recordScmChanges, JiraIssue jiraIssue) {
         StringBuilder comment = new StringBuilder();
-        RepositoryBrowser repoBrowser = getRepositoryBrowser(build);
-        for (Entry change : build.getChangeSet()) {
-            if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.id)) {
-                continue;
-            }
-            comment.append(change.getMsg());
-            String revision = getRevision(change);
-            if (revision != null) {
-                URL url = null;
-                if (repoBrowser != null) {
-                    try {
-                        url = repoBrowser.getChangeSetLink(change);
-                    } catch (IOException e) {
-                        LOGGER.warning("Failed to calculate SCM repository browser link " + e.getMessage());
+        RepositoryBrowser repoBrowser = getRepositoryBrowser(run);
+        for(ChangeLogSet<? extends Entry> set : getChanges(run)) {
+            for (Entry change : set) {
+                if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.id)) {
+                    continue;
+                }
+                comment.append(change.getMsg());
+                String revision = getRevision(change);
+                if (revision != null) {
+                    URL url = null;
+                    if (repoBrowser != null) {
+                        try {
+                            url = repoBrowser.getChangeSetLink(change);
+                        } catch (IOException e) {
+                            LOGGER.warning("Failed to calculate SCM repository browser link " + e.getMessage());
+                        }
                     }
-                }
-                comment.append(" (");
-                String uid = change.getAuthor().getId();
-                if (StringUtils.isNotBlank(uid)) {
-                    comment.append(uid).append(": ");
-                }
-                if (url != null && StringUtils.isNotBlank(url.toExternalForm())) {
-                    if (wikiStyle) {
-                        comment.append("[").append(revision).append("|");
-                        comment.append(url.toExternalForm()).append("]");
+                    comment.append(" (");
+                    String uid = change.getAuthor().getId();
+                    if (StringUtils.isNotBlank(uid)) {
+                        comment.append(uid).append(": ");
+                    }
+                    if (url != null && StringUtils.isNotBlank(url.toExternalForm())) {
+                        if (wikiStyle) {
+                            comment.append("[").append(revision).append("|");
+                            comment.append(url.toExternalForm()).append("]");
+                        } else {
+                            comment.append("[").append(url.toExternalForm()).append("]");
+                        }
                     } else {
-                        comment.append("[").append(url.toExternalForm()).append("]");
+                        comment.append("rev ").append(revision);
                     }
-                } else {
-                    comment.append("rev ").append(revision);
-                }
-                comment.append(")");
-            }
-            comment.append("\n");
-            if (recordScmChanges) {
-                // see http://issues.jenkins-ci.org/browse/JENKINS-2508
-                // added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
-                try {
-                    for (AffectedFile affectedFile : change.getAffectedFiles()) {
-                        comment.append("* ").append(affectedFile.getPath()).append("\n");
-                    }
-                } catch (UnsupportedOperationException e) {
-                    LOGGER.warning("Unsupported SCM operation 'getAffectedFiles'. Fall back to getAffectedPaths.");
-                    for (String affectedPath : change.getAffectedPaths()) {
-                        comment.append("* ").append(affectedPath).append("\n");
-                    }
+                    comment.append(")");
                 }
                 comment.append("\n");
+                if (recordScmChanges) {
+                    // see http://issues.jenkins-ci.org/browse/JENKINS-2508
+                    // added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
+                    try {
+                        for (AffectedFile affectedFile : change.getAffectedFiles()) {
+                            comment.append("* ").append(affectedFile.getPath()).append("\n");
+                        }
+                    } catch (UnsupportedOperationException e) {
+                        LOGGER.warning("Unsupported SCM operation 'getAffectedFiles'. Fall back to getAffectedPaths.");
+                        for (String affectedPath : change.getAffectedPaths()) {
+                            comment.append("* ").append(affectedPath).append("\n");
+                        }
+                    }
+                    comment.append("\n");
+                }
             }
         }
         return comment.toString();
     }
 
-    private static RepositoryBrowser<?> getRepositoryBrowser(AbstractBuild<?, ?> build) {
-        if (build.getProject().getScm() != null) {
-            return build.getProject().getScm().getEffectiveBrowser();
+    private RepositoryBrowser<?> getRepositoryBrowser(Run<?, ?> run) {
+        SCM scm = getScm();
+        if (scm != null) {
+            return scm.getEffectiveBrowser();
         }
         return null;
     }
@@ -290,7 +347,7 @@ class Updater {
      * {@link JiraSite#existsIssue(String)} here so that new projects
      * in JIRA can be detected.
      */
-    static Set<String> findIssueIdsRecursive(AbstractBuild<?, ?> build, Pattern pattern,
+    static Set<String> findIssueIdsRecursive(Run<?, ?> build, Pattern pattern,
                                                      TaskListener listener) {
         Set<String> ids = new HashSet<String>();
 
@@ -307,7 +364,7 @@ class Updater {
         findIssues(build, ids, pattern, listener);
 
         // check for issues fixed in dependencies
-        for (DependencyChange depc : build.getDependencyChanges(build.getPreviousBuild()).values()) {
+        for (DependencyChange depc : getDependencyChanges(build.getPreviousBuild()).values()) {
             for (AbstractBuild<?, ?> b : depc.getBuilds()) {
                 findIssues(b, ids, pattern, listener);
             }
@@ -318,21 +375,22 @@ class Updater {
     /**
      * @param pattern pattern to use to match issue ids
      */
-    static void findIssues(AbstractBuild<?, ?> build, Set<String> ids, Pattern pattern,
+    static void findIssues(Run<?, ?> build, Set<String> ids, Pattern pattern,
                            TaskListener listener) {
-        for (Entry change : build.getChangeSet()) {
-            LOGGER.fine("Looking for JIRA ID in " + change.getMsg());
-            Matcher m = pattern.matcher(change.getMsg());
+        for(ChangeLogSet<? extends Entry> set : getChanges(build)) {
+            for (Entry change : set) {
+                LOGGER.fine("Looking for JIRA ID in " + change.getMsg());
+                Matcher m = pattern.matcher(change.getMsg());
 
-            while (m.find()) {
-                if (m.groupCount() >= 1) {
-                    String content = StringUtils.upperCase(m.group(1));
-                    ids.add(content);
-                } else {
-                    listener.getLogger().println("Warning: The JIRA pattern " + pattern + " doesn't define a capturing group!");
-                }
+                while (m.find()) {
+                    if (m.groupCount() >= 1) {
+                        String content = StringUtils.upperCase(m.group(1));
+                        ids.add(content);
+                    } else {
+                        listener.getLogger().println("Warning: The JIRA pattern " + pattern + " doesn't define a capturing group!");
+                    }
+                }    
             }
-
         }
 
         // Now look for any JiraIssueParameterValue's set in the build
@@ -348,10 +406,62 @@ class Updater {
         }
     }
 
-    private static final Logger LOGGER = Logger.getLogger(Updater.class.getName());
+    private static List<ChangeLogSet<? extends Entry>> getChanges(Run<?,?> run) {
+        if(run instanceof AbstractBuild) {
+            return ((AbstractBuild<?,?>) run).getChangeSets();
+        } else if(run == null) {
+            throw new IllegalStateException("run cannot be null!");
+        } else {
+            return getChangesUsingReflection(run);
+        }        
+    }
 
     /**
-     * Debug flag.
+     * return changeSets using java reflection api, for example
+     * for workflow jobs.
+     * 
+     * until JENKINS-24141
+     * 
+     * @param run - run that imlement some type with GET_CHANGESET_METHOD
+     * @return collection of scm ChangeLogSet entries
      */
-    public static boolean debug = false;
+    @SuppressWarnings("unchecked")
+    static List<ChangeLogSet<? extends Entry>> getChangesUsingReflection(Run<?, ?> run) {
+        Method getChangeSetMethod = null;
+        for(Method method : run.getClass().getMethods()) {
+            if(method.getName().equals(GET_CHANGESET_METHOD) && List.class.isAssignableFrom(method.getReturnType())) {
+                getChangeSetMethod = method;
+                break;
+            }
+        }
+        if(getChangeSetMethod != null) {
+            try {
+                Object result = getChangeSetMethod.invoke(run, new Object[]{});
+                return (List<ChangeLogSet<? extends Entry>>) result;
+            } catch (IllegalAccessException e) {
+                throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
+            } catch (InvocationTargetException e) {
+                throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
+            }
+        } else {
+            //if run don't have  GET_CHANGESET_METHOD, we don't support it
+            throw new IllegalArgumentException("Unsupported Run type "+run.getClass().getName());
+        }
+    }
+
+    private static Map<AbstractProject,DependencyChange> getDependencyChanges(Run<?,?> run) {
+        AbstractBuild<?,?> build = null;
+        if(run instanceof AbstractBuild)
+            return ((AbstractBuild) run).getDependencyChanges((AbstractBuild)run);
+        //jenkins workflow plugin etc.
+        else 
+            return Maps.newHashMap();
+    }
+
+    private SCM getScm() {
+        return scm;
+    }
+
 }
