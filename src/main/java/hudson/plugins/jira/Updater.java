@@ -240,7 +240,7 @@ class Updater {
                 // added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
                 try {
                     for (AffectedFile affectedFile : change.getAffectedFiles()) {
-                        comment.append("* ").append(affectedFile.getPath()).append("\n");
+                        comment.append("* (").append(affectedFile.getEditType()).append(") ").append(affectedFile.getPath()).append("\n");
                     }
                 } catch (UnsupportedOperationException e) {
                     LOGGER.warning("Unsupported SCM operation 'getAffectedFiles'. Fall back to getAffectedPaths.");
