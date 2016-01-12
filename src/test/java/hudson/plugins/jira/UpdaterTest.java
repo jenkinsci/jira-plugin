@@ -191,15 +191,12 @@ public class UpdaterTest {
             });
         }
 
-        final List<RemoteComment> comments = Lists.newArrayList();
+        final List<Comment> comments = Lists.newArrayList();
         final JiraSession session = mock(JiraSession.class);
         doAnswer(new Answer<Object>() {
 
             public Object answer(final InvocationOnMock invocation) throws Throwable {
-                RemoteComment rc = new RemoteComment();
-                rc.setId((String) invocation.getArguments()[0]);
-                rc.setBody((String) invocation.getArguments()[1]);
-                rc.setGroupLevel((String) invocation.getArguments()[2]);
+                Comment rc = Comment.createWithGroupLevel((String) invocation.getArguments()[1], (String) invocation.getArguments()[2]);
                 comments.add(rc);
                 return null;
             }
