@@ -1,7 +1,6 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.*;
-import com.google.common.collect.Lists;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,7 +8,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+import com.atlassian.jira.rest.client.api.domain.Component;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Permissions;
+import com.atlassian.jira.rest.client.api.domain.Status;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.atlassian.jira.rest.client.api.domain.Version;
+import com.google.common.collect.Lists;
 
 /**
  * Connection to JIRA.
@@ -64,6 +71,24 @@ public class JiraSession {
     public void addComment(String issueId, String comment,
                            String groupVisibility, String roleVisibility) {
         service.addComment(issueId, comment, groupVisibility, roleVisibility);
+    }
+
+    public void addLabels(String issueId, List<String> labels) {
+        List<String> newLabels = Lists.newArrayList();
+        Issue existingIssue = service.getIssue(issueId);
+        if(existingIssue.getLabels() != null) {
+            newLabels.addAll(existingIssue.getLabels());
+        }
+        boolean changed = false;
+        for(String label : labels) {
+            if(!newLabels.contains(label)) {
+                newLabels.add(label);
+                changed = true;
+            }
+        }
+        if(changed) {
+            service.setIssueLabels(issueId, newLabels);
+        }
     }
 
     /**
