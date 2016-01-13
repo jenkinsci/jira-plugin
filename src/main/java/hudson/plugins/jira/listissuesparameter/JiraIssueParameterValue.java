@@ -40,8 +40,7 @@ public class JiraIssueParameterValue extends ParameterValue {
     }
 
     @Override
-    public VariableResolver<String> createVariableResolver(
-            final AbstractBuild<?, ?> build) {
+    public VariableResolver<String> createVariableResolver(final AbstractBuild<?, ?> build) {
         return new VariableResolver<String>() {
             public String resolve(final String name) {
                 return JiraIssueParameterValue.this.name.equals(name) ? getValue().toString() : null;

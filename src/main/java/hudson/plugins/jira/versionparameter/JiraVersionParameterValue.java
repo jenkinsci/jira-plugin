@@ -3,6 +3,7 @@ package hudson.plugins.jira.versionparameter;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.ParameterValue;
+import hudson.model.Run;
 import hudson.util.VariableResolver;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -11,7 +12,7 @@ public class JiraVersionParameterValue extends ParameterValue {
     /**
      *
      */
-    private static final long serialVersionUID = 7715888375360839483L;
+    private static final long serialVersionUID = 7715888375360839484L;
 
     private String version;
 
@@ -23,13 +24,12 @@ public class JiraVersionParameterValue extends ParameterValue {
     }
 
     @Override
-    public void buildEnvVars(final AbstractBuild<?, ?> build, final EnvVars env) {
-        env.put(getName(), getVersion());
+    public void buildEnvironment(final Run<?, ?> run, final EnvVars env) {
+        env.put(getName(), getValue().toString());
     }
 
     @Override
-    public VariableResolver<String> createVariableResolver(
-            final AbstractBuild<?, ?> build) {
+    public VariableResolver<String> createVariableResolver(final AbstractBuild<?, ?> build) {
         return new VariableResolver<String>() {
             public String resolve(final String name) {
                 return JiraVersionParameterValue.this.name.equals(name) ? getVersion() : null;
