@@ -1,9 +1,10 @@
-package hudson.plugins.jira.listissuesparameter;
+package hudson.plugins.jira;
 
 import hudson.cli.BuildCommand;
 import hudson.cli.CLICommandInvoker;
 import hudson.model.FreeStyleProject;
 import hudson.model.ParametersDefinitionProperty;
+import hudson.plugins.jira.listissuesparameter.JiraIssueParameterDefinition;
 import hudson.plugins.jira.versionparameter.JiraVersionParameterDefinition;
 import org.junit.Rule;
 import org.junit.Test;
@@ -14,7 +15,7 @@ import static org.junit.Assert.*;
 import static hudson.cli.CLICommandInvoker.Matcher.*;
 
 
-public class CliParameterTests {
+public class CliParameterTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
@@ -27,13 +28,13 @@ public class CliParameterTests {
         FreeStyleProject project = jenkins.createFreeStyleProject();
 
         project.addProperty(
-                new ParametersDefinitionProperty(
-                        new JiraIssueParameterDefinition("jiraissue","description","filter")
-                )
+            new ParametersDefinitionProperty(
+                new JiraIssueParameterDefinition("jiraissue", "description", "filter")
+            )
         );
 
         CLICommandInvoker invoker = new CLICommandInvoker(jenkins, new BuildCommand());
-        CLICommandInvoker.Result result = invoker.invokeWithArgs(project.getName(),"-p","jiraissue=TEST-1");
+        CLICommandInvoker.Result result = invoker.invokeWithArgs(project.getName(), "-p", "jiraissue=TEST-1");
         assertThat(result, succeeded());
     }
 
@@ -42,13 +43,13 @@ public class CliParameterTests {
         FreeStyleProject project = jenkins.createFreeStyleProject();
 
         project.addProperty(
-                new ParametersDefinitionProperty(
-                        new JiraVersionParameterDefinition("jiraversion","description","PROJ","RELEASE","true","false")
-                )
+            new ParametersDefinitionProperty(
+                new JiraVersionParameterDefinition("jiraversion", "description", "PROJ", "RELEASE", "true", "false")
+            )
         );
 
         CLICommandInvoker invoker = new CLICommandInvoker(jenkins, new BuildCommand());
-        CLICommandInvoker.Result result = invoker.invokeWithArgs(project.getName(),"-p","jiraversion=1.0");
+        CLICommandInvoker.Result result = invoker.invokeWithArgs(project.getName(), "-p", "jiraversion=1.0");
         assertThat(result, succeeded());
     }
 }

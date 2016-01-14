@@ -1,6 +1,7 @@
-package hudson.plugins.jira.versionparameter
+package hudson.plugins.jira
 
 import com.atlassian.jira.rest.client.api.domain.Version
+import hudson.plugins.jira.versionparameter.VersionComparator
 import spock.lang.*
 
 class VersionComparatorTest extends Specification {
