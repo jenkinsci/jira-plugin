@@ -11,11 +11,11 @@ public class JiraRestServiceTest {
     @Test
     public void testBaseApiPath() {
         URI uri = URI.create("http://example.com:8080/");
-        JiraRestService service = new JiraRestService(uri, null, "user", "password");
+        JiraRestService service = new JiraRestService(uri, null, "user", "password", JiraSite.DEFAULT_TIMEOUT);
         assertEquals("/" + JiraRestService.BASE_API_PATH, service.getBaseApiPath());
 
         uri = URI.create("https://example.com/path/to/jira");
-        service = new JiraRestService(uri, null, "user", "password");
+        service = new JiraRestService(uri, null, "user", "password", JiraSite.DEFAULT_TIMEOUT);
         assertEquals("/path/to/jira/" + JiraRestService.BASE_API_PATH, service.getBaseApiPath());
     }
 

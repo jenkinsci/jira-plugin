@@ -1,13 +1,15 @@
 package hudson.plugins.jira;
 
+import java.util.Set;
+
+import javax.annotation.Nonnull;
+
+import org.kohsuke.stapler.DataBoundConstructor;
+
 import hudson.Extension;
-import hudson.model.AbstractBuild;
 import hudson.model.Descriptor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import java.util.Set;
-import javax.annotation.Nonnull;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 public final class DefaultUpdaterIssueSelector extends UpdaterIssueSelector {
 
@@ -17,7 +19,7 @@ public final class DefaultUpdaterIssueSelector extends UpdaterIssueSelector {
 
     @Override
     public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull final JiraSite site, @Nonnull final TaskListener listener) {
-        return Updater.findIssueIdsRecursive((AbstractBuild<?, ?>) run, site.getIssuePattern(), listener);
+        return Updater.findIssueIdsRecursive(run, site.getIssuePattern(), listener);
     }
 
     @Extension

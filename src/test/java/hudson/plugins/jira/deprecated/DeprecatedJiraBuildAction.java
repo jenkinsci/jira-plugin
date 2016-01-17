@@ -1,26 +1,24 @@
-package hudson.plugins.jira;
+package hudson.plugins.jira.deprecated;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-
+import hudson.model.AbstractBuild;
 import hudson.model.Action;
-import hudson.model.Run;
+import hudson.plugins.jira.JiraIssue;
+import hudson.plugins.jira.Messages;
+
+import java.util.*;
 
 /**
- * JIRA issues related to the build.
+ * Old version of class JIRA issues related to the build.
+ * Used only in junit test JiraBuildActionTest for
+ * testing version transition compatibility of PR-72.
  *
- * @author Kohsuke Kawaguchi
  */
-public class JiraBuildAction implements Action {
-
-    public final Run<?, ?> owner;
+public class DeprecatedJiraBuildAction implements Action {
+    public final AbstractBuild<?, ?> owner;
 
     public JiraIssue[] issues;
 
-    public JiraBuildAction(Run<?, ?> owner, Collection<JiraIssue> issues) {
+    public DeprecatedJiraBuildAction(AbstractBuild<?, ?> owner, Collection<JiraIssue> issues) {
         this.owner = owner;
         this.issues = issues.toArray(new JiraIssue[issues.size()]);
         Arrays.sort(this.issues);
