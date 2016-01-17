@@ -71,6 +71,11 @@
           <artifactId>maven-release-plugin</artifactId>
           <version>2.5</version>
         </plugin>
+        <plugin>
+          <groupId>org.jenkins-ci.tools</groupId>
+          <artifactId>maven-hpi-plugin</artifactId>
+          <version>1.95</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
@@ -271,7 +276,18 @@
       <version>0.0.4</version>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-scm-step</artifactId>
+      <version>1.12</version>
+      <scope>test</scope>
+    </dependency>
+   	<dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-job</artifactId>
+      <version>1.12</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   
   <repositories>

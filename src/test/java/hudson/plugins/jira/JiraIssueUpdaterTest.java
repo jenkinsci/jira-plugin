@@ -11,7 +11,7 @@ public class JiraIssueUpdaterTest {
 
     @Test
     public void testIssueSelectorDefaultsToDefault() {
-        final JiraIssueUpdater updater = new JiraIssueUpdater(null);
+        final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, null);
         assertThat(updater.getIssueSelector(), instanceOf(DefaultUpdaterIssueSelector.class));
     }
 
@@ -26,7 +26,7 @@ public class JiraIssueUpdaterTest {
 
         }
 
-        final JiraIssueUpdater updater = new JiraIssueUpdater(new TestSelector());
+        final JiraIssueUpdater updater = new JiraIssueUpdater(new TestSelector(), null, null);
         assertThat(updater.getIssueSelector(), instanceOf(TestSelector.class));
     }
 

@@ -73,6 +73,13 @@ public class JiraSession {
         service.addComment(issueId, comment, groupVisibility, roleVisibility);
     }
 
+    /**
+     * Adds new labels to the existing issue.
+     * Old labels remains untouched.
+     *
+     * @param issueId Jira issue ID like "MNG-1235".
+     * @param labels New labels to add.
+     */
     public void addLabels(String issueId, List<String> labels) {
         List<String> newLabels = Lists.newArrayList();
         Issue existingIssue = service.getIssue(issueId);
