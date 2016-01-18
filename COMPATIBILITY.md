@@ -28,6 +28,26 @@ You can add some labels to issue in jira:
             labels: [ "$version", "jenkins" ]])            
 ```
 
+##SearchIssuesStep
+
+Workflow custom pipeline step (see [step-api](https://github.com/jenkinsci/workflow-plugin/blob/master/step-api/README.md)) that allow to search by jql query directly from workflow.
+
+usage:
+```groovy
+node {
+    List<String> issueKeys = jiraSearch(jql: "project = EX and labels = 'jenkins' and labels = '${version}'")	
+}
+```
+
+##CommentStep
+
+Interface for Workflow job types that simply want to post a comment e.g.
+```groovy
+node {
+    jiraComment(issueKey: "EX-111", body: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) builded. Please go to ${env.BUILD_URL}.")
+}
+```
+
 ## Other features
 
 Some features are currently not supported in workflow.
