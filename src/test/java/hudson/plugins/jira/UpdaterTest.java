@@ -1,39 +1,63 @@
 package hudson.plugins.jira;
 
-import hudson.scm.SCM;
-import hudson.scm.SCMDescriptor;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
 import java.io.IOException;
-import jenkins.model.Jenkins;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Pattern;
+
+import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import hudson.model.*;
+
+import hudson.model.BuildListener;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Job;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TopLevelItem;
+import hudson.model.User;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.scm.ChangeLogSet;
-import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCM;
 import hudson.scm.ChangeLogSet.Entry;
-import org.hamcrest.Matchers;
-import org.junit.Assert;
-import org.junit.Test;
-import org.jvnet.hudson.test.Bug;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
-import java.rmi.RemoteException;
-import java.util.*;
-import java.util.regex.Pattern;
-import static org.mockito.Mockito.*;
-import static org.hamcrest.CoreMatchers.*;
+import jenkins.model.Jenkins;
 
 
 /**
@@ -482,5 +506,60 @@ public class UpdaterTest {
         Run run = mock(Run.class);
         List<ChangeLogSet<? extends Entry>> changesUsingReflection = Updater.getChangesUsingReflection(run);
     }
-    
+
+    /**
+     * Test formatting of scm entry change time.
+     *
+     */
+    @Test
+    public void testAppendChangeTimestampToDescription() {
+        Updater updater = new Updater(null);
+        StringBuilder description = new StringBuilder();
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2016, 0, 1, 0, 0, 0);
+        JiraSite site = mock(JiraSite.class);
+        when(site.getDateTimePattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
+        updater.appendChangeTimestampToDescription(description, site, calendar.getTimeInMillis());
+        System.out.println(description.toString());
+        Assert.assertThat(description.toString(), equalTo("2016-01-01 00:00:00"));
+    }
+
+    @Rule
+    public JenkinsRule rule = new JenkinsRule();
+
+    /**
+     * Test formatting of scm entry change description.
+     *
+     */
+    @Test
+    public void testDateTimeInChangeDescription() {
+        rule.getInstance();
+        Updater updater = new Updater(null);
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(2016, 0, 1, 0, 0, 0);
+        JiraSite site = mock(JiraSite.class);
+        when(site.isAppendChangeTimestamp()).thenReturn(true);
+        when(site.getDateTimePattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
+
+        Run r = mock(Run.class);
+        Job j = mock(Job.class);
+        when(r.getParent()).thenReturn(j);
+        JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
+        when(j.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
+        when(jiraProjectProperty.getSite()).thenReturn(site);
+
+        ChangeLogSet.Entry entry = mock(ChangeLogSet.Entry.class);
+        when(entry.getTimestamp()).thenReturn(calendar.getTimeInMillis());
+        when(entry.getCommitId()).thenReturn("dsgsvds2re3dsv");
+        User mockAuthor = mock(User.class);
+        when(mockAuthor.getId()).thenReturn("jenkins-user");
+        when(entry.getAuthor()).thenReturn(mockAuthor);
+
+        String description = updater.createScmChangeEntryDescription(r, entry, false, false);
+        System.out.println(description);
+        Assert.assertThat(description, containsString("2016-01-01 00:00:00"));
+        Assert.assertThat(description, containsString("jenkins-user"));
+        Assert.assertThat(description, containsString("dsgsvds2re3dsv"));
+    }
+
 }

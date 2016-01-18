@@ -8,9 +8,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -252,59 +256,15 @@ class Updater {
                 result.toString());
     }
 
-    private String getScmComments(boolean wikiStyle,
-                                         Run<?, ?> run, boolean recordScmChanges, JiraIssue jiraIssue) {
+    private String getScmComments(boolean wikiStyle, Run<?, ?> run, boolean recordScmChanges, JiraIssue jiraIssue) {
         StringBuilder comment = new StringBuilder();
-        RepositoryBrowser repoBrowser = getRepositoryBrowser(run);
-        for(ChangeLogSet<? extends Entry> set : getChanges(run)) {
+
+        for (ChangeLogSet<? extends Entry> set : getChanges(run)) {
             for (Entry change : set) {
                 if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.id)) {
                     continue;
                 }
-                comment.append(change.getMsg());
-                String revision = getRevision(change);
-                if (revision != null) {
-                    URL url = null;
-                    if (repoBrowser != null) {
-                        try {
-                            url = repoBrowser.getChangeSetLink(change);
-                        } catch (IOException e) {
-                            LOGGER.log(Level.WARNING, "Failed to calculate SCM repository browser link", e);
-                        }
-                    }
-                    comment.append(" (");
-                    String uid = change.getAuthor().getId();
-                    if (StringUtils.isNotBlank(uid)) {
-                        comment.append(uid).append(": ");
-                    }
-                    if (url != null && StringUtils.isNotBlank(url.toExternalForm())) {
-                        if (wikiStyle) {
-                            comment.append("[").append(revision).append("|");
-                            comment.append(url.toExternalForm()).append("]");
-                        } else {
-                            comment.append("[").append(url.toExternalForm()).append("]");
-                        }
-                    } else {
-                        comment.append("rev ").append(revision);
-                    }
-                    comment.append(")");
-                }
-                comment.append("\n");
-                if (recordScmChanges) {
-                    // see http://issues.jenkins-ci.org/browse/JENKINS-2508
-                    // added additional try .. catch; getAffectedFiles is not supported by all SCM implementations
-                    try {
-                        for (AffectedFile affectedFile : change.getAffectedFiles()) {
-                            comment.append("* (").append(affectedFile.getEditType().getName()).append(") ").append(affectedFile.getPath()).append("\n");
-                        }
-                    } catch (UnsupportedOperationException e) {
-                        LOGGER.warning("Unsupported SCM operation 'getAffectedFiles'. Fall back to getAffectedPaths.");
-                        for (String affectedPath : change.getAffectedPaths()) {
-                            comment.append("* ").append(affectedPath).append("\n");
-                        }
-                    }
-                    comment.append("\n");
-                }
+                comment.append(createScmChangeEntryDescription(run, change, wikiStyle, recordScmChanges));
             }
         }
 
@@ -319,6 +279,93 @@ class Updater {
         }
 
         return comment.toString();
+    }
+
+    protected String createScmChangeEntryDescription(Run<?, ?> run, Entry change, boolean wikiStyle,
+            boolean recordScmChanges) {
+        StringBuilder description = new StringBuilder();
+        RepositoryBrowser repoBrowser = getRepositoryBrowser(run);
+        JiraSite site = JiraSite.get(run.getParent());
+
+        description.append(change.getMsg());
+        String revision = getRevision(change);
+        if (revision != null) {
+            description.append(" (");
+            appendAuthorToDescription(change, description);
+            if (site.isAppendChangeTimestamp() && change.getTimestamp() > 0) {
+                appendChangeTimestampToDescription(description, site, change.getTimestamp());
+                description.append(" ");
+            }
+            appendRevisionToDescription(change, wikiStyle, description, repoBrowser, revision);
+            description.append(")");
+        }
+        description.append("\n");
+        if (recordScmChanges) {
+            appendAffectedFilesToDescription(change, description);
+        }
+        return description.toString();
+    }
+
+    protected void appendAuthorToDescription(Entry change, StringBuilder description) {
+        if (change.getAuthor() != null) {
+            change.getAuthor();
+            String uid = change.getAuthor().getId();
+            if (StringUtils.isNotBlank(uid)) {
+                description.append(uid).append(": ");
+            }
+        }
+    }
+
+    protected void appendRevisionToDescription(Entry change, boolean wikiStyle, StringBuilder description,
+            RepositoryBrowser repoBrowser, String revision) {
+        URL url = null;
+        if (repoBrowser != null) {
+            try {
+                url = repoBrowser.getChangeSetLink(change);
+            } catch (IOException e) {
+                LOGGER.log(Level.WARNING, "Failed to calculate SCM repository browser link", e);
+            }
+        }
+        if (url != null && StringUtils.isNotBlank(url.toExternalForm())) {
+            if (wikiStyle) {
+                description.append("[").append(revision).append("|");
+                description.append(url.toExternalForm()).append("]");
+            } else {
+                description.append("[").append(url.toExternalForm()).append("]");
+            }
+        } else {
+            description.append("rev ").append(revision);
+        }
+    }
+
+    protected void appendAffectedFilesToDescription(Entry change, StringBuilder description) {
+        // see http://issues.jenkins-ci.org/browse/JENKINS-2508
+        // added additional try .. catch; getAffectedFiles is not supported
+        // by all SCM implementations
+        try {
+            for (AffectedFile affectedFile : change.getAffectedFiles()) {
+				description.append("* (").append(affectedFile.getEditType().getName()).append(") ").append(affectedFile.getPath()).append("\n");
+            }
+        } catch (UnsupportedOperationException e) {
+            LOGGER.warning("Unsupported SCM operation 'getAffectedFiles'. Fall back to getAffectedPaths.");
+            for (String affectedPath : change.getAffectedPaths()) {
+                description.append("* ").append(affectedPath).append("\n");
+            }
+        }
+        description.append("\n");
+    }
+
+    protected void appendChangeTimestampToDescription(StringBuilder description, JiraSite site, long timestamp) {
+        DateFormat df = null;
+        if (site.getDateTimePattern() != null) {
+            df = new SimpleDateFormat(site.getDateTimePattern());
+        } else {
+            // default format for current locale
+            df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());
+        }
+        Date changeDate = new Date(timestamp);
+        String dateTimeString = df.format(changeDate);
+        description.append(dateTimeString);
     }
 
     private RepositoryBrowser<?> getRepositoryBrowser(Run<?, ?> run) {
