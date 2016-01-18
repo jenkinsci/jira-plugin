@@ -610,6 +610,57 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         session.migrateIssuesToFixVersion(projectKey, versionName, query);
     }
 
+    public boolean progressIssues(List<JiraIssue> issueList, String workflowActionName, String comment, PrintStream console) throws IOException {
+        JiraSession session = getSession();
+
+        if (session == null) {
+            console.println(Messages.Updater_FailedToConnect());
+            return false;
+        }
+
+        boolean success = true;
+        List<JiraIssue> issues = issueList;
+
+
+        if (isEmpty(workflowActionName)) {
+            console.println("[JIRA] No workflow action was specified, " +
+                    "thus no status update will be made for any of the matching issues.");
+        }
+
+        for (JiraIssue issue : issues) {
+            String issueKey = issue.id;
+
+            if (isNotEmpty(comment)) {
+                session.addComment(issueKey, comment, null, null);
+            }
+
+
+            if (isEmpty(workflowActionName)) {
+                continue;
+            }
+
+            Integer actionId = session.getActionIdForIssue(issueKey, workflowActionName);
+
+            if (actionId == null) {
+                LOGGER.fine(String.format("Invalid workflow action %s for issue %s; issue status = ",
+                        workflowActionName, issueKey));
+                console.println(Messages.JiraIssueUpdateBuilder_UnknownWorkflowAction(issueKey, workflowActionName));
+                success = false;
+                continue;
+            }
+
+            String newStatus = session.progressWorkflowAction(issueKey, actionId);
+
+            console.println(String.format("[JIRA] Issue %s transitioned to \"%s\" due to action \"%s\".",
+                    issueKey, newStatus, workflowActionName));
+            LOGGER.log(Level.INFO, String.format("[JIRA] Issue %s transitioned to \"%s\" due to action \"%s\".",
+                    issueKey, newStatus, workflowActionName));
+
+        }
+
+        return success;
+    }
+
     /**
      * Progresses all issues matching the JQL search, using the given workflow action. Optionally
      * adds a comment to the issue(s) at the same time.
