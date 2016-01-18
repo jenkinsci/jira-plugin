@@ -1,0 +1,5 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <j:if test="${descriptor.hasIssueSelectors()}">
+        <f:dropdownDescriptorSelector field="issueSelector" title="${%Issue selector}"/>
+    </j:if>  
+</j:jelly>

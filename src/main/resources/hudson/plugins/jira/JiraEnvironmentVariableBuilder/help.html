@@ -1,0 +1,16 @@
+<div>
+  Extracts JIRA information for the build to environment variables.
+  <div>Available variables:</div>
+  <ul>
+      <li>JIRA_ISSUES - A comma separated list of issues which are referenced in the version control system changelog</li>
+      <li>JIRA_URL - Primary URL for the JIRA server </li>
+  </ul>
+  <p>
+      Typical usage:
+      <ol>
+          <li>Add this build step</li>
+          <li>Use the "Progress JIRA issues by workflow action" or "Move issues matching JQL to the specified version" with JQL like:
+              <blockquote><pre>issue in (${JIRA_ISSUES})</pre></blockquote></li>
+      </ol>
+  </p>
+</div>
