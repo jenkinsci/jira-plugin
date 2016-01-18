@@ -2,6 +2,8 @@ package hudson.plugins.jira;
 
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.selector.DefaultUpdaterIssueSelector;
+
 import java.util.Set;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertThat;

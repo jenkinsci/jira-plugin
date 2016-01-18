@@ -8,6 +8,8 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Node;
+import hudson.plugins.jira.selector.DefaultUpdaterIssueSelector;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
