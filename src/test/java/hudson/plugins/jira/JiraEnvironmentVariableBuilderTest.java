@@ -8,6 +8,9 @@ import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Node;
+import hudson.plugins.jira.selector.AbstractIssueSelector;
+import hudson.plugins.jira.selector.DefaultIssueSelector;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -45,7 +48,7 @@ public class JiraEnvironmentVariableBuilderTest {
     EnvVars env;
     AbstractProject project;
     JiraSite site;
-    UpdaterIssueSelector issueSelector;
+    AbstractIssueSelector issueSelector;
     PrintStream logger;
     Node node;
 
@@ -57,7 +60,7 @@ public class JiraEnvironmentVariableBuilderTest {
         env = mock(EnvVars.class);
         project = mock(AbstractProject.class);
         site = mock(JiraSite.class);
-        issueSelector = mock(UpdaterIssueSelector.class);
+        issueSelector = mock(AbstractIssueSelector.class);
         logger = mock(PrintStream.class);
 
         when(site.getName()).thenReturn(JIRA_URL);
@@ -75,7 +78,7 @@ public class JiraEnvironmentVariableBuilderTest {
     @Test
     public void testIssueSelectorDefaultsToDefault() {
         final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(null);
-        assertThat(builder.getIssueSelector(), instanceOf(DefaultUpdaterIssueSelector.class));
+        assertThat(builder.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
     }
 
     @Test

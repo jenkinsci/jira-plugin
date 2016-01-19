@@ -20,6 +20,8 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.selector.AbstractIssueSelector;
+import hudson.plugins.jira.selector.DefaultIssueSelector;
 import hudson.scm.SCM;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -36,12 +38,12 @@ import jenkins.tasks.SimpleBuildStep;
  */
 public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, SimpleBuildStep {
 
-    private UpdaterIssueSelector issueSelector;
+    private AbstractIssueSelector issueSelector;
     private SCM scm;
     private List<String> labels;
 
     @DataBoundConstructor
-    public JiraIssueUpdater(UpdaterIssueSelector issueSelector, SCM scm, List<String> labels) {
+    public JiraIssueUpdater(AbstractIssueSelector issueSelector, SCM scm, List<String> labels) {
         super();
         this.issueSelector = issueSelector;
         this.scm = scm;
@@ -77,9 +79,9 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         return DESCRIPTOR;
     }
 
-    public UpdaterIssueSelector getIssueSelector() {
-        UpdaterIssueSelector uis = this.issueSelector;
-        if (uis == null) uis = new DefaultUpdaterIssueSelector();
+    public AbstractIssueSelector getIssueSelector() {
+        AbstractIssueSelector uis = this.issueSelector;
+        if (uis == null) uis = new DefaultIssueSelector();
         return (this.issueSelector = uis);
     }
 
@@ -122,7 +124,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         }
 
         public boolean hasIssueSelectors() {
-            return Jenkins.getActiveInstance().getDescriptorList(UpdaterIssueSelector.class).size() > 1;
+            return Jenkins.getActiveInstance().getDescriptorList(AbstractIssueSelector.class).size() > 1;
         }
     }
 
