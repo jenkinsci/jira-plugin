@@ -5,6 +5,9 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.tasks.BuildWrapper;
+
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,7 +19,16 @@ import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Status;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -100,5 +112,36 @@ public class JiraCreateReleaseNotesTest {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes("",JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER));
         doReturn(site).when(jcrn).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
         jcrn.setUp(build, launcher, buildListener);
+    }
+
+    @Test
+    public void releaseNotesContent() throws InterruptedException, IOException {
+        JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
+        doReturn(site).when(jcrn).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+        when(site.getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER)).thenCallRealMethod();
+        JiraSession session = Mockito.mock(JiraSession.class);
+        doReturn(session).when(site).getSession();
+        Issue issue1 = Mockito.mock(Issue.class);
+        IssueType issueType1 = Mockito.mock(IssueType.class);
+        Status issueStatus = Mockito.mock(Status.class);
+        when(issue1.getIssueType()).thenReturn(issueType1);
+        when(issue1.getStatus()).thenReturn(issueStatus);
+        when(issueType1.getName()).thenReturn("Bug");
+        Issue issue2 = Mockito.mock(Issue.class);
+        IssueType issueType2 = Mockito.mock(IssueType.class);
+        when(issue2.getIssueType()).thenReturn(issueType2);
+        when(issue2.getStatus()).thenReturn(issueStatus);
+        when(issueType2.getName()).thenReturn("Feature");
+        when(session.getIssuesWithFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER)).
+           thenReturn(Arrays.asList(issue1, issue2));
+
+        BuildWrapper.Environment environment = jcrn.setUp(build, launcher, buildListener);
+        Map<String, String> envVars = new HashMap<String, String>();
+        environment.buildEnvVars(envVars);
+        String releaseNotes = envVars.get(jcrn.getJiraEnvironmentVariable());
+        assertNotNull(releaseNotes);
+        assertThat(releaseNotes, Matchers.containsString(issueType1.getName()));
+        assertThat(releaseNotes, Matchers.containsString(issueType2.getName()));
+        assertThat(releaseNotes, Matchers.not(Matchers.containsString("UNKNOWN")));
     }
 }

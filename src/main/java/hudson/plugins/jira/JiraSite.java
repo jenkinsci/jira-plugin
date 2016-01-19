@@ -473,13 +473,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
 
         List<Issue> issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
-        List<IssueType> types = session.getIssueTypes();
-
-        HashMap<Long, String> typeNameMap = new HashMap<Long, String>();
-
-        for (IssueType type : types) {
-            typeNameMap.put(type.getId(), type.getName());
-        }
 
         if (issues == null) {
             return "";
@@ -493,10 +486,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             String status = issue.getStatus().getName();
             String type = "UNKNOWN";
 
-            final String issueTypeName = issue.getIssueType() == null ? null : issue.getIssueType().getName();
-
-            if (typeNameMap.containsKey(issueTypeName)) {
-                type = typeNameMap.get(issueTypeName);
+            if (issue.getIssueType() != null && issue.getIssueType().getName() != null) {
+                type = issue.getIssueType().getName();
             }
 
             Set<String> issueSet;
