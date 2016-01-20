@@ -33,6 +33,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild.DependencyChange;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
+import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
@@ -50,9 +51,6 @@ class Updater {
     private List<String> labels;
 
     private static final Logger LOGGER = Logger.getLogger(Updater.class.getName());
-    //for reflection, until JENKINS-24141
-    private static final String GET_CHANGESET_METHOD = "getChangeSets";
-    private static final String CANNOT_ACCESS_GET_CHANGESET_METHOD = "cannot call "+GET_CHANGESET_METHOD;
 
     /**
      * Debug flag.
@@ -69,7 +67,7 @@ class Updater {
         this.labels = labels;
     }
 
-    boolean perform(Run<?, ?> build, TaskListener listener, UpdaterIssueSelector selector) {
+    boolean perform(Run<?, ?> build, TaskListener listener, AbstractIssueSelector selector) {
         PrintStream logger = listener.getLogger();
         List<JiraIssue> issues = null;
 
@@ -256,7 +254,7 @@ class Updater {
                                          Run<?, ?> run, boolean recordScmChanges, JiraIssue jiraIssue) {
         StringBuilder comment = new StringBuilder();
         RepositoryBrowser repoBrowser = getRepositoryBrowser(run);
-        for(ChangeLogSet<? extends Entry> set : getChanges(run)) {
+        for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(run)) {
             for (Entry change : set) {
                 if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.id)) {
                     continue;
@@ -348,126 +346,6 @@ class Updater {
         } catch (Exception e) {
             return null;
         }
-    }
-
-
-    /**
-     * Finds the strings that match JIRA issue ID patterns.
-     * This method returns all likely candidates and doesn't check
-     * if such ID actually exists or not. We don't want to use
-     * {@link JiraSite#existsIssue(String)} here so that new projects
-     * in JIRA can be detected.
-     */
-    static Set<String> findIssueIdsRecursive(Run<?, ?> build, Pattern pattern,
-                                                     TaskListener listener) {
-        Set<String> ids = new HashSet<String>();
-
-        // first, issues that were carried forward.
-        Run<?, ?> prev = build.getPreviousBuild();
-        if (prev != null) {
-            JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
-            if (a != null) {
-                ids.addAll(a.getIDs());
-            }
-        }
-
-        // then issues in this build
-        findIssues(build, ids, pattern, listener);
-
-        // check for issues fixed in dependencies
-        for (DependencyChange depc : getDependencyChanges(build.getPreviousBuild()).values()) {
-            for (AbstractBuild<?, ?> b : depc.getBuilds()) {
-                findIssues(b, ids, pattern, listener);
-            }
-        }
-        return ids;
-    }
-
-    /**
-     * @param pattern pattern to use to match issue ids
-     */
-    static void findIssues(Run<?, ?> build, Set<String> ids, Pattern pattern,
-                           TaskListener listener) {
-        for(ChangeLogSet<? extends Entry> set : getChanges(build)) {
-            for (Entry change : set) {
-                LOGGER.fine("Looking for JIRA ID in " + change.getMsg());
-                Matcher m = pattern.matcher(change.getMsg());
-
-                while (m.find()) {
-                    if (m.groupCount() >= 1) {
-                        String content = StringUtils.upperCase(m.group(1));
-                        ids.add(content);
-                    } else {
-                        listener.getLogger().println("Warning: The JIRA pattern " + pattern + " doesn't define a capturing group!");
-                    }
-                }    
-            }
-        }
-
-        // Now look for any JiraIssueParameterValue's set in the build
-        // Implements JENKINS-12312
-        ParametersAction parameters = build.getAction(ParametersAction.class);
-
-        if (parameters != null) {
-            for (ParameterValue val : parameters.getParameters()) {
-                if (val instanceof JiraIssueParameterValue) {
-                    ids.add(((JiraIssueParameterValue) val).getValue().toString());
-                }
-            }
-        }
-    }
-
-    private static List<ChangeLogSet<? extends Entry>> getChanges(Run<?,?> run) {
-        if(run instanceof AbstractBuild) {
-            return ((AbstractBuild<?,?>) run).getChangeSets();
-        } else if(run == null) {
-            throw new IllegalStateException("run cannot be null!");
-        } else {
-            return getChangesUsingReflection(run);
-        }        
-    }
-
-    /**
-     * return changeSets using java reflection api, for example
-     * for workflow jobs.
-     * 
-     * until JENKINS-24141
-     * 
-     * @param run - run that imlement some type with GET_CHANGESET_METHOD
-     * @return collection of scm ChangeLogSet entries
-     */
-    @SuppressWarnings("unchecked")
-    static List<ChangeLogSet<? extends Entry>> getChangesUsingReflection(Run<?, ?> run) {
-        Method getChangeSetMethod = null;
-        for(Method method : run.getClass().getMethods()) {
-            if(method.getName().equals(GET_CHANGESET_METHOD) && List.class.isAssignableFrom(method.getReturnType())) {
-                getChangeSetMethod = method;
-                break;
-            }
-        }
-        if(getChangeSetMethod != null) {
-            try {
-                Object result = getChangeSetMethod.invoke(run, new Object[]{});
-                return (List<ChangeLogSet<? extends Entry>>) result;
-            } catch (IllegalAccessException e) {
-                throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
-            } catch (InvocationTargetException e) {
-                throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
-            }
-        } else {
-            //if run don't have  GET_CHANGESET_METHOD, we don't support it
-            throw new IllegalArgumentException("Unsupported Run type "+run.getClass().getName());
-        }
-    }
-
-    private static Map<AbstractProject,DependencyChange> getDependencyChanges(Run<?,?> run) {
-        if(run instanceof AbstractBuild)
-            return ((AbstractBuild) run).getDependencyChanges((AbstractBuild)run);
-        //jenkins workflow plugin etc.
-        else 
-            return Maps.newHashMap();
     }
 
     private SCM getScm() {

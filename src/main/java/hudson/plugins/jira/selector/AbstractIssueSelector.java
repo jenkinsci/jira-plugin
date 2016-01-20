@@ -1,4 +1,4 @@
-package hudson.plugins.jira;
+package hudson.plugins.jira.selector;
 
 import java.util.Set;
 
@@ -8,13 +8,14 @@ import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraSite;
 
 /**
  * Strategy of finding issues which should be updated after completed run.
  *
  * @author Franta Mejta
  */
-public abstract class UpdaterIssueSelector extends AbstractDescribableImpl<UpdaterIssueSelector> implements ExtensionPoint {
+public abstract class AbstractIssueSelector extends AbstractDescribableImpl<AbstractIssueSelector> implements ExtensionPoint {
 
     /**
      * Finds the strings that match JIRA issue ID patterns.

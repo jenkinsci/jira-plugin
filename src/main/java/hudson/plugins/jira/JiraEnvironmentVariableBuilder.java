@@ -6,6 +6,8 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.plugins.jira.selector.AbstractIssueSelector;
+import hudson.plugins.jira.selector.DefaultIssueSelector;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import java.io.IOException;
@@ -18,16 +20,16 @@ import org.apache.commons.lang.StringUtils;
  */
 public class JiraEnvironmentVariableBuilder extends Builder  {
     
-    private UpdaterIssueSelector issueSelector;
+    private AbstractIssueSelector issueSelector;
     
     @DataBoundConstructor
-    public JiraEnvironmentVariableBuilder(UpdaterIssueSelector issueSelector) {
+    public JiraEnvironmentVariableBuilder(AbstractIssueSelector issueSelector) {
         this.issueSelector = issueSelector;
     }
     
-    public UpdaterIssueSelector getIssueSelector() {
-        UpdaterIssueSelector uis = this.issueSelector;
-        if (uis == null) uis = new DefaultUpdaterIssueSelector();
+    public AbstractIssueSelector getIssueSelector() {
+        AbstractIssueSelector uis = this.issueSelector;
+        if (uis == null) uis = new DefaultIssueSelector();
         return (this.issueSelector = uis);
     }
     

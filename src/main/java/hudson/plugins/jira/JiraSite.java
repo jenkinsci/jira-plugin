@@ -65,7 +65,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * First char must be a letter, then at least one letter, digit or underscore.
      * See issue JENKINS-729, JENKINS-4092
      */
-    protected static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
+    public static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
     
     /**
      * Default rest api client calls timeout, in seconds
