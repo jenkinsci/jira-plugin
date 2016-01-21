@@ -6,14 +6,14 @@
     <artifactId>plugin</artifactId>
     <version>1.609.3</version>
   </parent>
-  
+
   <artifactId>jira</artifactId>
   <version>2.2-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins JIRA plugin</name>
   <description>Integrates Jenkins to JIRA</description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/JIRA+Plugin</url>
-  
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.6</java.version>
@@ -30,13 +30,13 @@
     <gmaven.version>1.5</gmaven.version>
     <cobertura.version>2.7</cobertura.version>
   </properties>
-  
+
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/jira-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/jira-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/jira-plugin</url>
     <tag>HEAD</tag>
-  </scm>  
+  </scm>
 
   <developers>
     <developer>
@@ -59,18 +59,23 @@
           <configuration>
             <source>${java.version}</source>
             <target>${java.version}</target>
-          </configuration>          
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.12</version>
+          <configuration>
+            <forkCount>3</forkCount>
+            <reuseForks>true</reuseForks>
+            <argLine>-Xmx1024m</argLine>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-resources-plugin</artifactId>
           <version>2.5</version>
-        </plugin>               
+        </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
@@ -96,7 +101,7 @@
             </goals>
           </execution>
         </executions>
-      </plugin> 
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -104,7 +109,7 @@
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
-        </configuration>          
+        </configuration>
       </plugin>
 
 
@@ -284,6 +289,12 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.6.0-rc3</version>
     </dependency>
+	<dependency>
+	  <artifactId>workflow-step-api</artifactId>
+	  <groupId>org.jenkins-ci.plugins.workflow</groupId>
+	  <version>1.12</version>
+	  <optional>true</optional>
+	</dependency>
 
     <!-- test dependencies -->
     <dependency>
@@ -328,8 +339,15 @@
       <version>1.12</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
+      <version>1.12</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
-  
+
   <repositories>
    <repository>
      <id>repo.jenkins-ci.org</id>
@@ -379,5 +397,5 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
-  
+
 </project>
