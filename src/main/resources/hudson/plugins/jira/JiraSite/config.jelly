@@ -35,6 +35,12 @@
   <f:entry title="${%Visible for Project Role}" field="roleVisibility">
     <f:textbox />
   </f:entry>
+  <f:entry title="${%Add timestamp to JIRA comments}" field="appendChangeTimestamp">
+    <f:checkbox />
+  </f:entry>  
+  <f:entry title="${%JIRA comments timestamp format}" field="dateTimePattern">
+    <f:textbox />
+  </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
             method="validate" with="url,userName,password,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout" />
