@@ -29,6 +29,17 @@ You can add some labels to issue in jira:
             labels: [ "$version", "jenkins" ]])            
 ```
 
+##JiraIssueUpdateBuilder  usage example
+
+```groovy
+node {
+    step([$class: 'hudson.plugins.jira.JiraIssueUpdateBuilder', 
+            jqlSearch: "project = EX and labels = 'jenkins' and labels = '${version}'",
+            workflowActionName: 'Resolve Issue',
+            comment: 'comment'])
+}
+```
+
 ##SearchIssuesStep
 
 Custom pipeline step (see [step-api](https://github.com/jenkinsci/workflow-plugin/blob/master/step-api/README.md)) that allow to search by jql query directly from workflow.
@@ -68,7 +79,7 @@ Other builders will be supported in future (not supported yet).
 - [X] `Jira Version Parameter` supported
 - [X] `JiraChangeLogAnnotator` supported
 - [X] `JiraIssueUpdater` supported
-- [ ] `JiraIssueUpdateBuilder` not supported yet
+- [X] `JiraIssueUpdateBuilder` supported
 - [ ] `JiraCreateReleaseNotes` not supported yet
 - [ ] `JiraCreateIssueNotifier` never supported
 - [ ] `JiraIssueMigrator` never supported
