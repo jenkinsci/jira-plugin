@@ -144,6 +144,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public Integer timeout;
 
     /**
+     * Configuration  for formatting (date -> text) in jira comments.
+     */
+    private String dateTimePattern;
+    
+    /**
+     * To add scm entry change date and time in jira comments.
+     *
+     */
+    private Boolean appendChangeTimestamp;
+    
+    /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
      * last time we checked. Copy on write semantics.
      */
@@ -204,6 +215,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void setTimeout(Integer timeout) {
 		this.timeout = timeout;
 	}
+    
+    @DataBoundSetter
+    public void setDateTimePattern(String dateTimePattern) {
+        this.dateTimePattern = dateTimePattern;
+    }
+    
+    @DataBoundSetter
+    public void setAppendChangeTimestamp(Boolean appendChangeTimestamp) {
+        this.appendChangeTimestamp = appendChangeTimestamp;
+    }
+
+    public String getDateTimePattern() {
+        return dateTimePattern;
+    }
+    
+    public boolean isAppendChangeTimestamp() {
+        return this.appendChangeTimestamp != null && this.appendChangeTimestamp.booleanValue();
+    }
     
     protected Object readResolve() {
         projectUpdateLock = new ReentrantLock();
