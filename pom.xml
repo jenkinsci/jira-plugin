@@ -65,6 +65,11 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>2.12</version>
+          <configuration>
+            <forkCount>3</forkCount>
+            <reuseForks>true</reuseForks>
+            <argLine>-Xmx1024m</argLine>
+          </configuration>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -284,6 +289,12 @@
       <artifactId>jackson-databind</artifactId>
       <version>2.6.0-rc3</version>
     </dependency>
+	<dependency>
+	  <artifactId>workflow-step-api</artifactId>
+	  <groupId>org.jenkins-ci.plugins.workflow</groupId>
+	  <version>1.12</version>
+	  <optional>true</optional>
+	</dependency>
 
     <!-- test dependencies -->
     <dependency>
@@ -326,6 +337,13 @@
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-job</artifactId>
       <version>1.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-step-api</artifactId>
+      <version>1.12</version>
+      <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
   </dependencies>
