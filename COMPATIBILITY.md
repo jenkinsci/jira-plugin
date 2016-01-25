@@ -29,6 +29,20 @@ You can add some labels to issue in jira:
             labels: [ "$version", "jenkins" ]])            
 ```
 
+##JiraCreateReleaseNotes usage example
+
+```groovy
+node {
+    wrap([$class: 'hudson.plugins.jira.JiraCreateReleaseNotes', jiraProjectKey: 'TST', 
+	    jiraRelease: '1.1.1', jiraEnvironmentVariable: 'notes', jiraFilter: 'status in (Resolved, Closed)']) 
+	{
+        //do some useful here
+		//release notes can be found in environment variable jiraEnvironmentVariable
+		print env.notes
+    }
+}
+```
+
 ##SearchIssuesStep
 
 Custom pipeline step (see [step-api](https://github.com/jenkinsci/workflow-plugin/blob/master/step-api/README.md)) that allow to search by jql query directly from workflow.
@@ -69,7 +83,7 @@ Other builders will be supported in future (not supported yet).
 - [X] `JiraChangeLogAnnotator` supported
 - [X] `JiraIssueUpdater` supported
 - [ ] `JiraIssueUpdateBuilder` not supported yet
-- [ ] `JiraCreateReleaseNotes` not supported yet
+- [X] `JiraCreateReleaseNotes` supported
 - [ ] `JiraCreateIssueNotifier` never supported
 - [ ] `JiraIssueMigrator` never supported
 - [ ] `JiraReleaseVersionUpdater` never supported

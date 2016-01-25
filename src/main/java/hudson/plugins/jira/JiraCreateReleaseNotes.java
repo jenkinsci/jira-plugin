@@ -1,14 +1,20 @@
 package hudson.plugins.jira;
 
+import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Job;
 import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.BuildWrapper;
 import hudson.tasks.BuildWrapperDescriptor;
+import jenkins.tasks.SimpleBuildWrapper;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.io.IOException;
@@ -18,7 +24,7 @@ import java.util.Map;
 import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
-public class JiraCreateReleaseNotes extends BuildWrapper {
+public class JiraCreateReleaseNotes extends SimpleBuildWrapper {
 
     @Extension
     public final static class Descriptor extends BuildWrapperDescriptor {
@@ -98,15 +104,14 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
     }
 
 
-    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
+    JiraSite getSiteForProject(Job<?, ?> project) {
         return JiraSite.get(project);
     }
 
     @Override
-    public Environment setUp(final AbstractBuild build, final Launcher launcher, final BuildListener listener)
-            throws IOException, InterruptedException {
+    public void setUp(Context context, Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener, EnvVars initialEnvironment) throws IOException, InterruptedException {
 
-        final JiraSite site = getSiteForProject(build.getProject());
+        final JiraSite site = getSiteForProject(run.getParent());
 
         String realRelease = null;
         String realProjectKey = null;
@@ -114,9 +119,9 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
         String realFilter = DEFAULT_FILTER;
 
         try {
-            realRelease = build.getEnvironment(listener).expand(jiraRelease);
-            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
-            realFilter = build.getEnvironment(listener).expand(jiraFilter);
+            realRelease = run.getEnvironment(listener).expand(jiraRelease);
+            realProjectKey = run.getEnvironment(listener).expand(jiraProjectKey);
+            realFilter = run.getEnvironment(listener).expand(jiraFilter);
 
             if (isEmpty(realRelease)) {
                 throw new IllegalArgumentException("No version specified");
@@ -137,18 +142,12 @@ public class JiraCreateReleaseNotes extends BuildWrapper {
                     realProjectKey,
                     e
             ));
-            listener.finished(Result.FAILURE);
-            return new Environment() {};
+            if(listener instanceof BuildListener)
+                ((BuildListener)listener).finished(Result.FAILURE);
         }
 
         final Map<String, String> envMap = new HashMap<String, String>();
         envMap.put(jiraEnvironmentVariable, releaseNotes);
-
-        return new Environment() {
-            @Override
-            public void buildEnvVars(final Map<String, String> env) {
-                env.putAll(envMap);
-            }
-        };
+        context.getEnv().putAll(envMap);
     }
 }
