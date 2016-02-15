@@ -16,15 +16,18 @@
 package hudson.plugins.jira;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import jenkins.tasks.SimpleBuildStep;
+
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -38,7 +41,7 @@ import java.io.IOException;
  *
  * @author Joe Hansche jhansche@myyearbook.com
  */
-public class JiraIssueUpdateBuilder extends Builder {
+public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
     private final String jqlSearch;
     private final String workflowActionName;
     private final String comment;
@@ -75,17 +78,16 @@ public class JiraIssueUpdateBuilder extends Builder {
      * Performs the actual update based on job configuration.
      */
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        String realComment = Util.fixEmptyAndTrim(build.getEnvironment(listener).expand(comment));
-        String realJql = Util.fixEmptyAndTrim(build.getEnvironment(listener).expand(jqlSearch));
-        String realWorkflowActionName = Util.fixEmptyAndTrim(build.getEnvironment(listener).expand(workflowActionName));
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+        String realComment = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(comment));
+        String realJql = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(jqlSearch));
+        String realWorkflowActionName = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(workflowActionName));
 
-        JiraSite site = JiraSite.get(build.getProject());
+        JiraSite site = JiraSite.get(run.getParent());
 
         if (site == null) {
             listener.getLogger().println(Messages.Updater_NoJiraSite());
-            build.setResult(Result.FAILURE);
-            return true;
+            run.setResult(Result.FAILURE);
         }
 
         if (StringUtils.isNotEmpty(realWorkflowActionName)) {
@@ -97,15 +99,12 @@ public class JiraIssueUpdateBuilder extends Builder {
         try {
             if (!site.progressMatchingIssues(realJql, realWorkflowActionName, realComment, listener.getLogger())) {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
-                build.setResult(Result.UNSTABLE);
+                run.setResult(Result.UNSTABLE);
             }
         } catch (IOException e) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
-            return false;
         }
-
-        return true;
     }
 
     @Override
