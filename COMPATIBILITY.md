@@ -29,6 +29,7 @@ You can add some labels to issue in jira:
             labels: [ "$version", "jenkins" ]])            
 ```
 
+<<<<<<< HEAD
 ##JiraIssueUpdateBuilder  usage example
 
 ```groovy
@@ -37,6 +38,19 @@ node {
             jqlSearch: "project = EX and labels = 'jenkins' and labels = '${version}'",
             workflowActionName: 'Resolve Issue',
             comment: 'comment'])
+=======
+##JiraCreateReleaseNotes usage example
+
+```groovy
+node {
+    wrap([$class: 'hudson.plugins.jira.JiraCreateReleaseNotes', jiraProjectKey: 'TST', 
+	    jiraRelease: '1.1.1', jiraEnvironmentVariable: 'notes', jiraFilter: 'status in (Resolved, Closed)']) 
+	{
+        //do some useful here
+		//release notes can be found in environment variable jiraEnvironmentVariable
+		print env.notes
+    }
+>>>>>>> upstream/pr/87
 }
 ```
 
@@ -80,7 +94,7 @@ Other builders will be supported in future (not supported yet).
 - [X] `JiraChangeLogAnnotator` supported
 - [X] `JiraIssueUpdater` supported
 - [X] `JiraIssueUpdateBuilder` supported
-- [ ] `JiraCreateReleaseNotes` not supported yet
+- [X] `JiraCreateReleaseNotes` supported
 - [ ] `JiraCreateIssueNotifier` never supported
 - [ ] `JiraIssueMigrator` never supported
 - [ ] `JiraReleaseVersionUpdater` never supported

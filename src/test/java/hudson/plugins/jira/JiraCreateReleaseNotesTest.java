@@ -5,6 +5,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
 
 import org.hamcrest.Matchers;
@@ -103,17 +104,34 @@ public class JiraCreateReleaseNotesTest {
     public void jiraApiCallOtherFilter() throws InterruptedException, IOException {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER));
         doReturn(site).when(jcrn).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+        BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
+        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.<Result>anyObject());
         jcrn.setUp(build, launcher, buildListener);
         verify(site).getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JIRA_OTHER_FILTER);
+        //assert that build not fail
+        assertThat(finishedListener.getResult(), Matchers.nullValue());
     }
 
     @Test
-    public void failBuildOnError() throws InterruptedException, IOException {
+    public void failBuildOnErrorEmptyProjectKey() throws InterruptedException, IOException {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes("",JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER));
         doReturn(site).when(jcrn).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
-        jcrn.setUp(build, launcher, buildListener);
+        BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
+        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.<Result>anyObject());
+        jcrn.setUp(build, launcher, buildListener);        
+        assertThat(finishedListener.getResult(), Matchers.equalTo(Result.FAILURE));
     }
 
+    @Test
+    public void failBuildOnErrorEmptyRelease() throws InterruptedException, IOException {
+        JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,"",JIRA_VARIABLE, JIRA_OTHER_FILTER));
+        doReturn(site).when(jcrn).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+        BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
+        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.<Result>anyObject());
+        jcrn.setUp(build, launcher, buildListener);        
+        assertThat(finishedListener.getResult(), Matchers.equalTo(Result.FAILURE));
+    }
+    
     @Test
     public void releaseNotesContent() throws InterruptedException, IOException {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
