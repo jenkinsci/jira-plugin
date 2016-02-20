@@ -13,7 +13,7 @@ node {
     def gitScm = git url: 'git@github.com:jenkinsci/jira-plugin.git', branch: 'master'
     sh 'make something'
     step([$class: 'hudson.plugins.jira.JiraIssueUpdater', 
-            issueSelector: [$class: 'hudson.plugins.jira.DefaultUpdaterIssueSelector'], 
+            issueSelector: [$class: 'hudson.plugins.jira.selector.DefaultIssueSelector'], 
             scm: gitScm])            
     gitScm = null
 }
@@ -24,7 +24,7 @@ Note that a pointer to scm class should be better cleared to not serialize scm o
 You can add some labels to issue in jira:
 ```groovy
     step([$class: 'hudson.plugins.jira.JiraIssueUpdater', 
-            issueSelector: [$class: 'hudson.plugins.jira.DefaultUpdaterIssueSelector'], 
+            issueSelector: [$class: 'hudson.plugins.jira.selector.DefaultIssueSelector'], 
             scm: gitScm,
             labels: [ "$version", "jenkins" ]])            
 ```
@@ -83,6 +83,28 @@ node {
 }
 ```
 
+##JiraEnvironmentVariableBuilder
+Is not supported in Pipeline. You can get current jira url (if you are not using the Groovy sandbox):
+
+```groovy
+import hudson.plugins.jira.JiraSite;
+
+node {
+    String jiraUrl = JiraSite.get(currentBuild.rawBuild).name    	
+    env.JIRA_URL = jiraUrl
+}
+```
+
+To replace JIRA_ISSUES env variable, you can use pipeline step jiraIssueSelector:
+```groovy
+    List<String> issueKeys = jiraIssueSelector()
+```
+
+or if you use custom issue selector:
+```groovy
+    List<String> issueKeys = jiraIssueSelector(new CustomIssueSelector())
+```
+
 ## Other features
 
 Some features are currently not supported in pipeline.
@@ -109,3 +131,4 @@ Other builders will be supported in future (not supported yet).
 - [ ] `JiraReleaseVersionUpdater` never supported
 - [X] `JiraReleaseVersionUpdaterBuilder` supported
 - [ ] `JiraVersionCreator` never supported
+- [ ] `JiraEnvironmentVariableBuilder` not supported (workaround exists)
