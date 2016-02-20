@@ -1,8 +1,9 @@
 package hudson.plugins.jira;
 
-import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 
 import java.util.List;
 
@@ -15,13 +16,13 @@ import static org.hamcrest.Matchers.equalTo;
  */
 public class VersionReleaser {
 
-    static boolean perform(JiraSite site, String jiraProjectKey, String jiraRelease, AbstractBuild<?, ?> build, BuildListener listener) {
+    static boolean perform(JiraSite site, String jiraProjectKey, String jiraRelease, Run<?, ?> run, TaskListener listener) {
         String realRelease = "NOT_SET";
         String realProjectKey = null;
 
         try {
-            realRelease = build.getEnvironment(listener).expand(jiraRelease);
-            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
+            realRelease = run.getEnvironment(listener).expand(jiraRelease);
+            realProjectKey = run.getEnvironment(listener).expand(jiraProjectKey);
 
             if (realRelease == null || realRelease.isEmpty()) {
                 throw new IllegalArgumentException("Release is Empty");
@@ -47,7 +48,8 @@ public class VersionReleaser {
                     realRelease,
                     realProjectKey,
                     e));
-            listener.finished(Result.FAILURE);
+            if(listener instanceof BuildListener)
+                ((BuildListener)listener).finished(Result.FAILURE);
             return false;
         }
         return true;

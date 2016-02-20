@@ -3,7 +3,7 @@
 
 This document captures the status of features to be compatible or incompatible.
 
-##JiraIssueUpdater usage example
+## JiraIssueUpdater usage example
 
 You need keep reference to used scm.
 As an example, you can write a flow:
@@ -29,8 +29,7 @@ You can add some labels to issue in jira:
             labels: [ "$version", "jenkins" ]])            
 ```
 
-<<<<<<< HEAD
-##JiraIssueUpdateBuilder  usage example
+## JiraIssueUpdateBuilder  usage example
 
 ```groovy
 node {
@@ -38,8 +37,9 @@ node {
             jqlSearch: "project = EX and labels = 'jenkins' and labels = '${version}'",
             workflowActionName: 'Resolve Issue',
             comment: 'comment'])
-=======
-##JiraCreateReleaseNotes usage example
+```
+
+## JiraCreateReleaseNotes usage example
 
 ```groovy
 node {
@@ -50,11 +50,20 @@ node {
 		//release notes can be found in environment variable jiraEnvironmentVariable
 		print env.notes
     }
->>>>>>> upstream/pr/87
+
+```
+
+## JiraReleaseVersionUpdaterBuilder usage example
+
+```groovy
+node {
+    step([$class: 'hudson.plugins.jira.JiraReleaseVersionUpdaterBuilder', 
+            jiraProjectKey: 'TEST', 
+            jiraRelease: '1.1.1'])            
 }
 ```
 
-##SearchIssuesStep
+## SearchIssuesStep
 
 Custom pipeline step (see [step-api](https://github.com/jenkinsci/workflow-plugin/blob/master/step-api/README.md)) that allow to search by jql query directly from workflow.
 
@@ -65,7 +74,7 @@ node {
 }
 ```
 
-##CommentStep
+## CommentStep
 
 Interface for Pipeline job types that simply want to post a comment e.g.
 ```groovy
@@ -98,5 +107,5 @@ Other builders will be supported in future (not supported yet).
 - [ ] `JiraCreateIssueNotifier` never supported
 - [ ] `JiraIssueMigrator` never supported
 - [ ] `JiraReleaseVersionUpdater` never supported
-- [ ] `JiraReleaseVersionUpdaterBuilder` not supported yet
+- [X] `JiraReleaseVersionUpdaterBuilder` supported
 - [ ] `JiraVersionCreator` never supported

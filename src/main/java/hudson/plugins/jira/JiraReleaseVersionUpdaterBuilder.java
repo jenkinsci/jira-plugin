@@ -1,13 +1,16 @@
 package hudson.plugins.jira;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -17,7 +20,7 @@ import java.io.IOException;
 /**
  * Created by Reda on 18/12/2014.
  */
-public class JiraReleaseVersionUpdaterBuilder extends Builder {
+public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleBuildStep {
 
     private String jiraProjectKey;
     private String jiraRelease;
@@ -48,11 +51,11 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder {
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-        return VersionReleaser.perform(getSiteForProject(build.getProject()), jiraProjectKey, jiraRelease, build, listener);
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+        VersionReleaser.perform(getSiteForProject(run.getParent()), jiraProjectKey, jiraRelease, run, listener);
     }
 
-    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
+    JiraSite getSiteForProject(Job<?, ?> project) {
         return JiraSite.get(project);
     }
 
