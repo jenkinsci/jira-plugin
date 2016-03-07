@@ -174,7 +174,7 @@ class Updater {
                         createComment(build, useWikiStyleComments, jenkinsRootUrl, recordScmChanges, issue),
                         groupVisibility, roleVisibility
                 );
-                if (!labels.isEmpty()) {
+                if (labels != null && !labels.isEmpty()) {
                     session.addLabels(issue.id, labels);
                 }
 
