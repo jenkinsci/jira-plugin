@@ -4,7 +4,6 @@ import static java.lang.String.format;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -12,32 +11,19 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang.StringUtils;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
-
 import hudson.Util;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.Hudson;
-import hudson.model.ParameterValue;
-import hudson.model.ParametersAction;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.model.AbstractBuild.DependencyChange;
-import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.RepositoryBrowser;
@@ -69,7 +55,11 @@ class Updater {
     public Updater(SCM scm, List<String> labels) {
         super();
         this.scm = scm;
-        this.labels = labels;
+        if (labels == null) {
+            this.labels = new ArrayList<String>();
+        } else {
+            this.labels = labels;
+        }
     }
 
     boolean perform(Run<?, ?> build, TaskListener listener, AbstractIssueSelector selector) {
