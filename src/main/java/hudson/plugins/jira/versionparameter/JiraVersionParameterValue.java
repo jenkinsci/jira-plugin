@@ -25,7 +25,7 @@ public class JiraVersionParameterValue extends ParameterValue {
 
     @Override
     public void buildEnvironment(final Run<?, ?> run, final EnvVars env) {
-        env.put(getName(), getValue().toString());
+        env.put(getName(), getVersion());
     }
 
     @Override
