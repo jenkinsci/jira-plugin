@@ -451,7 +451,7 @@ public class JiraCreateIssueNotifier extends Notifier {
 
         @Override
         public String getDisplayName() {
-            return "Create Jira Issue";
+            return Messages.JiraCreateIssueNotifier_DisplayName();
         }
 
         @Override
