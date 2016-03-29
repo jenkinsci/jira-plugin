@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.lang.StringUtils;
 import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.common.base.Strings;
 import hudson.Util;
 import hudson.model.Hudson;
@@ -204,8 +205,16 @@ class Updater {
                 }
                 continue;   // token looked like a JIRA issue but it's actually not.
             }
-
-            issues.add(new JiraIssue(session.getIssue(id)));
+            
+            Issue issue = session.getIssue(id);
+            if (issue == null) {
+                if (debug) {
+                    logger.println(id + " issue doesn't exist in JIRA");
+                }
+                continue;
+            }
+            
+            issues.add(new JiraIssue(issue));
         }
         return issues;
     }
