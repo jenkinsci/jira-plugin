@@ -145,7 +145,6 @@
         </executions>
       </plugin>
 
-
       <plugin>
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
@@ -295,7 +294,13 @@
 	  <version>1.12</version>
 	  <optional>true</optional>
 	</dependency>
-
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-job</artifactId>
+      <version>1.12</version>
+      <optional>true</optional>
+    </dependency>
+    
     <!-- test dependencies -->
     <dependency>
       <groupId>org.mockito</groupId>
@@ -329,13 +334,7 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-scm-step</artifactId>
-      <version>1.12</version>
-      <scope>test</scope>
-    </dependency>
-   	<dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-job</artifactId>
+      <artifactId>workflow-aggregator</artifactId>
       <version>1.12</version>
       <scope>test</scope>
     </dependency>
