@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 
 import hudson.Extension;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
@@ -33,8 +34,7 @@ import hudson.scm.ChangeLogSet.Entry;
  */
 public class FindIssuesAtCommitLogsStep extends AbstractStepImpl {
 
-    public static final String DEFAULT_ISSUE_PATTERN = "((?<!([A-Z]{1,10})-?)[A-Z]+-\\d+)";
-    protected String issuePattern = DEFAULT_ISSUE_PATTERN;
+    protected String issuePattern;
     
     @DataBoundConstructor
     public FindIssuesAtCommitLogsStep() {
@@ -42,11 +42,11 @@ public class FindIssuesAtCommitLogsStep extends AbstractStepImpl {
     
     @DataBoundSetter
     public void setIssuePattern(@Nonnull String issuePattern) {
-        this.issuePattern = StringUtils.isBlank(issuePattern) ? DEFAULT_ISSUE_PATTERN : issuePattern;
+        this.issuePattern = issuePattern;
     }
     
     public String getIssuePattern() {
-        return issuePattern;
+        return StringUtils.isBlank(issuePattern) ? JiraSite.DEFAULT_ISSUE_PATTERN.toString() : issuePattern;
     }
     
     @Extension(optional = true)
@@ -58,7 +58,7 @@ public class FindIssuesAtCommitLogsStep extends AbstractStepImpl {
 
         @Override
         public String getFunctionName() {
-            return "jiraFindIssuesAtCommitLogs";
+            return "jiraFindInChangeSets";
         }
 
         @Override
@@ -75,18 +75,16 @@ public class FindIssuesAtCommitLogsStep extends AbstractStepImpl {
         private transient FindIssuesAtCommitLogsStep step;
 
         @StepContextParameter
-        private transient TaskListener listener;
-
-        @StepContextParameter
         private transient WorkflowRun run;
 
         @Override
         protected List<String> run() throws Exception {
             
             List<ChangeLogSet<? extends Entry>> changelogsets = run.getChangeSets();
+            JiraSite site = JiraSite.get(run.getParent());
             
             Set<String> issues = new HashSet<String>();
-            Pattern pattern = Pattern.compile(step.getIssuePattern());
+            Pattern pattern = StringUtils.isBlank(step.getIssuePattern()) ? site.getIssuePattern() : Pattern.compile(step.getIssuePattern());
             
             for (ChangeLogSet<? extends Entry> changelogset : changelogsets) {
                 Object[] entries = changelogset.getItems();
