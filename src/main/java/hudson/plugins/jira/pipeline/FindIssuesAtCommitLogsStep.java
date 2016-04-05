@@ -69,7 +69,7 @@ public class FindIssuesAtCommitLogsStep extends AbstractStepImpl {
     
     public static class FindIssuesAtCommitLogsStepExecution extends AbstractSynchronousNonBlockingStepExecution<List<String>> {
 
-        private static final long serialVersionUID = -6080152002390517795L;
+        private static final long serialVersionUID = 1L;
 
         @Inject
         private transient FindIssuesAtCommitLogsStep step;
