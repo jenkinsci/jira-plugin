@@ -1,7 +1,9 @@
 package hudson.plugins.jira.selector;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -59,25 +61,22 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
     private static Set<String> findIssueIdsRecursive(Run<?, ?> build, Pattern pattern, TaskListener listener) {
         Set<String> ids = new HashSet<String>();
 
-        // first, issues that were carried forward.
-        Run<?, ?> prev = build.getPreviousBuild();
-        if (prev != null) {
-            JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
-            if (a != null) {
-                ids.addAll(a.getIDs());
-            }
-        }
+        addCarriedOverIssues(build, ids);
 
         // then issues in this build
         findIssues(build, ids, pattern, listener);
 
-        // check for issues fixed in dependencies
+        addIssuesFromDependentBuilds(build, pattern, listener, ids);
+        return ids;
+    }
+
+    protected static void addIssuesFromDependentBuilds(Run<?, ?> build, Pattern pattern, TaskListener listener,
+            Set<String> ids) {
         for (DependencyChange depc : RunScmChangeExtractor.getDependencyChanges(build.getPreviousBuild()).values()) {
             for (AbstractBuild<?, ?> b : depc.getBuilds()) {
                 findIssues(b, ids, pattern, listener);
             }
         }
-        return ids;
     }
 
     /**
@@ -85,6 +84,12 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
      *            
      */
     protected static void findIssues(Run<?, ?> build, Set<String> ids, Pattern pattern, TaskListener listener) {
+        addIssuesFromChangeLog(build, ids, pattern, listener);
+        addIssuesFromParameters(build, ids);
+    }
+
+    protected static void addIssuesFromChangeLog(Run<?, ?> build, Set<String> ids, Pattern pattern,
+            TaskListener listener) {
         for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(build)) {
             for (Entry change : set) {
                 LOGGER.fine("Looking for JIRA ID in " + change.getMsg());
@@ -101,7 +106,9 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
                 }
             }
         }
+    }
 
+    public static void addIssuesFromParameters(Run<?, ?> build, Set<String> ids) {
         // Now look for any JiraIssueParameterValue's set in the build
         // Implements JENKINS-12312
         ParametersAction parameters = build.getAction(ParametersAction.class);
@@ -109,7 +116,26 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
         if (parameters != null) {
             for (ParameterValue val : parameters.getParameters()) {
                 if (val instanceof JiraIssueParameterValue) {
-                    ids.add(((JiraIssueParameterValue) val).getValue().toString());
+                    String issueId = ((JiraIssueParameterValue) val).getValue().toString();
+                    if (ids.add(issueId)){
+                        LOGGER.finer("Added perforce issue " + issueId + " from build " + build);
+                    }
+                }
+            }
+        }
+    }
+    public static void addCarriedOverIssues(Run<?, ?> build, Set<String> ids) {
+        Run<?, ?> prev = build.getPreviousBuild();
+        if (prev != null) {
+            JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
+            if (a != null) {
+                LOGGER.finer("Searching for JIRA issues in previously failed build " + prev.number);
+                Collection<String> jobIDs = a.getIDs();
+                ids.addAll(jobIDs);
+                if (LOGGER.isLoggable(Level.FINER)) {
+                    for (String jobId : a.getIDs()) {
+                        LOGGER.finer("Adding job " + jobId);
+                    }
                 }
             }
         }
