@@ -22,13 +22,15 @@ public class JiraIssueMigrator extends Notifier {
     private String jiraRelease;
     private String jiraReplaceVersion;
     private String jiraQuery;
+    private boolean addRelease;
 
     @DataBoundConstructor
-    public JiraIssueMigrator(String jiraProjectKey, String jiraRelease, String jiraQuery, String jiraReplaceVersion) {
+    public JiraIssueMigrator(String jiraProjectKey, String jiraRelease, String jiraQuery, String jiraReplaceVersion, boolean addRelease) {
         this.jiraRelease = jiraRelease;
         this.jiraProjectKey = jiraProjectKey;
         this.jiraQuery = jiraQuery;
         this.jiraReplaceVersion = jiraReplaceVersion;
+        this.addRelease = addRelease;
     }
 
     public String getJiraRelease() {
@@ -63,6 +65,10 @@ public class JiraIssueMigrator extends Notifier {
         this.jiraReplaceVersion = jiraReplaceVersion;
     }
 
+    public boolean isAddRelease() { return addRelease; }
+
+    public void setAddRelease(boolean addRelease) { this.addRelease = addRelease; }
+
     @Override
     public BuildStepDescriptor<Publisher> getDescriptor() {
         return DESCRIPTOR;
@@ -96,12 +102,16 @@ public class JiraIssueMigrator extends Notifier {
                 throw new IllegalArgumentException("JQL query is Empty");
             }
 
-            JiraSite site = JiraSite.get(build.getProject());
+            JiraSite site = getJiraSiteForProject(build.getProject());
 
-            if (realReplace == null || realReplace.isEmpty()) {
-                site.migrateIssuesToFixVersion(realProjectKey, realRelease, realQuery);
+            if (addRelease == true) {
+                site.addFixVersionToIssue(realProjectKey, realRelease, realQuery);
             } else {
-                site.replaceFixVersion(realProjectKey, realReplace, realRelease, realQuery);
+                if (realReplace == null || realReplace.isEmpty()) {
+                    site.migrateIssuesToFixVersion(realProjectKey, realRelease, realQuery);
+                } else {
+                    site.replaceFixVersion(realProjectKey, realReplace, realRelease, realQuery);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace(listener.fatalError(
@@ -111,6 +121,10 @@ public class JiraIssueMigrator extends Notifier {
             return false;
         }
         return true;
+    }
+
+    JiraSite getJiraSiteForProject(AbstractProject<?, ?> project) {
+        return JiraSite.get(project);
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
