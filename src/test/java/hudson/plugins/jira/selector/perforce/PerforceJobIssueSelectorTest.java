@@ -25,7 +25,7 @@ import hudson.plugins.perforce.PerforceChangeLogSet;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 
-public class PerforceJobIssueSelectorTest extends JobIssueSelectorTest{
+public class PerforceJobIssueSelectorTest extends JobIssueSelectorTest {
 
     @Test
     public void testFindsTwoPerforceJobs() {
