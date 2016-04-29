@@ -5,6 +5,10 @@ import java.util.Set;
 
 import javax.annotation.CheckForNull;
 
+import hudson.Extension;
+import hudson.model.Descriptor;
+import hudson.plugins.jira.Messages;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.google.common.collect.Lists;
@@ -13,19 +17,35 @@ import com.google.common.collect.Sets;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSite;
+import org.kohsuke.stapler.DataBoundSetter;
 
 public class ExplicitIssueSelector extends AbstractIssueSelector {
 
     @CheckForNull
     private List<String> jiraIssueKeys;
+    private String issueKeys;
 
     @DataBoundConstructor
-    public ExplicitIssueSelector(String jiraIssueKeys) {
-        this(Lists.newArrayList(jiraIssueKeys.split(",")));
+    public ExplicitIssueSelector(String issueKeys) {
+        this.jiraIssueKeys = StringUtils.isNotBlank(issueKeys) ? Lists.newArrayList(issueKeys.split(",")) : Lists.<String>newArrayList();
+        this.issueKeys = issueKeys;
     }
 
     public ExplicitIssueSelector(List<String> jiraIssueKeys) {
         this.jiraIssueKeys = jiraIssueKeys;
+    }
+
+    public ExplicitIssueSelector(){
+        jiraIssueKeys = Lists.newArrayList();
+    }
+
+    public void setIssueKeys(String issueKeys){
+        this.issueKeys = issueKeys;
+        this.jiraIssueKeys = Lists.newArrayList(issueKeys.split(","));
+    }
+
+    public String getIssueKeys(){
+        return issueKeys;
     }
 
     @Override
@@ -33,4 +53,12 @@ public class ExplicitIssueSelector extends AbstractIssueSelector {
         return Sets.newHashSet(jiraIssueKeys);
     }
 
+    @Extension
+    public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
+
+        @Override
+        public String getDisplayName() {
+            return Messages.IssueSelector_ExplicitIssueSelector_DisplayName();
+        }
+    }
 }

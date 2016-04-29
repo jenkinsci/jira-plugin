@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import hudson.Extension;
+import hudson.model.Descriptor;
+import hudson.plugins.jira.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
@@ -16,6 +19,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import org.kohsuke.stapler.DataBoundSetter;
 
 public class JqlIssueSelector extends AbstractIssueSelector {
 
@@ -25,6 +29,17 @@ public class JqlIssueSelector extends AbstractIssueSelector {
     public JqlIssueSelector(String jql) {
         super();
         this.jql = jql;
+    }
+
+    public JqlIssueSelector(){
+    }
+
+    public void setJql(String jql){
+        this.jql = jql;
+    }
+
+    public String getJql() {
+        return jql;
     }
 
     @Override
@@ -46,6 +61,15 @@ public class JqlIssueSelector extends AbstractIssueSelector {
             return Sets.newHashSet(issueKeys);
         } catch (IOException e) {
             throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
+        }
+    }
+
+    @Extension
+    public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
+
+        @Override
+        public String getDisplayName() {
+            return Messages.IssueSelector_JqlIssueSelector_DisplayName();
         }
     }
 

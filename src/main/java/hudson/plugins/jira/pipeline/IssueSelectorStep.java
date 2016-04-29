@@ -1,7 +1,14 @@
 package hudson.plugins.jira.pipeline;
 
+import java.util.Collection;
 import java.util.Set;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
+import hudson.DescriptorExtensionList;
+import hudson.ExtensionList;
+import hudson.model.Descriptor;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -17,6 +24,8 @@ import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
+
+import javax.annotation.Nullable;
 
 /**
  * Step that run selected issue selector.
@@ -45,6 +54,10 @@ public class IssueSelectorStep extends AbstractStepImpl {
 
         public DescriptorImpl() {
             super(IssueSelectorStepExecution.class);
+        }
+
+        public Collection<? extends Descriptor<?>> getApplicableDescriptors() {
+            return Jenkins.getInstance().<AbstractIssueSelector, Descriptor<AbstractIssueSelector>>getDescriptorList(AbstractIssueSelector.class);
         }
 
         @Override

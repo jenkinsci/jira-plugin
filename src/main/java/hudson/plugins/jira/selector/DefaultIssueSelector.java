@@ -56,7 +56,7 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
      * not. We don't want to use {@link JiraSite#existsIssue(String)} here so
      * that new projects in JIRA can be detected.
      */
-    private static Set<String> findIssueIdsRecursive(Run<?, ?> build, Pattern pattern, TaskListener listener) {
+    protected static Set<String> findIssueIdsRecursive(Run<?, ?> build, Pattern pattern, TaskListener listener) {
         Set<String> ids = new HashSet<String>();
 
         // first, issues that were carried forward.
