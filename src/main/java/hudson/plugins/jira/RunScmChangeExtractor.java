@@ -70,11 +70,14 @@ public class RunScmChangeExtractor {
     }
 
     public static Map<AbstractProject, DependencyChange> getDependencyChanges(Run<?, ?> run) {
-        if (run instanceof AbstractBuild)
-            return ((AbstractBuild) run).getDependencyChanges((AbstractBuild) run);
+        if (run instanceof AbstractBuild) {
+            Run<?, ?> previousBuild = run.getPreviousBuild();
+            if (previousBuild instanceof AbstractBuild) {
+                return ((AbstractBuild) run).getDependencyChanges((AbstractBuild) previousBuild);
+            }
+        }
         // jenkins workflow plugin etc.
-        else
-            return Maps.newHashMap();
+        return Maps.newHashMap();
     }
 
 }
