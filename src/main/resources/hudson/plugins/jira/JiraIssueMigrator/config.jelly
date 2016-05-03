@@ -2,6 +2,9 @@
   <f:entry title="${%Target Jira Release}" field="jiraRelease">
         <f:textbox/>
   </f:entry>
+  <f:entry title="${%Add Target Release}" field="addRelease">
+        <f:checkbox />
+  </f:entry>
   <f:entry title="${%Replace Jira Release}" field="jiraReplaceVersion">
         <f:textbox/>
   </f:entry>

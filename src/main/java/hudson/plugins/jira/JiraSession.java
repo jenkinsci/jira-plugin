@@ -252,6 +252,35 @@ public class JiraSession {
     }
 
     /**
+     * Adds the specified version to the fix version list of all issues matching the JQL.
+     *
+     * @param projectKey The JIRA Project
+     * @param version    The version to add
+     * @param query      The JQL Query
+     */
+    public void addFixVersion(String projectKey, String version, String query) {
+
+        Version newVersion = getVersionByName(projectKey, version);
+        if (newVersion == null) {
+            return;
+        }
+
+        LOGGER.fine("Fetching issues with JQL:" + query);
+        List<Issue> issues = service.getIssuesFromJqlSearch(query, Integer.MAX_VALUE);
+        if (issues == null || issues.isEmpty()) {
+            return;
+        }
+        LOGGER.fine("Found issues: " + issues.size());
+
+        for (Issue issue : issues) {
+            LOGGER.fine("Adding version: " + newVersion.getName() + " to issue: " + issue.getKey());
+            List<Version> fixVersions = Lists.newArrayList(issue.getFixVersions());
+            fixVersions.add(newVersion);
+            service.updateIssue(issue.getKey(), fixVersions);
+        }
+    }
+
+    /**
      * Progresses the issue's workflow by performing the specified action. The issue's new status is returned.
      *
      * @param issueKey

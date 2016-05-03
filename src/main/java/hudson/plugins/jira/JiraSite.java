@@ -633,6 +633,23 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
+     * Adds new fix version to issues matching the jql.
+     *
+     * @param projectKey
+     * @param versionName
+     * @param query
+     * @throws IOException
+     */
+    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws IOException {
+        JiraSession session = getSession();
+        if (session == null) {
+            return;
+        }
+
+        session.addFixVersion(projectKey, versionName, query);
+    }
+
+    /**
      * Progresses all issues matching the JQL search, using the given workflow action. Optionally
      * adds a comment to the issue(s) at the same time.
      *
