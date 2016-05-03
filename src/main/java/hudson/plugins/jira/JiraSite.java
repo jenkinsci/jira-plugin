@@ -402,8 +402,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * This method checks whether the key portion is a valid key (except that
      * it can potentially use stale data). Number portion is not checked at all.
      *
+     * @deprecated Use getIssue instead
      * @param id String like MNG-1234
      */
+    @Deprecated
     public boolean existsIssue(String id) {
         int idx = id.indexOf('-');
         if (idx == -1) {

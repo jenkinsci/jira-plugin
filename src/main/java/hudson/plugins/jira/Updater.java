@@ -195,22 +195,13 @@ class Updater {
 
     }
 
-    private static List<JiraIssue> getJiraIssues(
-            Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {
+    private static List<JiraIssue> getJiraIssues(Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {
         List<JiraIssue> issues = new ArrayList<JiraIssue>(ids.size());
         for (String id : ids) {
-            if (!session.existsIssue(id)) {
-                if (debug) {
-                    logger.println(id + " looked like a JIRA issue but it wasn't");
-                }
-                continue;   // token looked like a JIRA issue but it's actually not.
-            }
-            
+
             Issue issue = session.getIssue(id);
             if (issue == null) {
-                if (debug) {
-                    logger.println(id + " issue doesn't exist in JIRA");
-                }
+                logger.println(id + " issue doesn't exist in JIRA");
                 continue;
             }
             

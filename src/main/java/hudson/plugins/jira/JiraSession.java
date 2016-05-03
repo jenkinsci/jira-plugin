@@ -177,6 +177,7 @@ public class JiraSession {
         return service.getIssueTypes();
     }
 
+    @Deprecated
     public boolean existsIssue(String id) {
         return site.existsIssue(id);
     }
