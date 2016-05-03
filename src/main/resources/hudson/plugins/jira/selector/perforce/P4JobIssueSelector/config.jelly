@@ -1,0 +1,6 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:block>
+        Selects jobs associated with Perforce change lists or parameters of current build or in any of changed dependencies.
+        It works with Perforce Software (P4) SCM plugin. 
+    </f:block>
+</j:jelly>
