@@ -128,7 +128,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
      */
     protected void addIssuesFromDependentBuilds(Run<?, ?> build, JiraSite site, TaskListener listener,
             Set<String> issueIds) {
-        for (DependencyChange depc : RunScmChangeExtractor.getDependencyChanges(build.getPreviousBuild()).values()) {
+        for (DependencyChange depc : RunScmChangeExtractor.getDependencyChanges(build).values()) {
             for (AbstractBuild<?, ?> b : depc.getBuilds()) {
                 getLogger().finer("Searching for JIRA issues in dependency " + b + " of " + build);
                 addIssuesRecursive(b, site, listener, issueIds);
