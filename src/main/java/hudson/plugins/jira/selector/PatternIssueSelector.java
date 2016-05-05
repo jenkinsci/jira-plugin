@@ -31,15 +31,15 @@ public final class PatternIssueSelector extends AbstractIssueSelector {
         return StringUtils.isBlank(issuePattern) ? JiraSite.DEFAULT_ISSUE_PATTERN.toString() : issuePattern;
     }
 
-    public Pattern getPattern() {
-        return StringUtils.isBlank(issuePattern) ? JiraSite.DEFAULT_ISSUE_PATTERN : Pattern.compile(issuePattern);
+    private Pattern getPattern(final JiraSite site) {
+        return StringUtils.isBlank(issuePattern) ? site.getIssuePattern() : Pattern.compile(issuePattern);
     }
 
 
     @Override
     public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull final JiraSite site,
                                     @Nonnull final TaskListener listener) {
-        return DefaultIssueSelector.findIssueIdsRecursive(run, getPattern(), listener);
+        return DefaultIssueSelector.findIssueIdsRecursive(run, getPattern(site), listener);
     }
 
     @Extension
