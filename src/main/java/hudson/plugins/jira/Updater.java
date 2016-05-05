@@ -1,23 +1,7 @@
 package hudson.plugins.jira;
 
-import static java.lang.String.format;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.lang.reflect.Method;
-import java.net.URL;
-import java.rmi.RemoteException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.commons.lang.StringUtils;
 import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.common.base.Strings;
 import hudson.Util;
 import hudson.model.Hudson;
@@ -26,10 +10,24 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.scm.ChangeLogSet;
-import hudson.scm.RepositoryBrowser;
-import hudson.scm.SCM;
 import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
+import hudson.scm.RepositoryBrowser;
+import hudson.scm.SCM;
+import org.apache.commons.lang.StringUtils;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.rmi.RemoteException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static java.lang.String.format;
 
 /**
  * Actual JIRA update logic.
@@ -194,18 +192,17 @@ class Updater {
 
     }
 
-    private static List<JiraIssue> getJiraIssues(
-            Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {
+    private static List<JiraIssue> getJiraIssues(Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {
         List<JiraIssue> issues = new ArrayList<JiraIssue>(ids.size());
         for (String id : ids) {
-            if (!session.existsIssue(id)) {
-                if (debug) {
-                    logger.println(id + " looked like a JIRA issue but it wasn't");
-                }
-                continue;   // token looked like a JIRA issue but it's actually not.
-            }
 
-            issues.add(new JiraIssue(session.getIssue(id)));
+            Issue issue = session.getIssue(id);
+            if (issue == null) {
+                logger.println(id + " issue doesn't exist in JIRA");
+                continue;
+            }
+            
+            issues.add(new JiraIssue(issue));
         }
         return issues;
     }

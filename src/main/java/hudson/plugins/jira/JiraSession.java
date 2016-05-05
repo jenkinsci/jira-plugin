@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import com.atlassian.jira.rest.client.api.domain.*;
+import com.google.common.collect.Lists;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,15 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import com.atlassian.jira.rest.client.api.domain.BasicIssue;
-import com.atlassian.jira.rest.client.api.domain.Component;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-import com.atlassian.jira.rest.client.api.domain.Permissions;
-import com.atlassian.jira.rest.client.api.domain.Status;
-import com.atlassian.jira.rest.client.api.domain.Transition;
-import com.atlassian.jira.rest.client.api.domain.Version;
-import com.google.common.collect.Lists;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * Connection to JIRA.
@@ -177,6 +170,7 @@ public class JiraSession {
         return service.getIssueTypes();
     }
 
+    @Deprecated
     public boolean existsIssue(String id) {
         return site.existsIssue(id);
     }
@@ -198,6 +192,7 @@ public class JiraSession {
 
         Version newVersion = getVersionByName(projectKey, version);
         if (newVersion == null) {
+            LOGGER.warning("Version " + version + " was not found");
             return;
         }
 
@@ -226,6 +221,7 @@ public class JiraSession {
 
         Version newVersion = getVersionByName(projectKey, toVersion);
         if (newVersion == null) {
+            LOGGER.warning("Version " + toVersion + " was not found");
             return;
         }
 
@@ -247,6 +243,36 @@ public class JiraSession {
 
             LOGGER.fine("Replaceing version in issue: " + issue.getKey());
             service.updateIssue(issue.getKey(), Lists.newArrayList(newVersions));
+        }
+    }
+
+    /**
+     * Adds the specified version to the fix version list of all issues matching the JQL.
+     *
+     * @param projectKey The JIRA Project
+     * @param version    The version to add
+     * @param query      The JQL Query
+     */
+    public void addFixVersion(String projectKey, String version, String query) {
+
+        Version newVersion = getVersionByName(projectKey, version);
+        if (newVersion == null) {
+            LOGGER.warning("Version " + version + " was not found");
+            return;
+        }
+
+        LOGGER.fine("Fetching issues with JQL:" + query);
+        List<Issue> issues = service.getIssuesFromJqlSearch(query, Integer.MAX_VALUE);
+        if (issues == null || issues.isEmpty()) {
+            return;
+        }
+        LOGGER.fine("Found issues: " + issues.size());
+
+        for (Issue issue : issues) {
+            LOGGER.fine("Adding version: " + newVersion.getName() + " to issue: " + issue.getKey());
+            List<Version> fixVersions = Lists.newArrayList(issue.getFixVersions());
+            fixVersions.add(newVersion);
+            service.updateIssue(issue.getKey(), fixVersions);
         }
     }
 

@@ -11,10 +11,11 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-public final class PatternIssueSelector extends AbstractIssueSelector {
+public final class PatternIssueSelector extends DefaultIssueSelector {
 
     private String issuePattern;
 
@@ -39,7 +40,9 @@ public final class PatternIssueSelector extends AbstractIssueSelector {
     @Override
     public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull final JiraSite site,
                                     @Nonnull final TaskListener listener) {
-        return DefaultIssueSelector.findIssueIdsRecursive(run, getPattern(site), listener);
+        HashSet<String> issuesIds = new HashSet<String>();
+        addIssuesRecursive(run, getPattern(site), listener, issuesIds);
+        return issuesIds;
     }
 
     @Extension

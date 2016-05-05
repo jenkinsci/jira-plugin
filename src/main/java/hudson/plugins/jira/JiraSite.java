@@ -1,20 +1,33 @@
 package hudson.plugins.jira;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import hudson.Extension;
+import hudson.Util;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import hudson.model.Job;
+import hudson.util.FormValidation;
+import hudson.util.Secret;
+import org.joda.time.DateTime;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -24,30 +37,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
-
-import org.joda.time.DateTime;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-
-import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-import com.atlassian.jira.rest.client.api.domain.Version;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-
-import hudson.Extension;
-import hudson.Util;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import hudson.model.Job;
-import hudson.util.FormValidation;
-import hudson.util.Secret;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * Represents an external JIRA installation and configuration
@@ -402,8 +393,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * This method checks whether the key portion is a valid key (except that
      * it can potentially use stale data). Number portion is not checked at all.
      *
+     * @deprecated Use getIssue instead
      * @param id String like MNG-1234
      */
+    @Deprecated
     public boolean existsIssue(String id) {
         int idx = id.indexOf('-');
         if (idx == -1) {
@@ -478,6 +471,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public Set<JiraVersion> getVersions(String projectKey) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
             return Collections.emptySet();
         }
 
@@ -520,6 +514,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
             return "";
         }
 
@@ -607,6 +602,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
             return;
         }
 
@@ -624,10 +620,29 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
             return;
         }
 
         session.migrateIssuesToFixVersion(projectKey, versionName, query);
+    }
+
+    /**
+     * Adds new fix version to issues matching the jql.
+     *
+     * @param projectKey
+     * @param versionName
+     * @param query
+     * @throws IOException
+     */
+    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws IOException {
+        JiraSession session = getSession();
+        if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
+            return;
+        }
+
+        session.addFixVersion(projectKey, versionName, query);
     }
 
     /**
@@ -644,6 +659,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         JiraSession session = getSession();
 
         if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
             console.println(Messages.Updater_FailedToConnect());
             return false;
         }
@@ -745,6 +761,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void addVersion(String version, String projectKey) throws IOException {
         JiraSession session = getSession();
         if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
             return;
         }
 

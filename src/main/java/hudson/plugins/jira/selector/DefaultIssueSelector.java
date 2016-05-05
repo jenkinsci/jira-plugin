@@ -1,7 +1,9 @@
 package hudson.plugins.jira.selector;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,7 +29,7 @@ import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 
-public final class DefaultIssueSelector extends AbstractIssueSelector {
+public class DefaultIssueSelector extends AbstractIssueSelector {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultIssueSelector.class.getName());
 
@@ -35,10 +37,15 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
     public DefaultIssueSelector() {
     }
 
+    /**
+     * See {@link #addIssuesRecursive(Run, Pattern, TaskListener, Set)}
+     */
     @Override
     public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull final JiraSite site,
             @Nonnull final TaskListener listener) {
-        return findIssueIdsRecursive(run, site.getIssuePattern(), listener);
+        HashSet<String> issuesIds = new HashSet<String>();
+        addIssuesRecursive(run, site.getIssuePattern(), listener, issuesIds);
+        return issuesIds;
     }
 
     @Extension
@@ -46,8 +53,12 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
 
         @Override
         public String getDisplayName() {
-            return Messages.DefaultUpdaterIssueSelector_DisplayName();
+            return Messages.DefaultIssueSelector_DisplayName();
         }
+    }
+
+    protected Logger getLogger() {
+        return LOGGER;
     }
 
     /**
@@ -55,36 +66,9 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
      * all likely candidates and doesn't check if such ID actually exists or
      * not. We don't want to use {@link JiraSite#existsIssue(String)} here so
      * that new projects in JIRA can be detected.
+     * 
      */
-    protected static Set<String> findIssueIdsRecursive(Run<?, ?> build, Pattern pattern, TaskListener listener) {
-        Set<String> ids = new HashSet<String>();
-
-        // first, issues that were carried forward.
-        Run<?, ?> prev = build.getPreviousBuild();
-        if (prev != null) {
-            JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
-            if (a != null) {
-                ids.addAll(a.getIDs());
-            }
-        }
-
-        // then issues in this build
-        findIssues(build, ids, pattern, listener);
-
-        // check for issues fixed in dependencies
-        for (DependencyChange depc : RunScmChangeExtractor.getDependencyChanges(build.getPreviousBuild()).values()) {
-            for (AbstractBuild<?, ?> b : depc.getBuilds()) {
-                findIssues(b, ids, pattern, listener);
-            }
-        }
-        return ids;
-    }
-
-    /**
-     * @param pattern pattern to use to match issue ids
-     *            
-     */
-    protected static void findIssues(Run<?, ?> build, Set<String> ids, Pattern pattern, TaskListener listener) {
+    protected static void findIssues(Run<?, ?> build, Set<String> issueIds, Pattern pattern, TaskListener listener) {
         for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(build)) {
             for (Entry change : set) {
                 LOGGER.fine("Looking for JIRA ID in " + change.getMsg());
@@ -93,7 +77,7 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
                 while (m.find()) {
                     if (m.groupCount() >= 1) {
                         String content = StringUtils.upperCase(m.group(1));
-                        ids.add(content);
+                        issueIds.add(content);
                     } else {
                         listener.getLogger()
                                 .println("Warning: The JIRA pattern " + pattern + " doesn't define a capturing group!");
@@ -101,7 +85,61 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
                 }
             }
         }
+    }
 
+    /**
+     * Calls {@link #findIssues(Run, Set, Pattern, TaskListener)} with
+     * {@link JiraSite#getIssuePattern()} as pattern
+     */
+    protected void addIssuesFromChangeLog(Run<?, ?> build, Pattern pattern, TaskListener listener, Set<String> issueIds) {
+        findIssues(build, issueIds, pattern, listener);
+    }
+
+    /**
+     * Adds issues to issueIds. Adds issues carried over from previous build,
+     * issues from current build and from dependent builds
+     * {@link #addIssuesCarriedOverFromPreviousBuild(Run, Pattern, TaskListener, Set)}
+     * {@link #addIssuesFromCurrentBuild(Run, Pattern, TaskListener, Set)}
+     * {@link #addIssuesFromDependentBuilds(Run, Pattern, TaskListener, Set)}
+     */
+    protected void addIssuesRecursive(Run<?, ?> build, Pattern pattern, TaskListener listener, Set<String> issuesIds) {
+        addIssuesCarriedOverFromPreviousBuild(build, pattern, listener, issuesIds);
+        addIssuesFromCurrentBuild(build, pattern, listener, issuesIds);
+        addIssuesFromDependentBuilds(build, pattern, listener, issuesIds);
+    }
+
+    /**
+     * Adds issues to issueIds from the current build. Issues from parameters
+     * are added as well as issues matching pattern
+     * {@link #addIssuesFromChangeLog(Run, Pattern, TaskListener, Set)}
+     * {@link #addIssuesFromParameters(Run, Pattern, TaskListener, Set)}
+     */
+    protected void addIssuesFromCurrentBuild(Run<?, ?> build, Pattern pattern, TaskListener listener,
+            Set<String> issueIds) {
+        addIssuesFromChangeLog(build, pattern, listener, issueIds);
+        addIssuesFromParameters(build, pattern, listener, issueIds);
+    }
+
+    /**
+     * Adds issues to issueIds by examining dependency changes from last build.
+     * For each dependency change
+     * {@link #addIssuesRecursive(Run, Pattern, TaskListener, Set) is called.
+     */
+    protected void addIssuesFromDependentBuilds(Run<?, ?> build, Pattern pattern, TaskListener listener,
+            Set<String> issueIds) {
+        for (DependencyChange depc : RunScmChangeExtractor.getDependencyChanges(build).values()) {
+            for (AbstractBuild<?, ?> b : depc.getBuilds()) {
+                getLogger().finer("Searching for JIRA issues in dependency " + b + " of " + build);
+                addIssuesRecursive(b, pattern, listener, issueIds);
+            }
+        }
+    }
+
+    /**
+     * Adds issues to issueIds from parameters
+     */
+    protected void addIssuesFromParameters(Run<?, ?> build, Pattern pattern, TaskListener listener,
+            Set<String> issueIds) {
         // Now look for any JiraIssueParameterValue's set in the build
         // Implements JENKINS-12312
         ParametersAction parameters = build.getAction(ParametersAction.class);
@@ -109,7 +147,31 @@ public final class DefaultIssueSelector extends AbstractIssueSelector {
         if (parameters != null) {
             for (ParameterValue val : parameters.getParameters()) {
                 if (val instanceof JiraIssueParameterValue) {
-                    ids.add(((JiraIssueParameterValue) val).getValue().toString());
+                    String issueId = ((JiraIssueParameterValue) val).getValue().toString();
+                    if (issueIds.add(issueId)) {
+                        getLogger().finer("Added perforce issue " + issueId + " from build " + build);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds issues that were carried over from previous build to issueIds
+     */
+    protected void addIssuesCarriedOverFromPreviousBuild(Run<?, ?> build, Pattern pattern, TaskListener listener,
+            Set<String> ids) {
+        Run<?, ?> prev = build.getPreviousBuild();
+        if (prev != null) {
+            JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
+            if (a != null) {
+                getLogger().finer("Searching for JIRA issues in previously failed build " + prev.number);
+                Collection<String> jobIDs = a.getIDs();
+                ids.addAll(jobIDs);
+                if (getLogger().isLoggable(Level.FINER)) {
+                    for (String jobId : a.getIDs()) {
+                        getLogger().finer("Adding job " + jobId);
+                    }
                 }
             }
         }
