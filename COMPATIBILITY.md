@@ -1,5 +1,5 @@
-# Plugin Compatibility with [Pipeline](https://github.com/jenkinsci/workflow-plugin)
-(formerly known as workflow plugin)
+# Plugin Compatibility with [Pipeline](https://github.com/jenkinsci/pipeline-plugin)
+(formerly known as Pipeline plugin)
 
 This document captures the status of features to be compatible or incompatible.
 

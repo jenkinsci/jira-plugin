@@ -37,8 +37,8 @@ Fork the repository on GitHub, prepare your change on your forked
 copy, and submit a pull request (see [here](https://github.com/jenkinsci/jira-plugin/pulls) for open pull requests). Your pull request will be evaluated by the [Cloudbees Jenkins job](https://jenkins.ci.cloudbees.com/job/plugins/job/jira-plugin/)
 and you should receive e-mail with the results of the evaluation.
 
-If you are adding new features please make sure that they support Jenkins Workflow Plugin.
-See (here](https://github.com/jenkinsci/workflow-plugin/blob/master/COMPATIBILITY.md) for some information.
+If you are adding new features please make sure that they support Jenkins Pipeline Plugin.
+See (here](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for some information.
 
 Before submitting your change make sure that:
 * you added tests - the coverage will be checked after submitting PRs
