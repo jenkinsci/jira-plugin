@@ -38,13 +38,13 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     }
 
     /**
-     * See {@link #addIssuesRecursive(Run, JiraSite, TaskListener, Set)}
+     * See {@link #addIssuesRecursive(Run, Pattern, TaskListener, Set)}
      */
     @Override
     public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull final JiraSite site,
             @Nonnull final TaskListener listener) {
         HashSet<String> issuesIds = new HashSet<String>();
-        addIssuesRecursive(run, site, listener, issuesIds);
+        addIssuesRecursive(run, site.getIssuePattern(), listener, issuesIds);
         return issuesIds;
     }
 
@@ -91,47 +91,46 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
      * Calls {@link #findIssues(Run, Set, Pattern, TaskListener)} with
      * {@link JiraSite#getIssuePattern()} as pattern
      */
-    protected void addIssuesFromChangeLog(Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
-        Pattern pattern = site.getIssuePattern();
+    protected void addIssuesFromChangeLog(Run<?, ?> build, Pattern pattern, TaskListener listener, Set<String> issueIds) {
         findIssues(build, issueIds, pattern, listener);
     }
 
     /**
      * Adds issues to issueIds. Adds issues carried over from previous build,
      * issues from current build and from dependent builds
-     * {@link #addIssuesCarriedOverFromPreviousBuild(Run, JiraSite, TaskListener, Set)}
-     * {@link #addIssuesFromCurrentBuild(Run, JiraSite, TaskListener, Set)}
-     * {@link #addIssuesFromDependentBuilds(Run, JiraSite, TaskListener, Set)}
+     * {@link #addIssuesCarriedOverFromPreviousBuild(Run, Pattern, TaskListener, Set)}
+     * {@link #addIssuesFromCurrentBuild(Run, Pattern, TaskListener, Set)}
+     * {@link #addIssuesFromDependentBuilds(Run, Pattern, TaskListener, Set)}
      */
-    protected void addIssuesRecursive(Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issuesIds) {
-        addIssuesCarriedOverFromPreviousBuild(build, site, listener, issuesIds);
-        addIssuesFromCurrentBuild(build, site, listener, issuesIds);
-        addIssuesFromDependentBuilds(build, site, listener, issuesIds);
+    protected void addIssuesRecursive(Run<?, ?> build, Pattern pattern, TaskListener listener, Set<String> issuesIds) {
+        addIssuesCarriedOverFromPreviousBuild(build, pattern, listener, issuesIds);
+        addIssuesFromCurrentBuild(build, pattern, listener, issuesIds);
+        addIssuesFromDependentBuilds(build, pattern, listener, issuesIds);
     }
 
     /**
      * Adds issues to issueIds from the current build. Issues from parameters
      * are added as well as issues matching pattern
      * {@link #addIssuesFromChangeLog(Run, Pattern, TaskListener, Set)}
-     * {@link #addIssuesFromParameters(Run, JiraSite, TaskListener, Set)}
+     * {@link #addIssuesFromParameters(Run, Pattern, TaskListener, Set)}
      */
-    protected void addIssuesFromCurrentBuild(Run<?, ?> build, JiraSite site, TaskListener listener,
+    protected void addIssuesFromCurrentBuild(Run<?, ?> build, Pattern pattern, TaskListener listener,
             Set<String> issueIds) {
-        addIssuesFromChangeLog(build, site, listener, issueIds);
-        addIssuesFromParameters(build, site, listener, issueIds);
+        addIssuesFromChangeLog(build, pattern, listener, issueIds);
+        addIssuesFromParameters(build, pattern, listener, issueIds);
     }
 
     /**
      * Adds issues to issueIds by examining dependency changes from last build.
      * For each dependency change
-     * {@link #addIssuesRecursive(Run, JiraSite, TaskListener, Set) is called.
+     * {@link #addIssuesRecursive(Run, Pattern, TaskListener, Set) is called.
      */
-    protected void addIssuesFromDependentBuilds(Run<?, ?> build, JiraSite site, TaskListener listener,
+    protected void addIssuesFromDependentBuilds(Run<?, ?> build, Pattern pattern, TaskListener listener,
             Set<String> issueIds) {
         for (DependencyChange depc : RunScmChangeExtractor.getDependencyChanges(build).values()) {
             for (AbstractBuild<?, ?> b : depc.getBuilds()) {
                 getLogger().finer("Searching for JIRA issues in dependency " + b + " of " + build);
-                addIssuesRecursive(b, site, listener, issueIds);
+                addIssuesRecursive(b, pattern, listener, issueIds);
             }
         }
     }
@@ -139,7 +138,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     /**
      * Adds issues to issueIds from parameters
      */
-    protected void addIssuesFromParameters(Run<?, ?> build, JiraSite site, TaskListener listener,
+    protected void addIssuesFromParameters(Run<?, ?> build, Pattern pattern, TaskListener listener,
             Set<String> issueIds) {
         // Now look for any JiraIssueParameterValue's set in the build
         // Implements JENKINS-12312
@@ -160,7 +159,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     /**
      * Adds issues that were carried over from previous build to issueIds
      */
-    protected void addIssuesCarriedOverFromPreviousBuild(Run<?, ?> build, JiraSite site, TaskListener listener,
+    protected void addIssuesCarriedOverFromPreviousBuild(Run<?, ?> build, Pattern pattern, TaskListener listener,
             Set<String> ids) {
         Run<?, ?> prev = build.getPreviousBuild();
         if (prev != null) {

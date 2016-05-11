@@ -3,6 +3,7 @@ package hudson.plugins.jira.selector.perforce;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -43,7 +44,7 @@ public class P4JobIssueSelector extends JobIssueSelector {
     }
 
     @Override
-    protected void addJobIdsFromChangeLog(Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
+    protected void addJobIdsFromChangeLog(Run<?, ?> build, Pattern pattern, TaskListener listener, Set<String> issueIds) {
         getLogger().finer("Searching for JIRA issues in perforce jobs in " + build);
         for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(build)) {
             for (Entry change : set) {

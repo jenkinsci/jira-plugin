@@ -1,6 +1,7 @@
 package hudson.plugins.jira.selector.perforce;
 
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -21,14 +22,14 @@ public abstract class JobIssueSelector extends DefaultIssueSelector {
     /**
      * See {@link #addJobIdsFromChangeLog(Run, JiraSite, TaskListener, Set)}
      */
-    protected void addIssuesFromChangeLog(Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
-        addJobIdsFromChangeLog(build, site, listener, issueIds);
+    protected void addIssuesFromChangeLog(Run<?, ?> build, Pattern pattern, TaskListener listener, Set<String> issueIds) {
+        addJobIdsFromChangeLog(build, pattern, listener, issueIds);
     }
 
     /**
      * Adds job ids from change log to issueIds.
      */
-    protected abstract void addJobIdsFromChangeLog(Run<?, ?> build, JiraSite site, TaskListener listener,
+    protected abstract void addJobIdsFromChangeLog(Run<?, ?> build, Pattern pattern, TaskListener listener,
             Set<String> issueIds);
 
 }
