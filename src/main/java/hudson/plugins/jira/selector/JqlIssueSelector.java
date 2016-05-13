@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import hudson.Extension;
+import hudson.model.Descriptor;
+import hudson.plugins.jira.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
@@ -25,6 +28,14 @@ public class JqlIssueSelector extends AbstractIssueSelector {
     public JqlIssueSelector(String jql) {
         super();
         this.jql = jql;
+    }
+
+    public void setJql(String jql){
+        this.jql = jql;
+    }
+
+    public String getJql() {
+        return jql;
     }
 
     @Override
@@ -49,4 +60,11 @@ public class JqlIssueSelector extends AbstractIssueSelector {
         }
     }
 
+    @Extension
+    public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
+        @Override
+        public String getDisplayName() {
+            return Messages.IssueSelector_JqlIssueSelector_DisplayName();
+        }
+    }
 }

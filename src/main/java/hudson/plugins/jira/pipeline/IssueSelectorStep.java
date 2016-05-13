@@ -1,7 +1,10 @@
 package hudson.plugins.jira.pipeline;
 
+import java.util.Collection;
 import java.util.Set;
 
+import hudson.model.Descriptor;
+import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -45,6 +48,10 @@ public class IssueSelectorStep extends AbstractStepImpl {
 
         public DescriptorImpl() {
             super(IssueSelectorStepExecution.class);
+        }
+
+        public Collection<? extends Descriptor<?>> getApplicableDescriptors() {
+            return Jenkins.getInstance().<AbstractIssueSelector, Descriptor<AbstractIssueSelector>>getDescriptorList(AbstractIssueSelector.class);
         }
 
         @Override
