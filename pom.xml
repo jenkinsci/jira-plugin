@@ -35,7 +35,7 @@
     <connection>scm:git:git://github.com/jenkinsci/jira-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/jira-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/jira-plugin</url>
-    <tag>jira-2.2.1</tag>
+    <tag>jira-2.2.1-forked</tag>
   </scm>  
 
   <developers>
