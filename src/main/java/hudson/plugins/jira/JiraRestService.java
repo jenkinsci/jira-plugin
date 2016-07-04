@@ -18,10 +18,7 @@ package hudson.plugins.jira;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.*;
-import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
-import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
-import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
-import com.atlassian.jira.rest.client.api.domain.input.VersionInput;
+import com.atlassian.jira.rest.client.api.domain.input.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterators;
@@ -367,5 +364,20 @@ public class JiraRestService {
      */
     public Permissions getMyPermissions() throws RestClientException {
         return jiraRestClient.getMyPermissionsRestClient().getMyPermissions(null).claim();
+    }
+
+    public boolean updateIssueFieldValue(String issueKey, String fieldName, String fieldValue) {
+        IssueField field = getIssue(issueKey).getFieldByName(fieldName);
+        FieldInput fieldInput = new FieldInput(field.getId(), fieldValue);
+
+        IssueInput issueInput = IssueInput.createWithFields(fieldInput);
+
+        try {
+            jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
+            return true;
+        } catch (Exception e) {
+            LOGGER.warning("jira rest client update issue field error. cause: " + e.getMessage());
+        }
+        return false;
     }
 }
