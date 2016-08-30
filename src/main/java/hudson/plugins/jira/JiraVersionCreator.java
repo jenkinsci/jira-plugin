@@ -21,6 +21,7 @@ import net.sf.json.JSONObject;
  * @deprecated Replaced by {@link JiraVersionCreatorBuilder}. Read its description to see why.
  * 	Kept for backward compatibility.
  */
+@Deprecated
 public class JiraVersionCreator extends Notifier {
     private String jiraVersion;
     private String jiraProjectKey;
@@ -32,7 +33,7 @@ public class JiraVersionCreator extends Notifier {
     }
 
     @Override
-	public BuildStepMonitor getRequiredMonitorService() {
+    public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
 
