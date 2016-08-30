@@ -410,4 +410,16 @@ public class JiraSession {
      */
     public Permissions getMyPermissions(){ return service.getMyPermissions(); }
 
+    /**
+     * Update any issue field by given value
+     *
+     * @param issueKey
+     * @param fieldName
+     * @param fieldValue
+     */
+    public boolean updateIssueFieldValue(String issueKey, String fieldName, String fieldValue) {
+        LOGGER.fine("Updating issue " + issueKey + " with field name: " + fieldName + " and value: " + fieldValue);
+        return service.updateIssueFieldValue(issueKey, fieldName, fieldValue);
+    }
+
 }
