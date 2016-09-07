@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
@@ -235,8 +237,10 @@ public class JiraSession {
         for (Issue issue : issues) {
             Set<Version> newVersions = new HashSet<Version>();
             newVersions.add(newVersion);
+            Pattern fromVersionPattern = Pattern.compile(fromVersion);
             for (Version currentVersion : issue.getFixVersions()) {
-                if (!currentVersion.getName().equals(fromVersion)) {
+                Matcher versionToRemove = fromVersionPattern.matcher(currentVersion.getName());
+                if (!versionToRemove.matches()) {
                     newVersions.add(currentVersion);
                 }
             }
