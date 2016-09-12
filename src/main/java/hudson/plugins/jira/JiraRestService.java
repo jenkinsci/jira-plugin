@@ -273,6 +273,19 @@ public class JiraRestService {
         }
     }    
     
+    public void setIssueFields(String issueKey, List<JiraIssueField> fields) {
+        IssueInputBuilder builder = new IssueInputBuilder();
+        for (JiraIssueField field : fields)
+            builder.setFieldValue(field.getId(), field.getValue());
+        final IssueInput issueInput = builder.build();
+
+        try {
+            jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "jira rest client update fields error for issue " + issueKey, e);
+        }
+    }
+    
     public Issue progressWorkflowAction(String issueKey, Integer actionId) {
         final TransitionInput transitionInput = new TransitionInput(actionId);
 
