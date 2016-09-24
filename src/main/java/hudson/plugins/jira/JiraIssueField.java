@@ -3,20 +3,20 @@ package hudson.plugins.jira;
 import java.lang.String;
 
 public class JiraIssueField implements Comparable<JiraIssueField> {
-	
-	private final String field_id;
-	private final Object field_value;
-	
-	public JiraIssueField( String fieldId, Object fieldValue ) {
-		this.field_id = fieldId;
-		this.field_value = fieldValue;
-	}
-	
-	public int compareTo(JiraIssueField that) {
+
+    private final String field_id;
+    private final Object field_value;
+
+    public JiraIssueField(String fieldId, Object fieldValue) {
+        this.field_id = fieldId;
+        this.field_value = fieldValue;
+    }
+
+    public int compareTo(JiraIssueField that) {
         return this.compareTo(that);
-	}
-	
-	@Override
+    }
+
+    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -36,7 +36,7 @@ public class JiraIssueField implements Comparable<JiraIssueField> {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        
+
         JiraIssueField other = (JiraIssueField) obj;
         if (field_id == null) {
             if (other.field_id != null) {
@@ -45,7 +45,7 @@ public class JiraIssueField implements Comparable<JiraIssueField> {
         } else if (!field_id.equals(other.field_id)) {
             return false;
         }
-        
+
         if (field_value == null) {
             if (other.field_value != null) {
                 return false;
@@ -53,7 +53,7 @@ public class JiraIssueField implements Comparable<JiraIssueField> {
         } else if (!field_value.equals(other.field_value)) {
             return false;
         }
-        
+
         return true;
     }
 

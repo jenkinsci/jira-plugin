@@ -99,7 +99,7 @@ public class JiraSession {
      * @param fields Fields to add or update
      */
     public void addFields(String issueId, List<JiraIssueField> fields) {
-    	service.setIssueFields(issueId, fields);
+        service.setIssueFields(issueId, fields);
     }
 
     /**
