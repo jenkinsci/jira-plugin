@@ -11,6 +11,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
+
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
@@ -237,11 +239,26 @@ public class JiraSession {
         for (Issue issue : issues) {
             Set<Version> newVersions = new HashSet<Version>();
             newVersions.add(newVersion);
-            Pattern fromVersionPattern = Pattern.compile(fromVersion);
-            for (Version currentVersion : issue.getFixVersions()) {
-                Matcher versionToRemove = fromVersionPattern.matcher(currentVersion.getName());
-                if (!versionToRemove.matches()) {
-                    newVersions.add(currentVersion);
+
+            if(StringUtils.startsWith(fromVersion, "/") && StringUtils.endsWith(fromVersion, "/")) {
+
+                String regEx = StringUtils.removeStart(fromVersion, "/");
+                regEx = StringUtils.removeEnd(regEx, "/");
+
+                LOGGER.fine("Using regular expression: " + regEx);
+
+                Pattern fromVersionPattern = Pattern.compile(regEx);
+                for (Version currentVersion : issue.getFixVersions()) {
+                    Matcher versionToRemove = fromVersionPattern.matcher(currentVersion.getName());
+                    if (!versionToRemove.matches()) {
+                        newVersions.add(currentVersion);
+                    }
+                }
+            } else {
+                for (Version currentVersion : issue.getFixVersions()) {
+                    if (!currentVersion.getName().equals(fromVersion)) {
+                        newVersions.add(currentVersion);
+                    }
                 }
             }
 
