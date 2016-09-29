@@ -1,31 +1,27 @@
 package hudson.plugins.jira;
 
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
+
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.Result;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
-import java.util.List;
-
-import static ch.lambdaj.Lambda.filter;
-import static hudson.plugins.jira.JiraVersionMatcher.hasName;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.hamcrest.Matchers.equalTo;
 
 /**
  * A build step which creates new JIRA version
  *
  * @author Artem Koshelev artkoshelev@gmail.com
+ * @deprecated Replaced by {@link JiraVersionCreatorBuilder}. Read its description to see why.
+ * 	Kept for backward compatibility.
  */
+@Deprecated
 public class JiraVersionCreator extends Notifier {
     private String jiraVersion;
     private String jiraProjectKey;
@@ -36,6 +32,7 @@ public class JiraVersionCreator extends Notifier {
         this.jiraProjectKey = jiraProjectKey;
     }
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
     }
@@ -58,45 +55,8 @@ public class JiraVersionCreator extends Notifier {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-        String realVersion = null;
-        String realProjectKey = null;
-
-        try {
-            JiraSite site = getSiteForProject(build.getProject());
-            realVersion = build.getEnvironment(listener).expand(jiraVersion);
-            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
-
-            if (isEmpty(realVersion)) {
-                throw new IllegalArgumentException("No version specified");
-            }
-            if (isEmpty(realProjectKey)) {
-                throw new IllegalArgumentException("No project specified");
-            }
-
-            List<JiraVersion> sameNamedVersions = filter(
-                    hasName(equalTo(realVersion)),
-                    site.getVersions(realProjectKey));
-
-            if (sameNamedVersions.size() == 0) {
-                listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
-                site.addVersion(realVersion, realProjectKey);
-            } else {
-                listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace(listener.fatalError(
-                    "Unable to add version %s to JIRA project %s",
-                    realVersion,
-                    realProjectKey,
-                    e
-            ));
-
-            listener.finished(Result.FAILURE);
-            return false;
-        }
-
-        return true;
+    	JiraSite site = getSiteForProject(build.getProject());
+    	return VersionCreator.perform(site, jiraVersion, jiraProjectKey, build, listener);
     }
 
     JiraSite getSiteForProject(AbstractProject<?, ?> project) {
