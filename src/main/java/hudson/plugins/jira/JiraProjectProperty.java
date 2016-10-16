@@ -1,7 +1,6 @@
 package hudson.plugins.jira;
 
 import hudson.Extension;
-import hudson.model.AbstractProject;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
@@ -20,11 +19,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Associates {@link AbstractProject} with {@link JiraSite}.
+ * Associates {@link Job} with {@link JiraSite}.
  *
  * @author Kohsuke Kawaguchi
  */
-public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
+public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
 
     /**
      * Used to find {@link JiraSite}. Matches {@link JiraSite#getName()}. Always
@@ -84,7 +83,7 @@ public class JiraProjectProperty extends JobProperty<AbstractProject<?, ?>> {
         @Override
         @SuppressWarnings("unchecked")
         public boolean isApplicable(Class<? extends Job> jobType) {
-            return AbstractProject.class.isAssignableFrom(jobType);
+            return Job.class.isAssignableFrom(jobType);
         }
 
         @Override
