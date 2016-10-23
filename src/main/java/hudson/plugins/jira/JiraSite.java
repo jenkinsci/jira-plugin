@@ -662,7 +662,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
-            console.println(Messages.Updater_FailedToConnect());
+            console.println(Messages.FailedToConnect());
             return false;
         }
 

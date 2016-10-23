@@ -100,7 +100,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
         JiraSite site = JiraSite.get(run.getParent());
         if (site == null) {
-            logger.println(Messages.Updater_NoJiraSite());
+            logger.println(Messages.NoJiraSite());
             run.setResult(Result.FAILURE);
             return;
         }
@@ -109,11 +109,11 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         try {
             session = site.getSession();
         } catch (IOException e) {
-            listener.getLogger().println(Messages.Updater_FailedToConnect());
+            listener.getLogger().println(Messages.FailedToConnect());
             e.printStackTrace(listener.getLogger());
         }
         if (session == null) {
-            logger.println(Messages.Updater_NoRemoteAccess());
+            logger.println(Messages.NoRemoteAccess());
             run.setResult(Result.FAILURE);
             return;
         }
@@ -151,7 +151,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
                         issueId + " - Jenkins JIRA authentication problem");
             }
 
-            logger.println(Messages.Updater_FailedToCommentOnIssue(issueId));
+            logger.println(Messages.FailedToUpdateIssue(issueId));
             logger.println(e.getLocalizedMessage());
         }
     }

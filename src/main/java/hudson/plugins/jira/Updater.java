@@ -68,14 +68,14 @@ class Updater {
         try {
             JiraSite site = JiraSite.get(build.getParent());
             if (site == null) {
-                logger.println(Messages.Updater_NoJiraSite());
+                logger.println(Messages.NoJiraSite());
                 build.setResult(Result.FAILURE);
                 return true;
             }
 
             String rootUrl = Hudson.getInstance().getRootUrl();
             if (rootUrl == null) {
-                logger.println(Messages.Updater_NoJenkinsUrl());
+                logger.println(Messages.NoJenkinsUrl());
                 build.setResult(Result.FAILURE);
                 return true;
             }
@@ -92,11 +92,11 @@ class Updater {
             try {
                 session = site.getSession();
             } catch (IOException e) {
-                listener.getLogger().println(Messages.Updater_FailedToConnect());
+                listener.getLogger().println(Messages.FailedToConnect());
                 e.printStackTrace(listener.getLogger());
             }
             if (session == null) {
-                logger.println(Messages.Updater_NoRemoteAccess());
+                logger.println(Messages.NoRemoteAccess());
                 build.setResult(Result.FAILURE);
                 return true;
             }
@@ -155,7 +155,7 @@ class Updater {
         List<JiraIssue> copy = new ArrayList<JiraIssue>(issues);
 
         for (JiraIssue issue : copy) {
-            logger.println(Messages.Updater_Updating(issue.id));
+            logger.println(Messages.UpdatingIssue(issue.id));
 
             try {
                 session.addComment(
@@ -183,7 +183,7 @@ class Updater {
                     continue;
                 }
 
-                logger.println(Messages.Updater_FailedToCommentOnIssue(issue.id));
+                logger.println(Messages.FailedToUpdateIssueWithCarryOver(issue.id));
                 logger.println(e.getLocalizedMessage());
             }
 

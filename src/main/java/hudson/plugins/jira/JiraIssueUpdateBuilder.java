@@ -86,7 +86,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
         JiraSite site = JiraSite.get(run.getParent());
 
         if (site == null) {
-            listener.getLogger().println(Messages.Updater_NoJiraSite());
+            listener.getLogger().println(Messages.NoJiraSite());
             run.setResult(Result.FAILURE);
         }
 

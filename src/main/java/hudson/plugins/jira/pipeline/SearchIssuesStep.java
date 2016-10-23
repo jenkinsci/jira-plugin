@@ -82,7 +82,7 @@ public class SearchIssuesStep extends AbstractStepImpl {
             try {
                 session = site.getSession();
             } catch (IOException e) {
-                listener.getLogger().println(Messages.Updater_FailedToConnect());
+                listener.getLogger().println(Messages.FailedToConnect());
                 e.printStackTrace(listener.getLogger());
                 throw new AbortException("Cannot open jira session - error occured");
             }
