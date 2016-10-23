@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import hudson.plugins.jira.model.JiraIssueField;
 import org.apache.commons.lang.StringUtils;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;

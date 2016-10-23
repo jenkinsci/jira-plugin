@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import hudson.plugins.jira.model.JiraIssue;
 import org.apache.commons.lang.StringUtils;
 
 import hudson.Extension;

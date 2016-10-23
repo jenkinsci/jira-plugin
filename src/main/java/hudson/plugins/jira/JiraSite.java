@@ -12,6 +12,8 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Job;
+import hudson.plugins.jira.model.JiraIssue;
+import hudson.plugins.jira.model.JiraVersion;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 import org.joda.time.DateTime;

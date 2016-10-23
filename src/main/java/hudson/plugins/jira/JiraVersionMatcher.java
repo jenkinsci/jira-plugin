@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import hudson.plugins.jira.model.JiraVersion;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import hudson.plugins.jira.model.JiraIssue;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -52,7 +53,6 @@ import hudson.model.User;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.EditType;
 import hudson.scm.SCM;
-import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
 import jenkins.model.Jenkins;
 

@@ -1,4 +1,4 @@
-package hudson.plugins.jira;
+package hudson.plugins.jira.model;
 
 import java.lang.String;
 

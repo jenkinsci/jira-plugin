@@ -11,6 +11,7 @@ import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.model.JiraVersion;
 
 /**
  * Performs an action which creates new jira version.

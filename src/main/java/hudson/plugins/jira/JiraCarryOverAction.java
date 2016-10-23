@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import hudson.Util;
 import hudson.model.InvisibleAction;
+import hudson.plugins.jira.model.JiraIssue;
 
 import java.util.Arrays;
 import java.util.Collection;

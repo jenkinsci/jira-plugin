@@ -8,6 +8,7 @@ import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.model.JiraIssue;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.AffectedFile;

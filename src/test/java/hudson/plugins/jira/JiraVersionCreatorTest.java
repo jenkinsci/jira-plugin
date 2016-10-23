@@ -7,6 +7,7 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 
+import hudson.plugins.jira.model.JiraVersion;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;

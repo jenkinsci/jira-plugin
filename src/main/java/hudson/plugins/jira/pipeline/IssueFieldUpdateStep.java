@@ -1,4 +1,4 @@
-package hudson.plugins.jira;
+package hudson.plugins.jira.pipeline;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -7,6 +7,10 @@ import java.util.Set;
 
 import javax.servlet.ServletException;
 
+import hudson.plugins.jira.JiraSession;
+import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
+import hudson.plugins.jira.model.JiraIssueField;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -18,10 +22,7 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.matrix.MatrixRun;
-import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -29,7 +30,6 @@ import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
-import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 
 /**
@@ -38,7 +38,7 @@ import jenkins.tasks.SimpleBuildStep;
  * @author Dmitry Frolov tekillaz.dev@gmail.com
  * 
  */
-public class JiraIssueFieldUpdater extends Builder implements SimpleBuildStep {
+public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
     private AbstractIssueSelector issueSelector;
 
@@ -74,7 +74,7 @@ public class JiraIssueFieldUpdater extends Builder implements SimpleBuildStep {
     }
 
     @DataBoundConstructor
-    public JiraIssueFieldUpdater(AbstractIssueSelector issueSelector, String fieldId, String fieldValue) {
+    public IssueFieldUpdateStep(AbstractIssueSelector issueSelector, String fieldId, String fieldValue) {
         this.issueSelector = issueSelector;
         this.fieldId = fieldId;
         this.fieldValue = fieldValue;
@@ -94,8 +94,8 @@ public class JiraIssueFieldUpdater extends Builder implements SimpleBuildStep {
 
         AbstractIssueSelector selector = issueSelector;
         if (selector == null) {
-            logger.println("[JIRA][JiraIssueFieldUpdater] No issue selector found!");
-            throw new IOException("[JIRA][JiraIssueFieldUpdater] No issue selector found!");
+            logger.println("[JIRA][IssueFieldUpdateStep] No issue selector found!");
+            throw new IOException("[JIRA][IssueFieldUpdateStep] No issue selector found!");
         }
 
         JiraSite site = JiraSite.get(run.getParent());
@@ -120,7 +120,7 @@ public class JiraIssueFieldUpdater extends Builder implements SimpleBuildStep {
 
         Set<String> issues = selector.findIssueIds(run, site, listener);
         if (issues.isEmpty()) {
-            logger.println("[JIRA][JiraIssueFieldUpdater] Issue list is empty!");
+            logger.println("[JIRA][IssueFieldUpdateStep] Issue list is empty!");
             return;
         }
 

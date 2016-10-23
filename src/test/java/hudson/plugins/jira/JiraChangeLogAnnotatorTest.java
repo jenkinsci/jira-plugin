@@ -12,6 +12,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.regex.Pattern;
 
+import hudson.plugins.jira.model.JiraIssue;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

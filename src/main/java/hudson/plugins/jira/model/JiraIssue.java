@@ -1,6 +1,7 @@
-package hudson.plugins.jira;
+package hudson.plugins.jira.model;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import hudson.plugins.jira.JiraSite;
 
 /**
  * One JIRA issue.

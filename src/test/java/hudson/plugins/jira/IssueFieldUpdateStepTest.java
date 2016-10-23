@@ -1,36 +1,24 @@
 package hudson.plugins.jira;
 
 import hudson.EnvVars;
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.*;
-import hudson.plugins.jira.selector.AbstractIssueSelector;
-import hudson.plugins.jira.selector.DefaultIssueSelector;
-import hudson.plugins.jira.selector.ExplicitIssueSelector;
-import junit.framework.AssertionFailedError;
+import hudson.plugins.jira.model.JiraIssueField;
 
-import org.easymock.internal.matchers.Any;
-import org.junit.Before;
+import hudson.plugins.jira.pipeline.IssueFieldUpdateStep;
 import org.junit.Test;
 import org.mockito.Matchers;
-import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.google.common.collect.Lists;
-
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -42,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Dmitry Frolov tekillaz.dev@gmail.com
  */
-public class JiraIssueFieldUpdaterTest {
+public class IssueFieldUpdateStepTest {
 
     @Test
     public void checkPrepareFieldId() {
@@ -57,7 +45,7 @@ public class JiraIssueFieldUpdaterTest {
     			"customfield_10100", 
     			"customfield_field_10100");
     	
-    	JiraIssueFieldUpdater jifu = new JiraIssueFieldUpdater(null, null, "");
+    	IssueFieldUpdateStep jifu = new IssueFieldUpdateStep(null, null, "");
     	for( int i=0; i<field_test.size(); i++ )
 	    	assertEquals("Check field id conversion #" + Integer.toString(i),
 	    			jifu.prepareFieldId(field_test.get(i)),
@@ -78,7 +66,7 @@ public class JiraIssueFieldUpdaterTest {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(listener.getLogger()).thenReturn(logger);
         
-		JiraIssueFieldUpdater jifu = spy(new JiraIssueFieldUpdater( null, "", "") );
+		IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep( null, "", "") );
 		jifu.perform(build, null, launcher, listener);
 		assertTrue("Check selector is null", build.getResult() == Result.FAILURE);
 	}
@@ -107,7 +95,7 @@ public class JiraIssueFieldUpdaterTest {
         for( int i=0; i<100; i++ )         	
 			fields_test.add(new JiraIssueField(issue_test, "value-"+Integer.toString(10100+i)));
         
-		JiraIssueFieldUpdater jifu = spy(new JiraIssueFieldUpdater(null, "", "") );
+		IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(null, "", "") );
 		jifu.submitFields(session, issue_test, fields_test, logger);
 		
 		assertEquals("Check issues list size", issues_after.size(), 1);

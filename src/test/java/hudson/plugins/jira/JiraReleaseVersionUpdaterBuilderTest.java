@@ -12,6 +12,7 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import hudson.plugins.jira.model.JiraVersion;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;

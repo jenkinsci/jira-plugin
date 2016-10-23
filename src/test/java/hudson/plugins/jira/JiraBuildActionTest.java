@@ -4,6 +4,7 @@ import static org.mockito.Mockito.mock;
 
 import java.util.ArrayList;
 
+import hudson.plugins.jira.model.JiraIssue;
 import org.junit.Test;
 
 import hudson.model.FreeStyleBuild;

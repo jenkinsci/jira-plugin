@@ -8,6 +8,7 @@ import java.util.TreeSet;
 
 import hudson.model.Action;
 import hudson.model.Run;
+import hudson.plugins.jira.model.JiraIssue;
 
 /**
  * JIRA issues related to the build.
