@@ -283,7 +283,7 @@ public class JiraRestService {
         try {
             jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "jira rest client update fields error for issue " + issueKey, e);
+            LOGGER.log(WARNING, "jira rest client update fields error for issue " + issueKey, e);
         }
     }
     
