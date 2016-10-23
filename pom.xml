@@ -37,7 +37,12 @@
     <developerConnection>scm:git:git@github.com:jenkinsci/jira-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/jira-plugin</url>
     <tag>HEAD</tag>
-  </scm>  
+  </scm>
+
+  <issueManagement>
+    <system>JIRA</system>
+    <url>https://issues.jenkins-ci.org/browse/JENKINS</url>
+  </issueManagement>
 
   <developers>
     <developer>
@@ -49,6 +54,20 @@
       <name>Radek Antoniuk</name>
     </developer>
   </developers>
+
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>com.github.danielflower.mavenplugins</groupId>
+        <artifactId>gitlog-maven-plugin</artifactId>
+        <version>1.13.3</version>
+        <configuration>
+          <dateFormat>-</dateFormat>
+          <generateMarkdownChangeLog>true</generateMarkdownChangeLog>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
 
   <build>
     <pluginManagement>
@@ -71,6 +90,11 @@
             <reuseForks>true</reuseForks>
             <argLine>-Xmx1024m</argLine>
           </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.5.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
