@@ -94,6 +94,17 @@ public class JiraSession {
             service.setIssueLabels(issueId, newLabels);
         }
     }
+    
+    /**
+     * Adds new to or updates existing fields of the issue.
+     * Can add or update custom fields.
+     * 
+     * @param issueId Jira issue ID like "PRJ-123"
+     * @param fields Fields to add or update
+     */
+    public void addFields(String issueId, List<JiraIssueField> fields) {
+        service.setIssueFields(issueId, fields);
+    }
 
     /**
      * Gets the details of one issue.
