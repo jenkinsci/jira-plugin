@@ -24,6 +24,7 @@
 
     <!-- jenkins -->
     <jenkins.version>1.642.3</jenkins.version>
+    <hpi-plugin.version>1.95</hpi-plugin.version>
 
     <!-- security -->
     <owasp.version>1.3.1</owasp.version>
@@ -35,7 +36,27 @@
     <cobertura.version>2.7</cobertura.version>
     <surefire.version>2.19.1</surefire.version>
   </properties>
-  
+
+  <profiles>
+    <profile>
+      <id>doclint-java8-disable</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <additionalparam>-Xdoclint:none</additionalparam>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/jira-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/jira-plugin.git</developerConnection>
@@ -74,42 +95,17 @@
   </reporting>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${surefire.version}</version>
-          <configuration>
-            <forkCount>3</forkCount>
-            <reuseForks>true</reuseForks>
-            <argLine>-Xmx1024m</argLine>
-          </configuration>
-        </plugin>
-        <!-- removing those breaks the build -->
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.5.1</version>
-        </plugin>
-        <plugin>
-          <groupId>org.jenkins-ci.tools</groupId>
-          <artifactId>maven-hpi-plugin</artifactId>
-          <version>1.95</version>
-        </plugin>
-
-      </plugins>
-    </pluginManagement>
-
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
         <configuration>
-          <additionalparam>-Xdoclint:none</additionalparam>
+          <forkCount>0</forkCount>
+          <reuseForks>false</reuseForks>
+          <argLine>-Xms128m -Xmx2048m</argLine>
         </configuration>
       </plugin>
-
       <plugin>
         <groupId>org.codehaus.gmaven</groupId>
         <artifactId>gmaven-plugin</artifactId>
@@ -356,7 +352,7 @@
 
 
   <repositories>
-    <repository>
+   <!-- <repository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
       <releases>
@@ -365,7 +361,7 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-    </repository>
+    </repository>-->
     <repository>
       <id>atlassian-public</id>
       <url>https://m2proxy.atlassian.com/repository/public/</url>
@@ -382,7 +378,7 @@
   </repositories>
   
   <pluginRepositories>
-    <pluginRepository>
+    <!--<pluginRepository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
       <releases>
@@ -391,7 +387,7 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-    </pluginRepository>
+    </pluginRepository>-->
     <pluginRepository>
       <id>atlassian-public</id>
       <url>https://m2proxy.atlassian.com/repository/public/</url>
