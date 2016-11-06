@@ -24,6 +24,7 @@
 
     <!-- jenkins -->
     <jenkins.version>1.642.3</jenkins.version>
+    <hpi-plugin.version>1.95</hpi-plugin.version>
 
     <!-- security -->
     <owasp.version>1.3.1</owasp.version>
@@ -96,16 +97,16 @@
   <build>
     <pluginManagement>
       <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${surefire.version}</version>
-          <configuration>
-            <forkCount>0</forkCount>
-            <reuseForks>false</reuseForks>
-            <argLine>-Xms128m -Xmx4096m</argLine>
-          </configuration>
-        </plugin>
+        <!--<plugin>-->
+          <!--<groupId>org.apache.maven.plugins</groupId>-->
+          <!--<artifactId>maven-surefire-plugin</artifactId>-->
+          <!--<version>${surefire.version}</version>-->
+          <!--<configuration>-->
+            <!--<forkCount>0</forkCount>-->
+            <!--<reuseForks>false</reuseForks>-->
+            <!--<argLine>-Xms128m -Xmx4096m</argLine>-->
+          <!--</configuration>-->
+        <!--</plugin>-->
         <!-- removing those breaks the build -->
        <!-- <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -113,11 +114,11 @@
           <version>3.5.1</version>
         </plugin>
         -->
-        <plugin>
-          <groupId>org.jenkins-ci.tools</groupId>
-          <artifactId>maven-hpi-plugin</artifactId>
-          <version>1.95</version>
-        </plugin>
+        <!--<plugin>-->
+          <!--<groupId>org.jenkins-ci.tools</groupId>-->
+          <!--<artifactId>maven-hpi-plugin</artifactId>-->
+          <!--<version>1.95</version>-->
+        <!--</plugin>-->
 
 
         <!-- override parent pom javadoc because of missing annotations and build breaking -->
