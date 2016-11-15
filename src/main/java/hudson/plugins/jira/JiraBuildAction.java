@@ -9,12 +9,14 @@ import java.util.TreeSet;
 import hudson.model.Action;
 import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
+import org.kohsuke.stapler.export.ExportedBean;
 
 /**
  * JIRA issues related to the build.
  *
  * @author Kohsuke Kawaguchi
  */
+@ExportedBean
 public class JiraBuildAction implements Action {
 
     public final Run<?, ?> owner;
