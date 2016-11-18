@@ -226,7 +226,7 @@ public class JiraRestService {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
-                .setIssueTypeId(1L) // BUG
+                .setIssueTypeId(10004L) // BUG
                 .setSummary(summary);
 
         if (!assignee.equals(""))
