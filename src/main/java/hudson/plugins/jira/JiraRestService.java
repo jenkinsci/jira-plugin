@@ -58,6 +58,7 @@ public class JiraRestService {
      * URI.
      */
     public static final String BASE_API_PATH = "rest/api/2";
+    public static final Long ISSUE_TYPE_BUG = 10004L;
 
     private final URI uri;
 
@@ -226,7 +227,7 @@ public class JiraRestService {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
-                .setIssueTypeId(10004L) // BUG
+                .setIssueTypeId(ISSUE_TYPE_BUG) // BUG
                 .setSummary(summary);
 
         if (!assignee.equals(""))
