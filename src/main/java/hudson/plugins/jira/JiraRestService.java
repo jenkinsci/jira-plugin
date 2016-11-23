@@ -222,12 +222,24 @@ public class JiraRestService {
         }
     }
 
+    private static final long BUG_ISSUE_TYPE_ID = 1L;
+
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
+        return createIssue(projectKey, description, assignee, components, summary, null, BUG_ISSUE_TYPE_ID);
+    }
+
+    public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
+                                  Long priorityId, Long typeId) {
+        Long issueTypeId = typeId != null && typeId > 0 ? typeId : BUG_ISSUE_TYPE_ID;
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
-                .setIssueTypeId(1L) // BUG
+                .setIssueTypeId(issueTypeId)
                 .setSummary(summary);
+
+        if (priorityId != null && priorityId > 0) {
+            builder.setPriorityId(priorityId);
+        }
 
         if (!assignee.equals(""))
             builder.setAssigneeName(assignee);

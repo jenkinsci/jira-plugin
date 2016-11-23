@@ -50,6 +50,9 @@ public class JiraCreateIssueNotifier extends Notifier {
     private String testDescription;
     private String assignee;
     private String component;
+    private Long priorityId;
+    private Long typeId;
+    private Integer actionIdOnSuccess;
 
     enum finishedStatuses {
         Closed,
@@ -58,13 +61,21 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     @DataBoundConstructor
-    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component) {
+    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component, Long priorityId,
+                                   Long typeId, Integer actionIdOnSuccess) {
         if (projectKey == null) throw new IllegalArgumentException("Project key cannot be null");
         this.projectKey = projectKey;
 
         this.testDescription = testDescription;
         this.assignee = assignee;
         this.component = component;
+        this.priorityId = priorityId;
+        this.typeId = typeId;
+        this.actionIdOnSuccess = actionIdOnSuccess;
+    }
+
+    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component) {
+        this(projectKey, testDescription, assignee, component, null, null, null);
     }
 
     public String getProjectKey() {
@@ -97,6 +108,18 @@ public class JiraCreateIssueNotifier extends Notifier {
 
     public void setComponent(String component) {
         this.component = component;
+    }
+
+    public Long getPriorityId() {
+        return priorityId;
+    }
+
+    public Long getTypeId() {
+        return typeId;
+    }
+
+    public Integer getActionIdOnSuccess() {
+        return actionIdOnSuccess;
     }
 
     @Override
@@ -165,7 +188,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         );
         Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
 
-        Issue issue = session.createIssue(projectKey, description, assignee, components, summary);
+        Issue issue = session.createIssue(projectKey, description, assignee, components, summary, priorityId, typeId);
 
         writeInFile(filename, issue);
         return issue;
@@ -190,14 +213,15 @@ public class JiraCreateIssueNotifier extends Notifier {
      * Adds a comment to the existing issue.
      *
      * @param build
+     * @param listener
      * @param id
      * @param comment
      * @throws IOException
      */
-    private void addComment(AbstractBuild<?, ?> build, String id, String comment) throws IOException {
-
+    private void addComment(AbstractBuild<?, ?> build, BuildListener listener, String id, String comment) throws IOException {
         JiraSession session = getJiraSession(build);
         session.addCommentWithoutConstrains(id, comment);
+        listener.getLogger().println("Commented JIRA issue " + id);
     }
 
     /**
@@ -339,9 +363,9 @@ public class JiraCreateIssueNotifier extends Notifier {
                         deleteFile(filename);
                         Issue issue = createJiraIssue(build, filename);
                         LOG.info(String.format("[%s] created.", issue.getKey()));
-
+                        listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
                     }else {
-                        addComment(build, issueId, comment);
+                        addComment(build, listener, issueId, comment);
                         LOG.info(String.format("[%s] The previous build also failed, comment added.", issueId));
                     }
                 } catch (IOException e) {
@@ -353,6 +377,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         if (previousBuildResult == Result.SUCCESS || previousBuildResult == Result.ABORTED) {
             try {
                 Issue issue = createJiraIssue(build, filename);
+                LOG.info(String.format("[%s] created.", issue.getKey()));
                 listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
             } catch (IOException e) {
                 listener.error("Error creating JIRA issue : " + e.getMessage());
@@ -390,8 +415,11 @@ public class JiraCreateIssueNotifier extends Notifier {
                         LOG.info(String.format("%s is closed", issueId));
                         deleteFile(filename);
                     } else {
-                        LOG.info(String.format("%s is not Closed, comment was added.", issueId));
-                        addComment(build, issueId, comment);
+                        LOG.info(String.format("%s is not closed, comment was added.", issueId));
+                        addComment(build, listener, issueId, comment);
+                        if (actionIdOnSuccess != null && actionIdOnSuccess > 0) {
+                            progressWorkflowAction(build, issueId, actionIdOnSuccess);
+                        }
                     }
 
                 } catch (IOException e) {
@@ -401,6 +429,11 @@ public class JiraCreateIssueNotifier extends Notifier {
             }
 
         }
+    }
+
+    private void progressWorkflowAction(AbstractBuild<?, ?> build, String issueId, Integer actionId) throws IOException {
+        JiraSession session = getJiraSession(build);
+        session.progressWorkflowAction(issueId, actionId);
     }
 
     /**
