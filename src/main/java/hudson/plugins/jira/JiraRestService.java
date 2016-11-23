@@ -36,6 +36,8 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -44,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import static java.util.logging.Level.WARNING;
 
@@ -142,6 +145,15 @@ public class JiraRestService {
         }
     }
 
+    public List<Priority> getPriorities() {
+        try {
+            return Lists.newArrayList(jiraRestClient.getMetadataClient().getPriorities().get(timeout, TimeUnit.SECONDS));
+        } catch (Exception e) {
+            LOGGER.log(WARNING, "jira rest client get priorities error. cause: " + e.getMessage(), e);
+            return Collections.emptyList();
+        }
+    }
+
     public List<String> getProjectsKeys() {
         Iterable<BasicProject> projects = Collections.emptyList();
         try {
@@ -222,12 +234,66 @@ public class JiraRestService {
         }
     }
 
+    private static final long BUG_ISSUE_TYPE_ID = 1L;
+
+    @Nonnull
+    private Long getIssueTypeId(String type) {
+        if (StringUtils.isNotBlank(type)) {
+            if (isNumber(type)) {
+                return Long.valueOf(type.trim());
+            }
+            for (IssueType t : getIssueTypes()) {
+                if (type.equalsIgnoreCase(t.getName())) {
+                    return t.getId();
+                }
+            }
+        }
+        return BUG_ISSUE_TYPE_ID;
+    }
+
+    @Nullable
+    private Long getPriorityId(String priority) {
+        if (StringUtils.isNotBlank(priority)) {
+            if (isNumber(priority)) {
+                return Long.valueOf(priority.trim());
+            }
+            for (Priority p : getPriorities()) {
+                if (priority.equalsIgnoreCase(p.getName())) {
+                    return p.getId();
+                }
+            }
+        }
+        return null;
+    }
+
+    private final Pattern pattern = Pattern.compile("-?\\d+");
+
+    private boolean isNumber(String s) {
+        if (StringUtils.isBlank(s)) {
+            return false;
+        }
+        return pattern.matcher(s.trim()).matches();
+    }
+
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
+        return createIssue(projectKey, description, assignee, components, summary, null, BUG_ISSUE_TYPE_ID);
+    }
+
+    public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, String priority, String type) {
+        return createIssue(projectKey, description, assignee, components, summary, getPriorityId(priority), getIssueTypeId(type));
+    }
+
+    private BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
+                                   Long priorityId, Long issueTypeId) {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
-                .setIssueTypeId(1L) // BUG
+                .setIssueTypeId(issueTypeId)
                 .setSummary(summary);
+
+        if (priorityId != null) {
+            builder.setPriorityId(priorityId);
+        }
 
         if (!assignee.equals(""))
             builder.setAssigneeName(assignee);

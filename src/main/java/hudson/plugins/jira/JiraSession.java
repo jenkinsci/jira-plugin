@@ -274,7 +274,7 @@ public class JiraSession {
                 }
             }
 
-            LOGGER.fine("Replaceing version in issue: " + issue.getKey());
+            LOGGER.fine("Replacing version in issue: " + issue.getKey());
             service.updateIssue(issue.getKey(), Lists.newArrayList(newVersions));
         }
     }
@@ -392,7 +392,11 @@ public class JiraSession {
      * @return The issue id
      */
     public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
-        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary);
+        return createIssue(projectKey, description, assignee, components, summary, null, null);
+    }
+
+    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, String priority, String type) {
+        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, priority, type);
         return service.getIssue(basicIssue.getKey());
     }
 
