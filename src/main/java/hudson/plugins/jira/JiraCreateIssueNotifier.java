@@ -1,15 +1,13 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.BasicComponent;
-import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Priority;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -20,6 +18,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -31,10 +30,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.logging.Logger;
+
+import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
 
 /**
  * When a build fails it creates jira issues.
@@ -50,6 +48,9 @@ public class JiraCreateIssueNotifier extends Notifier {
     private String testDescription;
     private String assignee;
     private String component;
+    private Long typeId;
+    private Long priorityId;
+    private Integer actionIdOnSuccess;
 
     enum finishedStatuses {
         Closed,
@@ -58,13 +59,22 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     @DataBoundConstructor
-    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component) {
+    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component, Long typeId,
+                                   Long priorityId, Integer actionIdOnSuccess) {
         if (projectKey == null) throw new IllegalArgumentException("Project key cannot be null");
         this.projectKey = projectKey;
 
         this.testDescription = testDescription;
         this.assignee = assignee;
         this.component = component;
+        this.typeId = typeId;
+        this.priorityId = priorityId;
+        this.actionIdOnSuccess = actionIdOnSuccess;
+    }
+
+    @Deprecated
+    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component) {
+        this(projectKey, testDescription, assignee, component, null, null, null);
     }
 
     public String getProjectKey() {
@@ -97,6 +107,18 @@ public class JiraCreateIssueNotifier extends Notifier {
 
     public void setComponent(String component) {
         this.component = component;
+    }
+
+    public Long getTypeId() {
+        return typeId;
+    }
+
+    public Long getPriorityId() {
+        return priorityId;
+    }
+
+    public Integer getActionIdOnSuccess() {
+        return actionIdOnSuccess;
     }
 
     @Override
@@ -165,7 +187,16 @@ public class JiraCreateIssueNotifier extends Notifier {
         );
         Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
 
-        Issue issue = session.createIssue(projectKey, description, assignee, components, summary);
+        Long issueTypeId = typeId;
+        if (issueTypeId == null || issueTypeId == 0) { // zero is default / invalid selection
+            LOG.info("Returning default issue type id " + BUG_ISSUE_TYPE_ID);
+            issueTypeId = BUG_ISSUE_TYPE_ID;
+        }
+        if (priorityId != null && priorityId == 0) {
+            priorityId = null; // remove invalid priority selection
+        }
+
+        Issue issue = session.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
 
         writeInFile(filename, issue);
         return issue;
@@ -190,47 +221,15 @@ public class JiraCreateIssueNotifier extends Notifier {
      * Adds a comment to the existing issue.
      *
      * @param build
+     * @param listener
      * @param id
      * @param comment
      * @throws IOException
      */
-    private void addComment(AbstractBuild<?, ?> build, String id, String comment) throws IOException {
-
+    private void addComment(AbstractBuild<?, ?> build, BuildListener listener, String id, String comment) throws IOException {
         JiraSession session = getJiraSession(build);
         session.addCommentWithoutConstrains(id, comment);
-    }
-
-    /**
-     * Returns an Array of componets given by the user
-     *
-     * @param build
-     * @param component
-     * @return Array of component
-     * @throws IOException
-     */
-    private List<BasicComponent> getJiraComponents(AbstractBuild<?, ?> build, String component) throws IOException {
-
-        if (Util.fixEmpty(component) == null) {
-            return Collections.emptyList();
-        }
-
-        JiraSession session = getJiraSession(build);
-        List<Component> availableComponents = session.getComponents(projectKey);
-
-        //converting the user input as a string array
-        Splitter splitter = Splitter.on(",").trimResults().omitEmptyStrings();
-        List<String> inputComponents = Lists.newArrayList(splitter.split(component));
-        int numberOfComponents = inputComponents.size();
-
-        final List<BasicComponent> jiraComponents = new ArrayList<BasicComponent>(numberOfComponents);
-
-        for (final BasicComponent availableComponent : availableComponents) {
-            if (inputComponents.contains(availableComponent.getName())) {
-                jiraComponents.add(availableComponent);
-            }
-        }
-
-        return jiraComponents;
+        listener.getLogger().println(String.format("[%s] Commented issue", id));
     }
 
     /**
@@ -339,9 +338,9 @@ public class JiraCreateIssueNotifier extends Notifier {
                         deleteFile(filename);
                         Issue issue = createJiraIssue(build, filename);
                         LOG.info(String.format("[%s] created.", issue.getKey()));
-
+                        listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
                     }else {
-                        addComment(build, issueId, comment);
+                        addComment(build, listener, issueId, comment);
                         LOG.info(String.format("[%s] The previous build also failed, comment added.", issueId));
                     }
                 } catch (IOException e) {
@@ -353,6 +352,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         if (previousBuildResult == Result.SUCCESS || previousBuildResult == Result.ABORTED) {
             try {
                 Issue issue = createJiraIssue(build, filename);
+                LOG.info(String.format("[%s] created.", issue.getKey()));
                 listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
             } catch (IOException e) {
                 listener.error("Error creating JIRA issue : " + e.getMessage());
@@ -390,8 +390,11 @@ public class JiraCreateIssueNotifier extends Notifier {
                         LOG.info(String.format("%s is closed", issueId));
                         deleteFile(filename);
                     } else {
-                        LOG.info(String.format("%s is not Closed, comment was added.", issueId));
-                        addComment(build, issueId, comment);
+                        LOG.info(String.format("%s is not closed, comment was added.", issueId));
+                        addComment(build, listener, issueId, comment);
+                        if (actionIdOnSuccess != null && actionIdOnSuccess > 0) {
+                            progressWorkflowAction(build, issueId, actionIdOnSuccess);
+                        }
                     }
 
                 } catch (IOException e) {
@@ -401,6 +404,11 @@ public class JiraCreateIssueNotifier extends Notifier {
             }
 
         }
+    }
+
+    private void progressWorkflowAction(AbstractBuild<?, ?> build, String issueId, Integer actionId) throws IOException {
+        JiraSession session = getJiraSession(build);
+        session.progressWorkflowAction(issueId, actionId);
     }
 
     /**
@@ -437,6 +445,38 @@ public class JiraCreateIssueNotifier extends Notifier {
                 return FormValidation.error("Please set the project key");
             }
             return FormValidation.ok();
+        }
+
+        public ListBoxModel doFillPriorityIdItems() {
+            ListBoxModel items = new ListBoxModel().add(""); // optional field
+            for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
+                try {
+                    JiraSession session = site.getSession();
+                    if (session != null) {
+                        for (Priority priority : session.getPriorities()) {
+                            items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
+                        }
+                    }
+                } catch (IOException ignore) {
+                }
+            }
+            return items;
+        }
+
+        public ListBoxModel doFillTypeIdItems() {
+            ListBoxModel items = new ListBoxModel().add(""); // optional field
+            for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
+                try {
+                    JiraSession session = site.getSession();
+                    if (session != null) {
+                        for (IssueType type : session.getIssueTypes()) {
+                            items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
+                        }
+                    }
+                } catch (IOException ignore) {
+                }
+            }
+            return items;
         }
 
         @Override
