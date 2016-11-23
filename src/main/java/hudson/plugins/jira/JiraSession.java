@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
 import hudson.plugins.jira.model.JiraIssueField;
 import org.apache.commons.lang.StringUtils;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
@@ -186,6 +189,16 @@ public class JiraSession {
         return service.getIssueTypes();
     }
 
+    /**
+     * Get all priorities
+     *
+     * @return An array of priorities
+     */
+    public List<Priority> getPriorities() {
+        LOGGER.fine("Fetching priorities");
+        return service.getPriorities();
+    }
+
     @Deprecated
     public boolean existsIssue(String id) {
         return site.existsIssue(id);
@@ -274,7 +287,7 @@ public class JiraSession {
                 }
             }
 
-            LOGGER.fine("Replaceing version in issue: " + issue.getKey());
+            LOGGER.fine("Replacing version in issue: " + issue.getKey());
             service.updateIssue(issue.getKey(), Lists.newArrayList(newVersions));
         }
     }
@@ -391,8 +404,13 @@ public class JiraSession {
      * @param summary
      * @return The issue id
      */
+    @Deprecated
     public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
-        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary);
+        return createIssue(projectKey, description, assignee, components, summary, null, null);
+    }
+
+    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, @Nonnull Long issueTypeId, @Nullable Long priorityId) {
+        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
         return service.getIssue(basicIssue.getKey());
     }
 
