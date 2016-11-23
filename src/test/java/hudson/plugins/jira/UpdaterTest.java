@@ -114,7 +114,7 @@ public class UpdaterTest {
             when(build1.getResult()).thenReturn(Result.FAILURE);
             doReturn(project).when(build1).getProject();
 
-            doReturn(new JiraCarryOverAction(Lists.newArrayList(new JiraIssue("FOOBAR-1", null))))
+            doReturn(new JiraCarryOverAction(Sets.newHashSet(new JiraIssue("FOOBAR-1", null))))
                     .when(build1).getAction(JiraCarryOverAction.class);
 
             final Set<? extends Entry> entries = Sets.newHashSet(entry1);
@@ -278,13 +278,13 @@ public class UpdaterTest {
             }
         };
 
-        doAnswer(answer).when(session).addComment(eq(firstIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-        doAnswer(answer).when(session).addComment(eq(secondIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-        doAnswer(answer).when(session).addComment(eq(thirdIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doAnswer(answer).when(session).addComment(eq(firstIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doAnswer(answer).when(session).addComment(eq(secondIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doAnswer(answer).when(session).addComment(eq(thirdIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 
         // issue for the caught exception
-        doThrow(new RestClientException(new Throwable(), 404)).when(session).addComment(eq(deletedIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-        doThrow(new RestClientException(new Throwable(), 403)).when(session).addComment(eq(forbiddenIssue.id), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doThrow(new RestClientException(new Throwable(), 404)).when(session).addComment(eq(deletedIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doThrow(new RestClientException(new Throwable(), 403)).when(session).addComment(eq(forbiddenIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 
 
         final String groupVisibility = "";

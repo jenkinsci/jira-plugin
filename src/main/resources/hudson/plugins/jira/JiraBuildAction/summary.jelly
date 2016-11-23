@@ -7,8 +7,8 @@
     <table>
       <j:forEach var="issue" items="${it.issues}">
         <tr>
-          <td><a href="${it.getUrl(issue)}">${issue.id}</a></td>
-          <td>${issue.title}</td>
+          <td><a href="${it.getUrl(issue)}">${issue.key}</a></td>
+          <td>${issue.summary}</td>
         </tr>
       </j:forEach>
     </table>
