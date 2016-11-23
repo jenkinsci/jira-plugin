@@ -3,6 +3,8 @@ package hudson.plugins.jira;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import hudson.Util;
 import hudson.model.Hudson;
 import hudson.model.Result;
@@ -63,7 +65,7 @@ class Updater {
 
     boolean perform(Run<?, ?> build, TaskListener listener, AbstractIssueSelector selector) {
         PrintStream logger = listener.getLogger();
-        List<JiraIssue> issues = null;
+        Set<JiraIssue> issues = null;
 
         try {
             JiraSite site = JiraSite.get(build.getParent());
@@ -111,7 +113,7 @@ class Updater {
             boolean useWikiStyleComments = site.supportsWikiStyleComment;
 
             issues = getJiraIssues(ids, session, logger);
-            build.getActions().add(new JiraBuildAction(build, issues));
+            build.addAction(new JiraBuildAction(build, issues));
 
             if (doUpdate) {
                 submitComments(build, logger, rootUrl, issues,
@@ -148,55 +150,51 @@ class Updater {
      */
     void submitComments(
             Run<?, ?> build, PrintStream logger, String jenkinsRootUrl,
-            List<JiraIssue> issues, JiraSession session,
+            Iterable<JiraIssue> issues, JiraSession session,
             boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RestClientException {
 
         // copy to prevent ConcurrentModificationException
-        List<JiraIssue> copy = new ArrayList<JiraIssue>(issues);
+        Set<JiraIssue> copy = ImmutableSet.copyOf(issues);
 
         for (JiraIssue issue : copy) {
-            logger.println(Messages.UpdatingIssue(issue.id));
+            logger.println(Messages.UpdatingIssue(issue.getId()));
 
             try {
                 session.addComment(
-                        issue.id,
+                        issue.getId(),
                         createComment(build, useWikiStyleComments, jenkinsRootUrl, recordScmChanges, issue),
                         groupVisibility, roleVisibility
                 );
                 if (!labels.isEmpty()) {
-                    session.addLabels(issue.id, labels);
+                    session.addLabels(issue.getId(), labels);
                 }
 
             } catch (RestClientException e) {
 
                 if (e.getStatusCode().or(0).equals(404)) {
-                    logger.println(issue.id + " - JIRA issue not found. Dropping comment from update queue.");
+                    logger.println(issue.getId() + " - JIRA issue not found. Dropping comment from update queue.");
                 }
 
                 if (e.getStatusCode().or(0).equals(403)) {
-                    logger.println(issue.id + " - Jenkins JIRA user does not have permissions to comment on this issue. Preserving comment for future update.");
+                    logger.println(issue.getId() + " - Jenkins JIRA user does not have permissions to comment on this issue. Preserving comment for future update.");
                     continue;
                 }
 
                 if (e.getStatusCode().or(0).equals(401)) {
-                    logger.println(issue.id + " - Jenkins JIRA authentication problem. Preserving comment for future update.");
+                    logger.println(issue.getId() + " - Jenkins JIRA authentication problem. Preserving comment for future update.");
                     continue;
                 }
 
-                logger.println(Messages.FailedToUpdateIssueWithCarryOver(issue.id));
+                logger.println(Messages.FailedToUpdateIssueWithCarryOver(issue.getId()));
                 logger.println(e.getLocalizedMessage());
             }
-
-            // if no exception is thrown during update, remove from the list as succesfully updated
-            issues.remove(issue);
         }
 
     }
 
-    private static List<JiraIssue> getJiraIssues(Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {
-        List<JiraIssue> issues = new ArrayList<JiraIssue>(ids.size());
+    private static Set<JiraIssue> getJiraIssues(Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {
+        Set<JiraIssue> issues = Sets.newHashSet();
         for (String id : ids) {
-
             Issue issue = session.getIssue(id);
             if (issue == null) {
                 logger.println(id + " issue doesn't exist in JIRA");
@@ -248,7 +246,7 @@ class Updater {
         RepositoryBrowser repoBrowser = getRepositoryBrowser(run);
         for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(run)) {
             for (Entry change : set) {
-                if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.id)) {
+                if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.getId())) {
                     continue;
                 }
                 comment.append(createScmChangeEntryDescription(run, change, wikiStyle, recordScmChanges));
@@ -259,7 +257,7 @@ class Updater {
             final Run<?, ?> prev = run.getPreviousBuild();
             if (prev != null) {
                 final JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
-                if (a != null && a.getIDs().contains(jiraIssue.id)) {
+                if (a != null && a.getIDs().contains(jiraIssue.getId())) {
                     comment.append(getScmComments(wikiStyle, prev, recordScmChanges, jiraIssue));
                 }
             }

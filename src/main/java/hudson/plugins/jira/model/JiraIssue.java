@@ -2,6 +2,10 @@ package hudson.plugins.jira.model;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import hudson.plugins.jira.JiraSite;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
+
+import javax.annotation.Nonnull;
 
 /**
  * One JIRA issue.
@@ -11,28 +15,38 @@ import hudson.plugins.jira.JiraSite;
  * @author Kohsuke Kawaguchi
  * @see JiraSite#getUrl(JiraIssue)
  */
+@ExportedBean
 public final class JiraIssue implements Comparable<JiraIssue> {
-    /**
-     * JIRA ID, like "MNG-1235".
-     */
-    public final String id;
 
-    /**
-     * Title of the issue.
-     * For example, in case of MNG-1235, this is "NPE In DiagnosisUtils while using tomcat plugin"
-     */
-    public final String title;
+    private final String id;
+    private final String title;
 
     public JiraIssue(String id, String title) {
         this.id = id;
         this.title = title;
     }
 
+    /**
+     * @return JIRA ID, like "MNG-1235".
+     */
+    @Exported
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * @return Title of the issue. For example, in case of MNG-1235, this is "NPE In DiagnosisUtils while using tomcat plugin"
+     */
+    @Exported
+    public String getTitle() {
+        return title;
+    }
+
     public JiraIssue(Issue issue) {
         this(issue.getKey(), issue.getSummary());
     }
 
-    public int compareTo(JiraIssue that) {
+    public int compareTo(@Nonnull JiraIssue that) {
         return this.id.compareTo(that.id);
     }
 

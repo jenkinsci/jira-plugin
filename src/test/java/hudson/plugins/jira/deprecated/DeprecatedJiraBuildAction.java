@@ -41,7 +41,7 @@ public class DeprecatedJiraBuildAction implements Action {
      */
     public JiraIssue getIssue(String id) {
         for (JiraIssue issue : issues) {
-            if (issue.id.equals(id)) {
+            if (issue.getId().equals(id)) {
                 return issue;
             }
         }

@@ -6,10 +6,14 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import com.google.common.collect.Sets;
 import hudson.model.Action;
 import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
+import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+
+import javax.annotation.Nonnull;
 
 /**
  * JIRA issues related to the build.
@@ -21,12 +25,11 @@ public class JiraBuildAction implements Action {
 
     public final Run<?, ?> owner;
 
-    public JiraIssue[] issues;
+    private Set<JiraIssue> issues;
 
-    public JiraBuildAction(Run<?, ?> owner, Collection<JiraIssue> issues) {
+    public JiraBuildAction(@Nonnull Run<?, ?> owner, @Nonnull Set<JiraIssue> issues) {
         this.owner = owner;
-        this.issues = issues.toArray(new JiraIssue[issues.size()]);
-        Arrays.sort(this.issues);
+        this.issues = Sets.newHashSet(issues);
     }
 
     public String getIconFileName() {
@@ -41,12 +44,19 @@ public class JiraBuildAction implements Action {
         return "jira";
     }
 
+    @Exported
+    public Iterable<JiraIssue> getIssues() {
+        return issues;
+    }
+
     /**
      * Finds {@link JiraIssue} whose ID matches the given one.
+     * @param issueID e.g. JENKINS-1234
+     * @return JIRAIssue representing the issueID
      */
-    public JiraIssue getIssue(String id) {
+    public JiraIssue getIssue(String issueID) {
         for (JiraIssue issue : issues) {
-            if (issue.id.equals(id)) {
+            if (issue.getId().equals(issueID)) {
                 return issue;
             }
         }
@@ -54,10 +64,6 @@ public class JiraBuildAction implements Action {
     }
 
     public void addIssues(Set<JiraIssue> issuesToBeSaved) {
-        SortedSet<JiraIssue> allIssues = new TreeSet<JiraIssue>();
-        allIssues.addAll(issuesToBeSaved);
-        allIssues.addAll(Arrays.asList(this.issues));
-
-        this.issues = allIssues.toArray(new JiraIssue[allIssues.size()]);
+        this.issues.addAll(issuesToBeSaved);
     }
 }

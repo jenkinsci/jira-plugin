@@ -286,7 +286,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Computes the URL to the given issue.
      */
     public URL getUrl(JiraIssue issue) throws IOException {
-        return getUrl(issue.id);
+        return getUrl(issue.getId());
     }
 
     /**
