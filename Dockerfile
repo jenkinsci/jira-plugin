@@ -4,4 +4,4 @@ RUN mkdir -p /usr/src/app
 EXPOSE 8080
 WORKDIR /usr/src/app
 ADD . /usr/src/app
-RUN mvn install 
+RUN mvn install hpi:run
