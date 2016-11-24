@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+
 import static org.hamcrest.Matchers.instanceOf;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,7 +70,7 @@ public class JiraEnvironmentVariableBuilderTest {
         when(listener.getLogger()).thenReturn(logger);
         
         when(issueSelector.findIssueIds(build, site, listener))
-                .thenReturn(new HashSet<String>(Arrays.asList(ISSUE_ID_1, ISSUE_ID_2)));
+                .thenReturn(new LinkedHashSet<>(Arrays.asList(ISSUE_ID_1, ISSUE_ID_2)));
         
         when(build.getProject()).thenReturn(project);
         when(build.getEnvironment(listener)).thenReturn(env);

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -142,7 +143,7 @@ public class DefaultIssueSelectorTest {
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOO_BAR-4711"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        Set<String> ids = new HashSet<String>();
+        Set<String> ids = new LinkedHashSet<String>();
         DefaultIssueSelector.findIssues(build, ids, Pattern.compile("[(w)]"), mock(BuildListener.class));
 
         Assert.assertEquals(0, ids.size());
@@ -164,7 +165,7 @@ public class DefaultIssueSelectorTest {
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
-        Set<String> ids = new HashSet<String>();
+        Set<String> ids = new LinkedHashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         DefaultIssueSelector.findIssues(build, ids, pat, mock(BuildListener.class));
         Assert.assertEquals(3, ids.size());
@@ -189,7 +190,7 @@ public class DefaultIssueSelectorTest {
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
-        Set<String> ids = new HashSet<String>();
+        Set<String> ids = new LinkedHashSet<String>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         DefaultIssueSelector.findIssues(build, ids, pat, mock(BuildListener.class));
         Assert.assertEquals(2, ids.size());
@@ -212,7 +213,7 @@ public class DefaultIssueSelectorTest {
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("prepare release project-4.7.1"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        Set<String> ids = new HashSet<String>();
+        Set<String> ids = new LinkedHashSet<String>();
         DefaultIssueSelector.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         Assert.assertEquals(0, ids.size());
     }

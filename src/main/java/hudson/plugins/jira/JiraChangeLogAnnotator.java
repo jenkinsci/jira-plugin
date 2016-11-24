@@ -3,7 +3,7 @@ package hudson.plugins.jira;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,7 +50,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         // if there's any recorded detail information, try to use that, too.
         JiraBuildAction a = build.getAction(JiraBuildAction.class);
 
-        Set<JiraIssue> issuesToBeSaved = new HashSet<JiraIssue>();
+        Set<JiraIssue> issuesToBeSaved = new LinkedHashSet<>();
 
         Pattern pattern = site.getIssuePattern();
 
