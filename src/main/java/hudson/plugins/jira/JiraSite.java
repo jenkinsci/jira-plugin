@@ -5,6 +5,8 @@ import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.google.common.base.*;
+import com.google.common.base.Objects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import hudson.Extension;
@@ -69,13 +71,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
+     * @deprecated use @{getUrl}
      */
+    @Deprecated
     public final URL url;
 
     /**
      * URL of JIRA for normal access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
+     * @deprecated use @{getUrl}
      */
+    @Deprecated
     public final URL alternativeUrl;
 
     /**
@@ -280,6 +286,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());
         int usedTimeout = timeout != null ? timeout : JiraSite.DEFAULT_TIMEOUT;
         return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), usedTimeout));
+    }
+
+    /**
+     * @return the server URL
+     */
+    @Nullable
+    public URL getUrl() {
+        return Objects.firstNonNull(this.url, this.alternativeUrl);
     }
 
     /**
