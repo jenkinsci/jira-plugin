@@ -162,7 +162,7 @@ public class UpdaterTest {
 
         this.updater = new Updater(build2.getProject().getScm());        
         
-        final List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-1", null), new JiraIssue("FOOBAR-2", null));
+        final Set<JiraIssue> ids = Sets.newHashSet(new JiraIssue("FOOBAR-1", null), new JiraIssue("FOOBAR-2", null));
         updater.submitComments(build2, System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(2, comments.size());
@@ -210,7 +210,7 @@ public class UpdaterTest {
         when(build.getChangeSets()).thenReturn(changeSets);
 
         // test:
-        List<JiraIssue> ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
+        Set<JiraIssue> ids = Sets.newHashSet(new JiraIssue("FOOBAR-4711", "Title"));
         Updater updaterCurrent = new Updater(build.getParent().getScm());
         updaterCurrent.submitComments(build,
                 System.out, "http://jenkins", ids, session, false, false, "", "");
@@ -224,7 +224,7 @@ public class UpdaterTest {
         comments.clear();
         entries = Sets.newHashSet(new MockEntry("Fixed Foobar-4711"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
-        ids = Lists.newArrayList(new JiraIssue("FOOBAR-4711", "Title"));
+        ids = Sets.newHashSet(new JiraIssue("FOOBAR-4711", "Title"));
 
         updaterCurrent.submitComments(build,
                 System.out, "http://jenkins", ids, session, false, false, "", "");
@@ -260,7 +260,7 @@ public class UpdaterTest {
         final JiraIssue forbiddenIssue = new JiraIssue("LASSO-17", "Title");
 
         // assume that there is a following list of jira issues from scm commit messages out of hudson.plugins.jira.JiraCarryOverAction
-        List<JiraIssue> issues = Lists.newArrayList(firstIssue, secondIssue, forbiddenIssue, thirdIssue);
+        Set<JiraIssue> issues = Sets.newHashSet(firstIssue, secondIssue, forbiddenIssue, thirdIssue);
 
         // mock JIRA session:
         JiraSession session = mock(JiraSession.class);
@@ -297,7 +297,7 @@ public class UpdaterTest {
         );
 
         // expected issue list
-        final List<JiraIssue> expectedIssuesToCarryOver = new ArrayList<JiraIssue>();
+        final Set<JiraIssue> expectedIssuesToCarryOver = Sets.newHashSet();
         expectedIssuesToCarryOver.add(forbiddenIssue);
         Assert.assertThat(issues, is(expectedIssuesToCarryOver));
     }

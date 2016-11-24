@@ -150,7 +150,7 @@ class Updater {
      */
     void submitComments(
             Run<?, ?> build, PrintStream logger, String jenkinsRootUrl,
-            Iterable<JiraIssue> issues, JiraSession session,
+            Set<JiraIssue> issues, JiraSession session,
             boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RestClientException {
 
         // copy to prevent ConcurrentModificationException
@@ -188,12 +188,15 @@ class Updater {
                 logger.println(Messages.FailedToUpdateIssueWithCarryOver(issue.getKey()));
                 logger.println(e.getLocalizedMessage());
             }
+
+            // if no exception is thrown during update, remove from the list as succesfully updated
+            issues.remove(issue);
         }
 
     }
 
     private static Set<JiraIssue> getJiraIssues(Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {
-        Set<JiraIssue> issues = Sets.newHashSet();
+        Set<JiraIssue> issues = new LinkedHashSet<>(ids.size());
         for (String id : ids) {
             Issue issue = session.getIssue(id);
             if (issue == null) {
