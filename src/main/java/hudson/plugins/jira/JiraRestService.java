@@ -58,6 +58,7 @@ public class JiraRestService {
      * URI.
      */
     public static final String BASE_API_PATH = "rest/api/2";
+    public static final String ISSUE_TYPE_BUG_NAME = "Bug";
 
     private final URI uri;
 
@@ -222,11 +223,26 @@ public class JiraRestService {
         }
     }
 
+    public Long getIssueTypeId(String issueTypeName) {
+    	List<IssueType> issueTypeList = new ArrayList<IssueType>();
+        Long issueTypeId = 10004L;
+        
+    	issueTypeList = this.getIssueTypes();
+    	for(IssueType issue : issueTypeList) {
+    		if(issue.getName().equalsIgnoreCase(issueTypeName)) {
+    			issueTypeId = issue.getId();
+    			break;
+    		}
+    	}
+    	return issueTypeId;
+    }
+	
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
-        IssueInputBuilder builder = new IssueInputBuilder();
+        final Long issueTypeId = getIssueTypeId(ISSUE_TYPE_BUG_NAME);
+	IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
-                .setIssueTypeId(1L) // BUG
+                .setIssueTypeId(issueTypeId) // BUG
                 .setSummary(summary);
 
         if (!assignee.equals(""))
