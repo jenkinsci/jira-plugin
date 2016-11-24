@@ -3,6 +3,8 @@ package hudson.plugins.jira;
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Priority;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -21,10 +23,13 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -35,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * When a build fails it creates jira issues.
@@ -188,10 +194,52 @@ public class JiraCreateIssueNotifier extends Notifier {
         );
         Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
 
-        Issue issue = session.createIssue(projectKey, description, assignee, components, summary, priority, type);
+        Long issueTypeId = getIssueTypeId(session, type);
+        Long priorityId = getPriorityId(session, priority);
+
+        Issue issue = session.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
 
         writeInFile(filename, issue);
         return issue;
+    }
+
+    @Nonnull
+    private Long getIssueTypeId(JiraSession session, String type) {
+        if (StringUtils.isNotBlank(type)) {
+            for (IssueType t : session.getIssueTypes()) {
+                if (type.equalsIgnoreCase(t.getName())) {
+                    return t.getId();
+                }
+            }
+            if (isNumber(type)) {
+                return Long.valueOf(type.trim());
+            }
+        }
+        return JiraRestService.BUG_ISSUE_TYPE_ID;
+    }
+
+    @Nullable
+    private Long getPriorityId(JiraSession session, String priority) {
+        if (StringUtils.isNotBlank(priority)) {
+            for (Priority p : session.getPriorities()) {
+                if (priority.equalsIgnoreCase(p.getName())) {
+                    return p.getId();
+                }
+            }
+            if (isNumber(priority)) {
+                return Long.valueOf(priority.trim());
+            }
+        }
+        return null;
+    }
+
+    private final Pattern pattern = Pattern.compile("-?\\d+");
+
+    private boolean isNumber(String s) {
+        if (StringUtils.isBlank(s)) {
+            return false;
+        }
+        return pattern.matcher(s.trim()).matches();
     }
 
     /**

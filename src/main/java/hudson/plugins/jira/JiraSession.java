@@ -189,6 +189,16 @@ public class JiraSession {
         return service.getIssueTypes();
     }
 
+    /**
+     * Get all priorities
+     *
+     * @return An array of priorities
+     */
+    public List<Priority> getPriorities() {
+        LOGGER.fine("Fetching priorities");
+        return service.getPriorities();
+    }
+
     @Deprecated
     public boolean existsIssue(String id) {
         return site.existsIssue(id);
@@ -399,50 +409,10 @@ public class JiraSession {
         return createIssue(projectKey, description, assignee, components, summary, null, null);
     }
 
-    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, String priority, String type) {
-        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, getIssueTypeId(type), getPriorityId(priority));
+    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, @Nonnull Long issueTypeId, @Nullable Long priorityId) {
+        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
         return service.getIssue(basicIssue.getKey());
     }
-
-    @Nonnull
-    private Long getIssueTypeId(String type) {
-        if (StringUtils.isNotBlank(type)) {
-            for (IssueType t : getIssueTypes()) {
-                if (type.equalsIgnoreCase(t.getName())) {
-                    return t.getId();
-                }
-            }
-            if (isNumber(type)) {
-                return Long.valueOf(type.trim());
-            }
-        }
-        return JiraRestService.BUG_ISSUE_TYPE_ID;
-    }
-
-    @Nullable
-    private Long getPriorityId(String priority) {
-        if (StringUtils.isNotBlank(priority)) {
-            for (Priority p : service.getPriorities()) {
-                if (priority.equalsIgnoreCase(p.getName())) {
-                    return p.getId();
-                }
-            }
-            if (isNumber(priority)) {
-                return Long.valueOf(priority.trim());
-            }
-        }
-        return null;
-    }
-
-    private final Pattern pattern = Pattern.compile("-?\\d+");
-
-    private boolean isNumber(String s) {
-        if (StringUtils.isBlank(s)) {
-            return false;
-        }
-        return pattern.matcher(s.trim()).matches();
-    }
-
 
     /**
      * Adds a comment to the existing issue.There is no constrains to the visibility of the comment.
