@@ -345,11 +345,6 @@
       <version>${workflow.version}</version>
       <scope>test</scope>
     </dependency>
-   	<dependency>
-      <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <artifactId>workflow-job</artifactId>
-      <version>${workflow.version}</version>
-    </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>

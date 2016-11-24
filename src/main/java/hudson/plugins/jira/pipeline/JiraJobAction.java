@@ -49,6 +49,7 @@ public class JiraJobAction implements Action {
     }
 
     @Exported
+    @Nullable
     public String getServerURL() {
         JiraSite jiraSite = JiraSite.get(owner);
         URL url = jiraSite != null ? Objects.firstNonNull(jiraSite.url, jiraSite.alternativeUrl) : null;
