@@ -91,7 +91,7 @@ public class JiraCreateIssueNotifierTest {
 
         Issue issue = mock(Issue.class);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyString(), Mockito.anyString())).thenReturn(issue);
+                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
 
         assertTrue(notifier.perform(currentBuild, launcher, buildListener));
     }
@@ -104,7 +104,7 @@ public class JiraCreateIssueNotifierTest {
         Issue issue = mock(Issue.class);
         Status status = new Status(null, null, "1","Open",null);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyString(), Mockito.anyString())).thenReturn(issue);
+                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
 
@@ -137,7 +137,7 @@ public class JiraCreateIssueNotifierTest {
         Issue issue = mock(Issue.class);
         Status status = new Status(null, null, "1","Open",null);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyString(), Mockito.anyString())).thenReturn(issue);
+                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 
@@ -168,7 +168,7 @@ public class JiraCreateIssueNotifierTest {
         Status status = new Status(null, null, JiraCreateIssueNotifier.finishedStatuses.Closed.toString() , null, null);
 
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyString(), Mockito.anyString())).thenReturn(issue);
+                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 
