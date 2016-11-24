@@ -297,7 +297,7 @@ public class UpdaterTest {
         );
 
         // expected issue list
-        final Set<JiraIssue> expectedIssuesToCarryOver = Sets.newHashSet();
+        final Set<JiraIssue> expectedIssuesToCarryOver = Sets.newLinkedHashSet();
         expectedIssuesToCarryOver.add(forbiddenIssue);
         Assert.assertThat(issues, is(expectedIssuesToCarryOver));
     }
