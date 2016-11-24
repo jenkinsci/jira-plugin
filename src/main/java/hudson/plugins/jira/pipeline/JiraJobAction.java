@@ -38,19 +38,25 @@ public class JiraJobAction implements Action {
     private static final Logger LOGGER = Logger.getLogger(JiraJobAction.class.getName());
 
     private final Job<?, ?> owner;
-    private final JiraIssue jiraIssue;
+    private final JiraIssue issue;
 
     @DataBoundConstructor
-    public JiraJobAction(Job<?, ?> owner, JiraIssue jiraIssue) {
+    public JiraJobAction(Job<?, ?> owner, JiraIssue issue) {
         this.owner = owner;
-        this.jiraIssue = jiraIssue;
+        this.issue = issue;
     }
 
+    /**
+     * @return issue representing the job
+     */
     @Exported
-    public JiraIssue getJiraIssue() {
-        return jiraIssue;
+    public JiraIssue getIssue() {
+        return issue;
     }
 
+    /**
+     * @return url of the JIRA server
+     */
     @Exported
     @Nullable
     public String getServerURL() {

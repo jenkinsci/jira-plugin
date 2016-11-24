@@ -5,15 +5,12 @@ import hudson.model.Job;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.model.JiraIssue;
 import jenkins.branch.MultiBranchProject;
-import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.net.URL;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -46,10 +43,10 @@ public class JiraJobActionTest {
         verify(job).addAction(captor.capture());
 
         JiraJobAction action = captor.getValue();
-        assertNotNull(action.getJiraIssue());
+        assertNotNull(action.getIssure());
 
-        assertEquals("EXAMPLE-123", action.getJiraIssue().getKey());
-        assertEquals("I like cake", action.getJiraIssue().getSummary());
+        assertEquals("EXAMPLE-123", action.getIssure().getKey());
+        assertEquals("I like cake", action.getIssure().getSummary());
     }
 
     @Test
@@ -60,10 +57,10 @@ public class JiraJobActionTest {
         verify(job).addAction(captor.capture());
 
         JiraJobAction action = captor.getValue();
-        assertNotNull(action.getJiraIssue());
+        assertNotNull(action.getIssure());
 
-        assertEquals("EXAMPLE-123", action.getJiraIssue().getKey());
-        assertEquals("I like cake", action.getJiraIssue().getSummary());
+        assertEquals("EXAMPLE-123", action.getIssure().getKey());
+        assertEquals("I like cake", action.getIssure().getSummary());
     }
 
     @Test
