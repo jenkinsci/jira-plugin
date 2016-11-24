@@ -237,11 +237,11 @@ public class JiraRestService {
 
     @Deprecated
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
-        return createIssue(projectKey, description, assignee, components, summary, null, BUG_ISSUE_TYPE_ID);
+        return createIssue(projectKey, description, assignee, components, summary, BUG_ISSUE_TYPE_ID, null);
     }
 
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
-                                   @Nullable Long priorityId, @Nonnull Long issueTypeId) {
+                                  @Nonnull Long issueTypeId, @Nullable Long priorityId) {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
