@@ -28,6 +28,9 @@ import java.util.regex.Pattern;
 /**
  * JiraJobAction is to store a reference to the {@link JiraIssue} that represents work
  * being done for a {@link WorkflowJob} (branch or PR) belonging to a {@link MultiBranchProject}
+ *
+ * Any branches with the whole key in the name or after a prefix will have this action attached.
+ * e.g. "JENKINS-1234" and "feature/JENKINS-1234" will have this action with the issue JENKINS-1234 referenced
  */
 @ExportedBean
 public class JiraJobAction implements Action {
