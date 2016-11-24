@@ -46,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
 import static java.util.logging.Level.WARNING;
 
@@ -61,6 +60,8 @@ public class JiraRestService {
      * URI.
      */
     public static final String BASE_API_PATH = "rest/api/2";
+
+    static final long BUG_ISSUE_TYPE_ID = 1L;
 
     private final URI uri;
 
@@ -234,57 +235,13 @@ public class JiraRestService {
         }
     }
 
-    private static final long BUG_ISSUE_TYPE_ID = 1L;
-
-    @Nonnull
-    private Long getIssueTypeId(String type) {
-        if (StringUtils.isNotBlank(type)) {
-            for (IssueType t : getIssueTypes()) {
-                if (type.equalsIgnoreCase(t.getName())) {
-                    return t.getId();
-                }
-            }
-            if (isNumber(type)) {
-                return Long.valueOf(type.trim());
-            }
-        }
-        return BUG_ISSUE_TYPE_ID;
-    }
-
-    @Nullable
-    private Long getPriorityId(String priority) {
-        if (StringUtils.isNotBlank(priority)) {
-            for (Priority p : getPriorities()) {
-                if (priority.equalsIgnoreCase(p.getName())) {
-                    return p.getId();
-                }
-            }
-            if (isNumber(priority)) {
-                return Long.valueOf(priority.trim());
-            }
-        }
-        return null;
-    }
-
-    private final Pattern pattern = Pattern.compile("-?\\d+");
-
-    private boolean isNumber(String s) {
-        if (StringUtils.isBlank(s)) {
-            return false;
-        }
-        return pattern.matcher(s.trim()).matches();
-    }
-
+    @Deprecated
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
         return createIssue(projectKey, description, assignee, components, summary, null, BUG_ISSUE_TYPE_ID);
     }
 
-    public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, String priority, String type) {
-        return createIssue(projectKey, description, assignee, components, summary, getPriorityId(priority), getIssueTypeId(type));
-    }
-
-    private BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
-                                   Long priorityId, Long issueTypeId) {
+    public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
+                                   @Nullable Long priorityId, @Nonnull Long issueTypeId) {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
