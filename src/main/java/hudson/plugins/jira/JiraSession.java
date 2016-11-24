@@ -14,6 +14,9 @@ import java.util.regex.Pattern;
 import hudson.plugins.jira.model.JiraIssueField;
 import org.apache.commons.lang.StringUtils;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
@@ -391,14 +394,55 @@ public class JiraSession {
      * @param summary
      * @return The issue id
      */
+    @Deprecated
     public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
         return createIssue(projectKey, description, assignee, components, summary, null, null);
     }
 
     public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, String priority, String type) {
-        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, priority, type);
+        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, getPriorityId(priority), getIssueTypeId(type));
         return service.getIssue(basicIssue.getKey());
     }
+
+    @Nonnull
+    private Long getIssueTypeId(String type) {
+        if (StringUtils.isNotBlank(type)) {
+            for (IssueType t : getIssueTypes()) {
+                if (type.equalsIgnoreCase(t.getName())) {
+                    return t.getId();
+                }
+            }
+            if (isNumber(type)) {
+                return Long.valueOf(type.trim());
+            }
+        }
+        return JiraRestService.BUG_ISSUE_TYPE_ID;
+    }
+
+    @Nullable
+    private Long getPriorityId(String priority) {
+        if (StringUtils.isNotBlank(priority)) {
+            for (Priority p : service.getPriorities()) {
+                if (priority.equalsIgnoreCase(p.getName())) {
+                    return p.getId();
+                }
+            }
+            if (isNumber(priority)) {
+                return Long.valueOf(priority.trim());
+            }
+        }
+        return null;
+    }
+
+    private final Pattern pattern = Pattern.compile("-?\\d+");
+
+    private boolean isNumber(String s) {
+        if (StringUtils.isBlank(s)) {
+            return false;
+        }
+        return pattern.matcher(s.trim()).matches();
+    }
+
 
     /**
      * Adds a comment to the existing issue.There is no constrains to the visibility of the comment.
