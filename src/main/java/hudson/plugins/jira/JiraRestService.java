@@ -229,7 +229,6 @@ public class JiraRestService {
         
     	issueTypeList = this.getIssueTypes();
     	for(IssueType issue : issueTypeList) {
-    		LOGGER.warning("issueType: " + issue.getName() + "  "+ issue.getId());
     		if(issue.getName().equalsIgnoreCase(issueTypeName)) {
     			issueTypeId = issue.getId();
     			break;
