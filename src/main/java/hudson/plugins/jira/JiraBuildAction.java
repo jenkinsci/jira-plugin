@@ -50,7 +50,7 @@ public class JiraBuildAction implements Action {
     @Exported
     public String getServerURL() {
         JiraSite jiraSite = JiraSite.get(owner.getParent());
-        URL url = Objects.firstNonNull(jiraSite.alternativeUrl, jiraSite.alternativeUrl);
+        URL url = jiraSite != null ? Objects.firstNonNull(jiraSite.url, jiraSite.alternativeUrl) : null;
         return url != null ? url.toString() : null;
     }
 
