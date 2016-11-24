@@ -2,6 +2,7 @@ package hudson.plugins.jira.selector;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,7 +44,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     @Override
     public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull final JiraSite site,
             @Nonnull final TaskListener listener) {
-        HashSet<String> issuesIds = new HashSet<String>();
+        HashSet<String> issuesIds = new LinkedHashSet<String>();
         addIssuesRecursive(run, site, listener, issuesIds);
         return issuesIds;
     }
