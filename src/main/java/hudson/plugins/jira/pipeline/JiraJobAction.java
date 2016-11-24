@@ -9,6 +9,7 @@ import hudson.model.listeners.RunListener;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.model.JiraIssue;
 import jenkins.branch.MultiBranchProject;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -68,21 +69,25 @@ public class JiraJobAction implements Action {
         }
 
         // Exclude all non-multibranch workflow jobs
-        if (!(job instanceof WorkflowJob && job.getParent() instanceof MultiBranchProject)) {
+        if (!(job.getParent() instanceof MultiBranchProject)) {
             return;
         }
 
         // Find the first JIRA issue key in the branch name
         // If it exists, create the action and set it
-        Pattern pattern = site.getIssuePattern();
-        Matcher matcher = pattern.matcher(job.getName());
-        if (matcher.matches()) {
-            if (matcher.groupCount() > 0) {
-                String issueKey = matcher.group(0);
-                JiraIssue issue = site.getIssue(issueKey);
-                job.addAction(new JiraJobAction(job, issue));
-                job.save();
+        String issueKey = null;
+        for (String part : StringUtils.split(job.getName(), '/')) {
+            Pattern pattern = site.getIssuePattern();
+            Matcher matcher = pattern.matcher(part);
+            if (matcher.matches() && matcher.groupCount() > 0) {
+                issueKey = matcher.group();
             }
+        }
+
+        if (issueKey != null) {
+            JiraIssue issue = site.getIssue(issueKey);
+            job.addAction(new JiraJobAction(job, issue));
+            job.save();
         }
     }
 
