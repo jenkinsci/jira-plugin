@@ -239,13 +239,13 @@ public class JiraRestService {
     @Nonnull
     private Long getIssueTypeId(String type) {
         if (StringUtils.isNotBlank(type)) {
-            if (isNumber(type)) {
-                return Long.valueOf(type.trim());
-            }
             for (IssueType t : getIssueTypes()) {
                 if (type.equalsIgnoreCase(t.getName())) {
                     return t.getId();
                 }
+            }
+            if (isNumber(type)) {
+                return Long.valueOf(type.trim());
             }
         }
         return BUG_ISSUE_TYPE_ID;
@@ -254,13 +254,13 @@ public class JiraRestService {
     @Nullable
     private Long getPriorityId(String priority) {
         if (StringUtils.isNotBlank(priority)) {
-            if (isNumber(priority)) {
-                return Long.valueOf(priority.trim());
-            }
             for (Priority p : getPriorities()) {
                 if (priority.equalsIgnoreCase(p.getName())) {
                     return p.getId();
                 }
+            }
+            if (isNumber(priority)) {
+                return Long.valueOf(priority.trim());
             }
         }
         return null;
