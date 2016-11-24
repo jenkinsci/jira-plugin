@@ -400,7 +400,7 @@ public class JiraSession {
     }
 
     public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, String priority, String type) {
-        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, getPriorityId(priority), getIssueTypeId(type));
+        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, getIssueTypeId(type), getPriorityId(priority));
         return service.getIssue(basicIssue.getKey());
     }
 
