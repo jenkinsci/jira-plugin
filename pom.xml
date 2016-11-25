@@ -83,6 +83,14 @@
   <reporting>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+        <version>2.9</version>
+        <configuration>
+          <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>com.github.danielflower.mavenplugins</groupId>
         <artifactId>gitlog-maven-plugin</artifactId>
         <version>1.13.3</version>
@@ -101,9 +109,34 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${surefire.version}</version>
         <configuration>
-          <forkCount>0</forkCount>
-          <reuseForks>false</reuseForks>
+          <forkCount>3</forkCount>
+          <!-- cobertura reports 0% when this is false -->
+          <reuseForks>true</reuseForks>
           <argLine>-Xms128m -Xmx2048m</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.eluder.coveralls</groupId>
+        <artifactId>coveralls-maven-plugin</artifactId>
+        <version>4.3.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+        <version>${cobertura.version}</version>
+        <configuration>
+          <check />
+          <format>xml</format>
+          <maxmem>256m</maxmem>
+          <aggregate>true</aggregate>
+          <instrumentation>
+            <ignores>
+              <ignore>hudson.plugins.jira.Messages</ignore>
+            </ignores>
+            <excludes>
+              <exclude>hudson/plugins/jira/Messages*.class</exclude>
+            </excludes>
+          </instrumentation>
         </configuration>
       </plugin>
       <plugin>
@@ -137,33 +170,6 @@
           </execution>
         </executions>
       </plugin>
-
-
-      <plugin>
-        <groupId>org.eluder.coveralls</groupId>
-        <artifactId>coveralls-maven-plugin</artifactId>
-        <version>4.0.0</version>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>${cobertura.version}</version>
-        <configuration>
-          <check />
-          <format>xml</format>
-          <maxmem>256m</maxmem>
-          <aggregate>true</aggregate>
-          <instrumentation>
-            <ignores>
-              <ignore>hudson.plugins.jira.Messages</ignore>
-            </ignores>
-            <excludes>
-              <exclude>hudson/plugins/jira/Messages*.class</exclude>
-            </excludes>
-          </instrumentation>
-        </configuration>
-      </plugin>
-
       <plugin>
         <groupId>org.owasp</groupId>
         <artifactId>dependency-check-maven</artifactId>
