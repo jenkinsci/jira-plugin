@@ -495,7 +495,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                     JiraSession session = site.getSession();
                     if (session != null) {
                         for (Priority priority : session.getPriorities()) {
-                            items.add("[" + site.getName() + "] " + priority.getName() + " #" + priority.getId(), String.valueOf(priority.getId()));
+                            items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
                         }
                     }
                 } catch (IOException ignore) {
@@ -512,7 +512,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                     JiraSession session = site.getSession();
                     if (session != null) {
                         for (IssueType type : session.getIssueTypes()) {
-                            items.add("[" + site.getName() + "] " + type.getName() + " #" + type.getId(), String.valueOf(type.getId()));
+                            items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
                         }
                     }
                 } catch (IOException ignore) {
