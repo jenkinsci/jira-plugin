@@ -11,11 +11,11 @@
     <f:entry title="${%Component Name}" field="component">
         <f:textbox/>
     </f:entry>
-    <f:entry title="${%Issue Priority}" field="priority">
-        <f:textbox/>
+    <f:entry title="${%Issue Priority}" field="priorityId">
+        <f:select/>
     </f:entry>
-    <f:entry title="${%Issue Type}" field="type">
-        <f:textbox/>
+    <f:entry title="${%Issue Type}" field="typeId">
+        <f:select/>
     </f:entry>
     <f:entry title="${%Action Id On Success}" field="actionIdOnSuccess">
         <f:number/>

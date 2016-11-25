@@ -22,14 +22,12 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -40,9 +38,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 
-import static hudson.plugins.jira.JiraRestService.*;
+import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
 
 /**
  * When a build fails it creates jira issues.
@@ -54,14 +51,12 @@ public class JiraCreateIssueNotifier extends Notifier {
 
     private static final Logger LOG = Logger.getLogger(JiraCreateIssueNotifier.class.getName());
 
-    private static final Pattern NUMBER_PATTERN = Pattern.compile("-?\\d+");
-
     private String projectKey;
     private String testDescription;
     private String assignee;
     private String component;
-    private String priority;
-    private String type;
+    private Long typeId;
+    private Long priorityId;
     private Integer actionIdOnSuccess;
 
     enum finishedStatuses {
@@ -71,19 +66,20 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     @DataBoundConstructor
-    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component, String priority,
-                                   String type, Integer actionIdOnSuccess) {
+    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component, Long typeId,
+                                   Long priorityId, Integer actionIdOnSuccess) {
         if (projectKey == null) throw new IllegalArgumentException("Project key cannot be null");
         this.projectKey = projectKey;
 
         this.testDescription = testDescription;
         this.assignee = assignee;
         this.component = component;
-        this.priority = priority;
-        this.type = type;
+        this.typeId = typeId;
+        this.priorityId = priorityId;
         this.actionIdOnSuccess = actionIdOnSuccess;
     }
 
+    @Deprecated
     public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component) {
         this(projectKey, testDescription, assignee, component, null, null, null);
     }
@@ -120,12 +116,12 @@ public class JiraCreateIssueNotifier extends Notifier {
         this.component = component;
     }
 
-    public String getPriority() {
-        return priority;
+    public Long getTypeId() {
+        return typeId;
     }
 
-    public String getType() {
-        return type;
+    public Long getPriorityId() {
+        return priorityId;
     }
 
     public Integer getActionIdOnSuccess() {
@@ -198,51 +194,19 @@ public class JiraCreateIssueNotifier extends Notifier {
         );
         Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
 
-        Long issueTypeId = getIssueTypeId(session, type);
-        Long priorityId = getPriorityId(session, priority);
+        Long issueTypeId = typeId;
+        if (issueTypeId == null || issueTypeId == 0) { // zero is default / invalid selection
+            LOG.info("Returning default issue type id " + BUG_ISSUE_TYPE_ID);
+            issueTypeId = BUG_ISSUE_TYPE_ID;
+        }
+        if (priorityId != null && priorityId == 0) {
+            priorityId = null; // remove invalid priority selection
+        }
 
         Issue issue = session.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
 
         writeInFile(filename, issue);
         return issue;
-    }
-
-    @Nonnull
-    private Long getIssueTypeId(JiraSession session, String type) {
-        if (StringUtils.isNotBlank(type)) {
-            for (IssueType t : session.getIssueTypes()) {
-                if (type.equalsIgnoreCase(t.getName())) {
-                    return t.getId();
-                }
-            }
-            if (isNumber(type)) {
-                return Long.valueOf(type.trim());
-            }
-        }
-        LOG.info("Returning default issue type id " + BUG_ISSUE_TYPE_ID);
-        return BUG_ISSUE_TYPE_ID;
-    }
-
-    @Nullable
-    private Long getPriorityId(JiraSession session, String priority) {
-        if (StringUtils.isNotBlank(priority)) {
-            for (Priority p : session.getPriorities()) {
-                if (priority.equalsIgnoreCase(p.getName())) {
-                    return p.getId();
-                }
-            }
-            if (isNumber(priority)) {
-                return Long.valueOf(priority.trim());
-            }
-        }
-        return null;
-    }
-
-    private boolean isNumber(String s) {
-        if (StringUtils.isBlank(s)) {
-            return false;
-        }
-        return NUMBER_PATTERN.matcher(s.trim()).matches();
     }
 
     /**
@@ -521,6 +485,40 @@ public class JiraCreateIssueNotifier extends Notifier {
                 return FormValidation.error("Please set the project key");
             }
             return FormValidation.ok();
+        }
+
+        public ListBoxModel doFillPriorityIdItems() {
+            ListBoxModel items = new ListBoxModel();
+            items.add(""); // optional field
+            for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
+                try {
+                    JiraSession session = site.getSession();
+                    if (session != null) {
+                        for (Priority priority : session.getPriorities()) {
+                            items.add("[" + site.getName() + "] " + priority.getName() + " #" + priority.getId(), String.valueOf(priority.getId()));
+                        }
+                    }
+                } catch (IOException ignore) {
+                }
+            }
+            return items;
+        }
+
+        public ListBoxModel doFillTypeIdItems() {
+            ListBoxModel items = new ListBoxModel();
+            items.add(""); // optional field
+            for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
+                try {
+                    JiraSession session = site.getSession();
+                    if (session != null) {
+                        for (IssueType type : session.getIssueTypes()) {
+                            items.add("[" + site.getName() + "] " + type.getName() + " #" + type.getId(), String.valueOf(type.getId()));
+                        }
+                    }
+                } catch (IOException ignore) {
+                }
+            }
+            return items;
         }
 
         @Override
