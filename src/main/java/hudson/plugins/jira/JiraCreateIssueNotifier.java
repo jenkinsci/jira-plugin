@@ -42,6 +42,8 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import static hudson.plugins.jira.JiraRestService.*;
+
 /**
  * When a build fails it creates jira issues.
  * Repeated failures does not create a new issue but update the existing issue until the issue is closed.
@@ -51,6 +53,8 @@ import java.util.regex.Pattern;
 public class JiraCreateIssueNotifier extends Notifier {
 
     private static final Logger LOG = Logger.getLogger(JiraCreateIssueNotifier.class.getName());
+
+    private static final Pattern NUMBER_PATTERN = Pattern.compile("-?\\d+");
 
     private String projectKey;
     private String testDescription;
@@ -215,7 +219,8 @@ public class JiraCreateIssueNotifier extends Notifier {
                 return Long.valueOf(type.trim());
             }
         }
-        return JiraRestService.BUG_ISSUE_TYPE_ID;
+        LOG.info("Returning default issue type id " + BUG_ISSUE_TYPE_ID);
+        return BUG_ISSUE_TYPE_ID;
     }
 
     @Nullable
@@ -233,13 +238,11 @@ public class JiraCreateIssueNotifier extends Notifier {
         return null;
     }
 
-    private final Pattern pattern = Pattern.compile("-?\\d+");
-
     private boolean isNumber(String s) {
         if (StringUtils.isBlank(s)) {
             return false;
         }
-        return pattern.matcher(s.trim()).matches();
+        return NUMBER_PATTERN.matcher(s.trim()).matches();
     }
 
     /**
@@ -269,7 +272,7 @@ public class JiraCreateIssueNotifier extends Notifier {
     private void addComment(AbstractBuild<?, ?> build, BuildListener listener, String id, String comment) throws IOException {
         JiraSession session = getJiraSession(build);
         session.addCommentWithoutConstrains(id, comment);
-        listener.getLogger().println("Commented JIRA issue " + id);
+        listener.getLogger().println(String.format("[%s] Commented issue", id));
     }
 
     /**
