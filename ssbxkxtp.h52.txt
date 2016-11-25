@@ -1,0 +1,94 @@
+﻿# This is a combination of 14 commits.
+# The first commit's message is:
+JENKINS-31164: Configurable issue priorityId, typeId and actionIdOnSuccess
+
+Motivation:
+
+When Jenkins creates a JIRA ticket the priority and type ids are hardcoded and may break ticket creation as noted in JENKINS-31164.
+
+Modifications:
+
+Allow the admin to configure issue priority id and type id from the Jenkins job configuration.
+Allow the admin to configure actionId on success which allows the plugin to automatically resolve or close tickets.
+
+Result:
+
+Support for JIRA where the type ids are different and greater flexibility when setting up workflows.
+
+# This is the 2nd commit message:
+
+Export the JIRA actions so that we can expose them via the Blue Ocean REST API (#108)
+
+# This is the 3rd commit message:
+
+Fix calculation of server URL for JiraBuildAction (#115)
+
+* Fix calculation of server URL for JiraBuildAction
+
+* .
+
+* HashSet -> LinkedHashSet
+
+# This is the 4th commit message:
+
+Fix test.
+
+# This is the 5th commit message:
+
+Id as fallback.
+
+# This is the 6th commit message:
+
+Keep JiraRestService type safe.
+
+# This is the 7th commit message:
+
+Reorder params.
+
+# This is the 8th commit message:
+
+Remove logic from JiraSession.
+
+# This is the 9th commit message:
+
+Review feedback from @warden
+
+# This is the 10th commit message:
+
+Drop down selection for issue priority and type.
+
+# This is the 11th commit message:
+
+Remove debugging ids.
+
+# This is the 12th commit message:
+
+Fix coverage.
+
+# This is the 13th commit message:
+
+Fix calculation of server URL for JiraBuildAction (#113)
+
+# This is the 14th commit message:
+
+- Reuse false breaks Cobertura.
+- Bump Coveralls version.
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+# interactive rebase in progress; onto 2325b0b
+# Last commands done (14 commands done):
+#    s 921273b Fix calculation of server URL for JiraBuildAction (#113)
+#    s f8ac7d1 - Reuse false breaks Cobertura. - Bump Coveralls version.
+# Next command to do (1 remaining command):
+#    s e6824ff Improve test coverage.
+# You are currently rebasing branch 'configurable_priority_and_type' on '2325b0b'.
+#
+# Changes to be committed:
+#	modified:   .travis.yml
+#	modified:   pom.xml
+#
+# Untracked files:
+#	n5gkvsqy.iol.txt
+#
+

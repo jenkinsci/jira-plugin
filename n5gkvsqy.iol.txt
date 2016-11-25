@@ -1,0 +1,35 @@
+﻿pick 932f17a JENKINS-31164: Configurable issue priorityId, typeId and actionIdOnSuccess
+s 10a4785 Export the JIRA actions so that we can expose them via the Blue Ocean REST API (#108)
+s 713f8b2 Fix calculation of server URL for JiraBuildAction (#115)
+s 7a5afb8 Fix test.
+s bea1f08 Id as fallback.
+s 78f0be6 Keep JiraRestService type safe.
+s 8e7f8b2 Reorder params.
+s ae6dec3 Remove logic from JiraSession.
+s 03f537e Review feedback from @warden
+s 4bd2da6 Drop down selection for issue priority and type.
+s 93a77e0 Remove debugging ids.
+s 19b7255 Fix coverage.
+s 921273b Fix calculation of server URL for JiraBuildAction (#113)
+s f8ac7d1 - Reuse false breaks Cobertura. - Bump Coveralls version.
+s e6824ff Improve test coverage.
+
+# Rebase 2325b0b..e6824ff onto 2325b0b (15 command(s))
+#
+# Commands:
+# p, pick = use commit
+# r, reword = use commit, but edit the commit message
+# e, edit = use commit, but stop for amending
+# s, squash = use commit, but meld into previous commit
+# f, fixup = like "squash", but discard this commit's log message
+# x, exec = run command (the rest of the line) using shell
+# d, drop = remove commit
+#
+# These lines can be re-ordered; they are executed from top to bottom.
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+#
+# However, if you remove everything, the rebase will be aborted.
+#
+# Note that empty commits are commented out
+
