@@ -128,8 +128,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${surefire.version}</version>
         <configuration>
-          <forkCount>0</forkCount>
-          <reuseForks>false</reuseForks>
+          <forkCount>3</forkCount>
+          <reuseForks>true</reuseForks>
           <argLine>-Xms128m -Xmx2048m</argLine>
         </configuration>
       </plugin>
