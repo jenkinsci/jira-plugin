@@ -1,17 +1,13 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.BasicComponent;
-import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Priority;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -34,9 +30,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.logging.Logger;
 
 import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
@@ -237,39 +230,6 @@ public class JiraCreateIssueNotifier extends Notifier {
         JiraSession session = getJiraSession(build);
         session.addCommentWithoutConstrains(id, comment);
         listener.getLogger().println(String.format("[%s] Commented issue", id));
-    }
-
-    /**
-     * Returns an Array of componets given by the user
-     *
-     * @param build
-     * @param component
-     * @return Array of component
-     * @throws IOException
-     */
-    private List<BasicComponent> getJiraComponents(AbstractBuild<?, ?> build, String component) throws IOException {
-
-        if (Util.fixEmpty(component) == null) {
-            return Collections.emptyList();
-        }
-
-        JiraSession session = getJiraSession(build);
-        List<Component> availableComponents = session.getComponents(projectKey);
-
-        //converting the user input as a string array
-        Splitter splitter = Splitter.on(",").trimResults().omitEmptyStrings();
-        List<String> inputComponents = Lists.newArrayList(splitter.split(component));
-        int numberOfComponents = inputComponents.size();
-
-        final List<BasicComponent> jiraComponents = new ArrayList<BasicComponent>(numberOfComponents);
-
-        for (final BasicComponent availableComponent : availableComponents) {
-            if (inputComponents.contains(availableComponent.getName())) {
-                jiraComponents.add(availableComponent);
-            }
-        }
-
-        return jiraComponents;
     }
 
     /**
@@ -488,8 +448,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         }
 
         public ListBoxModel doFillPriorityIdItems() {
-            ListBoxModel items = new ListBoxModel();
-            items.add(""); // optional field
+            ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
                 try {
                     JiraSession session = site.getSession();
@@ -505,8 +464,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         }
 
         public ListBoxModel doFillTypeIdItems() {
-            ListBoxModel items = new ListBoxModel();
-            items.add(""); // optional field
+            ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
                 try {
                     JiraSession session = site.getSession();

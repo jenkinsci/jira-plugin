@@ -122,7 +122,7 @@ public class JiraCreateIssueNotifierTest {
 
         assertEquals(1, temporaryDirectory.list().length);
 
-        when(issue.getStatus()).thenReturn( new Status(null, null, "6", JiraCreateIssueNotifier.finishedStatuses.Closed.toString() ,null));
+        when(issue.getStatus()).thenReturn(new Status(null, null, "6", JiraCreateIssueNotifier.finishedStatuses.Closed.toString(), null));
         assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
         assertEquals(1, temporaryDirectory.list().length);
@@ -130,14 +130,17 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     public void testPerformFailureSuccessIssueOpen() throws Exception {
+        Long issueTypeId = 1L;
+        Long priorityId = 0L;
         Integer actionIdOnSuccess = 5;
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", null, null, actionIdOnSuccess));
+
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", issueTypeId, priorityId, actionIdOnSuccess));
         doReturn(site).when(notifier).getSiteForProject((AbstractProject) Mockito.any());
 
         Issue issue = mock(Issue.class);
-        Status status = new Status(null, null, "1","Open",null);
+        Status status = new Status(null, null, "1", "Open", null);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
+                Mockito.eq(issueTypeId), Mockito.isNull(Long.class))).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 
