@@ -1,14 +1,23 @@
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-  <f:entry title="${%Jira Project Key}" field="projectKey">
+    <f:entry title="${%Jira Project Key}" field="projectKey">
         <f:textbox/>
-  </f:entry>
-  <f:entry title="${%Assignee}" field="assignee">
-            <f:textbox/>
-      </f:entry>
-   <f:entry title="${%Description Of Test}" field="testDescription">
-          <f:textarea/>
+    </f:entry>
+    <f:entry title="${%Assignee}" field="assignee">
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="${%Description Of Test}" field="testDescription">
+        <f:textarea/>
     </f:entry>
     <f:entry title="${%Component Name}" field="component">
-           <f:textbox/>
+        <f:textbox/>
+    </f:entry>
+    <f:entry title="${%Issue Priority}" field="priorityId">
+        <f:select/>
+    </f:entry>
+    <f:entry title="${%Issue Type}" field="typeId">
+        <f:select/>
+    </f:entry>
+    <f:entry title="${%Action Id On Success}" field="actionIdOnSuccess">
+        <f:number/>
     </f:entry>
 </j:jelly>

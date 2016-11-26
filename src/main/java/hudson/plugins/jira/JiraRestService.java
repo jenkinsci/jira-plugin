@@ -36,6 +36,8 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -58,6 +60,8 @@ public class JiraRestService {
      * URI.
      */
     public static final String BASE_API_PATH = "rest/api/2";
+
+    static final long BUG_ISSUE_TYPE_ID = 1L;
 
     private final URI uri;
 
@@ -142,6 +146,15 @@ public class JiraRestService {
         }
     }
 
+    public List<Priority> getPriorities() {
+        try {
+            return Lists.newArrayList(jiraRestClient.getMetadataClient().getPriorities().get(timeout, TimeUnit.SECONDS));
+        } catch (Exception e) {
+            LOGGER.log(WARNING, "jira rest client get priorities error. cause: " + e.getMessage(), e);
+            return Collections.emptyList();
+        }
+    }
+
     public List<String> getProjectsKeys() {
         Iterable<BasicProject> projects = Collections.emptyList();
         try {
@@ -222,12 +235,22 @@ public class JiraRestService {
         }
     }
 
+    @Deprecated
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
+        return createIssue(projectKey, description, assignee, components, summary, BUG_ISSUE_TYPE_ID, null);
+    }
+
+    public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
+                                  @Nonnull Long issueTypeId, @Nullable Long priorityId) {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
-                .setIssueTypeId(1L) // BUG
+                .setIssueTypeId(issueTypeId)
                 .setSummary(summary);
+
+        if (priorityId != null) {
+            builder.setPriorityId(priorityId);
+        }
 
         if (!assignee.equals(""))
             builder.setAssigneeName(assignee);
