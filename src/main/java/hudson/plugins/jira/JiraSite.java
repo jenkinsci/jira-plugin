@@ -71,17 +71,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
-     * @deprecated use @{getUrl}
      */
-    @Deprecated
     public final URL url;
 
     /**
      * URL of JIRA for normal access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
-     * @deprecated use @{getUrl}
      */
-    @Deprecated
     public final URL alternativeUrl;
 
     /**
