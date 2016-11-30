@@ -45,7 +45,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
             return;    // not configured with JIRA
         }
 
-        LOGGER.log(Level.FINE, "Using site: {0}", site.url);
+        LOGGER.log(Level.FINE, "Using site: {0}", site.getUrl());
 
         // if there's any recorded detail information, try to use that, too.
         JiraBuildAction a = build.getAction(JiraBuildAction.class);
