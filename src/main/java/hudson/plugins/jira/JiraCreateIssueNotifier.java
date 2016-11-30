@@ -333,6 +333,7 @@ public class JiraCreateIssueNotifier extends Notifier {
 
                     // Issue Closed, need to open new one
                     if  (   status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
+                            status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
                             status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ) {
 
                         listener.getLogger().println("The previous build also failed but the issue is closed");
@@ -387,6 +388,7 @@ public class JiraCreateIssueNotifier extends Notifier {
 
                     //if issue is in closed status
                     if  (   status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
+                            status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
                             status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ) {
                         LOG.info(String.format("%s is closed", issueId));
                         deleteFile(filename);
