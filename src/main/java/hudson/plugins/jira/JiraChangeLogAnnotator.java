@@ -45,6 +45,11 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
             return;    // not configured with JIRA
         }
 
+        if (site.getDisableChangelogAnnotations()) {
+            LOGGER.finest("Jira annotations disabled for changelogs. Skipping.");
+            return;
+        }
+
         LOGGER.log(Level.FINE, "Using site: {0}", site.getUrl());
 
         // if there's any recorded detail information, try to use that, too.
