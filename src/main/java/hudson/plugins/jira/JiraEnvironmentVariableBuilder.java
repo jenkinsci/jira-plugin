@@ -11,6 +11,8 @@ import hudson.plugins.jira.selector.DefaultIssueSelector;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import java.io.IOException;
+
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
@@ -21,10 +23,12 @@ import org.apache.commons.lang.StringUtils;
 public class JiraEnvironmentVariableBuilder extends Builder  {
     
     private AbstractIssueSelector issueSelector;
+    private String issuesSizeVariableName;
     
     @DataBoundConstructor
-    public JiraEnvironmentVariableBuilder(AbstractIssueSelector issueSelector) {
+    public JiraEnvironmentVariableBuilder(AbstractIssueSelector issueSelector, String issuesSizeVariableName) {
         this.issueSelector = issueSelector;
+        this.issuesSizeVariableName = issuesSizeVariableName;
     }
     
     public AbstractIssueSelector getIssueSelector() {
@@ -32,7 +36,11 @@ public class JiraEnvironmentVariableBuilder extends Builder  {
         if (uis == null) uis = new DefaultIssueSelector();
         return (this.issueSelector = uis);
     }
-    
+
+    String getIssuesSizeVariableName() {
+        return issuesSizeVariableName;
+    }
+
     JiraSite getSiteForProject(AbstractProject<?, ?> project) {
         return JiraSite.get(project);
     }
@@ -49,10 +57,12 @@ public class JiraEnvironmentVariableBuilder extends Builder  {
         Set<String> ids = getIssueSelector().findIssueIds(build, site, listener);
 
         String idList = StringUtils.join(ids, ",");
+        Integer idListSize = ids != null ? ids.size() : null;
 
         listener.getLogger().println(Messages.JiraEnvironmentVariableBuilder_Updating(JiraEnvironmentContributingAction.ISSUES_VARIABLE_NAME, idList));
+        listener.getLogger().println(Messages.JiraEnvironmentVariableBuilder_Updating(getIssuesSizeVariableName(), idListSize));
  
-        build.addAction(new JiraEnvironmentContributingAction(idList, site.getName()));
+        build.addAction(new JiraEnvironmentContributingAction(idList, idListSize, site.getName(), getIssuesSizeVariableName()));
         
         return true;
     }
@@ -71,6 +81,10 @@ public class JiraEnvironmentVariableBuilder extends Builder  {
         @Override
         public String getDisplayName() {
             return Messages.JiraEnvironmentVariableBuilder_DisplayName();
+        }
+
+        public boolean hasIssueSelectors() {
+            return Jenkins.getActiveInstance().getDescriptorList(AbstractIssueSelector.class).size() > 1;
         }
     }
 }
