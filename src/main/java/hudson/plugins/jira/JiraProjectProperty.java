@@ -92,8 +92,12 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         }
 
         public void setSites(JiraSite site) {
-            sites.clear();
             sites.add(site);
+        }
+
+        public void setSites(List<JiraSite> jiraSites) {
+            sites.clear();
+            sites.addAll(jiraSites);
         }
 
         public JiraSite[] getSites() {
