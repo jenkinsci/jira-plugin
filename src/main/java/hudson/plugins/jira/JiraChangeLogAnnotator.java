@@ -104,7 +104,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                             issuesToBeSaved.add(issue);
                         }
                     } catch (Exception e) {
-                        LOGGER.log(Level.WARNING, "Error getting remote issue " + id, e);
+                        LOGGER.log(Level.FINE, "Error getting remote issue " + id, e);
                     }
                 }
 
