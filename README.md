@@ -24,10 +24,18 @@ Reported Issues:
 [[by Votes]](https://issues.jenkins-ci.org/issues/?filter=15156)
 [[by Priority]](https://issues.jenkins-ci.org/issues/?filter=15157)
 
+### Building plugin with Docker
 
+Build the plugin locally using Docker and Maven image version 3.3 & newest JDK 8:
 
-Contributing to the Plugin
-==========================
+```docker run -it --rm -v "$PWD":/usr/src/mymaven -v "$HOME/.m2:/usr/src/mymaven/.m2" -w /usr/src/mymaven maven:3.3-jdk-8 mvn clean package```
+
+### Contributing to the Plugin
+
+See [examples](examples/) directory for some useful scripts like:
+
+* [docker_build.sh](examples/docker_build.sh) for building using Docker maven image
+* [docker-compose.yaml](examples/docker-compose.yaml) for running a complete development 
 
 Plugin source code is hosted on [GitHub](https://github.com/jenkinsci/jira-plugin).
 New feature proposals and bug fix proposals should be submitted as
