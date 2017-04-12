@@ -134,7 +134,7 @@ public class UpdaterTest {
             List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
             changeSets.add(changeLogSet);
             when(build2.getChangeSets()).thenReturn(changeSets);
-            when(build2.getPreviousBuild()).thenReturn(build1);
+            when(build2.getPreviousCompletedBuild()).thenReturn(build1);
             when(build2.getResult()).thenReturn(Result.SUCCESS);
             doReturn(project).when(build2).getProject();
 

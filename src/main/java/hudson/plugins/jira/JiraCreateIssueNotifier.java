@@ -130,7 +130,7 @@ public class JiraCreateIssueNotifier extends Notifier {
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.NONE;
     }
 
     @Override
@@ -144,7 +144,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         Result currentBuildResult = build.getResult();
 
         Result previousBuildResult = null;
-        AbstractBuild<?, ?> previousBuild = build.getPreviousBuild();
+        AbstractBuild<?, ?> previousBuild = build.getPreviousCompletedBuild();
 
         if (previousBuild != null) {
             previousBuildResult = previousBuild.getResult();

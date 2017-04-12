@@ -38,7 +38,7 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
 
 	@Override
 	public BuildStepMonitor getRequiredMonitorService() {
-		return BuildStepMonitor.BUILD;
+		return BuildStepMonitor.NONE;
 	}
 
 	public String getJiraVersion() {

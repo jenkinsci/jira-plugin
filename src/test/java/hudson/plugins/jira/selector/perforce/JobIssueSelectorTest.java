@@ -77,7 +77,7 @@ public abstract class JobIssueSelectorTest {
         ArrayList<String> issues = new ArrayList<String>();
         issues.add("GC-131");
         JiraCarryOverAction jiraCarryOverAction = mock(JiraCarryOverAction.class);
-        when (build.getPreviousBuild()).thenReturn(previousBuild);
+        when (build.getPreviousCompletedBuild()).thenReturn(previousBuild);
         when (previousBuild.getAction(JiraCarryOverAction.class)).thenReturn(jiraCarryOverAction);
         when (jiraCarryOverAction.getIDs()).thenReturn(issues);
         

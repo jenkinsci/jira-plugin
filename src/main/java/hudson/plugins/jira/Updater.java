@@ -257,7 +257,7 @@ class Updater {
         }
 
         if (jiraIssue != null) {
-            final Run<?, ?> prev = run.getPreviousBuild();
+            final Run<?, ?> prev = run.getPreviousCompletedBuild();
             if (prev != null) {
                 final JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
                 if (a != null && a.getIDs().contains(jiraIssue.getKey())) {

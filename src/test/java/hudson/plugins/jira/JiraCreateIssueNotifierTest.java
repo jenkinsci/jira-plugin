@@ -74,7 +74,7 @@ public class JiraCreateIssueNotifierTest {
         when(project.getBuildDir()).thenReturn(temporaryDirectory);
         when(currentBuild.getProject()).thenReturn(project);
         when(currentBuild.getEnvironment(buildListener)).thenReturn(env);
-        when(currentBuild.getPreviousBuild()).thenReturn(previousBuild);
+        when(currentBuild.getPreviousCompletedBuild()).thenReturn(previousBuild);
         when(buildListener.getLogger()).thenReturn(logger);
 
         when(session.getComponents(Mockito.anyString())).thenReturn(jiraComponents);

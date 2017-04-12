@@ -163,7 +163,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
      */
     protected void addIssuesCarriedOverFromPreviousBuild(Run<?, ?> build, JiraSite site, TaskListener listener,
             Set<String> ids) {
-        Run<?, ?> prev = build.getPreviousBuild();
+        Run<?, ?> prev = build.getPreviousCompletedBuild();
         if (prev != null) {
             JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
             if (a != null) {

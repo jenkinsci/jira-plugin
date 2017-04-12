@@ -84,7 +84,7 @@ public class JiraCreateReleaseNotes extends SimpleBuildWrapper {
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.NONE;
     }
 
     public void setJiraEnvironmentVariable(final String jiraEnvironmentVariable) {

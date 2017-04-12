@@ -71,7 +71,7 @@ public class RunScmChangeExtractor {
 
     public static Map<AbstractProject, DependencyChange> getDependencyChanges(Run<?, ?> run) {
         if (run instanceof AbstractBuild) {
-            Run<?, ?> previousBuild = run.getPreviousBuild();
+            Run<?, ?> previousBuild = run.getPreviousCompletedBuild();
             if (previousBuild instanceof AbstractBuild) {
                 return ((AbstractBuild) run).getDependencyChanges((AbstractBuild) previousBuild);
             }
