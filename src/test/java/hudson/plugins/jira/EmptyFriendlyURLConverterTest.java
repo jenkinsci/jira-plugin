@@ -26,35 +26,35 @@ public class EmptyFriendlyURLConverterTest {
     @WithoutJenkins
     public void shouldHandleURLClass() throws Exception {
         URL someUrl = new URL(SOME_VALID_URL);
-        assertThat(new JiraProjectProperty.DescriptorImpl.EmptyFriendlyURLConverter()
+        assertThat(new EmptyFriendlyURLConverter()
                 .convert(URL.class, someUrl), Matchers.<Object>is(someUrl));
     }
 
     @Test
     @WithoutJenkins
     public void shouldHandleStringClass() throws Exception {
-        assertThat(new JiraProjectProperty.DescriptorImpl.EmptyFriendlyURLConverter()
+        assertThat(new EmptyFriendlyURLConverter()
                 .convert(URL.class, SOME_VALID_URL), Matchers.<Object>is(new URL(SOME_VALID_URL)));
     }
 
     @Test
     @WithoutJenkins
     public void shouldHandleNull() throws Exception {
-        assertThat(new JiraProjectProperty.DescriptorImpl.EmptyFriendlyURLConverter()
+        assertThat(new EmptyFriendlyURLConverter()
                 .convert(URL.class, null), nullValue());
     }
 
     @Test
     @WithoutJenkins
     public void shouldHandleEmptyString() throws Exception {
-        assertThat(new JiraProjectProperty.DescriptorImpl.EmptyFriendlyURLConverter()
+        assertThat(new EmptyFriendlyURLConverter()
                 .convert(URL.class, StringUtils.EMPTY), nullValue());
     }
 
     @Test
     @WithoutJenkins
     public void shouldHandleNullAsString() throws Exception {
-        assertThat(new JiraProjectProperty.DescriptorImpl.EmptyFriendlyURLConverter()
+        assertThat(new EmptyFriendlyURLConverter()
                 .convert(URL.class, "null"), nullValue());
     }
 
@@ -63,7 +63,7 @@ public class EmptyFriendlyURLConverterTest {
      */
     @Test
     public void shouldHandleMalformedUrlAsString() throws Exception {
-        assertThat(new JiraProjectProperty.DescriptorImpl.EmptyFriendlyURLConverter()
+        assertThat(new EmptyFriendlyURLConverter()
                 .convert(URL.class, "bla"), nullValue());
     }
 

@@ -5,15 +5,13 @@ import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.google.common.base.*;
+import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.google.common.base.Objects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import hudson.model.Job;
+import hudson.model.*;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.plugins.jira.model.JiraVersion;
 import hudson.util.FormValidation;
@@ -384,9 +382,32 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public static JiraSite get(Job<?, ?> p) {
         JiraProjectProperty jpp = p.getProperty(JiraProjectProperty.class);
         if (jpp != null) {
+            // Looks in global configuration for the site configured
             JiraSite site = jpp.getSite();
             if (site != null) {
                 return site;
+            }
+        }
+
+        // Check up the folder chain if a site is defined there
+        // This only supports one site per folder
+        ItemGroup parent = p.getParent();
+        while (parent != null) {
+            if (parent instanceof AbstractFolder) {
+                AbstractFolder folder = (AbstractFolder) parent;
+                JiraFolderProperty jfp = (JiraFolderProperty) folder.getProperties().get(JiraFolderProperty.class);
+                if (jfp != null) {
+                    JiraSite[] sites = jfp.getSites();
+                    if (sites != null && sites.length > 0) {
+                        return sites[0];
+                    }
+                }
+            }
+
+            if (parent instanceof Item) {
+                parent = ((Item) parent).getParent();
+            } else {
+                parent = null;
             }
         }
 

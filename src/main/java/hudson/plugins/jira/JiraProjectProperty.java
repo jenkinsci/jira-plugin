@@ -6,16 +6,10 @@ import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.util.CopyOnWriteList;
 import net.sf.json.JSONObject;
-import org.apache.commons.beanutils.Converter;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -122,26 +116,5 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             save();
             return true;
         }
-
-        /**
-         * It's little hackish
-         */
-        @Restricted(NoExternalUse.class)
-        public static class EmptyFriendlyURLConverter implements Converter {
-            public Object convert(Class aClass, Object o) {
-                if (o == null || "".equals(o) || "null".equals(o)) {
-                    return null;
-                }
-                try {
-                    return new URL(o.toString());
-                } catch (MalformedURLException e) {
-                    LOGGER.log(Level.WARNING, "{0} is not a valid URL", o);
-                    return null;
-                }
-            }
-        }
     }
-
-    private static final Logger LOGGER = Logger
-            .getLogger(JiraProjectProperty.class.getName());
 }
