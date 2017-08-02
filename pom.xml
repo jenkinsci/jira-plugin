@@ -19,7 +19,7 @@
     <java.level>7</java.level>
     <mockito.version>1.10.19</mockito.version>
     <powermock.version>1.6.3</powermock.version>
-    <jira-rest-client.version>3.0.0</jira-rest-client.version>
+    <jira-rest-client.version>4.0.0</jira-rest-client.version>
     <workflow.version>2.0</workflow.version>
 
     <!-- jenkins -->
@@ -209,11 +209,6 @@
           <artifactId>guava</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.atlassian.jira</groupId>
-      <artifactId>jira-rest-java-client-plugin</artifactId>
-      <version>${jira-rest-client.version}</version>
     </dependency>
     <dependency>
       <groupId>com.atlassian.jira</groupId>
