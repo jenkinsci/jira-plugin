@@ -454,8 +454,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     if (session != null) {
                         issue = session.getIssue(id);
                     }
-
-                    return issue != null ? issue : null;
+                    return issue;
                 }
             });
 

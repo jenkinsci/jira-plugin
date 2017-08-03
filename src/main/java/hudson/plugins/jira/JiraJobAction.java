@@ -7,7 +7,6 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.plugins.jira.model.JiraIssue;
 import jenkins.branch.MultiBranchProject;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -18,6 +17,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -83,19 +83,24 @@ public class JiraJobAction implements Action {
 
         // Find the first JIRA issue key in the branch name
         // If it exists, create the action and set it
+        Pattern pattern = site.getIssuePattern();
+        // Pipeline will URL encode job names if the branch or PR name contains a '/' or other non-URL safe characters
+        String decodedJobName = URLDecoder.decode(job.getName(), "UTF-8");
         String issueKey = null;
-        for (String part : StringUtils.split(job.getName(), '/')) {
-            Pattern pattern = site.getIssuePattern();
-            Matcher matcher = pattern.matcher(part);
-            if (matcher.matches() && matcher.groupCount() > 0) {
-                issueKey = matcher.group();
+        Matcher m = pattern.matcher(decodedJobName);
+        while (m.find()) {
+            if (m.groupCount() >= 1) {
+                issueKey = m.group(1);
+                break;
             }
         }
 
         if (issueKey != null) {
             JiraIssue issue = site.getIssue(issueKey);
-            job.addAction(new JiraJobAction(job, issue));
-            job.save();
+            if (issue != null) {
+                job.addAction(new JiraJobAction(job, issue));
+                job.save();
+            }
         }
     }
 

@@ -2,8 +2,6 @@ package hudson.plugins.jira;
 
 import hudson.model.Action;
 import hudson.model.Job;
-import hudson.plugins.jira.JiraJobAction;
-import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.model.JiraIssue;
 import jenkins.branch.MultiBranchProject;
 import org.junit.Before;
@@ -15,9 +13,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,7 +34,21 @@ public class JiraJobActionTest {
 
     @Test
     public void testDetectBranchNameIssue() throws Exception {
-        when(job.getName()).thenReturn("feature/EXAMPLE-123");
+        when(job.getName()).thenReturn("EXAMPLE-123");
+        ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
+        JiraJobAction.setAction(job, site);
+        verify(job).addAction(captor.capture());
+
+        JiraJobAction action = captor.getValue();
+        assertNotNull(action.getIssue());
+
+        assertEquals("EXAMPLE-123", action.getIssue().getKey());
+        assertEquals("I like cake", action.getIssue().getSummary());
+    }
+
+    @Test
+    public void testDetectBranchNameIssueWithEncodedJobName() throws Exception {
+        when(job.getName()).thenReturn("feature%2FEXAMPLE-123");
         ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
         JiraJobAction.setAction(job, site);
         verify(job).addAction(captor.capture());
