@@ -1,6 +1,5 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
 import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Job;
@@ -8,7 +7,6 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.plugins.jira.model.JiraIssue;
 import jenkins.branch.MultiBranchProject;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.stapler.DataBoundConstructor;
