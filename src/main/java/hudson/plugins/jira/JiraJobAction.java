@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Job;
@@ -98,8 +99,10 @@ public class JiraJobAction implements Action {
 
         if (issueKey != null) {
             JiraIssue issue = site.getIssue(issueKey);
-            job.addAction(new JiraJobAction(job, issue));
-            job.save();
+            if (issue != null) {
+                job.addAction(new JiraJobAction(job, issue));
+                job.save();
+            }
         }
     }
 
