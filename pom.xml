@@ -20,6 +20,7 @@
     <mockito.version>1.10.19</mockito.version>
     <powermock.version>1.6.3</powermock.version>
     <jira-rest-client.version>4.0.0</jira-rest-client.version>
+    <fugue.version>2.6.1</fugue.version>
     <workflow.version>2.0</workflow.version>
 
     <!-- jenkins -->
@@ -221,6 +222,12 @@
           <artifactId>guava</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>com.atlassian.fugue</groupId>
+      <artifactId>fugue</artifactId>
+      <version>${fugue.version}</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
