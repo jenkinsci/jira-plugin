@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +42,7 @@ public class JqlIssueSelectorTest {
     }
 
     @Test
-    public void testCallGetIssuesFromJqlSearch() throws IOException {
+    public void testCallGetIssuesFromJqlSearch() throws IOException, TimeoutException {
         Issue issue = mock(Issue.class);
         when(issue.getKey()).thenReturn("EXAMPLE-1");
         when(session.getIssuesFromJqlSearch(TEST_JQL)).thenReturn(Lists.newArrayList(issue));

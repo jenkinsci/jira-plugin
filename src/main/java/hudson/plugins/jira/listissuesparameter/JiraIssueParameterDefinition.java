@@ -31,6 +31,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import static hudson.Util.fixNull;
 
@@ -68,7 +69,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         return new JiraIssueParameterValue(getName(), value);
     }
 
-    public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException {
+    public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException, TimeoutException {
         Job<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(Job.class);
 
         JiraSite site = JiraSite.get(context);

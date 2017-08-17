@@ -34,6 +34,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Build step that will mass-update all issues matching a JQL query, using the specified workflow
@@ -101,9 +102,10 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
                 run.setResult(Result.UNSTABLE);
             }
-        } catch (IOException e) {
+        } catch (IOException | TimeoutException e) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
+            run.setResult(Result.FAILURE);
         }
     }
 

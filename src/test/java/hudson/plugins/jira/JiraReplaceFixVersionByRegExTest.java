@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
@@ -46,7 +47,7 @@ public class JiraReplaceFixVersionByRegExTest {
 	}
 
 	@Test
-	public void testReplaceWithFixVersionByRegex() throws URISyntaxException {
+	public void testReplaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
 
 		List<Version> myVersions = new ArrayList<Version>();
 		myVersions.add(new Version(new URI("self"), 0L, TO_VERSION, null, false, false, null));

@@ -45,6 +45,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import static java.util.logging.Level.WARNING;
@@ -169,12 +170,15 @@ public class JiraRestService {
         return keys;
     }
 
-    public List<Issue> getIssuesFromJqlSearch(String jqlSearch, Integer maxResults) {
+    public List<Issue> getIssuesFromJqlSearch(String jqlSearch, Integer maxResults) throws TimeoutException {
         try {
             final SearchResult searchResult = jiraRestClient.getSearchClient()
                                                             .searchJql(jqlSearch, maxResults, 0, null)
                                                             .get(timeout, TimeUnit.SECONDS);
             return Lists.newArrayList(searchResult.getIssues());
+        } catch(TimeoutException e) {
+            LOGGER.log(WARNING, "jira rest client get issue from jql search error. cause: " + e.getMessage(), e);
+            throw e;
         } catch (Exception e) {
             LOGGER.log(WARNING, "jira rest client get issue from jql search error. cause: " + e.getMessage(), e);
             return Collections.emptyList();

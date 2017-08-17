@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
@@ -93,7 +94,7 @@ public class JiraCreateReleaseNotesTest {
     }
 
     @Test
-    public void jiraApiCallDefaultFilter() throws InterruptedException, IOException {
+    public void jiraApiCallDefaultFilter() throws InterruptedException, IOException, TimeoutException {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
         doReturn(site).when(jcrn).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
         jcrn.setUp(build, launcher, buildListener);
@@ -101,7 +102,7 @@ public class JiraCreateReleaseNotesTest {
     }
 
     @Test
-    public void jiraApiCallOtherFilter() throws InterruptedException, IOException {
+    public void jiraApiCallOtherFilter() throws InterruptedException, IOException, TimeoutException {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER));
         doReturn(site).when(jcrn).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
@@ -133,7 +134,7 @@ public class JiraCreateReleaseNotesTest {
     }
     
     @Test
-    public void releaseNotesContent() throws InterruptedException, IOException {
+    public void releaseNotesContent() throws InterruptedException, IOException, TimeoutException {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
         doReturn(site).when(jcrn).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
         when(site.getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER)).thenCallRealMethod();

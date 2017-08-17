@@ -19,6 +19,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import java.util.concurrent.TimeoutException;
 
 public class JqlIssueSelector extends AbstractIssueSelector {
 
@@ -55,7 +56,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
 
             // deduplication
             return Sets.newHashSet(issueKeys);
-        } catch (IOException e) {
+        } catch (IOException | TimeoutException e) {
             throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
         }
     }
