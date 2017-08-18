@@ -20,6 +20,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -74,6 +75,10 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
     public String getComment() {
         return comment;
     }
+    
+    JiraSite getSiteForJob(Job<?, ?> job) {
+        return JiraSite.get(job);
+    }
 
     /**
      * Performs the actual update based on job configuration.
@@ -84,11 +89,12 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
         String realJql = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(jqlSearch));
         String realWorkflowActionName = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(workflowActionName));
 
-        JiraSite site = JiraSite.get(run.getParent());
+        JiraSite site = getSiteForJob(run.getParent());
 
         if (site == null) {
             listener.getLogger().println(Messages.NoJiraSite());
             run.setResult(Result.FAILURE);
+            return;
         }
 
         if (StringUtils.isNotEmpty(realWorkflowActionName)) {
