@@ -12,6 +12,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.concurrent.TimeoutException;
 
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -103,7 +104,7 @@ public class ChangingWorkflowTest {
 
 
     @Test
-    public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws IOException {
+    public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
         when(site.getSession()).thenReturn(mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
         when(mockSession.getActionIdForIssue(anyString(),
@@ -121,7 +122,7 @@ public class ChangingWorkflowTest {
 
 
     @Test
-    public void addCommentsOnNullWorkflowAndNonEmptyComment() throws IOException {
+    public void addCommentsOnNullWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
         when(site.getSession()).thenReturn(mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
@@ -135,7 +136,7 @@ public class ChangingWorkflowTest {
 
 
     @Test
-    public void dontAddCommentsOnNullWorkflowAndNullComment() throws IOException {
+    public void dontAddCommentsOnNullWorkflowAndNullComment() throws IOException, TimeoutException {
         when(site.getSession()).thenReturn(mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))

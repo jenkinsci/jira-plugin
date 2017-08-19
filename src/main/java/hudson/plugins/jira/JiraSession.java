@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import hudson.plugins.jira.model.JiraIssueField;
+import java.util.concurrent.TimeoutException;
 import org.apache.commons.lang.StringUtils;
 
 import javax.annotation.Nonnull;
@@ -130,7 +131,7 @@ public class JiraSession {
      * @param jqlSearch JQL query string to execute
      * @return issues matching the JQL query
      */
-    public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) {
+    public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException {
         return service.getIssuesFromJqlSearch(jqlSearch, 50);
     }
 
@@ -167,11 +168,11 @@ public class JiraSession {
         return null;
     }
 
-    public List<Issue> getIssuesWithFixVersion(String projectKey, String version) {
+    public List<Issue> getIssuesWithFixVersion(String projectKey, String version) throws TimeoutException {
         return getIssuesWithFixVersion(projectKey, version, "");
     }
 
-    public List<Issue> getIssuesWithFixVersion(String projectKey, String version, String filter) {
+    public List<Issue> getIssuesWithFixVersion(String projectKey, String version, String filter) throws TimeoutException {
         LOGGER.fine("Fetching versions from project: " + projectKey + " with fixVersion:" + version);
         if (isNotEmpty(filter)) {
             return service.getIssuesFromJqlSearch(String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version), Integer.MAX_VALUE);
@@ -217,7 +218,7 @@ public class JiraSession {
      * @param version    The replacement version
      * @param query      The JQL Query
      */
-    public void migrateIssuesToFixVersion(String projectKey, String version, String query) {
+    public void migrateIssuesToFixVersion(String projectKey, String version, String query) throws TimeoutException {
 
         Version newVersion = getVersionByName(projectKey, version);
         if (newVersion == null) {
@@ -246,7 +247,7 @@ public class JiraSession {
      * @param toVersion   The name of the replacement version
      * @param query       The JQL Query
      */
-    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) {
+    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
 
         Version newVersion = getVersionByName(projectKey, toVersion);
         if (newVersion == null) {
@@ -299,7 +300,7 @@ public class JiraSession {
      * @param version    The version to add
      * @param query      The JQL Query
      */
-    public void addFixVersion(String projectKey, String version, String query) {
+    public void addFixVersion(String projectKey, String version, String query) throws TimeoutException {
 
         Version newVersion = getVersionByName(projectKey, version);
         if (newVersion == null) {

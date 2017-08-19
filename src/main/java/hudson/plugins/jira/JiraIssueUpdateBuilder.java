@@ -20,6 +20,7 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -34,6 +35,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Build step that will mass-update all issues matching a JQL query, using the specified workflow
@@ -73,6 +75,10 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
     public String getComment() {
         return comment;
     }
+    
+    JiraSite getSiteForJob(Job<?, ?> job) {
+        return JiraSite.get(job);
+    }
 
     /**
      * Performs the actual update based on job configuration.
@@ -83,11 +89,12 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
         String realJql = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(jqlSearch));
         String realWorkflowActionName = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(workflowActionName));
 
-        JiraSite site = JiraSite.get(run.getParent());
+        JiraSite site = getSiteForJob(run.getParent());
 
         if (site == null) {
             listener.getLogger().println(Messages.NoJiraSite());
             run.setResult(Result.FAILURE);
+            return;
         }
 
         if (StringUtils.isNotEmpty(realWorkflowActionName)) {
@@ -101,9 +108,10 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
                 run.setResult(Result.UNSTABLE);
             }
-        } catch (IOException e) {
+        } catch (IOException | TimeoutException e) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
+            run.setResult(Result.FAILURE);
         }
     }
 

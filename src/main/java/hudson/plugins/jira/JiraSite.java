@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -528,9 +529,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey
      * @param versionName
      * @return release notes
-     * @throws IOException
+     * @throws IOException, TimeoutException
      */
-    public String getReleaseNotesForFixVersion(String projectKey, String versionName) throws IOException {
+    public String getReleaseNotesForFixVersion(String projectKey, String versionName) throws IOException, TimeoutException {
         return getReleaseNotesForFixVersion(projectKey, versionName, "");
     }
 
@@ -541,9 +542,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param versionName
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
      * @return release notes
-     * @throws IOException
+     * @throws IOException, TimeoutException
      */
-    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException {
+    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException, TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -600,9 +601,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey  The project key
      * @param versionName The fixVersion
      * @return A set of JiraIssues
-     * @throws IOException
+     * @throws IOException, TimeoutException
      */
-    public Set<JiraIssue> getIssueWithFixVersion(String projectKey, String versionName) throws IOException {
+    public Set<JiraIssue> getIssueWithFixVersion(String projectKey, String versionName) throws IOException, TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             return Collections.emptySet();
@@ -629,9 +630,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey The project key
      * @param toVersion  The new fixVersion
      * @param query      A JQL Query
-     * @throws IOException
+     * @throws IOException, TimeoutException
      */
-    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException {
+    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException, TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -647,9 +648,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey  The project key
      * @param versionName The new fixVersion
      * @param query       A JQL Query
-     * @throws IOException
+     * @throws IOException, TimeoutException
      */
-    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException {
+    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException, TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -665,9 +666,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey
      * @param versionName
      * @param query
-     * @throws IOException
+     * @throws IOException, TimeoutException
      */
-    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws IOException {
+    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws IOException, TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -685,9 +686,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param workflowActionName
      * @param comment
      * @param console
-     * @throws IOException
+     * @throws IOException, TimeoutException
      */
-    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException {
+    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException, TimeoutException {
         JiraSession session = getSession();
 
         if (session == null) {

@@ -9,6 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
@@ -28,7 +29,7 @@ public class JiraIssueMigratorTest {
     JiraIssueMigrator jiraIssueMigrator;
 
     @Before
-    public void prepareMocks() throws IOException, InterruptedException {
+    public void prepareMocks() throws IOException, TimeoutException, InterruptedException {
         build = mock(AbstractBuild.class);
         launcher = mock(Launcher.class);
         listener = mock(BuildListener.class);
@@ -46,7 +47,7 @@ public class JiraIssueMigratorTest {
     }
 
     @Test
-    public void testAddingVersion() throws IOException {
+    public void testAddingVersion() throws IOException, TimeoutException {
         boolean addRelease = true;
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, addRelease));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
@@ -58,7 +59,7 @@ public class JiraIssueMigratorTest {
     }
 
     @Test
-    public void testMigratingToVersion() throws IOException {
+    public void testMigratingToVersion() throws IOException, TimeoutException {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);
@@ -69,7 +70,7 @@ public class JiraIssueMigratorTest {
     }
 
     @Test
-    public void testReplacingVersion() throws IOException {
+    public void testReplacingVersion() throws IOException, TimeoutException {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, RELEASE_TO_REPLACE, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);
