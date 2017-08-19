@@ -41,12 +41,12 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         JiraSite site = getSiteForProject(build.getParent());
         
         if (site == null) {
-            LOGGER.fine("not configured with JIRA");
+            LOGGER.fine("not configured with JIRA site");
             return;    // not configured with JIRA
         }
 
         if (site.getDisableChangelogAnnotations()) {
-            LOGGER.finest("Jira annotations disabled for changelogs. Skipping.");
+            LOGGER.info("ChangeLog annotations are disabled.\n Due to this also Related Issues won't be visible.");
             return;
         }
 
