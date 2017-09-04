@@ -117,6 +117,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public final boolean recordScmChanges;
 
     /**
+     * Disable annotating the changelogs
+     *
+     * @since todo
+     */
+    public boolean disableChangelogAnnotations;
+
+    /**
      * user defined pattern
      *
      * @since 1.22
@@ -147,7 +154,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      */
     private Boolean appendChangeTimestamp;
-    
+
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
      * last time we checked. Copy on write semantics.
@@ -203,6 +210,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.roleVisibility = Util.fixEmpty(roleVisibility);
         this.useHTTPAuth = useHTTPAuth;
         this.jiraSession = null;
+    }
+
+    @DataBoundSetter
+    public void setDisableChangelogAnnotations(boolean disableChangelogAnnotations) {
+        this.disableChangelogAnnotations = disableChangelogAnnotations;
+    }
+
+    public boolean getDisableChangelogAnnotations() {
+        return disableChangelogAnnotations;
     }
 
     @DataBoundSetter
