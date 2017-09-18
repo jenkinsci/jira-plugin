@@ -33,7 +33,6 @@
     
     <!-- tests -->
     <groovy.version>2.4.5</groovy.version>
-    <gmaven.version>1.5</gmaven.version>
     <cobertura.version>2.7</cobertura.version>
     <surefire.version>2.20</surefire.version>
     <jackson.version>2.8.9</jackson.version>
@@ -144,7 +143,6 @@
       <plugin>
         <groupId>org.codehaus.gmaven</groupId>
         <artifactId>gmaven-plugin</artifactId>
-        <version>${gmaven.version}</version>
         <configuration>
           <source>1.${java.level}</source>
           <providerSelection>1.8</providerSelection>
@@ -153,7 +151,7 @@
           <dependency>
             <groupId>org.codehaus.gmaven.runtime</groupId>
             <artifactId>gmaven-runtime-1.8</artifactId>
-            <version>${gmaven.version}</version>
+            <version>1.5</version>
           </dependency>
           <dependency>
             <groupId>org.codehaus.groovy</groupId>
@@ -192,16 +190,6 @@
   		<version>2.3.3</version>
 	</dependency>
     <dependency>
-      <groupId>javax.activation</groupId>
-      <artifactId>activation</artifactId>
-      <version>1.1.1</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-discovery</groupId>
-      <artifactId>commons-discovery</artifactId>
-      <version>0.5</version>
-    </dependency>
-    <dependency>
       <groupId>com.atlassian.jira</groupId>
       <artifactId>jira-rest-java-client-api</artifactId>
       <version>${jira-rest-client.version}</version>
@@ -221,6 +209,14 @@
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-beans</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>javax.activation</groupId>
+          <artifactId>activation</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -238,6 +234,12 @@
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>4.5.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-codec</groupId>
+          <artifactId>commons-codec</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -261,11 +263,6 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>mailer</artifactId>
       <version>1.20</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.10</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -302,6 +299,10 @@
           <exclusion>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
           </exclusion>
         </exclusions>
     </dependency>
