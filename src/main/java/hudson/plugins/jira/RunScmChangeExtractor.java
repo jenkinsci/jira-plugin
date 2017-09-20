@@ -13,6 +13,7 @@ import hudson.model.Run;
 import hudson.model.AbstractBuild.DependencyChange;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
+import java.util.Collections;
 
 public class RunScmChangeExtractor {
 
@@ -25,7 +26,8 @@ public class RunScmChangeExtractor {
 
     public static List<ChangeLogSet<? extends Entry>> getChanges(Run<?, ?> run) {
         if (run instanceof AbstractBuild) {
-            return ((AbstractBuild<?, ?>) run).getChangeSets();
+            ChangeLogSet<? extends Entry> cs = ((AbstractBuild<?, ?>) run).getChangeSet();
+            return cs.isEmptySet() ? Collections.<ChangeLogSet<? extends ChangeLogSet.Entry>>emptyList() : Collections.<ChangeLogSet<? extends ChangeLogSet.Entry>>singletonList(cs);
         } else if (run == null) {
             throw new IllegalStateException("run cannot be null!");
         } else {
