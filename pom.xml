@@ -398,7 +398,7 @@
     </repository>-->
     <repository>
       <id>atlassian-public</id>
-      <url>https://atlassianuseast1.jfrog.io/atlassianuseast1/atlassian-maven/</url>
+      <url>https://packages.atlassian.com/maven/repository/public</url>
       <releases>
         <enabled>true</enabled>
         <checksumPolicy>warn</checksumPolicy>
@@ -414,7 +414,7 @@
   <pluginRepositories>
     <pluginRepository>
       <id>atlassian-public</id>
-      <url>https://atlassianuseast1.jfrog.io/atlassianuseast1/atlassian-maven/</url>
+      <url>https://packages.atlassian.com/maven/repository/public</url>
       <releases>
         <enabled>true</enabled>
         <checksumPolicy>warn</checksumPolicy>
