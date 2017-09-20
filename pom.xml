@@ -412,19 +412,9 @@
   </repositories>
   
   <pluginRepositories>
-    <!--<pluginRepository>
-      <id>repo.jenkins-ci.org</id>
-      <url>http://repo.jenkins-ci.org/public/</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </pluginRepository>-->
     <pluginRepository>
       <id>atlassian-public</id>
-      <url>https://m2proxy.atlassian.com/repository/public/</url>
+      <url>https://atlassianuseast1.jfrog.io/atlassianuseast1/atlassian-maven/</url>
       <releases>
         <enabled>true</enabled>
         <checksumPolicy>warn</checksumPolicy>
