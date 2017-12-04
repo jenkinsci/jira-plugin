@@ -206,6 +206,14 @@
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.atlassian.httpclient</groupId>
+          <artifactId>atlassian-httpclient-plugin</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.atlassian.httpclient</groupId>
+          <artifactId>atlassian-httpclient-api</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -224,6 +232,14 @@
         <exclusion>
           <groupId>javax.activation</groupId>
           <artifactId>activation</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.atlassian.httpclient</groupId>
+          <artifactId>atlassian-httpclient-plugin</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.atlassian.httpclient</groupId>
+          <artifactId>atlassian-httpclient-api</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
