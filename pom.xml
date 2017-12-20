@@ -113,17 +113,6 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire.version}</version>
-        <configuration>
-          <forkCount>3</forkCount>
-          <!-- cobertura reports 0% when this is false -->
-          <reuseForks>true</reuseForks>
-          <argLine>-Xms128m -Xmx2048m</argLine>
-        </configuration>
-      </plugin>
-      <plugin>
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
         <version>4.3.0</version>
