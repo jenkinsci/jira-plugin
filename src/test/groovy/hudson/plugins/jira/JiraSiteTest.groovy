@@ -1,5 +1,6 @@
 package hudson.plugins.jira
 
+import com.atlassian.jira.rest.client.api.domain.Issue
 import com.cloudbees.hudson.plugins.folder.AbstractFolder
 import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty
 import hudson.model.ItemGroup
@@ -105,5 +106,34 @@ class JiraSiteTest extends Specification {
         1 * job.getParent() >> nonFolderParent
         0 * _._
         result==site2
+    }
+
+
+    def "getIssue"() {
+        given:
+        // FIXME We need JENKINS-47500 to be backported into JENKINS 1.642 to use null password here.
+        def site = new JiraSite(null, null, null, "{*** HACK INVALID BASE64 PASSWORD ***}", false, false, null, false, null, null, false)
+        def session = Mock(JiraSession)
+        def issue = Mock(Issue)
+        site.jiraSession = session
+
+        when: "issue exists"
+        def result = site.getIssue("FOO-1")
+
+        then:
+        1 * issue.getKey() >> "FOO-1"
+        1 * issue.getSummary() >> "commit message"
+        1 * session.getIssue("FOO-1") >> issue
+        0 * _._
+        result != null
+        result.getKey() == "FOO-1"
+
+        when: "no issue found"
+        result = site.getIssue("BAR-2")
+
+        then:
+        1 * session.getIssue("BAR-2") >> null
+        0 * _._
+        result == null
     }
 }

@@ -7,6 +7,7 @@ import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.google.common.base.Objects;
+import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import hudson.Extension;
@@ -163,7 +164,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     // should we implement to invalidate this (say every hour)?
     private transient volatile Set<String> projects;
 
-    private transient Cache<String, Issue> issueCache = makeIssueCache();
+    private transient Cache<String, Optional<Issue>> issueCache = makeIssueCache();
 
     /**
      * Used to guard the computation of {@link #projects}
@@ -251,7 +252,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return this;
     }
 
-    private static Cache<String, Issue> makeIssueCache() {
+    private static Cache<String, Optional<Issue>> makeIssueCache() {
         return CacheBuilder.newBuilder().concurrencyLevel(2).expireAfterAccess(2, TimeUnit.MINUTES).build();
     }
 
@@ -464,22 +465,22 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public JiraIssue getIssue(final String id) throws IOException {
         try {
 
-            Issue issue = issueCache.get(id, new Callable<Issue>() {
-                public Issue call() throws Exception {
+            Optional<Issue> issue = issueCache.get(id, new Callable<Optional<Issue>>() {
+                public Optional<Issue> call() throws Exception {
                     JiraSession session = getSession();
                     Issue issue = null;
                     if (session != null) {
                         issue = session.getIssue(id);
                     }
-                    return issue;
+                    return Optional.fromNullable(issue);
                 }
             });
 
-            if (issue == null) {
+            if (!issue.isPresent()) {
                 return null;
             }
 
-            return new JiraIssue(issue);
+            return new JiraIssue(issue.get());
         } catch (ExecutionException e) {
             throw new IOException(e);
         }
