@@ -29,13 +29,13 @@ public class DescriptorImplTest {
 
     @Test
     public void testDoValidate() throws Exception {
-        FormValidation validation = descriptor.doValidate(null, null, null, null, null, false, null, JiraSite.DEFAULT_TIMEOUT);
+        FormValidation validation = descriptor.doValidate(null, null, null, null, null, null, false, null, JiraSite.DEFAULT_TIMEOUT);
         assertEquals(validation.kind, FormValidation.Kind.ERROR);
 
-        validation = descriptor.doValidate("user", "invalid", "pass", null, null, false, null, JiraSite.DEFAULT_TIMEOUT);
+        validation = descriptor.doValidate("user", "invalid", "pass", null, null, null, false, null, JiraSite.DEFAULT_TIMEOUT);
         assertEquals(validation.kind, FormValidation.Kind.ERROR);
 
-        validation = descriptor.doValidate("user", "http://valid/", "pass", null, null, false, "invalid", JiraSite.DEFAULT_TIMEOUT);
+        validation = descriptor.doValidate("user", "http://valid/", "pass", null, null, null, false, "invalid", JiraSite.DEFAULT_TIMEOUT);
         assertEquals(validation.kind, FormValidation.Kind.ERROR);
     }
 
@@ -43,7 +43,7 @@ public class DescriptorImplTest {
     public void testValidateConnectionError() throws Exception {
         when(jiraSession.getMyPermissions()).thenThrow(RestClientException.class);
         when(jiraSite.createSession()).thenReturn(jiraSession);
-        FormValidation validation = descriptor.doValidate("user", "http://localhost:8080", "pass", null, null, false, " ", JiraSite.DEFAULT_TIMEOUT);
+        FormValidation validation = descriptor.doValidate("user", "http://localhost:8080", "pass", null, null, null, false, " ", JiraSite.DEFAULT_TIMEOUT);
         assertEquals(validation.kind, FormValidation.Kind.ERROR);
     }
 
