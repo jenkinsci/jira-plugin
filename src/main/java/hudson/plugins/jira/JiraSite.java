@@ -174,8 +174,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private transient JiraSession jiraSession = null;
 
     @DataBoundConstructor
-    public JiraSite(URL url, URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
-                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
+    public JiraSite(URL url, @CheckForNull URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
+                    boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
         if (url != null && !url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm() + "/");
@@ -222,9 +222,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return disableChangelogAnnotations;
     }
 
+    /**
+     * Sets request timeout (in seconds).
+     * If not specified, a default timeout will be used.
+     * @param timeoutSec Timeout in seconds
+     */
     @DataBoundSetter
-    public void setTimeout(Integer timeout) {
-		this.timeout = timeout;
+    public void setTimeout(Integer timeoutSec) {
+		this.timeout = timeoutSec;
 	}
     
     @DataBoundSetter
