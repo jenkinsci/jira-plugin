@@ -94,7 +94,6 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         this.labels = labels;
     }
 
-
     @Override
     public DescriptorImpl getDescriptor() {
         return DESCRIPTOR;
