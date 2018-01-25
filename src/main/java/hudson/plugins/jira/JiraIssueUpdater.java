@@ -74,6 +74,27 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         return BuildStepMonitor.BUILD;
     }
 
+    public void setIssueSelector(AbstractIssueSelector issueSelector) {
+        this.issueSelector = issueSelector;
+    }
+
+    public SCM getScm() {
+        return scm;
+    }
+
+    public void setScm(SCM scm) {
+        this.scm = scm;
+    }
+
+    public List<String> getLabels() {
+        return labels;
+    }
+
+    public void setLabels(List<String> labels) {
+        this.labels = labels;
+    }
+
+
     @Override
     public DescriptorImpl getDescriptor() {
         return DESCRIPTOR;
