@@ -12,6 +12,7 @@ import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
@@ -206,7 +207,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @DataBoundConstructor
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, @CheckForNull String credentialsId, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
                     boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
-        this(url, alternativeUrl, lookupSystemCredentials(credentialsId), userName, password, supportsWikiStyleComment, recordScmChanges, userPattern,
+        this(url, alternativeUrl, lookupSystemCredentials(credentialsId, url != null ? url.toExternalForm() : null), userName, password, supportsWikiStyleComment, recordScmChanges, userPattern,
                 updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
     }
 
@@ -259,14 +260,18 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     @CheckForNull
-    public static StandardUsernamePasswordCredentials lookupSystemCredentials(@CheckForNull String credentialsId) {
+    public static StandardUsernamePasswordCredentials lookupSystemCredentials(@CheckForNull String credentialsId, String url) {
         if (credentialsId == null) {
             return null;
         }
         return CredentialsMatchers.firstOrNull(
                 CredentialsProvider
-                        .lookupCredentials(StandardUsernamePasswordCredentials.class, Jenkins.getInstance(), ACL.SYSTEM,
-                                Collections.<DomainRequirement>emptyList()),
+                        .lookupCredentials(
+                                StandardUsernamePasswordCredentials.class,
+                                Jenkins.getInstance(),
+                                ACL.SYSTEM,
+                                URIRequirementBuilder.fromUri(url).build()
+                        ),
                 CredentialsMatchers.withId(credentialsId)
         );
     }
@@ -757,7 +762,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return FormValidation.error("Failed to login to JIRA");
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context) {
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context, @QueryParameter String url) {
             AccessControlled _context = (context instanceof AccessControlled ? (AccessControlled) context : Jenkins.getInstance());
             if (_context == null || !_context.hasPermission(Computer.CONFIGURE)) {
                 return new StandardUsernameListBoxModel();
@@ -770,7 +775,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                             StandardUsernamePasswordCredentials.class,
                             Jenkins.getInstance(),
                             ACL.SYSTEM,
-                            Collections.<DomainRequirement>emptyList()
+                            URIRequirementBuilder.fromUri(url).build()
                         )
                     );
         }
