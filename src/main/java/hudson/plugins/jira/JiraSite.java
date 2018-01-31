@@ -803,9 +803,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setTimeout(timeout);            
             try {
                 JiraSession session = site.createSession();
-                if (session == null) {
-                    return FormValidation.error("Failed to login to JIRA");
-                }
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
