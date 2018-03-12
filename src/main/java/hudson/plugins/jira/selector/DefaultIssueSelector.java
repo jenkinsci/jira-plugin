@@ -128,11 +128,16 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
      * {@link #addIssuesRecursive(Run, JiraSite, TaskListener, Set) is called.
      */
     protected void addIssuesFromDependentBuilds(Run<?, ?> build, JiraSite site, TaskListener listener,
-            Set<String> issueIds) {
+            Set<String> issueIds) {		
+        Pattern pattern = site.getIssuePattern();
+
         for (DependencyChange depc : RunScmChangeExtractor.getDependencyChanges(build).values()) {
             for (AbstractBuild<?, ?> b : depc.getBuilds()) {
                 getLogger().finer("Searching for JIRA issues in dependency " + b + " of " + build);
-                addIssuesRecursive(b, site, listener, issueIds);
+
+                // Fix JENKINS-44989
+                // The original code before refactoring just called "findIssues", not "findIssueIdsRecursive"
+                findIssues(b, issueIds, pattern, listener);
             }
         }
     }
