@@ -46,6 +46,11 @@ public class JiraVersionParameterValue extends ParameterValue {
     }
 
     @Override
+    public Object getValue() {
+        return getVersion();
+    }
+
+    @Override
     public String toString() {
         return "(JiraVersionParameterValue) " + getName() + "='" + version + "'";
     }
