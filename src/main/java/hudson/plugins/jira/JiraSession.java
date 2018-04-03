@@ -132,7 +132,7 @@ public class JiraSession {
      * @return issues matching the JQL query
      */
     public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException {
-        return service.getIssuesFromJqlSearch(jqlSearch, 50);
+        return service.getIssuesFromJqlSearch(jqlSearch, Integer.MAX_VALUE);
     }
 
     /**
