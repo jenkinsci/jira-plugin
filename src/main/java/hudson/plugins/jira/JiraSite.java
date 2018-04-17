@@ -6,12 +6,10 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
-import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -207,7 +205,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @DataBoundConstructor
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, @CheckForNull String credentialsId, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
                     boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
-        this(url, alternativeUrl, lookupSystemCredentials(credentialsId, url != null ? url.toExternalForm() : null), userName, password, supportsWikiStyleComment, recordScmChanges, userPattern,
+        this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url != null ? url.toExternalForm() : null), userName, password, supportsWikiStyleComment, recordScmChanges, userPattern,
                 updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
     }
 
@@ -257,23 +255,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.roleVisibility = Util.fixEmpty(roleVisibility);
         this.useHTTPAuth = useHTTPAuth;
         this.jiraSession = null;
-    }
-
-    @CheckForNull
-    public static StandardUsernamePasswordCredentials lookupSystemCredentials(@CheckForNull String credentialsId, String url) {
-        if (credentialsId == null) {
-            return null;
-        }
-        return CredentialsMatchers.firstOrNull(
-                CredentialsProvider
-                        .lookupCredentials(
-                                StandardUsernamePasswordCredentials.class,
-                                Jenkins.getInstance(),
-                                ACL.SYSTEM,
-                                URIRequirementBuilder.fromUri(url).build()
-                        ),
-                CredentialsMatchers.withId(credentialsId)
-        );
     }
 
     @DataBoundSetter
