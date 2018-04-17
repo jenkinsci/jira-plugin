@@ -27,13 +27,7 @@
   <f:entry title="${%Credentials}" field="credentialsId">
     <c:select />
   </f:entry>
-  <f:entry title="${%User Name}" field="userName">
-    <f:textbox />
-  </f:entry>
-  <f:entry title="${%Password}" field="password" description="${%site.userpass}">
-    <f:password />
-  </f:entry>
-    <f:entry title="${%Connection timeout}" field="timeout">
+  <f:entry title="${%Connection timeout}" field="timeout">
     <f:textbox default="10" />
   </f:entry>
   <f:entry title="${%Visible for Group}" field="groupVisibility">
@@ -50,7 +44,7 @@
   </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
-            method="validate" with="url,credentialsId,userName,password,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout" />
+            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout" />
   </f:entry>
   <f:entry title="">
     <div align="right">

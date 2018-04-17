@@ -30,7 +30,7 @@ public class JiraSite2Test {
     @Test
     public void createSessionWithProvidedCredentials() {
         JiraSite site = new JiraSite(nonExistentUrl, null,
-                ANY_USER, ANY_PASSWORD,
+                (String)null,
                 false, false,
                 null, false, null,
                 null, true);
