@@ -1,5 +1,9 @@
 package hudson.plugins.jira;
 
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,7 +34,7 @@ public class JiraSite2Test {
     @Test
     public void createSessionWithProvidedCredentials() {
         JiraSite site = new JiraSite(nonExistentUrl, null,
-                (String)null,
+                new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, null, null, ANY_USER, ANY_PASSWORD),
                 false, false,
                 null, false, null,
                 null, true);
@@ -40,9 +44,9 @@ public class JiraSite2Test {
     }
 
     @Test
-    public void createSessionReturnsNullIfUsernameIsNull() {
+    public void createSessionReturnsNullIfCredentialsIsNull() {
         JiraSite site = new JiraSite(nonExistentUrl, null,
-                null, ANY_PASSWORD,
+                (StandardUsernamePasswordCredentials)null,
                 false, false,
                 null, false, null,
                 null, true);
