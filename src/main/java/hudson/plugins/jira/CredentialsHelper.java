@@ -1,11 +1,13 @@
 package hudson.plugins.jira;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -28,7 +30,7 @@ public class CredentialsHelper {
 	private static final Logger LOGGER = Logger.getLogger(CredentialsHelper.class.getName());
 
 	@CheckForNull
-	public static StandardUsernamePasswordCredentials lookupSystemCredentials(@CheckForNull String credentialsId, String url) {
+	public static StandardUsernamePasswordCredentials lookupSystemCredentials(@CheckForNull String credentialsId, @CheckForNull URL url) {
 		if (credentialsId == null) {
 			return null;
 		}
@@ -37,13 +39,13 @@ public class CredentialsHelper {
 						StandardUsernamePasswordCredentials.class,
 						Jenkins.getInstance(),
 						ACL.SYSTEM,
-						URIRequirementBuilder.fromUri(url).build()
+						URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build()
 				),
 				CredentialsMatchers.withId(credentialsId)
 		);
 	}
 
-	public static StandardUsernamePasswordCredentials migrateCredentials(String username, String password, String url) {
+	public static StandardUsernamePasswordCredentials migrateCredentials(@Nonnull String username, String password, @CheckForNull URL url) {
 		StandardUsernamePasswordCredentials cred = null;
 
 		List<StandardUsernamePasswordCredentials> credentials = CredentialsMatchers.filter(
@@ -51,7 +53,7 @@ public class CredentialsHelper {
 						StandardUsernamePasswordCredentials.class,
 						Jenkins.getInstance(),
 						ACL.SYSTEM,
-						URIRequirementBuilder.fromUri(url).build()
+						URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build()
 				),
 				CredentialsMatchers.withUsername(username)
 		);

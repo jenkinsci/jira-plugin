@@ -209,14 +209,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @DataBoundConstructor
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, @CheckForNull String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
                     boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
-        this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url != null ? url.toExternalForm() : null), supportsWikiStyleComment, recordScmChanges, userPattern,
+        this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url), supportsWikiStyleComment, recordScmChanges, userPattern,
                 updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
     }
 
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
     @Deprecated
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
                     boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
-        this(url, alternativeUrl, CredentialsHelper.migrateCredentials(userName, password, url != null ? url.toExternalForm() : null), supportsWikiStyleComment, recordScmChanges, userPattern,
+        this(url, alternativeUrl, CredentialsHelper.migrateCredentials(userName, password, url), supportsWikiStyleComment, recordScmChanges, userPattern,
                 updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
     }
 
@@ -303,10 +304,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         // HACK, update final fields via reflection, see jls 17.5.3, https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.5.3
         if (StringUtils.isNotBlank(credentialsId)) {
-            StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url != null ? url.toExternalForm() : null);
+            StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
             setCredentials(credentials);
         } else if (userName != null && password != null) { // Migrate credentials
-            StandardUsernamePasswordCredentials credentials = CredentialsHelper.migrateCredentials(userName, password.getPlainText(), url != null ? url.toExternalForm() : null);
+            StandardUsernamePasswordCredentials credentials = CredentialsHelper.migrateCredentials(userName, password.getPlainText(), url);
             setCredentials(credentials);
             setCredentialsId(credentials.getId());
         }
