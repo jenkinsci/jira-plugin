@@ -15,12 +15,15 @@ import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
 
 /**
  * @author Zhenlei Huang
@@ -88,5 +91,25 @@ public class CredentialsHelperTest {
 		StandardUsernamePasswordCredentials cred = CredentialsHelper.migrateCredentials("username", "password", new URL("http://example.org"));
 
 		assertEquals(c, cred);
+	}
+
+	@Test
+	@WithoutJenkins
+	public void testSetCredentialsId() {
+		JiraSite site = new JiraSite(null, null, (StandardUsernamePasswordCredentials)null, false, false, null, false, null, null, false);
+		if (site.credentialsId == null) { // HACK, disable compiler reorder
+			CredentialsHelper.setCredentialsId(site, "test-credentials-id");
+		}
+		assertEquals("test-credentials-id", site.credentialsId);
+	}
+
+	@Test
+	@WithoutJenkins
+	public void testSetCredentials() {
+		JiraSite site = new JiraSite(null, null, (StandardUsernamePasswordCredentials)null, false, false, null, false, null, null, false);
+		if (site.credentials == null) { // HACK, disable compiler reorder
+			CredentialsHelper.setCredentials(site, mock(StandardUsernamePasswordCredentials.class));
+		}
+		assertNotNull(site.credentials);
 	}
 }

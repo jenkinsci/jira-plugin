@@ -303,35 +303,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         jiraSession = null;
 
         // HACK, update final fields via reflection, see jls 17.5.3, https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.5.3
-        if (StringUtils.isNotBlank(credentialsId)) {
+        if (credentialsId != null) {
             StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
-            setCredentials(credentials);
+            if (credentials != null) {
+                CredentialsHelper.setCredentials(this, credentials);
+            } else { // no matching credentials found, set credentialsId to null
+                CredentialsHelper.setCredentialsId(this, null);
+            }
         } else if (userName != null && password != null) { // Migrate credentials
             StandardUsernamePasswordCredentials credentials = CredentialsHelper.migrateCredentials(userName, password.getPlainText(), url);
-            setCredentials(credentials);
-            setCredentialsId(credentials.getId());
+            CredentialsHelper.setCredentials(this, credentials);
+            CredentialsHelper.setCredentialsId(this, credentials.getId());
         }
         return this;
-    }
-
-    private void setCredentialsId(String credentialsId) {
-        try {
-            Field f = this.getClass().getDeclaredField("credentialsId");
-            f.setAccessible(true);
-            f.set(this, credentialsId);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private void setCredentials(StandardUsernamePasswordCredentials credentials) {
-        try {
-            Field f = this.getClass().getDeclaredField("credentials");
-            f.setAccessible(true);
-            f.set(this, credentials);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     private static Cache<String, Optional<Issue>> makeIssueCache() {

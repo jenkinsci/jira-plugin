@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
@@ -46,8 +47,6 @@ public class CredentialsHelper {
 	}
 
 	public static StandardUsernamePasswordCredentials migrateCredentials(@Nonnull String username, String password, @CheckForNull URL url) {
-		StandardUsernamePasswordCredentials cred = null;
-
 		List<StandardUsernamePasswordCredentials> credentials = CredentialsMatchers.filter(
 				CredentialsProvider.lookupCredentials(
 						StandardUsernamePasswordCredentials.class,
@@ -59,28 +58,46 @@ public class CredentialsHelper {
 		);
 		for (StandardUsernamePasswordCredentials c : credentials) {
 			if (StringUtils.equals(password, Secret.toString(c.getPassword()))) {
-				cred = c;
-				break; // found
+				return c; // found
 			}
 		}
-		if (cred == null) {
-			// Create new credentials with the principal and secret if we couldn't find any existing credentials
-			StandardUsernamePasswordCredentials newCredentials = new UsernamePasswordCredentialsImpl(
-					CredentialsScope.SYSTEM,
-					null,
-					"Migrated by JIRA Plugin",
-					username,
-					password
-			);
-			SystemCredentialsProvider.getInstance().getCredentials().add(newCredentials);
-			try {
-				SystemCredentialsProvider.getInstance().save();
-				LOGGER.log(Level.INFO, "Migrated credentials");
-			} catch (IOException e) {
-				LOGGER.log(Level.WARNING, "Unable to store migrated credentials", e);
-			}
-			cred = newCredentials;
+
+		// Create new credentials with the principal and secret if we couldn't find any existing credentials
+		StandardUsernamePasswordCredentials newCredentials = new UsernamePasswordCredentialsImpl(
+				CredentialsScope.SYSTEM,
+				null,
+				"Migrated by JIRA Plugin",
+				username,
+				password
+		);
+		SystemCredentialsProvider.getInstance().getCredentials().add(newCredentials);
+		try {
+			SystemCredentialsProvider.getInstance().save();
+			LOGGER.log(Level.INFO, "Migrated credentials");
+		} catch (IOException e) {
+			LOGGER.log(Level.WARNING, "Unable to store migrated credentials", e);
 		}
-		return cred;
+
+		return newCredentials;
+	}
+
+	public static void setCredentialsId(JiraSite site, String credentialsId) {
+		try {
+			Field f = site.getClass().getDeclaredField("credentialsId");
+			f.setAccessible(true);
+			f.set(site, credentialsId);
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			throw new IllegalStateException(e);
+		}
+	}
+
+	public static void setCredentials(JiraSite site, StandardUsernamePasswordCredentials credentials) {
+		try {
+			Field f = site.getClass().getDeclaredField("credentials");
+			f.setAccessible(true);
+			f.set(site, credentials);
+		} catch (NoSuchFieldException | IllegalAccessException e) {
+			throw new IllegalStateException(e);
+		}
 	}
 }
