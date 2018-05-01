@@ -119,16 +119,6 @@ public final class ApacheAsyncHttpClient<C> extends AbstractHttpClient implement
                 options);
     }
 
-    public ApacheAsyncHttpClient(String applicationName)
-    {
-        this(applicationName, new HttpClientOptions());
-    }
-
-    public ApacheAsyncHttpClient(String applicationName, final HttpClientOptions options)
-    {
-        this(Suppliers.ofInstance(applicationName), Functions.constant((Void) null), new NoOpThreadLocalContextManager<C>(), options);
-    }
-
     public ApacheAsyncHttpClient(final Supplier<String> applicationName,
             final Function<Object, Void> eventConsumer,
             final ThreadLocalContextManager<C> threadLocalContextManager,
