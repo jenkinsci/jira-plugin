@@ -63,5 +63,5 @@ To resolve some binary compatiblity issues [JENKINS-48357](https://issues.jenkin
 the sources from the artifact [com.atlassian.httpclient:atlassian-httpclient-plugin:0.23](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/)
 has been imported in the project to have control over http(s) protocol transport layer. 
 The downloaded sources didn't have any license headers but based on the [pom](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/atlassian-httpclient-plugin-0.23.0.pom)
-sources are Apache License.   
+sources are Apache License (see pom in src/main/resources/atlassian-httpclient-plugin-0.23.0.pom)   
 
