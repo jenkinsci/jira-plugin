@@ -44,7 +44,7 @@ public class ProvidedProxyConfig extends ProxyConfig
             Host h = proxyHostMap.get(s);
             this.proxyHostMap.put(s.schemeName(), new HttpHost(h.getHost(), h.getPort()));
         }
-        this.nonProxyHosts = new HashMap<String, List<String>>(nonProxyHosts.size());
+        this.nonProxyHosts = new HashMap<>(nonProxyHosts.size());
         for (Scheme s: nonProxyHosts.keySet())
         {
             List<String> nonProxyHostList = nonProxyHosts.get(s);
