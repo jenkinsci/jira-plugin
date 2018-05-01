@@ -4,21 +4,21 @@ import com.atlassian.event.api.EventPublisher;
 import com.atlassian.fugue.Effect;
 import com.atlassian.httpclient.apache.httpcomponents.proxy.ProxyConfigFactory;
 import com.atlassian.httpclient.apache.httpcomponents.proxy.ProxyCredentialsProvider;
+import com.atlassian.httpclient.api.DefaultResponseTransformation;
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.httpclient.api.HttpStatus;
 import com.atlassian.httpclient.api.Request;
 import com.atlassian.httpclient.api.Response;
 import com.atlassian.httpclient.api.ResponsePromise;
 import com.atlassian.httpclient.api.ResponsePromises;
+import com.atlassian.httpclient.api.ResponseTransformation;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
-import com.atlassian.httpclient.base.AbstractHttpClient;
 import com.atlassian.httpclient.base.event.HttpRequestCompletedEvent;
 import com.atlassian.httpclient.base.event.HttpRequestFailedEvent;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
 import com.atlassian.util.concurrent.ThreadFactories;
 import com.google.common.base.Function;
-import com.google.common.base.Functions;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
@@ -63,7 +63,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 import java.io.IOException;
+import java.net.URI;
 import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -73,16 +78,12 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
 
 import static com.atlassian.util.concurrent.Promises.rejected;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
-public final class ApacheAsyncHttpClient<C> extends AbstractHttpClient implements HttpClient, DisposableBean
+public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBean
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -529,5 +530,44 @@ public final class ApacheAsyncHttpClient<C> extends AbstractHttpClient implement
             return null;
         }
         return s.split(" *, *");
+    }
+
+    @Override
+    public Request.Builder newRequest()
+    {
+        return DefaultRequest.builder(this);
+    }
+
+    @Override
+    public Request.Builder newRequest(URI uri)
+    {
+        return DefaultRequest.builder(this).setUri(uri);
+    }
+
+    @Override
+    public Request.Builder newRequest(URI uri, String contentType, String entity)
+    {
+        return DefaultRequest.builder(this)
+            .setContentType(contentType)
+            .setEntity(entity)
+            .setUri(uri);
+    }
+
+    @Override
+    public Request.Builder newRequest(String uri)
+    {
+        return newRequest(URI.create(uri));
+    }
+
+    @Override
+    public Request.Builder newRequest(String uri, String contentType, String entity)
+    {
+        return newRequest(URI.create(uri), contentType, entity);
+    }
+
+    @Override
+    public <A> ResponseTransformation.Builder<A> transformation()
+    {
+        return DefaultResponseTransformation.builder();
     }
 }
