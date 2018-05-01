@@ -73,7 +73,7 @@ public class CredentialsHelper {
 		SystemCredentialsProvider.getInstance().getCredentials().add(newCredentials);
 		try {
 			SystemCredentialsProvider.getInstance().save();
-			LOGGER.log(Level.INFO, "Migrated credentials");
+			LOGGER.log(Level.INFO, "Provided username and password were successfully migrated and stored as {0}", newCredentials.getId());
 		} catch (IOException e) {
 			LOGGER.log(Level.WARNING, "Unable to store migrated credentials", e);
 		}
