@@ -55,6 +55,37 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>acceptance-tests</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.jenkins-ci</groupId>
+          <artifactId>acceptance-test-harness</artifactId>
+          <version>1.59</version>
+          <scope>test</scope>
+          <exclusions>
+            <exclusion>
+              <groupId>org.codehaus.groovy</groupId>
+              <artifactId>*</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+      </dependencies>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <environmentVariables>
+                <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
+                <LOCAL_SNAPSHOTS>true</LOCAL_SNAPSHOTS>
+                <BROWSER>phantomjs</BROWSER><!-- TODO change to your browser -->
+              </environmentVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <scm>
@@ -228,7 +259,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <version>4.5.3-2.0</version>
+      <version>4.5.5-2.0-SNAPSHOT</version><!-- TODO Bump version to fix JENKINS-48357 once https://github.com/jenkinsci/apache-httpcomponents-client-4-api-plugin/pull/6 is merged and released -->
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
