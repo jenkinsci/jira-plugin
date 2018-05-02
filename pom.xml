@@ -132,6 +132,7 @@
             </ignores>
             <excludes>
               <exclude>hudson/plugins/jira/Messages*.class</exclude>
+              <exclude>com/atlassian/httpclient/**/*.class</exclude>
             </excludes>
           </instrumentation>
         </configuration>
@@ -184,7 +185,7 @@
   		<groupId>com.googlecode.lambdaj</groupId>
   		<artifactId>lambdaj</artifactId>
   		<version>2.3.3</version>
-	</dependency>
+	  </dependency>
     <dependency>
       <groupId>com.atlassian.jira</groupId>
       <artifactId>jira-rest-java-client-api</artifactId>
@@ -217,19 +218,23 @@
           <groupId>org.apache.httpcomponents</groupId>
           <artifactId>httpmime</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.atlassian.httpclient</groupId>
+          <artifactId>atlassian-httpclient-plugin</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>com.atlassian.fugue</groupId>
       <artifactId>fugue</artifactId>
       <version>${fugue.version}</version>
-      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <version>4.5.3-2.0</version>
+      <version>4.5.5-2.0</version>
     </dependency>
+
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
@@ -372,7 +377,7 @@
 
 
   <repositories>
-   <!-- <repository>
+   <repository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
       <releases>
@@ -381,7 +386,7 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-    </repository>-->
+    </repository>
     <repository>
       <id>atlassian-public</id>
       <url>https://packages.atlassian.com/maven/repository/public</url>

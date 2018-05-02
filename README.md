@@ -57,3 +57,11 @@ Before submitting your change make sure that:
 There have been many developers involved in the git plugin and there are many, many users who depend on the git-plugin.  
 Tests help us assure that we're delivering a reliable plugin, and that we've communicated our intent to other developers in a way that they can detect when they run tests.
 
+### Atlassian sources import
+
+To resolve some binary compatiblity issues [JENKINS-48357](https://issues.jenkins-ci.org/browse/JENKINS-48357), 
+the sources from the artifact [com.atlassian.httpclient:atlassian-httpclient-plugin:0.23](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/)
+has been imported in the project to have control over http(s) protocol transport layer. 
+The downloaded sources didn't have any license headers but based on the [pom](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/atlassian-httpclient-plugin-0.23.0.pom)
+sources are Apache License (see pom in src/main/resources/atlassian-httpclient-plugin-0.23.0.pom)   
+
