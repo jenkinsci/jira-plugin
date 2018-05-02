@@ -376,7 +376,7 @@
 
 
   <repositories>
-   <!-- <repository>
+   <repository>
       <id>repo.jenkins-ci.org</id>
       <url>http://repo.jenkins-ci.org/public/</url>
       <releases>
@@ -385,7 +385,7 @@
       <snapshots>
         <enabled>false</enabled>
       </snapshots>
-    </repository>-->
+    </repository>
     <repository>
       <id>atlassian-public</id>
       <url>https://packages.atlassian.com/maven/repository/public</url>
