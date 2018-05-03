@@ -22,11 +22,17 @@ import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.base.Throwables;
+import hudson.ProxyConfiguration;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpDelete;
@@ -42,6 +48,7 @@ import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.ProxyAuthenticationStrategy;
 import org.apache.http.impl.conn.DefaultSchemePortResolver;
 import org.apache.http.impl.conn.SystemDefaultDnsResolver;
@@ -192,6 +199,24 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                     .setUserAgent(getUserAgent(options))
                     .setDefaultRequestConfig(requestConfig);
 
+            ProxyConfiguration proxyConfiguration = Jenkins.getInstance().proxy;
+            if(proxyConfiguration!=null)
+            {
+
+                clientBuilder.setProxy( new HttpHost( proxyConfiguration.name, proxyConfiguration.port ) );
+                if(StringUtils.isNotBlank( proxyConfiguration.getUserName()))
+                {
+                    clientBuilder.setProxyAuthenticationStrategy( ProxyAuthenticationStrategy.INSTANCE );
+                    CredentialsProvider credsProvider = new BasicCredentialsProvider();
+                    credsProvider.setCredentials( new AuthScope(  proxyConfiguration.name,  proxyConfiguration.port),
+                                                  new UsernamePasswordCredentials(proxyConfiguration.getUserName(),
+                                                                                  proxyConfiguration.getPassword()) );
+                    clientBuilder.setDefaultCredentialsProvider( credsProvider );
+                }
+            }
+
+
+            /*
             ProxyConfigFactory.getProxyHost(options).foreach(new Effect<HttpHost>()
             {
                 @Override
@@ -209,6 +234,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                     });
                 }
             });
+            */
 
             this.nonCachingHttpClient = clientBuilder.build();
             this.callbackExecutor = options.getCallbackExecutor();
