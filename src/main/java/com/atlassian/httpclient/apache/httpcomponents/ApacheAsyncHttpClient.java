@@ -541,7 +541,10 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
         @Override
         public Void apply(Object event)
         {
-            eventPublisher.publish(event);
+            if (eventPublisher != null)
+            {
+                eventPublisher.publish( event );
+            }
             return null;
         }
     }
