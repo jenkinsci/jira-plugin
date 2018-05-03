@@ -132,7 +132,7 @@
             </ignores>
             <excludes>
               <exclude>hudson/plugins/jira/Messages*.class</exclude>
-              <exclude>com/atlassian/httpclient/**/*.class</exclude>
+              <!--exclude>com/atlassian/httpclient/**/*.class</exclude-->
             </excludes>
           </instrumentation>
         </configuration>
