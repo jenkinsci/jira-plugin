@@ -1,9 +1,6 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
 import com.atlassian.event.api.EventPublisher;
-import com.atlassian.fugue.Effect;
-import com.atlassian.httpclient.apache.httpcomponents.proxy.ProxyConfigFactory;
-import com.atlassian.httpclient.apache.httpcomponents.proxy.ProxyCredentialsProvider;
 import com.atlassian.httpclient.api.DefaultResponseTransformation;
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.httpclient.api.HttpStatus;
