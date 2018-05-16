@@ -117,25 +117,6 @@
         <artifactId>coveralls-maven-plugin</artifactId>
         <version>4.3.0</version>
       </plugin>
-      <!--plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>${cobertura.version}</version>
-        <configuration>
-          <check />
-          <format>xml</format>
-          <maxmem>256m</maxmem>
-          <aggregate>true</aggregate>
-          <instrumentation>
-            <ignores>
-              <ignore>hudson.plugins.jira.Messages</ignore>
-            </ignores>
-            <excludes>
-              <exclude>hudson/plugins/jira/Messages*.class</exclude>
-            </excludes>
-          </instrumentation>
-        </configuration>
-      </plugin-->
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
