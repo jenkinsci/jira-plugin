@@ -81,7 +81,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 
         List<Issue> issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
 
-        List<Result> issueValues = new ArrayList<Result>();
+        List<Result> issueValues = new ArrayList<>();
 
         for (Issue issue : fixNull(issues)) {
             issueValues.add(new Result(issue));

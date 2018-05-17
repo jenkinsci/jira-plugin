@@ -6,6 +6,7 @@ import com.google.common.collect.Lists;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -57,7 +58,7 @@ public class JiraSession {
         if (projectKeys == null) {
             LOGGER.fine("Fetching remote project key list from " + site.getName());
             final List<String> keys = service.getProjectsKeys();
-            projectKeys = new HashSet<String>(keys.size());
+            projectKeys = new HashSet<>(keys.size());
             projectKeys.addAll(keys);
             LOGGER.fine("Project list=" + projectKeys);
         }
@@ -263,7 +264,7 @@ public class JiraSession {
         LOGGER.fine("Found issues: " + issues.size());
 
         for (Issue issue : issues) {
-            Set<Version> newVersions = new HashSet<Version>();
+            Set<Version> newVersions = new HashSet<>();
             newVersions.add(newVersion);
 
             if(StringUtils.startsWith(fromVersion, "/") && StringUtils.endsWith(fromVersion, "/")) {
@@ -377,17 +378,17 @@ public class JiraSession {
         return status;
     }
 
-    private HashMap<Long, String> knownStatuses = null;
+    private Map<Long, String> knownStatuses = null;
 
     /**
      * Returns all known statuses.
      *
      * @return
      */
-    private HashMap<Long, String> getKnownStatuses() {
+    private Map<Long, String> getKnownStatuses() {
         if (knownStatuses == null) {
             List<Status> statuses = service.getStatuses();
-            knownStatuses = new HashMap<Long, String>(statuses.size());
+            knownStatuses = new HashMap<>(statuses.size());
             for (Status status : statuses) {
                 knownStatuses.put(status.getId(), status.getName());
             }

@@ -44,7 +44,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     @Override
     public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull final JiraSite site,
             @Nonnull final TaskListener listener) {
-        HashSet<String> issuesIds = new LinkedHashSet<String>();
+        HashSet<String> issuesIds = new LinkedHashSet<>();
         addIssuesRecursive(run, site, listener, issuesIds);
         return issuesIds;
     }

@@ -87,7 +87,7 @@ public class SearchIssuesStep extends AbstractStepImpl {
                 throw new AbortException("Cannot open jira session - error occured");
             }
 
-            List<String> resultList = new ArrayList<String>();
+            List<String> resultList = new ArrayList<>();
             List<Issue> issuesFromJqlSearch = session.getIssuesFromJqlSearch(step.jql);
             for (Issue issue : issuesFromJqlSearch)
                 resultList.add(issue.getKey());

@@ -70,10 +70,10 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
         List<Version> versions = session.getVersions(projectKey);
-        SortedSet<Version> orderedVersions = new TreeSet<Version>(new VersionComparator());
+        SortedSet<Version> orderedVersions = new TreeSet<>(new VersionComparator());
         orderedVersions.addAll(versions);
 
-        List<Result> projectVersions = new ArrayList<Result>();
+        List<Result> projectVersions = new ArrayList<>();
 
         for (Version version : orderedVersions) {
             if (match(version)) projectVersions.add(new Result(version));

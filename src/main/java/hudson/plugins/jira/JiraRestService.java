@@ -163,7 +163,7 @@ public class JiraRestService {
         } catch (Exception e) {
             LOGGER.log(WARNING, "jira rest client get project keys error. cause: " + e.getMessage(), e);
         }
-        final List<String> keys = new ArrayList<String>();
+        final List<String> keys = new ArrayList<>();
         for (BasicProject project : projects) {
             keys.add(project.getKey());
         }
@@ -202,7 +202,7 @@ public class JiraRestService {
             LOGGER.log(WARNING, "jira rest client get versions error. cause: " + e.getMessage(), e);
         }
 
-        final List<Version> versions = new ArrayList<Version>();
+        final List<Version> versions = new ArrayList<>();
         for (Map<String, Object> decodedVersion : decoded) {
             final DateTime releaseDate = decodedVersion.containsKey("releaseDate") ? DATE_TIME_FORMATTER.parseDateTime((String) decodedVersion.get("releaseDate")) : null;
             final Version version = new Version(URI.create((String) decodedVersion.get("self")), Long.parseLong((String) decodedVersion.get("id")),
@@ -363,7 +363,7 @@ public class JiraRestService {
                 new TypeReference<List<Map<String, Object>>>() {
             });
 
-            final List<Component> components = new ArrayList<Component>();
+            final List<Component> components = new ArrayList<>();
             for (final Map<String, Object> decodeComponent : decoded) {
                 BasicUser lead = null;
                 if (decodeComponent.containsKey("lead")) {

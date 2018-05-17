@@ -48,7 +48,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
 
             List<Issue> issues = session.getIssuesFromJqlSearch(jql);
 
-            List<String> issueKeys = new ArrayList<String>();
+            List<String> issueKeys = new ArrayList<>();
 
             for (Issue issue : fixNull(issues)) {
                 issueKeys.add(issue.getKey());

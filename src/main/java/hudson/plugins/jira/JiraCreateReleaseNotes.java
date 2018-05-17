@@ -146,7 +146,7 @@ public class JiraCreateReleaseNotes extends SimpleBuildWrapper {
                 ((BuildListener)listener).finished(Result.FAILURE);
         }
 
-        final Map<String, String> envMap = new HashMap<String, String>();
+        final Map<String, String> envMap = new HashMap<>();
         envMap.put(jiraEnvironmentVariable, releaseNotes);
         context.getEnv().putAll(envMap);
     }

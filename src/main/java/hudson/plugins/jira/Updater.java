@@ -50,14 +50,14 @@ class Updater {
     public static boolean debug = false;
 
     public Updater(SCM scm) {
-        this(scm, new ArrayList<String>());
+        this(scm, new ArrayList<>());
     }
 
     public Updater(SCM scm, List<String> labels) {
         super();
         this.scm = scm;
         if (labels == null) {
-            this.labels = new ArrayList<String>();
+            this.labels = new ArrayList<>();
         } else {
             this.labels = labels;
         }

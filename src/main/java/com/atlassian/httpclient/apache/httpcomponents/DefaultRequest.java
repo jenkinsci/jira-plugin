@@ -127,7 +127,7 @@ public class DefaultRequest extends DefaultMessage implements Request
         public DefaultRequestBuilder(final HttpClient httpClient)
         {
             this.httpClient = httpClient;
-            this.attributes = new HashMap<String, String>();
+            this.attributes = new HashMap<>();
             commonBuilder = new CommonBuilder<DefaultRequest>();
             setAccept("*/*");
             contentLength = Option.none();

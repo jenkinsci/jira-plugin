@@ -536,7 +536,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return Collections.emptySet();
         }
 
-        Set<JiraVersion> versionsSet = new HashSet<JiraVersion>(versions.size());
+        Set<JiraVersion> versionsSet = new HashSet<>(versions.size());
 
         for (Version version : versions) {
             versionsSet.add(new JiraVersion(version));
@@ -579,7 +579,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return "";
         }
 
-        Map<String, Set<String>> releaseNotes = new HashMap<String, Set<String>>();
+        Map<String, Set<String>> releaseNotes = new HashMap<>();
 
         for (Issue issue : issues) {
             String key = issue.getKey();
@@ -593,7 +593,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
             Set<String> issueSet;
             if (!releaseNotes.containsKey(type)) {
-                issueSet = new HashSet<String>();
+                issueSet = new HashSet<>();
                 releaseNotes.put(type, issueSet);
             } else {
                 issueSet = releaseNotes.get(type);
@@ -637,7 +637,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return Collections.emptySet();
         }
 
-        Set<JiraIssue> issueSet = new HashSet<JiraIssue>(issues.size());
+        Set<JiraIssue> issueSet = new HashSet<>(issues.size());
 
         for (Issue issue : issues) {
             issueSet.add(new JiraIssue(issue));
