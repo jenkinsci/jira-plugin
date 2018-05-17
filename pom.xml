@@ -24,7 +24,7 @@
     <workflow.version>2.0</workflow.version>
 
     <!-- jenkins -->
-    <jenkins.version>2.60.1</jenkins.version>
+    <jenkins.version>2.60.3</jenkins.version>
 
     <!-- security -->
     <owasp.version>1.3.1</owasp.version>
@@ -251,17 +251,13 @@
       <artifactId>mailer</artifactId>
       <version>1.20</version>
     </dependency>
-    <!-- TODO: Use Jackson 2 API Plugin once the target baseline is above 2.60 -->
+
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-      <version>${jackson.version}</version>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>jackson2-api</artifactId>
+      <version>2.8.11.2</version>
     </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
+
 	<dependency>
 	  <artifactId>workflow-step-api</artifactId>
 	  <groupId>org.jenkins-ci.plugins.workflow</groupId>
