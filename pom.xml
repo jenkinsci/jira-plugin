@@ -34,7 +34,6 @@
     <groovy.version>2.4.5</groovy.version>
     <cobertura.version>2.7</cobertura.version>
     <surefire.version>2.20</surefire.version>
-    <jackson.version>2.8.10</jackson.version>
   </properties>
 
   <profiles>
