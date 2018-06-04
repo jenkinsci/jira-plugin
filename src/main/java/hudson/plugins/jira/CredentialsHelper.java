@@ -1,7 +1,6 @@
 package hudson.plugins.jira;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.List;
 import java.util.logging.Level;
@@ -81,23 +80,4 @@ public class CredentialsHelper {
 		return newCredentials;
 	}
 
-	public static void setCredentialsId(JiraSite site, String credentialsId) {
-		try {
-			Field f = site.getClass().getDeclaredField("credentialsId");
-			f.setAccessible(true);
-			f.set(site, credentialsId);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
-	public static void setCredentials(JiraSite site, StandardUsernamePasswordCredentials credentials) {
-		try {
-			Field f = site.getClass().getDeclaredField("credentials");
-			f.setAccessible(true);
-			f.set(site, credentials);
-		} catch (NoSuchFieldException | IllegalAccessException e) {
-			throw new IllegalStateException(e);
-		}
-	}
 }

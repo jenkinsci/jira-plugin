@@ -30,7 +30,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -40,7 +39,6 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -298,24 +296,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
     
     protected Object readResolve() {
-        projectUpdateLock = new ReentrantLock();
-        issueCache = makeIssueCache();
-        jiraSession = null;
-
-        // HACK, update final fields via reflection, see jls 17.5.3, https://docs.oracle.com/javase/specs/jls/se7/html/jls-17.html#jls-17.5.3
-        if (credentialsId != null) {
-            StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
-            if (credentials != null) {
-                CredentialsHelper.setCredentials(this, credentials);
-            } else { // no matching credentials found, set credentialsId to null
-                CredentialsHelper.setCredentialsId(this, null);
-            }
-        } else if (userName != null && password != null) { // Migrate credentials
-            StandardUsernamePasswordCredentials credentials = CredentialsHelper.migrateCredentials(userName, password.getPlainText(), url);
-            CredentialsHelper.setCredentials(this, credentials);
-            CredentialsHelper.setCredentialsId(this, credentials.getId());
+        if (credentialsId == null && userName != null && password != null) { // Migrate credentials
+            return new JiraSite(url, alternativeUrl, userName, password.getPlainText(), supportsWikiStyleComment, recordScmChanges, userPattern,
+                    updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
         }
-        return this;
+        return new JiraSite(url, alternativeUrl, credentialsId, supportsWikiStyleComment, recordScmChanges, userPattern,
+                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
     }
 
     private static Cache<String, Optional<Issue>> makeIssueCache() {
