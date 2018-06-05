@@ -746,7 +746,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context, @QueryParameter String url) {
             AccessControlled _context = (context instanceof AccessControlled ? (AccessControlled) context : Jenkins.getInstance());
-            if (_context == null || !_context.hasPermission(Computer.CONFIGURE)) {
+            if (_context == null || !_context.hasPermission(Jenkins.ADMINISTER)) {
                 return new StandardUsernameListBoxModel();
             }
 
