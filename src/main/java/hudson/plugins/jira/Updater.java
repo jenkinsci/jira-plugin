@@ -137,7 +137,7 @@ class Updater {
 
     /**
      * Submits comments for the given issues.
-     * Remvoes from <code>issues</code> issues which have been successfully updated or are invalid
+     * Removes from <code>issues</code> issues which have been successfully updated or are invalid
      *
      * @param build
      * @param logger
