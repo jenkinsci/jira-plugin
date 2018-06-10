@@ -203,7 +203,7 @@ public class DefaultIssueSelectorTest {
      * These patterns are used e.g. by the maven release plugin.
      */
     @Test
-    public void testDefaultPattertNotToMatchMavenRelease() {
+    public void testDefaultPatternNotToMatchMavenRelease() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
