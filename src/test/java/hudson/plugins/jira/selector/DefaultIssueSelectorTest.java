@@ -66,7 +66,7 @@ public class DefaultIssueSelectorTest {
         
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed JI123-4711"),
                 new MockEntry("Fixed foo_bar-4710"), new MockEntry("Fixed FoO_bAr-4711"),
-                new MockEntry("Fixed someting.\nJFoO_bAr_MULTI-4718"), new MockEntry("TR-123: foo"),
+                new MockEntry("Fixed something.\nJFoO_bAr_MULTI-4718"), new MockEntry("TR-123: foo"),
                 new MockEntry("[ABC-42] hallo"), new MockEntry("#123: this one must not match"),
                 new MockEntry("ABC-: this one must also not match"),
                 new MockEntry("ABC-: \n\nABC-127:\nthis one should match"),
