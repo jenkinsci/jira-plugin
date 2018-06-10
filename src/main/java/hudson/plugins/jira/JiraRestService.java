@@ -389,13 +389,13 @@ public class JiraRestService {
 
     private Request buildGetRequest(URI uri) {
         return Request.Get(uri)
-                .connectTimeout(timeoutInMiliseconds())
-                .socketTimeout(timeoutInMiliseconds())
+                .connectTimeout(timeoutInMilliseconds())
+                .socketTimeout(timeoutInMilliseconds())
                 .addHeader("Authorization", authHeader)
                 .addHeader("Content-Type", "application/json");
     }
 
-	protected int timeoutInMiliseconds() {
+	protected int timeoutInMilliseconds() {
 		return (int) TimeUnit.SECONDS.toMillis(timeout);
 	}
 
