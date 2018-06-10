@@ -42,7 +42,7 @@ public class RunScmChangeExtractor {
      * until JENKINS-24141
      * 
      * @param run
-     *            - run that imlement some type with GET_CHANGESET_METHOD
+     *            - run that implements some type with GET_CHANGESET_METHOD
      * @return collection of scm ChangeLogSet entries
      */
     @SuppressWarnings("unchecked")
