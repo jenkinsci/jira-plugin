@@ -440,7 +440,7 @@ public class JiraSession {
      * Returns all the components for the particular project
      *
      * @param projectKey
-     * @return An array of componets
+     * @return An array of components
      */
     public List<Component> getComponents(String projectKey) {
         return service.getComponents(projectKey);
