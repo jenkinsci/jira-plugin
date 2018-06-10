@@ -84,7 +84,7 @@ public class SearchIssuesStep extends AbstractStepImpl {
             } catch (IOException e) {
                 listener.getLogger().println(Messages.FailedToConnect());
                 e.printStackTrace(listener.getLogger());
-                throw new AbortException("Cannot open jira session - error occured");
+                throw new AbortException("Cannot open jira session - error occurred");
             }
 
             List<String> resultList = new ArrayList<>();
