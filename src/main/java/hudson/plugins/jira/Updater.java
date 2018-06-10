@@ -189,7 +189,7 @@ class Updater {
                 logger.println(e.getLocalizedMessage());
             }
 
-            // if no exception is thrown during update, remove from the list as succesfully updated
+            // if no exception is thrown during update, remove from the list as successfully updated
             issues.remove(issue);
         }
 
