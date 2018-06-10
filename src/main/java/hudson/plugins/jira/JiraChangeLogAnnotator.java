@@ -92,7 +92,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                         url = alternativeUrl;
                     }
                 } catch (MalformedURLException e) {
-                    LOGGER.log(Level.WARNING, "Failed to construct alternative URL for Jira link. " + e.getMessage());
+                    LOGGER.log(Level.WARNING, "Failed to construct alternative URL for JIRA link. " + e.getMessage());
                     // This should not fail, since we already have an URL object. Exceptions would happen elsewhere.
                     throw new AssertionError(e);
                 }

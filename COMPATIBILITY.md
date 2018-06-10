@@ -121,7 +121,7 @@ Other builders will be supported in future (not supported yet).
 ##Current status:
 
 - [X] `JIRA Issue Parameter` supported
-- [X] `Jira Version Parameter` supported
+- [X] `JIRA Version Parameter` supported
 - [X] `JiraChangeLogAnnotator` supported
 - [X] `JiraIssueUpdater` supported
 - [X] `JiraIssueUpdateBuilder` supported

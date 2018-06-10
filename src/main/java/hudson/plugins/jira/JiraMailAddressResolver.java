@@ -19,7 +19,7 @@ public class JiraMailAddressResolver extends MailAddressResolver {
     private static final Logger LOGGER = Logger.getLogger(JiraMailAddressResolver.class.getName());
 
     /**
-     * Boolean to disable the Jira mail address resolver.
+     * Boolean to disable the JIRA mail address resolver.
      *
      * To disable set the System property "-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true"
      */

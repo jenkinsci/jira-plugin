@@ -1,15 +1,15 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-  <f:entry title="${%Target Jira Release}" field="jiraRelease">
+  <f:entry title="${%Target JIRA Release}" field="jiraRelease">
         <f:textbox/>
   </f:entry>
   <f:entry title="${%Add Target Release}" field="addRelease">
         <f:checkbox />
   </f:entry>
-  <f:entry title="${%Replace Jira Release}" field="jiraReplaceVersion">
+  <f:entry title="${%Replace JIRA Release}" field="jiraReplaceVersion">
         <f:textbox/>
   </f:entry>
-  <f:entry title="${%Jira Project Key}" field="jiraProjectKey">
+  <f:entry title="${%JIRA Project Key}" field="jiraProjectKey">
         <f:textbox/>
   </f:entry>
   <f:entry title="${%JQL Query}" field="jiraQuery">

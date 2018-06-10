@@ -80,7 +80,7 @@ public class JiraSession {
      * Adds new labels to the existing issue.
      * Old labels remains untouched.
      *
-     * @param issueId Jira issue ID like "MNG-1235".
+     * @param issueId JIRA issue ID like "MNG-1235".
      * @param labels New labels to add.
      */
     public void addLabels(String issueId, List<String> labels) {
@@ -105,7 +105,7 @@ public class JiraSession {
      * Adds new to or updates existing fields of the issue.
      * Can add or update custom fields.
      * 
-     * @param issueId Jira issue ID like "PRJ-123"
+     * @param issueId JIRA issue ID like "PRJ-123"
      * @param fields Fields to add or update
      */
     public void addFields(String issueId, List<JiraIssueField> fields) {
