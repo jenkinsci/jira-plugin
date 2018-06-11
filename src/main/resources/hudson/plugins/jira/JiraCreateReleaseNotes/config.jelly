@@ -3,10 +3,10 @@
   <f:entry title="${%Environment Variable}" field="jiraEnvironmentVariable">
         <f:textbox/>
   </f:entry>
-  <f:entry title="${%Jira Release}" field="jiraRelease">
+  <f:entry title="${%JIRA Release}" field="jiraRelease">
         <f:textbox/>
   </f:entry>
-  <f:entry title="${%Jira Project Key}" field="jiraProjectKey">
+  <f:entry title="${%JIRA Project Key}" field="jiraProjectKey">
         <f:textbox/>
   </f:entry>
   <f:entry title="${%Additional Issue Filter}" field="jiraFilter">

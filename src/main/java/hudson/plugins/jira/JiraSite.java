@@ -81,7 +81,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public final URL alternativeUrl;
 
     /**
-     * Jira requires HTTP Authentication for login
+     * JIRA requires HTTP Authentication for login
      */
     public final boolean useHTTPAuth;
 
@@ -297,7 +297,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             LOGGER.warning("convert URL to URI error: " + e.getMessage());
             throw new RuntimeException("failed to create JiraSession due to convert URI error");
         }
-        LOGGER.fine("creating Jira Session: " + uri);
+        LOGGER.fine("creating JIRA Session: " + uri);
 
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());

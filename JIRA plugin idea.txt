@@ -21,7 +21,7 @@ JIRA Wiki formatting rules:
   http://localhost:90/secure/WikiRendererHelpAction.jspa?section=texteffects
 
 JIRA Support for Workflow Actions
-  - you can have multiple separated worflows in you jira installation
+  - you can have multiple separated workflows in you jira installation
   	http://www.atlassian.com/software/jira/tour/workflow.jsp
   - issues has binding to one workflow
   - workflow steps has one or more transition actions to go to another workflow step

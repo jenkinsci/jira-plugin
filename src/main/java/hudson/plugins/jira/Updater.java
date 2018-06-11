@@ -137,7 +137,7 @@ class Updater {
 
     /**
      * Submits comments for the given issues.
-     * Remvoes from <code>issues</code> issues which have been successfully updated or are invalid
+     * Removes from <code>issues</code> issues which have been successfully updated or are invalid
      *
      * @param build
      * @param logger
@@ -189,7 +189,7 @@ class Updater {
                 logger.println(e.getLocalizedMessage());
             }
 
-            // if no exception is thrown during update, remove from the list as succesfully updated
+            // if no exception is thrown during update, remove from the list as successfully updated
             issues.remove(issue);
         }
 

@@ -21,7 +21,7 @@
   <f:entry title="${%Issue Pattern}" field="userPattern">
     <f:textbox />
   </f:entry>
-  <f:entry title="${%Update Relevant Jira Issues For All Build Results}" field="updateJiraIssueForAllStatus">
+  <f:entry title="${%Update Relevant JIRA Issues For All Build Results}" field="updateJiraIssueForAllStatus">
     <f:checkbox />
   </f:entry>
   <f:entry title="${%User Name}" field="userName">

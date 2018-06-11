@@ -59,7 +59,7 @@ Tests help us assure that we're delivering a reliable plugin, and that we've com
 
 ### Atlassian sources import
 
-To resolve some binary compatiblity issues [JENKINS-48357](https://issues.jenkins-ci.org/browse/JENKINS-48357), 
+To resolve some binary compatibility issues [JENKINS-48357](https://issues.jenkins-ci.org/browse/JENKINS-48357), 
 the sources from the artifact [com.atlassian.httpclient:atlassian-httpclient-plugin:0.23](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/)
 has been imported in the project to have control over http(s) protocol transport layer. 
 The downloaded sources didn't have any license headers but based on the [pom](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/atlassian-httpclient-plugin-0.23.0.pom)
