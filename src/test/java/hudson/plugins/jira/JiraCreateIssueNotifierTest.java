@@ -38,6 +38,7 @@ public class JiraCreateIssueNotifierTest {
     private static final String COMPONENT = "some, componentA";
     private static final String ASSIGNEE = "user.name";
     private static final String DESCRIPTION = "Some description";
+    private static final String FIX_VERSION = "some, fixVersion1";
 
     List<Component> jiraComponents = new ArrayList<Component>();
 
@@ -86,25 +87,25 @@ public class JiraCreateIssueNotifierTest {
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
 
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", ""));
         doReturn(site).when(notifier).getSiteForProject((AbstractProject) Mockito.any());
 
         Issue issue = mock(Issue.class);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
+                Mockito.anyList(), Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
 
         assertTrue(notifier.perform(currentBuild, launcher, buildListener));
     }
 
     @Test
     public void testPerformFailureFailure() throws Exception {
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT, FIX_VERSION));
         doReturn(site).when(notifier).getSiteForProject((AbstractProject) Mockito.any());
 
         Issue issue = mock(Issue.class);
         Status status = new Status(null, null, "1","Open",null);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
+                Mockito.anyList(), Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
 
@@ -134,7 +135,7 @@ public class JiraCreateIssueNotifierTest {
         Long priorityId = 0L;
         Integer actionIdOnSuccess = 5;
 
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", typeId, priorityId, actionIdOnSuccess));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", "", typeId, priorityId, actionIdOnSuccess));
 
         assertEquals(typeId, notifier.getTypeId());
         assertEquals(priorityId, notifier.getPriorityId());
@@ -145,7 +146,7 @@ public class JiraCreateIssueNotifierTest {
         Issue issue = mock(Issue.class);
         Status status = new Status(null, null, "1", "Open", null);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.eq(typeId), Mockito.isNull(Long.class))).thenReturn(issue);
+                Mockito.anyList(), Mockito.eq(typeId), Mockito.isNull(Long.class))).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 
@@ -169,14 +170,14 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     public void testPerformFailureSuccessIssueClosedWithComponents() throws Exception {
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", ""));
         doReturn(site).when(notifier).getSiteForProject((AbstractProject) Mockito.any());
 
         Issue issue = mock(Issue.class);
         Status status = new Status(null, null, JiraCreateIssueNotifier.finishedStatuses.Closed.toString() , null, null);
 
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
+                Mockito.anyList(), Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 

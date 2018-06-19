@@ -73,7 +73,7 @@ public class JiraRestService {
     private final String authHeader;
 
     private final String baseApiPath;
-    
+
     private final int timeout;
 
     @Deprecated
@@ -128,7 +128,7 @@ public class JiraRestService {
           LOGGER.log(WARNING, "jira rest client add comment error. cause: " + e.getMessage(), e);
       }
     }
-  
+
     public Issue getIssue(String issueKey) {
         try {
             return jiraRestClient.getIssueClient().getIssue(issueKey).get(timeout, TimeUnit.SECONDS);
@@ -241,16 +241,17 @@ public class JiraRestService {
 
     @Deprecated
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
-        return createIssue(projectKey, description, assignee, components, summary, BUG_ISSUE_TYPE_ID, null);
+        return createIssue(projectKey, description, assignee, components, summary, null, BUG_ISSUE_TYPE_ID, null);
     }
 
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
-                                  @Nonnull Long issueTypeId, @Nullable Long priorityId) {
+                                  Iterable<String> fixVersionsNames, @Nonnull Long issueTypeId, @Nullable Long priorityId) {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
                 .setIssueTypeId(issueTypeId)
-                .setSummary(summary);
+                .setSummary(summary)
+                .setFixVersionsNames(fixVersionsNames);
 
         if (priorityId != null) {
             builder.setPriorityId(priorityId);
@@ -280,7 +281,7 @@ public class JiraRestService {
             return null;
         }
     }
- 
+
     public void updateIssue(String issueKey, List<Version> fixVersions) {
         final IssueInput issueInput = new IssueInputBuilder().setFixVersions(fixVersions)
                                                              .build();
@@ -290,7 +291,7 @@ public class JiraRestService {
             LOGGER.log(WARNING, "jira rest client update issue error. cause: " + e.getMessage(), e);
         }
     }
-    
+
     public void setIssueLabels(String issueKey, List<String> labels) {
         final IssueInput issueInput = new IssueInputBuilder()
         		.setFieldValue(IssueFieldId.LABELS_FIELD.id, labels)
@@ -300,8 +301,8 @@ public class JiraRestService {
         } catch (Exception e) {
             LOGGER.log(WARNING, "jira rest client update labels error for issue "+issueKey, e);
         }
-    }    
-    
+    }
+
     public void setIssueFields(String issueKey, List<JiraIssueField> fields) {
         IssueInputBuilder builder = new IssueInputBuilder();
         for (JiraIssueField field : fields)
@@ -314,7 +315,7 @@ public class JiraRestService {
             LOGGER.log(WARNING, "jira rest client update fields error for issue " + issueKey, e);
         }
     }
-    
+
     public Issue progressWorkflowAction(String issueKey, Integer actionId) {
         final TransitionInput transitionInput = new TransitionInput(actionId);
 

@@ -12,6 +12,9 @@
     <f:entry title="${%Component Name}" field="component">
         <f:textbox/>
     </f:entry>
+    <f:entry title="${%Fix Version}" field="fixVersion">
+        <f:textbox/>
+    </f:entry>
     <f:entry title="${%Issue Priority}" field="priorityId">
         <f:select/>
     </f:entry>

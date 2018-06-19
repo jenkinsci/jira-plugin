@@ -100,11 +100,11 @@ public class JiraSession {
             service.setIssueLabels(issueId, newLabels);
         }
     }
-    
+
     /**
      * Adds new to or updates existing fields of the issue.
      * Can add or update custom fields.
-     * 
+     *
      * @param issueId JIRA issue ID like "PRJ-123"
      * @param fields Fields to add or update
      */
@@ -408,11 +408,11 @@ public class JiraSession {
      */
     @Deprecated
     public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
-        return createIssue(projectKey, description, assignee, components, summary, null, null);
+        return createIssue(projectKey, description, assignee, components, summary, null, null, null);
     }
 
-    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, @Nonnull Long issueTypeId, @Nullable Long priorityId) {
-        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
+    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, Iterable<String> fixVersionsNames, @Nonnull Long issueTypeId, @Nullable Long priorityId) {
+        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, fixVersionsNames, issueTypeId, priorityId);
         return service.getIssue(basicIssue.getKey());
     }
 

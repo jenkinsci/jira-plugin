@@ -48,6 +48,7 @@ public class JiraCreateIssueNotifier extends Notifier {
     private String testDescription;
     private String assignee;
     private String component;
+    private String fixVersion;
     private Long typeId;
     private Long priorityId;
     private Integer actionIdOnSuccess;
@@ -59,22 +60,23 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     @DataBoundConstructor
-    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component, Long typeId,
-                                   Long priorityId, Integer actionIdOnSuccess) {
+    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component,
+                                   String fixVersion, Long typeId, Long priorityId, Integer actionIdOnSuccess) {
         if (projectKey == null) throw new IllegalArgumentException("Project key cannot be null");
         this.projectKey = projectKey;
 
         this.testDescription = testDescription;
         this.assignee = assignee;
         this.component = component;
+        this.fixVersion = fixVersion;
         this.typeId = typeId;
         this.priorityId = priorityId;
         this.actionIdOnSuccess = actionIdOnSuccess;
     }
 
     @Deprecated
-    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component) {
-        this(projectKey, testDescription, assignee, component, null, null, null);
+    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component, String fixVersion) {
+        this(projectKey, testDescription, assignee, component, fixVersion, null, null, null);
     }
 
     public String getProjectKey() {
@@ -107,6 +109,14 @@ public class JiraCreateIssueNotifier extends Notifier {
 
     public void setComponent(String component) {
         this.component = component;
+    }
+
+    public String getFixVersion() {
+        return fixVersion;
+    }
+
+    public void setFixVersion(String fixVersion) {
+        this.fixVersion = fixVersion;
     }
 
     public Long getTypeId() {
@@ -186,6 +196,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                 getBuildDetailsString(vars)
         );
         Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
+        Iterable<String> fixVersionsNames = Splitter.on(",").trimResults().omitEmptyStrings().split(fixVersion);
 
         Long type = typeId;
         if (type == null || type == 0) { // zero is default / invalid selection
@@ -197,7 +208,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             priority = null; // remove invalid priority selection
         }
 
-        Issue issue = session.createIssue(projectKey, description, assignee, components, summary, type, priority);
+        Issue issue = session.createIssue(projectKey, description, assignee, components, summary, fixVersionsNames, type, priority);
 
         writeInFile(filename, issue);
         return issue;
