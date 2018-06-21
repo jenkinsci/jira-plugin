@@ -195,6 +195,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                 buildName,
                 getBuildDetailsString(vars)
         );
+        String assignee = vars.expand(getAssignee());
         Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
         Iterable<String> fixVersionsNames = Splitter.on(",").trimResults().omitEmptyStrings().split(fixVersion);
 
