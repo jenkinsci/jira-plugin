@@ -56,7 +56,9 @@ public class JiraCreateIssueNotifier extends Notifier {
     enum finishedStatuses {
         Closed,
         Done,
-        Resolved
+        Resolved,
+        Approved,
+        Delivered,
     }
 
     @DataBoundConstructor
@@ -346,7 +348,9 @@ public class JiraCreateIssueNotifier extends Notifier {
                     // Issue Closed, need to open new one
                     if  (   status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
                             status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ) {
+                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ||
+                            status.getName().equalsIgnoreCase(finishedStatuses.Approved.toString()) ||
+                            status.getName().equalsIgnoreCase(finishedStatuses.Delivered.toString()) ) {
 
                         listener.getLogger().println("The previous build also failed but the issue is closed");
                         deleteFile(filename);
@@ -401,7 +405,9 @@ public class JiraCreateIssueNotifier extends Notifier {
                     //if issue is in closed status
                     if  (   status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
                             status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ) {
+                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ||
+                            status.getName().equalsIgnoreCase(finishedStatuses.Approved.toString()) ||
+                            status.getName().equalsIgnoreCase(finishedStatuses.Delivered.toString()) ) {
                         LOG.info(String.format("%s is closed", issueId));
                         deleteFile(filename);
                     } else {
