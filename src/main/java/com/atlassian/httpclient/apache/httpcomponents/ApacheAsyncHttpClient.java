@@ -24,7 +24,9 @@ import jenkins.model.Jenkins;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
 import org.apache.http.auth.AuthScope;
@@ -42,11 +44,14 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.SchemePortResolver;
 import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.ProxyAuthenticationStrategy;
+import org.apache.http.impl.conn.DefaultProxyRoutePlanner;
+import org.apache.http.impl.conn.DefaultRoutePlanner;
 import org.apache.http.impl.conn.DefaultSchemePortResolver;
 import org.apache.http.impl.conn.SystemDefaultDnsResolver;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
@@ -62,6 +67,8 @@ import org.apache.http.nio.conn.ssl.SSLIOSessionStrategy;
 import org.apache.http.nio.reactor.IOReactorException;
 import org.apache.http.nio.reactor.IOReactorExceptionHandler;
 import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.Args;
 import org.apache.http.util.TextUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,6 +85,8 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -196,11 +205,12 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                     .setUserAgent(getUserAgent(options))
                     .setDefaultRequestConfig(requestConfig);
 
+
             ProxyConfiguration proxyConfiguration = Jenkins.getInstance().proxy;
             if(proxyConfiguration!=null)
             {
-
-                clientBuilder.setProxy( new HttpHost( proxyConfiguration.name, proxyConfiguration.port ) );
+                final HttpHost proxy = new HttpHost( proxyConfiguration.name, proxyConfiguration.port );
+                //clientBuilder.setProxy( proxy );
                 if(StringUtils.isNotBlank( proxyConfiguration.getUserName()))
                 {
                     clientBuilder.setProxyAuthenticationStrategy( ProxyAuthenticationStrategy.INSTANCE );
@@ -210,6 +220,8 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                                                                                   proxyConfiguration.getPassword()) );
                     clientBuilder.setDefaultCredentialsProvider( credsProvider );
                 }
+
+                clientBuilder.setRoutePlanner(new JenkinsProxyRoutePlanner(proxy, proxyConfiguration.getNoProxyHostPatterns()));
             }
 
 
@@ -240,6 +252,30 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
         catch (IOReactorException e)
         {
             throw new RuntimeException("Reactor " + options.getThreadPrefix() + "not set up correctly", e);
+        }
+    }
+
+    private class JenkinsProxyRoutePlanner extends DefaultRoutePlanner {
+        private final HttpHost proxy;
+        private final List<Pattern> nonProxyHosts;
+
+        public JenkinsProxyRoutePlanner(HttpHost proxy, List<Pattern> nonProxyHosts) {
+            super((SchemePortResolver)null);
+            this.proxy = (HttpHost) Args.notNull(proxy, "Proxy host");
+            this.nonProxyHosts = nonProxyHosts;
+        }
+
+        protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context) throws HttpException {
+            return bypassProxy(target.getHostName()) ? null : this.proxy;
+        }
+
+        private boolean bypassProxy(String host) {
+            for (Pattern p : nonProxyHosts) {
+                if (p.matcher(host).matches()) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 
