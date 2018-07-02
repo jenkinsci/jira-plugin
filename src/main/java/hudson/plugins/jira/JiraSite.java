@@ -12,7 +12,11 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.*;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
+import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.plugins.jira.model.JiraVersion;
 import hudson.util.FormValidation;
@@ -30,8 +34,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -273,7 +281,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null if remote access is not supported.
      */
     @Nullable
-    public JiraSession getSession() throws IOException {
+    public JiraSession getSession() {
         if (jiraSession == null) {
             jiraSession = createSession();
         }
@@ -286,9 +294,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return null if remote access is not supported.
      */
-    protected JiraSession createSession() throws IOException {
-        if (userName == null || password == null)
+    protected JiraSession createSession() {
+        if (userName == null || password == null) {
             return null;    // remote access not supported
+        }
 
         final URI uri;
         try {
@@ -370,15 +379,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             try {
                 if (projectUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
                     try {
-                        if (projects == null) {
-                            JiraSession session = getSession();
-                            if (session != null) {
-                                projects = Collections.unmodifiableSet(session.getProjectKeys());
-                            }
+                        JiraSession session = getSession();
+                        if (session != null) {
+                            projects = Collections.unmodifiableSet(session.getProjectKeys());
                         }
-                    } catch (IOException e) {
-                        // in case of error, set empty set to avoid trying the same thing repeatedly.
-                        LOGGER.log(Level.WARNING, "Failed to obtain JIRA project list", e);
                     } finally {
                         projectUpdateLock.unlock();
                     }
@@ -449,11 +453,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * This method checks whether the key portion is a valid key (except that
      * it can potentially use stale data). Number portion is not checked at all.
      *
-     * @deprecated Use getIssue instead
      * @param id String like MNG-1234
      */
-    @Deprecated
-    public boolean existsIssue(String id) {
+    public boolean hasProjectForIssue(String id) {
         int idx = id.indexOf('-');
         if (idx == -1) {
             return false;
@@ -469,16 +471,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @CheckForNull
     public JiraIssue getIssue(final String id) throws IOException {
         try {
-
-            Optional<Issue> issue = issueCache.get(id, new Callable<Optional<Issue>>() {
-                public Optional<Issue> call() throws Exception {
-                    JiraSession session = getSession();
-                    Issue issue = null;
-                    if (session != null) {
-                        issue = session.getIssue(id);
-                    }
-                    return Optional.fromNullable(issue);
+            Optional<Issue> issue = issueCache.get(id, () -> {
+                JiraSession session = getSession();
+                if (session == null) {
+                    return null;
                 }
+                return Optional.fromNullable(session.getIssue(id));
             });
 
             if (!issue.isPresent()) {
@@ -496,24 +494,26 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @param projectKey  The Project Key
      * @param versionName The name of the version
-     * @throws IOException
      */
-    public void releaseVersion(String projectKey, String versionName) throws IOException {
+    public void releaseVersion(String projectKey, String versionName) {
         JiraSession session = getSession();
-        if (session != null) {
-            List<Version> versions = session.getVersions(projectKey);
-            if (versions == null || versions.isEmpty()) {
-                return;
-            }
-            for (Version version : versions) {
-                if (version.getName().equals(versionName)) {
-                    Version releaseVersion = new Version(version.getSelf(), version.getId(), version.getName(),
-                        version.getDescription(), version.isArchived(), true, new DateTime());
-                    session.releaseVersion(projectKey, releaseVersion);
-                    return;
-                }
-            }
+
+        if (session == null) {
+            return;
         }
+
+        List<Version> versions = session.getVersions(projectKey);
+        java.util.Optional<Version> matchingVersion = versions.stream()
+                .filter(version -> version.getName().equals(versionName))
+                .findFirst();
+
+        if (matchingVersion.isPresent()) {
+            Version version = matchingVersion.get();
+            Version releaseVersion = new Version(version.getSelf(), version.getId(), version.getName(),
+                    version.getDescription(), version.isArchived(), true, new DateTime());
+            session.releaseVersion(projectKey, releaseVersion);
+        }
+
     }
 
     /**
@@ -521,9 +521,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @param projectKey Project Key
      * @return A set of JiraVersions
-     * @throws IOException
      */
-    public Set<JiraVersion> getVersions(String projectKey) throws IOException {
+    public Set<JiraVersion> getVersions(String projectKey) {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -531,10 +530,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
 
         List<Version> versions = session.getVersions(projectKey);
-
-        if (versions == null) {
-            return Collections.emptySet();
-        }
 
         Set<JiraVersion> versionsSet = new HashSet<>(versions.size());
 
@@ -550,23 +545,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @param projectKey
      * @param versionName
-     * @return release notes
-     * @throws IOException, TimeoutException
-     */
-    public String getReleaseNotesForFixVersion(String projectKey, String versionName) throws IOException, TimeoutException {
-        return getReleaseNotesForFixVersion(projectKey, versionName, "");
-    }
-
-    /**
-     * Generates release notes for a given version.
-     *
-     * @param projectKey
-     * @param versionName
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
      * @return release notes
-     * @throws IOException, TimeoutException
+     * @throws TimeoutException
      */
-    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException, TimeoutException {
+    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -575,7 +558,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         List<Issue> issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
 
-        if (issues == null) {
+        if (issues.isEmpty()) {
             return "";
         }
 
@@ -585,18 +568,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             String key = issue.getKey();
             String summary = issue.getSummary();
             String status = issue.getStatus().getName();
-            String type = "UNKNOWN";
-
-            if (issue.getIssueType() != null && issue.getIssueType().getName() != null) {
-                type = issue.getIssueType().getName();
-            }
+            String type = issue.getIssueType().getName();
 
             Set<String> issueSet;
-            if (!releaseNotes.containsKey(type)) {
+            if (releaseNotes.containsKey(type)) {
+                issueSet = releaseNotes.get(type);
+            } else {
                 issueSet = new HashSet<>();
                 releaseNotes.put(type, issueSet);
-            } else {
-                issueSet = releaseNotes.get(type);
             }
 
             issueSet.add(String.format(" - [%s] %s (%s)", key, summary, status));
@@ -615,46 +594,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Gets a set of issues that have the given fixVersion associated with them.
-     *
-     * <p>
-     * Kohsuke: this seems to fail if {@link JiraSite#useHTTPAuth} is on. What is the motivation behind JIRA site?
-     *
-     * @param projectKey  The project key
-     * @param versionName The fixVersion
-     * @return A set of JiraIssues
-     * @throws IOException, TimeoutException
-     */
-    public Set<JiraIssue> getIssueWithFixVersion(String projectKey, String versionName) throws IOException, TimeoutException {
-        JiraSession session = getSession();
-        if (session == null) {
-            return Collections.emptySet();
-        }
-
-        List<Issue> issues = session.getIssuesWithFixVersion(projectKey, versionName);
-
-        if (issues == null || issues.isEmpty()) {
-            return Collections.emptySet();
-        }
-
-        Set<JiraIssue> issueSet = new HashSet<>(issues.size());
-
-        for (Issue issue : issues) {
-            issueSet.add(new JiraIssue(issue));
-        }
-
-        return issueSet;
-    }
-
-    /**
      * Migrates issues matching the jql query provided to a new fix version.
      *
      * @param projectKey The project key
      * @param toVersion  The new fixVersion
      * @param query      A JQL Query
-     * @throws IOException, TimeoutException
+     * @throws TimeoutException
      */
-    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException, TimeoutException {
+    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -670,9 +617,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey  The project key
      * @param versionName The new fixVersion
      * @param query       A JQL Query
-     * @throws IOException, TimeoutException
+     * @throws TimeoutException
      */
-    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException, TimeoutException {
+    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -688,9 +635,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey
      * @param versionName
      * @param query
-     * @throws IOException, TimeoutException
+     * @throws TimeoutException
      */
-    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws IOException, TimeoutException {
+    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -708,9 +655,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param workflowActionName
      * @param comment
      * @param console
-     * @throws IOException, TimeoutException
+     * @throws TimeoutException
      */
-    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException, TimeoutException {
+    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
         JiraSession session = getSession();
 
         if (session == null) {
@@ -721,7 +668,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         boolean success = true;
         List<Issue> issues = session.getIssuesFromJqlSearch(jqlSearch);
-
 
         if (isEmpty(workflowActionName)) {
             console.println("[JIRA] No workflow action was specified, " +
@@ -759,6 +705,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return success;
     }
 
+    public void addVersion(String version, String projectKey) {
+        JiraSession session = getSession();
+        if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
+            return;
+        }
+
+        session.addVersion(version, projectKey);
+
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
@@ -776,7 +733,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                          @QueryParameter String roleVisibility,
                                          @QueryParameter boolean useHTTPAuth,
                                          @QueryParameter String alternativeUrl,
-                                         @QueryParameter Integer timeout) throws IOException {
+                                         @QueryParameter Integer timeout) {
             url = Util.fixEmpty(url);
             alternativeUrl = Util.fixEmpty(alternativeUrl);
             URL mainURL, alternativeURL = null;
@@ -813,14 +770,4 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
     }
 
-    public void addVersion(String version, String projectKey) throws IOException {
-        JiraSession session = getSession();
-        if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
-            return;
-        }
-
-        session.addVersion(version, projectKey);
-
-    }
 }

@@ -1,27 +1,23 @@
 package hudson.plugins.jira;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.io.IOException;
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.Comment;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Job;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TopLevelItem;
+import hudson.model.User;
 import hudson.plugins.jira.model.JiraIssue;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.ChangeLogSet.Entry;
+import hudson.scm.EditType;
+import hudson.scm.SCM;
+import jenkins.model.Jenkins;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -34,27 +30,27 @@ import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
 import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.domain.Comment;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
+import java.io.IOException;
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.model.Job;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.TopLevelItem;
-import hudson.model.User;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.EditType;
-import hudson.scm.SCM;
-import hudson.scm.ChangeLogSet.Entry;
-import jenkins.model.Jenkins;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Test case for the JIRA {@link Updater}.
@@ -101,7 +97,7 @@ public class UpdaterTest {
 
     @Test
     @WithoutJenkins
-    public void testGetScmCommentsFromPreviousBuilds() throws Exception {
+    public void testGetScmCommentsFromPreviousBuilds() {
         final FreeStyleProject project = mock(FreeStyleProject.class);
         final FreeStyleBuild build1 = mock(FreeStyleBuild.class);
         final MockEntry entry1 = new MockEntry("FOOBAR-1: The first build");
@@ -118,12 +114,7 @@ public class UpdaterTest {
                     .when(build1).getAction(JiraCarryOverAction.class);
 
             final Set<? extends Entry> entries = Sets.newHashSet(entry1);
-            when(changeLogSet.iterator()).thenAnswer(new Answer<Object>() {
-
-                public Object answer(final InvocationOnMock invocation) throws Throwable {
-                    return entries.iterator();
-                }
-            });
+            when(changeLogSet.iterator()).thenAnswer(invocation -> entries.iterator());
         }
 
         final FreeStyleBuild build2 = mock(FreeStyleBuild.class);
@@ -139,25 +130,15 @@ public class UpdaterTest {
             doReturn(project).when(build2).getProject();
 
             final Set<? extends Entry> entries = Sets.newHashSet(entry2);
-            when(changeLogSet.iterator()).thenAnswer(new Answer<Object>() {
-
-                public Object answer(final InvocationOnMock invocation) throws Throwable {
-                    return entries.iterator();
-                }
-
-            });
+            when(changeLogSet.iterator()).thenAnswer(invocation -> entries.iterator());
         }
 
         final List<Comment> comments = Lists.newArrayList();
         final JiraSession session = mock(JiraSession.class);
-        doAnswer(new Answer<Object>() {
-
-            public Object answer(final InvocationOnMock invocation) throws Throwable {
-                Comment rc = Comment.createWithGroupLevel((String) invocation.getArguments()[1], (String) invocation.getArguments()[2]);
-                comments.add(rc);
-                return null;
-            }
-
+        doAnswer((Answer<Object>) invocation -> {
+            Comment rc = Comment.createWithGroupLevel((String) invocation.getArguments()[1], (String) invocation.getArguments()[2]);
+            comments.add(rc);
+            return null;
         }).when(session).addComment(anyString(), anyString(), anyString(), anyString());
 
         this.updater = new Updater(build2.getProject().getScm());        
@@ -177,20 +158,17 @@ public class UpdaterTest {
     @Test
     @Bug(4572)
     @WithoutJenkins
-    public void testComment() throws Exception {
+    public void testComment() {
         // mock JIRA session:
         JiraSession session = mock(JiraSession.class);
-        when(session.existsIssue(Mockito.anyString())).thenReturn(Boolean.TRUE);
         final Issue mockIssue = Mockito.mock(Issue.class);
         when(session.getIssue(Mockito.anyString())).thenReturn(mockIssue);
 
         final List<String> comments = new ArrayList<String>();
 
-        Answer answer = new Answer<Object>() {
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                comments.add((String) invocation.getArguments()[1]);
-                return null;
-            }
+        Answer answer = (Answer<Object>) invocation -> {
+            comments.add((String) invocation.getArguments()[1]);
+            return null;
         };
         doAnswer(answer).when(session).addComment(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 
@@ -264,18 +242,13 @@ public class UpdaterTest {
 
         // mock JIRA session:
         JiraSession session = mock(JiraSession.class);
-        when(session.existsIssue(Mockito.anyString())).thenReturn(Boolean.TRUE);
-//        when(session.getIssue(Mockito.anyString())).thenReturn( new Issue());
-//        when(session.getGroup(Mockito.anyString())).thenReturn(new Group("Software Development", null));
 
         final List<Comment> comments = new ArrayList<Comment>();
 
-        Answer answer = new Answer<Object>() {
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                Comment c = Comment.createWithGroupLevel((String) invocation.getArguments()[0], (String) invocation.getArguments()[1]);
-                comments.add(c);
-                return null;
-            }
+        Answer answer = (Answer<Object>) invocation -> {
+            Comment c = Comment.createWithGroupLevel((String) invocation.getArguments()[0], (String) invocation.getArguments()[1]);
+            comments.add(c);
+            return null;
         };
 
         doAnswer(answer).when(session).addComment(eq(firstIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
@@ -320,7 +293,7 @@ public class UpdaterTest {
         WorkflowJob workflowJob = new WorkflowJob(jenkins, "job");
         WorkflowRun workflowRun = new WorkflowRun(workflowJob);
         
-        ChangeLogSet changeLogSet = ChangeLogSet.createEmpty(workflowRun);
+        ChangeLogSet.createEmpty(workflowRun);
         
         List<ChangeLogSet<? extends Entry>> changesUsingReflection = RunScmChangeExtractor.getChangesUsingReflection(workflowRun);
         Assert.assertNotNull(changesUsingReflection);
@@ -329,9 +302,9 @@ public class UpdaterTest {
     
     @WithoutJenkins
     @Test(expected=IllegalArgumentException.class)
-    public void testGetChangesUsingReflectionForunknownJob() throws IOException {
+    public void testGetChangesUsingReflectionForunknownJob() {
         Run run = mock(Run.class);
-        List<ChangeLogSet<? extends Entry>> changesUsingReflection = RunScmChangeExtractor.getChangesUsingReflection(run);
+        RunScmChangeExtractor.getChangesUsingReflection(run);
     }
 
     /**

@@ -119,11 +119,7 @@ public class JiraSession {
      * @return null if no such issue exists.
      */
     public Issue getIssue(String id) {
-        if (existsIssue(id)) {
-            return service.getIssue(id);
-        } else {
-            return null;
-        }
+        return service.getIssue(id);
     }
 
     /**
@@ -201,12 +197,11 @@ public class JiraSession {
         return service.getPriorities();
     }
 
-    @Deprecated
-    public boolean existsIssue(String id) {
-        return site.existsIssue(id);
-    }
-
-
+    /**
+     * Release given version in given project
+     * @param projectKey
+     * @param version
+     */
     public void releaseVersion(String projectKey, Version version) {
         LOGGER.fine("Releasing version: " + version.getName());
         service.releaseVersion(projectKey, version);

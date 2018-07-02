@@ -65,7 +65,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     /**
      * Finds the strings that match JIRA issue ID patterns. This method returns
      * all likely candidates and doesn't check if such ID actually exists or
-     * not. We don't want to use {@link JiraSite#existsIssue(String)} here so
+     * not. We don't want to use {@link JiraSite#hasProjectForIssue(String)} here so
      * that new projects in JIRA can be detected.
      * 
      */
