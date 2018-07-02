@@ -110,6 +110,25 @@ public class ApacheAsyncHttpClientTest
     }
 
     @Test
+    public void simple_get_with_non_proxy_host()
+            throws Exception
+    {
+        ProxyTestHandler testHandler = new ProxyTestHandler();
+        prepare( testHandler );
+
+        Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar", "www.apache.org" );
+
+        ApacheAsyncHttpClient httpClient =
+                new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
+
+        Response response = httpClient.newRequest( "http://www.apache.org" )
+                .get().get( 30, TimeUnit.SECONDS );
+        Assert.assertEquals( 200, response.getStatusCode() );
+        //Assert.assertEquals( CONTENT_RESPONSE, IOUtils.toString( response.getEntityStream() ) );
+    }
+
+    @Test
     public void simple_get_with_proxy()
         throws Exception
     {
