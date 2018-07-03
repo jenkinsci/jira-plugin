@@ -4,7 +4,6 @@ import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import hudson.Util;
 import hudson.model.Hudson;
 import hudson.model.Result;
@@ -26,7 +25,12 @@ import java.net.URL;
 import java.rmi.RemoteException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -90,13 +94,7 @@ class Updater {
                 return true;    // nothing found here.
             }
 
-            JiraSession session = null;
-            try {
-                session = site.getSession();
-            } catch (IOException e) {
-                listener.getLogger().println(Messages.FailedToConnect());
-                e.printStackTrace(listener.getLogger());
-            }
+            JiraSession session = site.getSession();
             if (session == null) {
                 logger.println(Messages.NoRemoteAccess());
                 build.setResult(Result.FAILURE);

@@ -28,12 +28,10 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import jenkins.tasks.SimpleBuildStep;
-
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
@@ -108,7 +106,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
                 run.setResult(Result.UNSTABLE);
             }
-        } catch (IOException | TimeoutException e) {
+        } catch (TimeoutException e) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
             run.setResult(Result.FAILURE);
@@ -131,7 +129,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
          * @param value This parameter receives the value that the user has typed.
          * @return Indicates the outcome of the validation. This is sent to the browser.
          */
-        public FormValidation doCheckJqlSearch(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckJqlSearch(@QueryParameter String value) {
             if (value.length() == 0) {
                 return FormValidation.error(Messages.JiraIssueUpdateBuilder_NoJqlSearch());
             }

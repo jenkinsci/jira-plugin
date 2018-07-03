@@ -52,7 +52,7 @@ public class JiraChangeLogAnnotatorTest {
                         return new URL("http://dummy/" + id);
                     }
                 });
-        when(site.existsIssue(Mockito.anyString())).thenCallRealMethod();
+        when(site.hasProjectForIssue(Mockito.anyString())).thenCallRealMethod();
         when(site.getProjectKeys()).thenCallRealMethod();
         when(site.getIssuePattern()).thenCallRealMethod();
         when(site.readResolve()).thenCallRealMethod();
@@ -163,9 +163,9 @@ public class JiraChangeLogAnnotatorTest {
     @Bug(4132)
     public void testCaseInsensitiveAnnotate() throws IOException {
 
-        Assert.assertTrue(site.existsIssue("JENKINS-123"));
-        Assert.assertTrue(site.existsIssue("jenKiNs-123"));
-        Assert.assertTrue(site.existsIssue("dummy-4711"));
+        Assert.assertTrue(site.hasProjectForIssue("JENKINS-123"));
+        Assert.assertTrue(site.hasProjectForIssue("jenKiNs-123"));
+        Assert.assertTrue(site.hasProjectForIssue("dummy-4711"));
 
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject((AbstractProject<?, ?>) Mockito.any());

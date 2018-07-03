@@ -332,16 +332,16 @@ public class JiraCreateIssueNotifier extends Notifier {
                     Status status = getStatus(build, issueId);
 
                     // Issue Closed, need to open new one
-                    if  (   status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
+                    if (status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
                             status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ) {
+                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString())) {
 
                         listener.getLogger().println("The previous build also failed but the issue is closed");
                         deleteFile(filename);
                         Issue issue = createJiraIssue(build, filename);
                         LOG.info(String.format("[%s] created.", issue.getKey()));
                         listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
-                    }else {
+                    } else {
                         addComment(build, listener, issueId, comment);
                         LOG.info(String.format("[%s] The previous build also failed, comment added.", issueId));
                     }
@@ -387,9 +387,9 @@ public class JiraCreateIssueNotifier extends Notifier {
                     Status status = getStatus(build, issueId);
 
                     //if issue is in closed status
-                    if  (   status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
+                    if (status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
                             status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ) {
+                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString())) {
                         LOG.info(String.format("%s is closed", issueId));
                         deleteFile(filename);
                     } else {
@@ -420,7 +420,7 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param vars
      * @return
      */
-    private String getBuildDetailsString(EnvVars vars){
+    private String getBuildDetailsString(EnvVars vars) {
         final String buildURL = vars.get("BUILD_URL");
         return String.format("[%s|%s] [console log|%s]", getBuildName(vars), buildURL, buildURL.concat("console"));
     }
@@ -431,7 +431,7 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param vars
      * @return String
      */
-    private String getBuildName(EnvVars vars){
+    private String getBuildName(EnvVars vars) {
         final String jobName = vars.get("JOB_NAME");
         final String buildNumber = vars.get("BUILD_NUMBER");
         return String.format("%s #%s", jobName, buildNumber);
@@ -453,14 +453,11 @@ public class JiraCreateIssueNotifier extends Notifier {
         public ListBoxModel doFillPriorityIdItems() {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
-                try {
-                    JiraSession session = site.getSession();
-                    if (session != null) {
-                        for (Priority priority : session.getPriorities()) {
-                            items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
-                        }
+                JiraSession session = site.getSession();
+                if (session != null) {
+                    for (Priority priority : session.getPriorities()) {
+                        items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
                     }
-                } catch (IOException ignore) {
                 }
             }
             return items;
@@ -469,14 +466,11 @@ public class JiraCreateIssueNotifier extends Notifier {
         public ListBoxModel doFillTypeIdItems() {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
-                try {
-                    JiraSession session = site.getSession();
-                    if (session != null) {
-                        for (IssueType type : session.getIssueTypes()) {
-                            items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
-                        }
+                JiraSession session = site.getSession();
+                if (session != null) {
+                    for (IssueType type : session.getIssueTypes()) {
+                        items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
                     }
-                } catch (IOException ignore) {
                 }
             }
             return items;

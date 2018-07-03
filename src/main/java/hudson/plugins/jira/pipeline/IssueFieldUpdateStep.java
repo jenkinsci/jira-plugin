@@ -1,23 +1,7 @@
 package hudson.plugins.jira.pipeline;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.ServletException;
-
-import hudson.plugins.jira.JiraSession;
-import hudson.plugins.jira.JiraSite;
-import hudson.plugins.jira.Messages;
-import hudson.plugins.jira.model.JiraIssueField;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.google.common.collect.Lists;
-
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -26,11 +10,24 @@ import hudson.model.AbstractProject;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraSession;
+import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
+import hudson.plugins.jira.model.JiraIssueField;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import jenkins.tasks.SimpleBuildStep;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
+
+import javax.servlet.ServletException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Issue custom fields updater
@@ -89,7 +86,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-            throws InterruptedException, IOException {
+            throws IOException {
         PrintStream logger = listener.getLogger();
 
         AbstractIssueSelector selector = issueSelector;
@@ -105,13 +102,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
-        JiraSession session = null;
-        try {
-            session = site.getSession();
-        } catch (IOException e) {
-            listener.getLogger().println(Messages.FailedToConnect());
-            e.printStackTrace(listener.getLogger());
-        }
+        JiraSession session = site.getSession();
         if (session == null) {
             logger.println(Messages.NoRemoteAccess());
             run.setResult(Result.FAILURE);
