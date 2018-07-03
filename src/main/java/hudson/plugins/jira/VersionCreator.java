@@ -1,24 +1,24 @@
 package hudson.plugins.jira;
 
-import static ch.lambdaj.Lambda.filter;
-import static hudson.plugins.jira.JiraVersionMatcher.hasName;
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.hamcrest.Matchers.equalTo;
-
-import java.util.List;
-
+import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.plugins.jira.model.JiraVersion;
+
+import java.util.Optional;
+import java.util.logging.Logger;
+
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
  * Performs an action which creates new jira version.
  */
 class VersionCreator {
 
-	static boolean perform(JiraSite site, String jiraVersion, String jiraProjectKey, Run<?, ?> build, TaskListener listener) {
+    private static final Logger LOGGER = Logger.getLogger(VersionCreator.class.getName());
+
+	protected boolean perform(JiraSite site, String jiraVersion, String jiraProjectKey, Run<?, ?> build, TaskListener listener) {
 		String realVersion = null;
 		String realProjectKey = null;
 
@@ -33,14 +33,15 @@ class VersionCreator {
 				throw new IllegalArgumentException("No project specified");
 			}
 
-			List<JiraVersion> sameNamedVersions = filter(hasName(equalTo(realVersion)),
-					site.getVersions(realProjectKey));
+			String finalRealVersion = realVersion;
+			Optional<Version> sameNamedVersion = site.getVersions(realProjectKey).stream()
+					.filter(version -> version.getName().equals(finalRealVersion) && version.isReleased()).findFirst();
 
-			if (sameNamedVersions.size() == 0) {
-				listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
-				site.addVersion(realVersion, realProjectKey);
-			} else {
+			if (sameNamedVersion.isPresent()) {
 				listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
+			} else {
+				listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
+				addVersion(realVersion, realProjectKey, site.getSession());
 			}
 
 		} catch (Exception e) {
@@ -52,4 +53,20 @@ class VersionCreator {
 		}
 		return true;
 	}
+
+    /**
+     * Creates given version in given project
+     * @param version
+     * @param projectKey
+     * @param session
+     */
+    public void addVersion(String version, String projectKey, JiraSession session) {
+        if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
+            return;
+        }
+
+        session.addVersion(version, projectKey);
+    }
+
 }

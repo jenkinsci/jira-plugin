@@ -61,7 +61,7 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
 	public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
 			throws InterruptedException, IOException {
 		JiraSite site = getSiteForProject(build.getParent());
-		VersionCreator.perform(site, jiraVersion, jiraProjectKey, build, listener);
+		new VersionCreator().perform(site, jiraVersion, jiraProjectKey, build, listener);
 	}
 
 	JiraSite getSiteForProject(Job<?, ?> project) {

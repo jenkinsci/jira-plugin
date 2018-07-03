@@ -15,8 +15,6 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.IOException;
-
 /**
  * Created by Reda on 18/12/2014.
  */
@@ -51,8 +49,8 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        VersionReleaser.perform(getSiteForProject(run.getParent()), jiraProjectKey, jiraRelease, run, listener);
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) {
+        new VersionReleaser().perform(getSiteForProject(run.getParent()), jiraProjectKey, jiraRelease, run, listener);
     }
 
     JiraSite getSiteForProject(Job<?, ?> project) {
