@@ -24,6 +24,9 @@ import java.util.HashSet;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,11 +59,12 @@ public class VersionReleaserTest {
     @Captor
     ArgumentCaptor<String> projectCaptor;
 
-    private VersionReleaser versionReleaser = new VersionReleaser();
+    private VersionReleaser versionReleaser = spy(VersionReleaser.class);
     private Version existingVersion = new Version(null, ANY_ID, JIRA_VER, null,false, false, ANY_DATE);
 
     @Before
-    public void createMocks() {
+    public void createMocks() throws IOException, InterruptedException {
+        when(build.getEnvironment(listener)).thenReturn(env);
         when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
             String expanded = (String) args[0];
@@ -73,42 +77,37 @@ public class VersionReleaserTest {
         });
         when(listener.getLogger()).thenReturn(logger);
         when(site.getSession()).thenReturn(session);
+        doReturn(site).when(versionReleaser).getSiteForProject(any());
     }
 
     @Test
-    public void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
-        when(build.getProject()).thenReturn(project);
-        when(build.getEnvironment(listener)).thenReturn(env);
+    public void callsJiraWithSpecifiedParameters() {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
-        versionReleaser.perform(site, JIRA_PRJ, JIRA_VER, build, listener);
+        versionReleaser.perform(project, JIRA_PRJ, JIRA_VER, build, listener);
         verify(session).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue().getName(), is(JIRA_VER));
     }
 
     @Test
-    public void expandsEnvParameters() throws InterruptedException, IOException {
-        when(build.getProject()).thenReturn(project);
-        when(build.getEnvironment(listener)).thenReturn(env);
+    public void expandsEnvParameters() {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
-        versionReleaser.perform(site, JIRA_PRJ_PARAM, JIRA_VER_PARAM, build, listener);
+        versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, build, listener);
         verify(session).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue().getName(), is(JIRA_VER));
     }
 
     @Test
-    public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
-        when(build.getProject()).thenReturn(project);
-        when(build.getEnvironment(listener)).thenReturn(env);
+    public void buildDidNotFailWhenVersionExists() {
         Version releasedVersion = new Version(null, ANY_ID, JIRA_VER, null,false, true, ANY_DATE);
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));
 
-        versionReleaser.perform(site, JIRA_PRJ_PARAM, JIRA_VER_PARAM, build, listener);
+        versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, build, listener);
         verify(session, times(0))
                 .releaseVersion(projectCaptor.capture(), versionCaptor.capture());
     }

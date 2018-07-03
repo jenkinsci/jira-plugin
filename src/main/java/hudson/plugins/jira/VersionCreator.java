@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.model.BuildListener;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -18,7 +19,7 @@ class VersionCreator {
 
     private static final Logger LOGGER = Logger.getLogger(VersionCreator.class.getName());
 
-	protected boolean perform(JiraSite site, String jiraVersion, String jiraProjectKey, Run<?, ?> build, TaskListener listener) {
+	protected boolean perform(Job<?, ?> project, String jiraVersion, String jiraProjectKey, Run<?, ?> build, TaskListener listener) {
 		String realVersion = null;
 		String realProjectKey = null;
 
@@ -34,6 +35,7 @@ class VersionCreator {
 			}
 
 			String finalRealVersion = realVersion;
+			JiraSite site = getSiteForProject(project);
 			Optional<Version> sameNamedVersion = site.getVersions(realProjectKey).stream()
 					.filter(version -> version.getName().equals(finalRealVersion) && version.isReleased()).findFirst();
 
@@ -60,7 +62,7 @@ class VersionCreator {
      * @param projectKey
      * @param session
      */
-    public void addVersion(String version, String projectKey, JiraSession session) {
+    protected void addVersion(String version, String projectKey, JiraSession session) {
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return;
@@ -68,5 +70,9 @@ class VersionCreator {
 
         session.addVersion(version, projectKey);
     }
+
+	protected JiraSite getSiteForProject(Job<?, ?> project) {
+		return JiraSite.get(project);
+	}
 
 }

@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.model.BuildListener;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -19,7 +20,7 @@ public class VersionReleaser {
 
     private static final Logger LOGGER = Logger.getLogger(VersionReleaser.class.getName());
 
-    protected boolean perform(JiraSite site, String jiraProjectKey, String jiraRelease, Run<?, ?> run, TaskListener listener) {
+    protected boolean perform(Job<?, ?> project, String jiraProjectKey, String jiraRelease, Run<?, ?> run, TaskListener listener) {
         String realRelease = "NOT_SET";
         String realProjectKey = null;
 
@@ -36,6 +37,7 @@ public class VersionReleaser {
             }
 
             String finalRealRelease = realRelease;
+            JiraSite site = getSiteForProject(project);
             Optional<Version> sameNamedVersion = site.getVersions(realProjectKey).stream()
                     .filter(version -> version.getName().equals(finalRealRelease) && version.isReleased()).findFirst();
 
@@ -65,7 +67,7 @@ public class VersionReleaser {
      * @param projectKey  The Project Key
      * @param versionName The name of the version
      */
-    public void releaseVersion(String projectKey, String versionName, JiraSession session) {
+    protected void releaseVersion(String projectKey, String versionName, JiraSession session) {
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return;
@@ -83,6 +85,10 @@ public class VersionReleaser {
             session.releaseVersion(projectKey, releaseVersion);
         }
 
+    }
+
+    protected JiraSite getSiteForProject(Job<?, ?> project) {
+        return JiraSite.get(project);
     }
 
 }

@@ -18,10 +18,8 @@ import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
-import hudson.plugins.jira.model.JiraVersion;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -179,7 +177,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     private transient Lock projectUpdateLock = new ReentrantLock();
 
-    private transient JiraSession jiraSession = null;
+    private transient JiraSession jiraSession;
 
     @DataBoundConstructor
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
@@ -295,7 +293,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null if remote access is not supported.
      */
     protected JiraSession createSession() {
-        if (userName == null || password == null) {
+        if (userName == null) {
             return null;    // remote access not supported
         }
 
