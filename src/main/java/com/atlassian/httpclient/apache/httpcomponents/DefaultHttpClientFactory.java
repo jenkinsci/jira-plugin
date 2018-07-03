@@ -6,12 +6,12 @@ import com.atlassian.httpclient.api.factory.HttpClientFactory;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
-import com.atlassian.util.concurrent.NotNull;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.DisposableBean;
 
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import javax.annotation.Nonnull;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -42,7 +42,7 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     }
 
     @Override
-    public void dispose(@NotNull final HttpClient httpClient) throws Exception
+    public void dispose(@Nonnull final HttpClient httpClient) throws Exception
     {
         if (httpClient instanceof ApacheAsyncHttpClient)
         {
