@@ -5,7 +5,6 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
-import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -14,8 +13,6 @@ import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-
-import java.io.IOException;
 
 /**
  * Created by Reda on 18/12/2014.
@@ -51,12 +48,8 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        VersionReleaser.perform(getSiteForProject(run.getParent()), jiraProjectKey, jiraRelease, run, listener);
-    }
-
-    JiraSite getSiteForProject(Job<?, ?> project) {
-        return JiraSite.get(project);
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) {
+        new VersionReleaser().perform(run.getParent(), jiraProjectKey, jiraRelease, run, listener);
     }
 
     @Override

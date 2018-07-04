@@ -18,10 +18,8 @@ import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
-import hudson.plugins.jira.model.JiraVersion;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
-import org.joda.time.DateTime;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -179,7 +177,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     private transient Lock projectUpdateLock = new ReentrantLock();
 
-    private transient JiraSession jiraSession = null;
+    private transient JiraSession jiraSession;
 
     @DataBoundConstructor
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
@@ -295,7 +293,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null if remote access is not supported.
      */
     protected JiraSession createSession() {
-        if (userName == null || password == null) {
+        if (userName == null) {
             return null;    // remote access not supported
         }
 
@@ -363,11 +361,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     public Pattern getIssuePattern() {
-        if (getUserPattern() != null) {
-            return getUserPattern();
-        }
-
-        return DEFAULT_ISSUE_PATTERN;
+        Pattern result = getUserPattern();
+        return result == null ? DEFAULT_ISSUE_PATTERN : result;
     }
 
     /**
@@ -449,23 +444,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Checks if the given JIRA id will be likely to exist in this issue tracker.
-     * This method checks whether the key portion is a valid key (except that
-     * it can potentially use stale data). Number portion is not checked at all.
-     *
-     * @param id String like MNG-1234
-     */
-    public boolean hasProjectForIssue(String id) {
-        int idx = id.indexOf('-');
-        if (idx == -1) {
-            return false;
-        }
-
-        Set<String> keys = getProjectKeys();
-        return keys.contains(id.substring(0, idx).toUpperCase());
-    }
-
-    /**
      * Returns the remote issue with the given id or <code>null</code> if it wasn't found.
      */
     @CheckForNull
@@ -490,54 +468,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Release a given version.
-     *
-     * @param projectKey  The Project Key
-     * @param versionName The name of the version
-     */
-    public void releaseVersion(String projectKey, String versionName) {
-        JiraSession session = getSession();
-
-        if (session == null) {
-            return;
-        }
-
-        List<Version> versions = session.getVersions(projectKey);
-        java.util.Optional<Version> matchingVersion = versions.stream()
-                .filter(version -> version.getName().equals(versionName))
-                .findFirst();
-
-        if (matchingVersion.isPresent()) {
-            Version version = matchingVersion.get();
-            Version releaseVersion = new Version(version.getSelf(), version.getId(), version.getName(),
-                    version.getDescription(), version.isArchived(), true, new DateTime());
-            session.releaseVersion(projectKey, releaseVersion);
-        }
-
-    }
-
-    /**
      * Returns all versions for the given project key.
      *
      * @param projectKey Project Key
      * @return A set of JiraVersions
      */
-    public Set<JiraVersion> getVersions(String projectKey) {
+    public Set<Version> getVersions(String projectKey) {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return Collections.emptySet();
         }
 
-        List<Version> versions = session.getVersions(projectKey);
-
-        Set<JiraVersion> versionsSet = new HashSet<>(versions.size());
-
-        for (Version version : versions) {
-            versionsSet.add(new JiraVersion(version));
-        }
-
-        return versionsSet;
+        return new HashSet<>(session.getVersions(projectKey));
     }
 
     /**
@@ -703,17 +646,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
 
         return success;
-    }
-
-    public void addVersion(String version, String projectKey) {
-        JiraSession session = getSession();
-        if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
-            return;
-        }
-
-        session.addVersion(version, projectKey);
-
     }
 
     @Extension

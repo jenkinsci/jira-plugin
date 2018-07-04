@@ -57,14 +57,9 @@ public class JiraReleaseVersionUpdater extends Notifier {
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
 	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener) {
-		return VersionReleaser.perform(getSiteForProject(build.getProject()), jiraProjectKey, jiraRelease, build, listener);
+	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+		return new VersionReleaser().perform(build.getProject(), jiraProjectKey, jiraRelease, build, listener);
 	}
-
-    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
-        return JiraSite.get(project);
-    }
 
 	public BuildStepMonitor getRequiredMonitorService() {
 		return BuildStepMonitor.BUILD;
