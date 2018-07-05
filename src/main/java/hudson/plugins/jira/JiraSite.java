@@ -294,7 +294,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public boolean isAppendChangeTimestamp() {
         return this.appendChangeTimestamp != null && this.appendChangeTimestamp.booleanValue();
     }
-    
+
+    @SuppressWarnings("unused")
     protected Object readResolve() {
         if (credentialsId == null && userName != null && password != null) { // Migrate credentials
             return new JiraSite(url, alternativeUrl, userName, password.getPlainText(), supportsWikiStyleComment, recordScmChanges, userPattern,

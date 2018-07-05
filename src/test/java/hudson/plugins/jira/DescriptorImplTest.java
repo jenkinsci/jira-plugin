@@ -20,7 +20,6 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockFolder;
@@ -40,9 +39,6 @@ public class DescriptorImplTest {
     public JenkinsRule r = new JenkinsRule();
 
     JiraSite.DescriptorImpl descriptor = new JiraSite.DescriptorImpl();
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 
     @WithoutJenkins
     @Test
@@ -79,7 +75,7 @@ public class DescriptorImplTest {
         as.grant(Item.READ).onItems(dummy).to("alice");
         r.jenkins.setAuthorizationStrategy(as);
 
-        try (ACLContext context = ACL.as(User.get("admin"))) {
+        try (ACLContext ignored = ACL.as(User.get("admin"))) {
             ListBoxModel options = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class).doFillCredentialsIdItems(null, "http://example.org");
             assertThat(options, hasSize(2));
             assertEquals(CredentialsNameProvider.name(c), options.get(1).name);
@@ -93,7 +89,7 @@ public class DescriptorImplTest {
             assertEquals(CredentialsNameProvider.name(c), options.get(1).name);
         }
 
-        try (ACLContext context = ACL.as(User.get("alice"))) {
+        try (ACLContext ignored = ACL.as(User.get("alice"))) {
             ListBoxModel options = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class).doFillCredentialsIdItems(dummy, "http://example.org");
             assertThat(options, empty());
         }
