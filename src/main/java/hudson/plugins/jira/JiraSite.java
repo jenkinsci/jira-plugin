@@ -18,7 +18,6 @@ import com.google.common.cache.CacheBuilder;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
-import hudson.model.Computer;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
@@ -731,8 +730,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
             credentialsId = Util.fixEmpty(credentialsId);
-            JiraSite site = new JiraSite(mainURL, alternativeURL, credentialsId, false,
-                    false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
+            JiraSite site = getJiraSiteBuilder()
+                    .withMainURL(mainURL)
+                    .withAlternativeURL(alternativeURL)
+                    .withCredentialsId(credentialsId)
+                    .withGroupVisibility(groupVisibility)
+                    .withRoleVisibility(roleVisibility)
+                    .withUseHTTPAuth(useHTTPAuth)
+                    .build();
+
             site.setTimeout(timeout);            
             try {
                 JiraSession session = site.createSession();
@@ -761,6 +767,78 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                             URIRequirementBuilder.fromUri(url).build()
                         )
                     );
+        }
+
+        JiraSiteBuilder getJiraSiteBuilder() {
+            return new JiraSiteBuilder();
+        }
+    }
+
+    static class JiraSiteBuilder {
+        private URL mainURL;
+        private URL alternativeURL;
+        private String credentialsId;
+        private boolean supportsWikiStyleComment;
+        private boolean recordScmChanges;
+        private String userPattern;
+        private boolean updateJiraIssueForAllStatus;
+        private String groupVisibility;
+        private String roleVisibility;
+        private boolean useHTTPAuth;
+
+        public JiraSiteBuilder withMainURL(URL mainURL) {
+            this.mainURL = mainURL;
+            return this;
+        }
+
+        public JiraSiteBuilder withAlternativeURL(URL alternativeURL) {
+            this.alternativeURL = alternativeURL;
+            return this;
+        }
+
+        public JiraSiteBuilder withCredentialsId(String credentialsId) {
+            this.credentialsId = credentialsId;
+            return this;
+        }
+
+        public JiraSiteBuilder withSupportsWikiStyleComment(boolean supportsWikiStyleComment) {
+            this.supportsWikiStyleComment = supportsWikiStyleComment;
+            return this;
+        }
+
+        public JiraSiteBuilder withRecordScmChanges(boolean recordScmChanges) {
+            this.recordScmChanges = recordScmChanges;
+            return this;
+        }
+
+        public JiraSiteBuilder withUserPattern(String userPattern) {
+            this.userPattern = userPattern;
+            return this;
+        }
+
+        public JiraSiteBuilder withUpdateJiraIssueForAllStatus(boolean updateJiraIssueForAllStatus) {
+            this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
+            return this;
+        }
+
+        public JiraSiteBuilder withGroupVisibility(String groupVisibility) {
+            this.groupVisibility = groupVisibility;
+            return this;
+        }
+
+        public JiraSiteBuilder withRoleVisibility(String roleVisibility) {
+            this.roleVisibility = roleVisibility;
+            return this;
+        }
+
+        public JiraSiteBuilder withUseHTTPAuth(boolean useHTTPAuth) {
+            this.useHTTPAuth = useHTTPAuth;
+            return this;
+        }
+
+        public JiraSite build() {
+            return new JiraSite(mainURL, alternativeURL, credentialsId, supportsWikiStyleComment,
+                    recordScmChanges, userPattern, updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
         }
     }
 
