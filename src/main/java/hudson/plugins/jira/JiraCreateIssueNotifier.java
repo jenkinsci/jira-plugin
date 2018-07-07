@@ -342,22 +342,14 @@ public class JiraCreateIssueNotifier extends Notifier {
             String issueId = getIssue(filename);
             if (issueId != null) {
                 try {
-                    //The status of the issue which was filed when the previous build failed
-                    Status status = getStatus(build, issueId);
-
-                    // Issue Closed, need to open new one
-                    if  (   status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Approved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Delivered.toString()) ) {
-
+                    // Issue closed, need to open new one
+                    if  (isIssueClosed(build, issueId)) {
                         listener.getLogger().println("The previous build also failed but the issue is closed");
                         deleteFile(filename);
                         Issue issue = createJiraIssue(build, filename);
                         LOG.info(String.format("[%s] created.", issue.getKey()));
                         listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
-                    }else {
+                    } else {
                         addComment(build, listener, issueId, comment);
                         LOG.info(String.format("[%s] The previous build also failed, comment added.", issueId));
                     }
@@ -368,13 +360,22 @@ public class JiraCreateIssueNotifier extends Notifier {
         }
 
         if (previousBuildResult == Result.SUCCESS || previousBuildResult == Result.ABORTED) {
+            String issueId = getIssue(filename);
             try {
-                Issue issue = createJiraIssue(build, filename);
-                LOG.info(String.format("[%s] created.", issue.getKey()));
-                listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
+                // It's the first time build failed or the issue is closed so need to open new one
+                if (issueId == null || isIssueClosed(build, issueId)) {
+                    deleteFile(filename);
+                    Issue issue = createJiraIssue(build, filename);
+                    LOG.info(String.format("[%s] created.", issue.getKey()));
+                    listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
+                } else {
+                    String comment = String.format("Build is failing again now.\nFailed run: %s", getBuildDetailsString(vars));
+                    addComment(build, listener, issueId, comment);
+                    LOG.info(String.format("[%s] The previous build was success but issue is still not closed, adding comment.", issueId));
+                }
             } catch (IOException e) {
-                listener.error("Error creating JIRA issue : " + e.getMessage());
-                LOG.warning("Error creating JIRA issue\n" + e.getMessage());
+                listener.error("Error processing JIRA change: " + e.getMessage());
+                LOG.warning("Error processing JIRA change: " + e.getMessage());
             }
         }
     }
@@ -400,14 +401,8 @@ public class JiraCreateIssueNotifier extends Notifier {
             //if issue exists it will check the status and comment or delete the file accordingly
             if (issueId != null) {
                 try {
-                    Status status = getStatus(build, issueId);
-
                     //if issue is in closed status
-                    if  (   status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Approved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Delivered.toString()) ) {
+                    if  (isIssueClosed(build, issueId)) {
                         LOG.info(String.format("%s is closed", issueId));
                         deleteFile(filename);
                     } else {
@@ -417,7 +412,6 @@ public class JiraCreateIssueNotifier extends Notifier {
                             progressWorkflowAction(build, issueId, actionIdOnSuccess);
                         }
                     }
-
                 } catch (IOException e) {
                     listener.error("Error updating JIRA issue " + issueId + " : " + e.getMessage());
                     LOG.warning("Error updating JIRA issue " + issueId + "\n" + e);
@@ -425,6 +419,16 @@ public class JiraCreateIssueNotifier extends Notifier {
             }
 
         }
+    }
+
+    private boolean isIssueClosed(AbstractBuild<?, ?> build, String id) throws IOException {
+        Status status = getStatus(build, id);
+
+        return status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
+                status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
+                status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ||
+                status.getName().equalsIgnoreCase(finishedStatuses.Approved.toString()) ||
+                status.getName().equalsIgnoreCase(finishedStatuses.Delivered.toString());
     }
 
     private void progressWorkflowAction(AbstractBuild<?, ?> build, String issueId, Integer actionId) throws IOException {
