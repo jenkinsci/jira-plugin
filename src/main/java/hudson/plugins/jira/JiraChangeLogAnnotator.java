@@ -72,7 +72,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
                 String id = m.group(1);
 
-                if (StringUtils.isNotBlank(site.userName) && !hasProjectForIssue(id, site)) {
+                if (StringUtils.isNotBlank(site.credentialsId) && !hasProjectForIssue(id, site)) {
                     LOGGER.log(Level.INFO, "No known JIRA project corresponding to id: ''{0}''", id);
                     continue;
                 }

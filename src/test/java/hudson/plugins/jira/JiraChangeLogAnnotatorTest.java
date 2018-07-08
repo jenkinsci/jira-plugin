@@ -10,10 +10,12 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
+import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
 import static org.hamcrest.Matchers.containsString;
@@ -33,7 +35,7 @@ public class JiraChangeLogAnnotatorTest {
     private JiraSite site;
 
     @Before
-    public void before() throws IOException {
+    public void before() throws Exception {
         JiraSession session = mock(JiraSession.class);
         when(session.getProjectKeys()).thenReturn(
                 Sets.newHashSet("DUMMY", "JENKINS"));
@@ -47,8 +49,10 @@ public class JiraChangeLogAnnotatorTest {
                 });
         when(site.getProjectKeys()).thenCallRealMethod();
         when(site.getIssuePattern()).thenCallRealMethod();
-        when(site.readResolve()).thenCallRealMethod();
-        site.readResolve(); // create the lock object
+
+        // create inner objects
+        Whitebox.setInternalState(site, "projectUpdateLock", new ReentrantLock());
+        Whitebox.setInternalState(site, "issueCache", (Object)Whitebox.invokeMethod(JiraSite.class, "makeIssueCache"));
     }
 
     @Test

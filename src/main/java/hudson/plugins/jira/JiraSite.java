@@ -6,6 +6,11 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
@@ -18,8 +23,13 @@ import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
+import hudson.security.ACL;
+import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -92,14 +102,28 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public final boolean useHTTPAuth;
 
     /**
-     * User name needed to login. Optional.
+     * The id of the credentials to use. Optional.
      */
-    public final String userName;
+    public final String credentialsId;
+
+    /**
+     * Transient stash of the credentials to use, mostly just for providing floating user object.
+     */
+    public final transient UsernamePasswordCredentials credentials;
+
+    /**
+     * User name needed to login. Optional.
+     * @deprecated use credentialsId
+     */
+    @Deprecated
+    private transient String userName;
 
     /**
      * Password needed to login. Optional.
+     * @deprecated use credentialsId
      */
-    public final Secret password;
+    @Deprecated
+    private transient Secret password;
 
     /**
      * Group visibility to constrain the visibility of the added comment. Optional.
@@ -180,8 +204,22 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private transient JiraSession jiraSession;
 
     @DataBoundConstructor
+    public JiraSite(URL url, @CheckForNull URL alternativeUrl, @CheckForNull String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
+                    boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
+        this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url), supportsWikiStyleComment, recordScmChanges, userPattern,
+                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+    }
+
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
                     boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
+        this(url, alternativeUrl, CredentialsHelper.migrateCredentials(userName, password, url), supportsWikiStyleComment, recordScmChanges, userPattern,
+                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+    }
+
+    public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
         if (url != null && !url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm() + "/");
@@ -200,8 +238,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     	this.timeout = JiraSite.DEFAULT_TIMEOUT;
         
         this.alternativeUrl = alternativeUrl;
-        this.userName = Util.fixEmpty(userName);
-        this.password = Secret.fromString(Util.fixEmpty(password));
+        this.credentials = credentials;
+        this.credentialsId = credentials != null ? credentials.getId() : null;
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
         this.userPattern = Util.fixEmpty(userPattern);
@@ -255,12 +293,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public boolean isAppendChangeTimestamp() {
         return this.appendChangeTimestamp != null && this.appendChangeTimestamp.booleanValue();
     }
-    
+
+    @SuppressWarnings("unused")
     protected Object readResolve() {
-        projectUpdateLock = new ReentrantLock();
-        issueCache = makeIssueCache();
-        jiraSession = null;
-        return this;
+        if (credentialsId == null && userName != null && password != null) { // Migrate credentials
+            return new JiraSite(url, alternativeUrl, userName, password.getPlainText(), supportsWikiStyleComment, recordScmChanges, userPattern,
+                    updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+        }
+        return new JiraSite(url, alternativeUrl, credentialsId, supportsWikiStyleComment, recordScmChanges, userPattern,
+                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
     }
 
     private static Cache<String, Optional<Issue>> makeIssueCache() {
@@ -293,7 +334,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null if remote access is not supported.
      */
     protected JiraSession createSession() {
-        if (userName == null) {
+        if (credentials == null) {
             return null;    // remote access not supported
         }
 
@@ -306,6 +347,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
         LOGGER.fine("creating JIRA Session: " + uri);
 
+        String userName = credentials.getUsername();
+        Secret password = credentials.getPassword();
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());
         int usedTimeout = timeout != null ? timeout : JiraSite.DEFAULT_TIMEOUT;
@@ -658,9 +701,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         /**
          * Checks if the user name and password are valid.
          */
-        public FormValidation doValidate(@QueryParameter String userName,
-                                         @QueryParameter String url,
-                                         @QueryParameter String password,
+        public FormValidation doValidate(@QueryParameter String url,
+                                         @QueryParameter String credentialsId,
                                          @QueryParameter String groupVisibility,
                                          @QueryParameter String roleVisibility,
                                          @QueryParameter boolean useHTTPAuth,
@@ -687,8 +729,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 return FormValidation.error(String.format("Malformed alternative URL (%s)",alternativeUrl), e );
             }
 
-            JiraSite site = new JiraSite(mainURL, alternativeURL, userName, password, false,
-                    false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
+            credentialsId = Util.fixEmpty(credentialsId);
+            JiraSite site = getJiraSiteBuilder()
+                    .withMainURL(mainURL)
+                    .withAlternativeURL(alternativeURL)
+                    .withCredentialsId(credentialsId)
+                    .withGroupVisibility(groupVisibility)
+                    .withRoleVisibility(roleVisibility)
+                    .withUseHTTPAuth(useHTTPAuth)
+                    .build();
+
             site.setTimeout(timeout);            
             try {
                 JiraSession session = site.createSession();
@@ -699,6 +749,96 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
             return FormValidation.error("Failed to login to JIRA");
+        }
+
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context, @QueryParameter String url) {
+            AccessControlled _context = (context instanceof AccessControlled ? (AccessControlled) context : Jenkins.getInstance());
+            if (_context == null || !_context.hasPermission(Jenkins.ADMINISTER)) {
+                return new StandardUsernameListBoxModel();
+            }
+
+            return new StandardUsernameListBoxModel()
+                    .withEmptySelection()
+                    .withAll(
+                        CredentialsProvider.lookupCredentials(
+                            StandardUsernamePasswordCredentials.class,
+                            Jenkins.getInstance(),
+                            ACL.SYSTEM,
+                            URIRequirementBuilder.fromUri(url).build()
+                        )
+                    );
+        }
+
+        JiraSiteBuilder getJiraSiteBuilder() {
+            return new JiraSiteBuilder();
+        }
+    }
+
+    static class JiraSiteBuilder {
+        private URL mainURL;
+        private URL alternativeURL;
+        private String credentialsId;
+        private boolean supportsWikiStyleComment;
+        private boolean recordScmChanges;
+        private String userPattern;
+        private boolean updateJiraIssueForAllStatus;
+        private String groupVisibility;
+        private String roleVisibility;
+        private boolean useHTTPAuth;
+
+        public JiraSiteBuilder withMainURL(URL mainURL) {
+            this.mainURL = mainURL;
+            return this;
+        }
+
+        public JiraSiteBuilder withAlternativeURL(URL alternativeURL) {
+            this.alternativeURL = alternativeURL;
+            return this;
+        }
+
+        public JiraSiteBuilder withCredentialsId(String credentialsId) {
+            this.credentialsId = credentialsId;
+            return this;
+        }
+
+        public JiraSiteBuilder withSupportsWikiStyleComment(boolean supportsWikiStyleComment) {
+            this.supportsWikiStyleComment = supportsWikiStyleComment;
+            return this;
+        }
+
+        public JiraSiteBuilder withRecordScmChanges(boolean recordScmChanges) {
+            this.recordScmChanges = recordScmChanges;
+            return this;
+        }
+
+        public JiraSiteBuilder withUserPattern(String userPattern) {
+            this.userPattern = userPattern;
+            return this;
+        }
+
+        public JiraSiteBuilder withUpdateJiraIssueForAllStatus(boolean updateJiraIssueForAllStatus) {
+            this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
+            return this;
+        }
+
+        public JiraSiteBuilder withGroupVisibility(String groupVisibility) {
+            this.groupVisibility = groupVisibility;
+            return this;
+        }
+
+        public JiraSiteBuilder withRoleVisibility(String roleVisibility) {
+            this.roleVisibility = roleVisibility;
+            return this;
+        }
+
+        public JiraSiteBuilder withUseHTTPAuth(boolean useHTTPAuth) {
+            this.useHTTPAuth = useHTTPAuth;
+            return this;
+        }
+
+        public JiraSite build() {
+            return new JiraSite(mainURL, alternativeURL, credentialsId, supportsWikiStyleComment,
+                    recordScmChanges, userPattern, updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
         }
     }
 

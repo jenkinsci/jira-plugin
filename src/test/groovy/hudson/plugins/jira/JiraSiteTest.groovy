@@ -111,8 +111,7 @@ class JiraSiteTest extends Specification {
 
     def "getIssue"() {
         given:
-        // FIXME We need JENKINS-47500 to be backported into JENKINS 1.642 to use null password here.
-        def site = new JiraSite(null, null, null, "{*** HACK INVALID BASE64 PASSWORD ***}", false, false, null, false, null, null, false)
+        def site = new JiraSite(null, null, null, false, false, null, false, null, null, false)
         def session = Mock(JiraSession)
         def issue = Mock(Issue)
         site.jiraSession = session
