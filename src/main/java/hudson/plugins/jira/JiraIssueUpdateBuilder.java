@@ -15,13 +15,13 @@
  */
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Job;
-import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -33,7 +33,15 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Logger;
+
+import static hudson.model.Result.FAILURE;
+import static hudson.model.Result.UNSTABLE;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * Build step that will mass-update all issues matching a JQL query, using the specified workflow
@@ -42,6 +50,8 @@ import java.util.concurrent.TimeoutException;
  * @author Joe Hansche jhansche@myyearbook.com
  */
 public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
+    private static final Logger LOGGER = Logger.getLogger(JiraIssueUpdateBuilder.class.getName());
+
     private final String jqlSearch;
     private final String workflowActionName;
     private final String comment;
@@ -73,7 +83,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
     public String getComment() {
         return comment;
     }
-    
+
     JiraSite getSiteForJob(Job<?, ?> job) {
         return JiraSite.get(job);
     }
@@ -91,7 +101,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
 
         if (site == null) {
             listener.getLogger().println(Messages.NoJiraSite());
-            run.setResult(Result.FAILURE);
+            run.setResult(FAILURE);
             return;
         }
 
@@ -102,15 +112,93 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
         listener.getLogger().println("[JIRA] JQL: " + realJql);
 
         try {
-            if (!site.progressMatchingIssues(realJql, realWorkflowActionName, realComment, listener.getLogger())) {
+            if (!progressMatchingIssues(site, realJql, realWorkflowActionName, realComment, listener.getLogger())) {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
-                run.setResult(Result.UNSTABLE);
+                run.setResult(UNSTABLE);
             }
         } catch (TimeoutException e) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
-            run.setResult(Result.FAILURE);
+            run.setResult(FAILURE);
         }
+    }
+
+    /**
+     * Progresses all issues matching the JQL search, using the given workflow action. Optionally
+     * adds a comment to the issue(s) at the same time.
+     *
+     * @param jqlSearch
+     * @param workflowActionName
+     * @param comment
+     * @param console
+     * @throws TimeoutException
+     */
+    public boolean progressMatchingIssues(
+            JiraSite site,
+            String jqlSearch,
+            String workflowActionName,
+            String comment,
+            PrintStream console) throws TimeoutException {
+
+        if (isEmpty(workflowActionName)) {
+            console.println("[JIRA] No workflow action was specified, " +
+                    "thus no status update will be made for any of the matching issues.");
+        }
+
+        JiraSession session = site.getSession();
+
+        if (session == null) {
+            LOGGER.warning("JIRA session could not be established");
+            console.println(Messages.FailedToConnect());
+            return false;
+        }
+
+        List<Issue> issues = session.getIssuesFromJqlSearch(jqlSearch);
+
+        boolean success = true;
+        for (Issue issue : issues) {
+            commentIssue(session, issue, comment);
+            if (!progressIssue(session, issue, workflowActionName, console)) {
+                success = false;
+            }
+        }
+
+        return success;
+    }
+
+    protected void commentIssue(JiraSession session, Issue issue, String comment) {
+        if (isNotEmpty(comment)) {
+            session.addComment(issue.getKey(), comment, null, null);
+        }
+    }
+
+    protected boolean progressIssue(
+            JiraSession session, Issue issue, String workflowActionName, PrintStream console) {
+
+        String issueKey = issue.getKey();
+
+        if (isEmpty(workflowActionName)) {
+            return true;
+        }
+
+        Integer actionId = session.getActionIdForIssue(issueKey, workflowActionName);
+
+        if (actionId == null) {
+            LOGGER.fine(String.format(
+                    "Invalid workflow action '%s' for issue '%s'; issue status = '%s'.",
+                    workflowActionName,
+                    issueKey,
+                    issue.getStatus()));
+            console.println(Messages.JiraIssueUpdateBuilder_UnknownWorkflowAction(issueKey, workflowActionName));
+            return false;
+        }
+
+        String newStatus = session.progressWorkflowAction(issueKey, actionId);
+
+        console.println(String.format("[JIRA] Issue '%s' transitioned to '%s' due to action '%s'.",
+                issueKey, newStatus, workflowActionName));
+
+        return true;
     }
 
     @Override
