@@ -59,6 +59,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         Resolved,
         Approved,
         Delivered,
+        Discarded
     }
 
     @DataBoundConstructor
@@ -428,7 +429,8 @@ public class JiraCreateIssueNotifier extends Notifier {
                 status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
                 status.getName().equalsIgnoreCase(finishedStatuses.Done.toString()) ||
                 status.getName().equalsIgnoreCase(finishedStatuses.Approved.toString()) ||
-                status.getName().equalsIgnoreCase(finishedStatuses.Delivered.toString());
+                status.getName().equalsIgnoreCase(finishedStatuses.Delivered.toString()) ||
+                status.getName().equalsIgnoreCase(finishedStatuses.Discarded.toString());
     }
 
     private void progressWorkflowAction(AbstractBuild<?, ?> build, String issueId, Integer actionId) throws IOException {
