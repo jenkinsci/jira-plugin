@@ -5,8 +5,11 @@ import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.util.CopyOnWriteList;
+import hudson.util.PersistedList;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -66,8 +69,10 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
+    @Symbol("jira")
     public static final class DescriptorImpl extends JobPropertyDescriptor {
-        private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<JiraSite>();
+
+        public final PersistedList<JiraSite> sites = new PersistedList<>(this);
 
         public DescriptorImpl() {
             super(JiraProjectProperty.class);
@@ -85,6 +90,10 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             return Messages.JiraProjectProperty_DisplayName();
         }
 
+        /**
+         * @deprecated use {@link #sites} directly to configure Jira sites, as PersistedList will notify owner on changes.
+         */
+        @Deprecated
         public void setSites(JiraSite site) {
             sites.add(site);
         }
@@ -112,7 +121,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             Stapler.CONVERT_UTILS.register(new EmptyFriendlyURLConverter(), java.net.URL.class);
             //End hack
 
-            sites.replaceBy(req.bindJSONToList(JiraSite.class, formData.get("sites")));
+            req.bindJSON(this, formData);
             save();
             return true;
         }
