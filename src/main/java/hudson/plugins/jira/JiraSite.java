@@ -37,7 +37,6 @@ import org.kohsuke.stapler.QueryParameter;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -57,9 +56,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
-
 /**
  * Represents an external JIRA installation and configuration
  * needed to access this JIRA.
@@ -77,13 +73,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * See issue JENKINS-729, JENKINS-4092
      */
     public static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
-    
+
     /**
      * Default rest api client calls timeout, in seconds
-     * See issue JENKINS-31113 
+     * See issue JENKINS-31113
      */
     public static final int DEFAULT_TIMEOUT = 10;
-    
+
     /**
      * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
@@ -113,6 +109,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * User name needed to login. Optional.
+     *
      * @deprecated use credentialsId
      */
     @Deprecated
@@ -120,6 +117,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Password needed to login. Optional.
+     *
      * @deprecated use credentialsId
      */
     @Deprecated
@@ -169,20 +167,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @since 1.22
      */
     public final boolean updateJiraIssueForAllStatus;
-    
+
     /**
      * timeout used when calling jira rest api, in seconds
      */
-    public Integer timeout;
+    public Integer timeout = DEFAULT_TIMEOUT;
 
     /**
      * Configuration  for formatting (date -> text) in jira comments.
      */
     private String dateTimePattern;
-    
+
     /**
      * To add scm entry change date and time in jira comments.
-     *
      */
     private Boolean appendChangeTimestamp;
 
@@ -220,30 +217,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
                     boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
-        if (url != null && !url.toExternalForm().endsWith("/"))
-            try {
-                url = new URL(url.toExternalForm() + "/");
-            } catch (MalformedURLException e) {
-                throw new AssertionError(e);
-            }
 
-        if (alternativeUrl != null && !alternativeUrl.toExternalForm().endsWith("/"))
-            try {
-                alternativeUrl = new URL(alternativeUrl.toExternalForm() + "/");
-            } catch (MalformedURLException e) {
-                throw new AssertionError(e);
-            }
+        this.url = normalizeURL(url);
+        this.alternativeUrl = normalizeURL(alternativeUrl);
 
-        this.url = url;        
-    	this.timeout = JiraSite.DEFAULT_TIMEOUT;
-        
-        this.alternativeUrl = alternativeUrl;
         this.credentials = credentials;
         this.credentialsId = credentials != null ? credentials.getId() : null;
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
         this.userPattern = Util.fixEmpty(userPattern);
-        
+
         if (this.userPattern != null) {
             this.userPat = Pattern.compile(this.userPattern);
         } else {
@@ -269,18 +252,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Sets request timeout (in seconds).
      * If not specified, a default timeout will be used.
+     *
      * @param timeoutSec Timeout in seconds
      */
     @DataBoundSetter
     public void setTimeout(Integer timeoutSec) {
-		this.timeout = timeoutSec;
-	}
-    
+        this.timeout = timeoutSec;
+    }
+
     @DataBoundSetter
     public void setDateTimePattern(String dateTimePattern) {
         this.dateTimePattern = dateTimePattern;
     }
-    
+
     @DataBoundSetter
     public void setAppendChangeTimestamp(Boolean appendChangeTimestamp) {
         this.appendChangeTimestamp = appendChangeTimestamp;
@@ -289,7 +273,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public String getDateTimePattern() {
         return dateTimePattern;
     }
-    
+
     public boolean isAppendChangeTimestamp() {
         return this.appendChangeTimestamp != null && this.appendChangeTimestamp.booleanValue();
     }
@@ -442,7 +426,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Gets the effective {@link JiraSite} associated with the given project.
      *
      * @return null
-     *         if no such was found.
+     * if no such was found.
      */
     public static JiraSite get(Job<?, ?> p) {
         JiraProjectProperty jpp = p.getProperty(JiraProjectProperty.class);
@@ -633,64 +617,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         session.addFixVersion(projectKey, versionName, query);
     }
 
-    /**
-     * Progresses all issues matching the JQL search, using the given workflow action. Optionally
-     * adds a comment to the issue(s) at the same time.
-     *
-     * @param jqlSearch
-     * @param workflowActionName
-     * @param comment
-     * @param console
-     * @throws TimeoutException
-     */
-    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
-        JiraSession session = getSession();
-
-        if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
-            console.println(Messages.FailedToConnect());
-            return false;
-        }
-
-        boolean success = true;
-        List<Issue> issues = session.getIssuesFromJqlSearch(jqlSearch);
-
-        if (isEmpty(workflowActionName)) {
-            console.println("[JIRA] No workflow action was specified, " +
-                    "thus no status update will be made for any of the matching issues.");
-        }
-
-        for (Issue issue : issues) {
-            String issueKey = issue.getKey();
-
-            if (isNotEmpty(comment)) {
-                session.addComment(issueKey, comment, null, null);
-            }
-
-
-            if (isEmpty(workflowActionName)) {
-                continue;
-            }
-
-            Integer actionId = session.getActionIdForIssue(issueKey, workflowActionName);
-
-            if (actionId == null) {
-                LOGGER.fine(String.format("Invalid workflow action %s for issue %s; issue status = %s",
-                        workflowActionName, issueKey, issue.getStatus()));
-                console.println(Messages.JiraIssueUpdateBuilder_UnknownWorkflowAction(issueKey, workflowActionName));
-                success = false;
-                continue;
-            }
-
-            String newStatus = session.progressWorkflowAction(issueKey, actionId);
-
-            console.println(String.format("[JIRA] Issue %s transitioned to \"%s\" due to action \"%s\".",
-                    issueKey, newStatus, workflowActionName));
-        }
-
-        return success;
-    }
-
     @Extension
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
@@ -712,21 +638,21 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             alternativeUrl = Util.fixEmpty(alternativeUrl);
             URL mainURL, alternativeURL = null;
 
-            try{
+            try {
                 if (url == null) {
                     return FormValidation.error("No URL given");
                 }
                 mainURL = new URL(url);
-            } catch (MalformedURLException e){
-                return FormValidation.error(String.format("Malformed URL (%s)", url), e );
+            } catch (MalformedURLException e) {
+                return FormValidation.error(String.format("Malformed URL '%s'", url), e);
             }
 
             try {
                 if (alternativeUrl != null) {
                     alternativeURL = new URL(alternativeUrl);
                 }
-            }catch (MalformedURLException e){
-                return FormValidation.error(String.format("Malformed alternative URL (%s)",alternativeUrl), e );
+            } catch (MalformedURLException e) {
+                return FormValidation.error(String.format("Malformed alternative URL '%s'", alternativeUrl), e);
             }
 
             credentialsId = Util.fixEmpty(credentialsId);
@@ -739,7 +665,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withUseHTTPAuth(useHTTPAuth)
                     .build();
 
-            site.setTimeout(timeout);            
+            site.setTimeout(timeout);
             try {
                 JiraSession session = site.createSession();
                 session.getMyPermissions();
@@ -760,12 +686,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return new StandardUsernameListBoxModel()
                     .withEmptySelection()
                     .withAll(
-                        CredentialsProvider.lookupCredentials(
-                            StandardUsernamePasswordCredentials.class,
-                            Jenkins.getInstance(),
-                            ACL.SYSTEM,
-                            URIRequirementBuilder.fromUri(url).build()
-                        )
+                            CredentialsProvider.lookupCredentials(
+                                    StandardUsernamePasswordCredentials.class,
+                                    Jenkins.getInstance(),
+                                    ACL.SYSTEM,
+                                    URIRequirementBuilder.fromUri(url).build()
+                            )
                     );
         }
 
@@ -840,6 +766,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return new JiraSite(mainURL, alternativeURL, credentialsId, supportsWikiStyleComment,
                     recordScmChanges, userPattern, updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
         }
+    }
+
+    private URL normalizeURL(URL url) {
+        if (url!=null && !url.toExternalForm().endsWith("/")) {
+            try {
+                return new URL(url.toExternalForm() + "/");
+            } catch (MalformedURLException e) {
+                throw new AssertionError(e);
+            }
+        }
+        return url;
     }
 
 }
