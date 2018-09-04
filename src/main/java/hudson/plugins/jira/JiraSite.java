@@ -39,7 +39,6 @@ import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
-import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -51,6 +50,7 @@ import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
+import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -930,48 +930,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return release notes
      * @throws TimeoutException if too long
      */
+    @Deprecated
     public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws TimeoutException {
-        JiraSession session = getSession();
-        if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
-            return "";
-        }
-
-        List<Issue> issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
-
-        if (issues.isEmpty()) {
-            return "";
-        }
-
-        Map<String, Set<String>> releaseNotes = new HashMap<>();
-
-        for (Issue issue : issues) {
-            String key = issue.getKey();
-            String summary = issue.getSummary();
-            String status = issue.getStatus().getName();
-            String type = issue.getIssueType().getName();
-
-            Set<String> issueSet;
-            if (releaseNotes.containsKey(type)) {
-                issueSet = releaseNotes.get(type);
-            } else {
-                issueSet = new HashSet<>();
-                releaseNotes.put(type, issueSet);
-            }
-
-            issueSet.add(String.format(" - [%s] %s (%s)", key, summary, status));
-        }
-
-        StringBuilder sb = new StringBuilder();
-        for (String type : releaseNotes.keySet()) {
-            sb.append(String.format("# %s\n", type));
-            for (String issue : releaseNotes.get(type)) {
-                sb.append(issue);
-                sb.append("\n");
-            }
-        }
-
-        return sb.toString();
+        return JiraCreateReleaseNotes.getReleaseNotesForFixVersion(projectKey, versionName, filter, getSession());
     }
 
     /**

@@ -10,13 +10,14 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
-import org.hamcrest.Matchers;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -25,8 +26,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JiraCreateReleaseNotesTest {
@@ -52,6 +64,8 @@ public class JiraCreateReleaseNotesTest {
     JiraSite site;
     @Mock
     private PrintWriter printWriter;
+    @Mock
+    JiraSession session;
 
     @Before
     public void createCommonMocks() throws IOException, InterruptedException {
@@ -59,16 +73,17 @@ public class JiraCreateReleaseNotesTest {
         when(build.getEnvironment(buildListener)).thenReturn(env);
         when(buildListener.fatalError(Mockito.anyString(), Mockito.anyVararg())).thenReturn(printWriter);
         when(build.getResult()).thenCallRealMethod();
+        doReturn(session).when(site).getSession();
 
-        when(env.expand(Mockito.anyString())).thenAnswer(invocationOnMock -> {
-                Object[] args = invocationOnMock.getArguments();
-                String expanded = (String) args[0];
-                if (expanded.equals(JIRA_PRJ_PARAM))
-                    return JIRA_PRJ;
-                else if (expanded.equals(JIRA_RELEASE_PARAM))
-                    return JIRA_RELEASE;
-                else
-                    return expanded;
+        when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
+            Object[] args = invocationOnMock.getArguments();
+            String expanded = (String) args[0];
+            if (expanded.equals(JIRA_PRJ_PARAM))
+                return JIRA_PRJ;
+            else if (expanded.equals(JIRA_RELEASE_PARAM))
+                return JIRA_RELEASE;
+            else
+                return expanded;
         });
 
     }
@@ -76,6 +91,7 @@ public class JiraCreateReleaseNotesTest {
     @Test
     public void defaults(){
         JiraCreateReleaseNotes jcrn = new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,"");
+
         assertEquals(JiraCreateReleaseNotes.DEFAULT_ENVVAR_NAME, jcrn.getJiraEnvironmentVariable());
         assertEquals(JiraCreateReleaseNotes.DEFAULT_FILTER, jcrn.getJiraFilter());
     }
@@ -84,49 +100,58 @@ public class JiraCreateReleaseNotesTest {
     public void jiraApiCallDefaultFilter() throws InterruptedException, IOException, TimeoutException {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
+
         jcrn.setUp(build, launcher, buildListener);
-        verify(site).getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER);
+
+        verify(session).getIssuesWithFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER);
     }
 
     @Test
     public void jiraApiCallOtherFilter() throws InterruptedException, IOException, TimeoutException {
-        JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER));
+        JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(
+                JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
-        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.anyObject());
+        doAnswer(finishedListener).when(buildListener).finished(anyObject());
+
         jcrn.setUp(build, launcher, buildListener);
-        verify(site).getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JIRA_OTHER_FILTER);
-        //assert that build not fail
-        assertThat(finishedListener.getResult(), Matchers.nullValue());
+
+        verify(session).getIssuesWithFixVersion(JIRA_PRJ, JIRA_RELEASE, JIRA_OTHER_FILTER);
+        assertThat(finishedListener.getResult(), nullValue());
     }
 
     @Test
     public void failBuildOnErrorEmptyProjectKey() throws InterruptedException, IOException {
-        JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes("",JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER));
-        doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
+        JiraCreateReleaseNotes jcrn = new JiraCreateReleaseNotes(
+                "", JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER);
+
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
-        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.anyObject());
-        jcrn.setUp(build, launcher, buildListener);        
-        assertThat(finishedListener.getResult(), Matchers.equalTo(Result.FAILURE));
+        doAnswer(finishedListener).when(buildListener).finished(anyObject());
+        jcrn.setUp(build, launcher, buildListener);
+
+        assertThat(finishedListener.getResult(), equalTo(Result.FAILURE));
     }
 
     @Test
     public void failBuildOnErrorEmptyRelease() throws InterruptedException, IOException {
-        JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,"",JIRA_VARIABLE, JIRA_OTHER_FILTER));
-        doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
+        JiraCreateReleaseNotes jcrn = new JiraCreateReleaseNotes(
+                JIRA_PRJ,"", JIRA_VARIABLE, JIRA_OTHER_FILTER);
+
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
-        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.anyObject());
-        jcrn.setUp(build, launcher, buildListener);        
-        assertThat(finishedListener.getResult(), Matchers.equalTo(Result.FAILURE));
+        doAnswer(finishedListener).when(buildListener).finished(anyObject());
+        jcrn.setUp(build, launcher, buildListener);
+
+        assertThat(finishedListener.getResult(), equalTo(Result.FAILURE));
     }
     
     @Test
     public void releaseNotesContent() throws InterruptedException, IOException, TimeoutException {
-        JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
+        JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ, JIRA_RELEASE, JIRA_VARIABLE));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
-        when(site.getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER)).thenCallRealMethod();
+
         JiraSession session = Mockito.mock(JiraSession.class);
         doReturn(session).when(site).getSession();
+
         Issue issue1 = Mockito.mock(Issue.class);
         IssueType issueType1 = Mockito.mock(IssueType.class);
         Status issueStatus = Mockito.mock(Status.class);
@@ -142,12 +167,15 @@ public class JiraCreateReleaseNotesTest {
            thenReturn(Arrays.asList(issue1, issue2));
 
         BuildWrapper.Environment environment = jcrn.setUp(build, launcher, buildListener);
-        Map<String, String> envVars = new HashMap<>();
+
+        Map<String, String> envVars = new HashMap();
         environment.buildEnvVars(envVars);
         String releaseNotes = envVars.get(jcrn.getJiraEnvironmentVariable());
+
         assertNotNull(releaseNotes);
-        assertThat(releaseNotes, Matchers.containsString(issueType1.getName()));
-        assertThat(releaseNotes, Matchers.containsString(issueType2.getName()));
-        assertThat(releaseNotes, Matchers.not(Matchers.containsString("UNKNOWN")));
+        assertThat(releaseNotes, containsString(issueType1.getName()));
+        assertThat(releaseNotes, containsString(issueType2.getName()));
+        assertThat(releaseNotes, not(containsString("UNKNOWN")));
     }
+
 }
