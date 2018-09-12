@@ -25,6 +25,8 @@ import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
+import hudson.security.AccessDeniedException2;
+import hudson.security.Permission;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -33,6 +35,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
@@ -57,6 +60,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import static hudson.model.Item.CONFIGURE;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
@@ -701,13 +705,26 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         /**
          * Checks if the user name and password are valid.
          */
+        @RequirePOST
         public FormValidation doValidate(@QueryParameter String url,
                                          @QueryParameter String credentialsId,
                                          @QueryParameter String groupVisibility,
                                          @QueryParameter String roleVisibility,
                                          @QueryParameter boolean useHTTPAuth,
                                          @QueryParameter String alternativeUrl,
-                                         @QueryParameter Integer timeout) {
+                                         @QueryParameter Integer timeout,
+                                         @AncestorInPath Item item) {
+            boolean ok = Jenkins.getInstance().hasPermission( Jenkins.ADMINISTER);
+            if(!ok){
+                // not administer we check configure for the item if any
+                if (item != null) {
+                    ok = item.hasPermission( CONFIGURE);
+                }
+                if(!ok){
+                    throw new AccessDeniedException2( Jenkins.getAuthentication(), CONFIGURE);
+                }
+            }
+
             url = Util.fixEmpty(url);
             alternativeUrl = Util.fixEmpty(alternativeUrl);
             URL mainURL, alternativeURL = null;
