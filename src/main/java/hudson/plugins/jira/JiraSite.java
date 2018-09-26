@@ -717,8 +717,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
             if (item == null) {
                 Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
-            }
-            else {
+            } else {
                 item.checkPermission(Item.CONFIGURE);
             }
 
