@@ -714,15 +714,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                          @QueryParameter String alternativeUrl,
                                          @QueryParameter Integer timeout,
                                          @AncestorInPath Item item) {
-            boolean ok = Jenkins.getInstance().hasPermission( Jenkins.ADMINISTER);
-            if(!ok){
-                // not administer we check configure for the item if any
-                if (item != null) {
-                    ok = item.hasPermission( CONFIGURE);
-                }
-                if(!ok){
-                    throw new AccessDeniedException2( Jenkins.getAuthentication(), CONFIGURE);
-                }
+
+            if (item == null) {
+                Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            } else {
+                item.checkPermission(Item.CONFIGURE);
             }
 
             url = Util.fixEmpty(url);
