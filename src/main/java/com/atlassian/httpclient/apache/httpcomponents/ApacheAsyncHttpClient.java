@@ -100,14 +100,8 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
 {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    private static final Supplier<String> httpClientVersion = Suppliers.memoize(new Supplier<String>()
-    {
-        @Override
-        public String get()
-        {
-            return MavenUtils.getVersion("com.atlassian.httpclient", "atlassian-httpclient-api");
-        }
-    });
+    private static final Supplier<String> httpClientVersion =
+        Suppliers.memoize(() -> MavenUtils.getVersion("com.atlassian.httpclient", "atlassian-httpclient-api"));
 
     private final Function<Object, Void> eventConsumer;
     private final Supplier<String> applicationName;
@@ -261,7 +255,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
 
         public JenkinsProxyRoutePlanner(HttpHost proxy, List<Pattern> nonProxyHosts) {
             super((SchemePortResolver)null);
-            this.proxy = (HttpHost) Args.notNull(proxy, "Proxy host");
+            this.proxy = Args.notNull(proxy, "Proxy host");
             this.nonProxyHosts = nonProxyHosts;
         }
 
@@ -424,21 +418,12 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
 
         final PromiseHttpAsyncClient asyncClient = getPromiseHttpAsyncClient(request);
         return ResponsePromises.toResponsePromise(asyncClient.execute(op, new BasicHttpContext()).fold(
-                new Function<Throwable, Response>()
-                {
-                    @Override
-                    public Response apply(Throwable ex)
-                    {
+            throwable -> {
                         final long requestDuration = System.currentTimeMillis() - start;
-                        publishEvent(request, requestDuration, ex);
-                        throw Throwables.propagate(ex);
-                    }
-                },
-                new Function<HttpResponse, Response>()
-                {
-                    @Override
-                    public Response apply(HttpResponse httpResponse)
-                    {
+                        publishEvent(request, requestDuration, throwable);
+                        throw Throwables.propagate(throwable);
+                    },
+            httpResponse -> {
                         final long requestDuration = System.currentTimeMillis() - start;
                         publishEvent(request, requestDuration, httpResponse.getStatusLine().getStatusCode());
                         try
@@ -449,7 +434,6 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                         {
                             throw Throwables.propagate(e);
                         }
-                    }
                 }
         ));
     }

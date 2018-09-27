@@ -514,6 +514,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
     }
 
+    @Deprecated
+    public boolean existsIssue(String id) {
+        try {
+            return getIssue(id) != null;
+        } catch ( IOException e ) { // restoring backward compat means even avoid exception
+            throw new RuntimeException( e.getMessage(),e );
+        }
+    }
+
     /**
      * Returns all versions for the given project key.
      *
