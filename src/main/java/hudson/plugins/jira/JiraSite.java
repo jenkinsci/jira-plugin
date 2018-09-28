@@ -1,10 +1,22 @@
 package hudson.plugins.jira;
 
+import com.atlassian.event.api.EventPublisher;
+import com.atlassian.httpclient.apache.httpcomponents.DefaultHttpClientFactory;
+import com.atlassian.httpclient.api.HttpClient;
+import com.atlassian.httpclient.api.factory.HttpClientOptions;
+import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
+import com.atlassian.jira.rest.client.internal.async.AtlassianHttpClientDecorator;
+import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+import com.atlassian.sal.api.ApplicationProperties;
+import com.atlassian.sal.api.UrlMode;
+import com.atlassian.sal.api.executor.ThreadLocalContextManager;
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
@@ -25,8 +37,6 @@ import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
-import hudson.security.AccessDeniedException2;
-import hudson.security.Permission;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -38,7 +48,9 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
@@ -46,21 +58,24 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static hudson.model.Item.CONFIGURE;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
@@ -87,6 +102,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * See issue JENKINS-31113 
      */
     public static final int DEFAULT_TIMEOUT = 10;
+
+    public static final int DEFAULT_READ_TIMEOUT = 30;
     
     /**
      * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
@@ -175,9 +192,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public final boolean updateJiraIssueForAllStatus;
     
     /**
-     * timeout used when calling jira rest api, in seconds
+     * connection timeout used when calling jira rest api, in seconds
      */
     public Integer timeout;
+
+    /**
+     * response timeout for jira rest call
+     */
+    private Integer readTimeout;
 
     /**
      * Configuration  for formatting (date -> text) in jira comments.
@@ -222,8 +244,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
     }
 
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
     public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
                     boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
+        this( url, alternativeUrl, credentials, supportsWikiStyleComment, recordScmChanges, userPattern, updateJiraIssueForAllStatus,
+              groupVisibility, roleVisibility, useHTTPAuth, DEFAULT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+    }
+
+    public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout) {
         if (url != null && !url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm() + "/");
@@ -239,7 +269,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
         this.url = url;        
-    	this.timeout = JiraSite.DEFAULT_TIMEOUT;
+    	this.timeout = timeout;
+    	this.readTimeout = readTimeout;
         
         this.alternativeUrl = alternativeUrl;
         this.credentials = credentials;
@@ -271,7 +302,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Sets request timeout (in seconds).
+     * Sets connect timeout (in seconds).
      * If not specified, a default timeout will be used.
      * @param timeoutSec Timeout in seconds
      */
@@ -279,7 +310,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void setTimeout(Integer timeoutSec) {
 		this.timeout = timeoutSec;
 	}
-    
+
+    /**
+     * Sets read timeout (in seconds).
+     * If not specified, a default timeout will be used.
+     * @param readTimeout Timeout in seconds
+     */
+    @DataBoundSetter
+    public void setReadTimeout( Integer readTimeout ) {
+        this.readTimeout = readTimeout;
+    }
+
     @DataBoundSetter
     public void setDateTimePattern(String dateTimePattern) {
         this.dateTimePattern = dateTimePattern;
@@ -353,11 +394,189 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         String userName = credentials.getUsername();
         Secret password = credentials.getPassword();
+        final HttpClientOptions options = new HttpClientOptions();
+        options.setRequestTimeout(readTimeout != null ? readTimeout : JiraSite.DEFAULT_READ_TIMEOUT, TimeUnit.SECONDS);
+        options.setSocketTimeout(timeout != null ? timeout : JiraSite.DEFAULT_TIMEOUT, TimeUnit.SECONDS);
+        options.setCallbackExecutor( Executors.newCachedThreadPool( new ThreadFactory()
+        {
+            final AtomicInteger threadNumber = new AtomicInteger( 0);
+            @Override
+            public Thread newThread( Runnable r )
+            {
+                 return new Thread( r, "jira-plugin-http-request-" + threadNumber.getAndIncrement() + "-thread" );
+            }
+        }));
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
-                .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());
-        int usedTimeout = timeout != null ? timeout : JiraSite.DEFAULT_TIMEOUT;
+                .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),options);
+        int usedTimeout = readTimeout != null ? readTimeout : JiraSite.DEFAULT_READ_TIMEOUT;
         return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), usedTimeout));
     }
+
+    //-----------------------------------------------------------------------------------
+    // internal classes we want to override
+    //-----------------------------------------------------------------------------------
+
+    private static class AsynchronousJiraRestClientFactory implements JiraRestClientFactory
+    {
+
+        public JiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
+            final DisposableHttpClient httpClient = createClient(serverUri, authenticationHandler, options);
+            return new AsynchronousJiraRestClient( serverUri, httpClient);
+        }
+
+        @Override
+        public JiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler) {
+            final DisposableHttpClient httpClient = createClient(serverUri, authenticationHandler, new HttpClientOptions());
+            return new AsynchronousJiraRestClient( serverUri, httpClient);
+        }
+
+        @Override
+        public JiraRestClient createWithBasicHttpAuthentication(final URI serverUri, final String username, final String password) {
+            return create(serverUri, new BasicHttpAuthenticationHandler( username, password));
+        }
+
+        @Override
+        public JiraRestClient createWithAuthenticationHandler(final URI serverUri, final AuthenticationHandler authenticationHandler) {
+            return create(serverUri, authenticationHandler);
+        }
+
+        @Override
+        public JiraRestClient create(final URI serverUri, final HttpClient httpClient) {
+            final DisposableHttpClient disposableHttpClient = createClient(httpClient);
+            return new AsynchronousJiraRestClient(serverUri, disposableHttpClient);
+        }
+    }
+
+    private static DisposableHttpClient createClient(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
+
+        final DefaultHttpClientFactory
+            defaultHttpClientFactory = new DefaultHttpClientFactory( new NoOpEventPublisher(),
+                                                                     new RestClientApplicationProperties( serverUri),
+                                                                     new ThreadLocalContextManager() {
+                                                                         @Override
+                                                                         public Object getThreadLocalContext() {
+                                                                             return null;
+                                                                         }
+
+                                                                         @Override
+                                                                         public void setThreadLocalContext(Object context) {
+                                                                         }
+
+                                                                         @Override
+                                                                         public void clearThreadLocalContext() {
+                                                                         }
+                                                                     });
+
+        final HttpClient httpClient = defaultHttpClientFactory.create(options);
+
+        return new AtlassianHttpClientDecorator( httpClient, authenticationHandler) {
+            @Override
+            public void destroy() throws Exception {
+                defaultHttpClientFactory.dispose(httpClient);
+            }
+        };
+    }
+
+    private static DisposableHttpClient createClient(final HttpClient client) {
+        return new AtlassianHttpClientDecorator(client, null) {
+            @Override
+            public void destroy() throws Exception {
+                // This should never be implemented. This is simply creation of a wrapper
+                // for AtlassianHttpClient which is extended by a destroy method.
+                // Destroy method should never be called for AtlassianHttpClient coming from
+                // a client! Imagine you create a RestClient, pass your own HttpClient there
+                // and it gets destroy.
+            }
+        };
+    }
+
+    private static class NoOpEventPublisher implements EventPublisher
+    {
+        @Override
+        public void publish(Object o) {
+        }
+
+        @Override
+        public void register(Object o) {
+        }
+
+        @Override
+        public void unregister(Object o) {
+        }
+
+        @Override
+        public void unregisterAll() {
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static class RestClientApplicationProperties implements ApplicationProperties
+    {
+
+        private final String baseUrl;
+
+        private RestClientApplicationProperties(URI jiraURI) {
+            this.baseUrl = jiraURI.getPath();
+        }
+
+        @Override
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        /**
+         * We'll always have an absolute URL as a client.
+         */
+        @Nonnull
+        @Override
+        public String getBaseUrl( UrlMode urlMode) {
+            return baseUrl;
+        }
+
+        @Nonnull
+        @Override
+        public String getDisplayName() {
+            return "Atlassian JIRA Rest Java Client";
+        }
+
+        @Nonnull
+        @Override
+        public String getPlatformId() {
+            return ApplicationProperties.PLATFORM_JIRA;
+        }
+
+        @Nonnull
+        @Override
+        public String getVersion() {
+            return "";
+        }
+
+        @Nonnull
+        @Override
+        public Date getBuildDate() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Nonnull
+        @Override
+        public String getBuildNumber() {
+            return String.valueOf(0);
+        }
+
+        @Override
+        public File getHomeDirectory() {
+            return new File(".");
+        }
+
+        @Override
+        public String getPropertyValue(final String s) {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+    }
+
+    //-----------------------------------------------------------------------------------
+    //
+    //-----------------------------------------------------------------------------------
 
     /**
      * @return the server URL
