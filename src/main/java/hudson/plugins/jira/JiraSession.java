@@ -39,14 +39,11 @@ public class JiraSession {
      */
     private Set<String> projectKeys;
 
-    /**
-     * This session is created for this site.
-     */
-    private final JiraSite site;
+    private final String jiraSiteName;
 
     /* package */JiraSession(JiraSite site, JiraRestService jiraRestService) {
-        this.site = site;
         this.service = jiraRestService;
+        this.jiraSiteName = site.getName();
     }
 
     /**
@@ -56,7 +53,7 @@ public class JiraSession {
      */
     public Set<String> getProjectKeys() {
         if (projectKeys == null) {
-            LOGGER.fine("Fetching remote project key list from " + site.getName());
+            LOGGER.fine("Fetching remote project key list from " + jiraSiteName);
             final List<String> keys = service.getProjectsKeys();
             projectKeys = new HashSet<>(keys.size());
             projectKeys.addAll(keys);
