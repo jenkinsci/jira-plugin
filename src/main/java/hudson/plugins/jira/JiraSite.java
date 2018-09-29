@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
@@ -104,6 +105,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public static final int DEFAULT_TIMEOUT = 10;
 
     public static final int DEFAULT_READ_TIMEOUT = 30;
+
+    public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
     
     /**
      * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
@@ -125,7 +128,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * The id of the credentials to use. Optional.
      */
-    public final String credentialsId;
+    public String credentialsId;
 
     /**
      * Transient stash of the credentials to use, mostly just for providing floating user object.
@@ -194,12 +197,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * connection timeout used when calling jira rest api, in seconds
      */
-    public Integer timeout;
+    public int timeout = DEFAULT_TIMEOUT;
 
     /**
      * response timeout for jira rest call
+     * @since 3.0.3
      */
-    private Integer readTimeout;
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
+
+    /**
+     * thread pool number
+     * @since 3.0.3
+     */
+    private int threadExecutorNumber = DEFAULT_THREAD_EXECUTOR_NUMBER;
 
     /**
      * Configuration  for formatting (date -> text) in jira comments.
@@ -229,7 +239,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     private transient JiraSession jiraSession;
 
-    @DataBoundConstructor
+    private transient ExecutorService executorService;
+
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, @CheckForNull String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
                     boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
         this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url), supportsWikiStyleComment, recordScmChanges, userPattern,
@@ -249,11 +262,18 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
                     boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
         this( url, alternativeUrl, credentials, supportsWikiStyleComment, recordScmChanges, userPattern, updateJiraIssueForAllStatus,
-              groupVisibility, roleVisibility, useHTTPAuth, DEFAULT_TIMEOUT, DEFAULT_READ_TIMEOUT);
+              groupVisibility, roleVisibility, useHTTPAuth, DEFAULT_TIMEOUT, DEFAULT_READ_TIMEOUT, DEFAULT_THREAD_EXECUTOR_NUMBER);
+    }
+
+    @DataBoundConstructor
+    public JiraSite(URL url, URL alternativeUrl, String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber){
+        this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url), supportsWikiStyleComment, recordScmChanges, userPattern,
+             updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
     }
 
     public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
-                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout) {
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber) {
         if (url != null && !url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm() + "/");
@@ -271,6 +291,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.url = url;        
     	this.timeout = timeout;
     	this.readTimeout = readTimeout;
+    	this.threadExecutorNumber = threadExecutorNumber;
         
         this.alternativeUrl = alternativeUrl;
         this.credentials = credentials;
@@ -307,9 +328,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param timeoutSec Timeout in seconds
      */
     @DataBoundSetter
-    public void setTimeout(Integer timeoutSec) {
+    public void setTimeout(int timeoutSec) {
 		this.timeout = timeoutSec;
 	}
+
+    public int getTimeout() {
+        return timeout;
+    }
 
     /**
      * Sets read timeout (in seconds).
@@ -317,15 +342,37 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param readTimeout Timeout in seconds
      */
     @DataBoundSetter
-    public void setReadTimeout( Integer readTimeout ) {
+    public void setReadTimeout( int readTimeout ) {
         this.readTimeout = readTimeout;
+    }
+
+    public int getReadTimeout() {
+        return readTimeout;
+    }
+
+    public String getCredentialsId() {
+        return credentialsId;
+    }
+
+    @DataBoundSetter
+    public void setCredentialsId(String credentialsId) {
+        this.credentialsId = credentialsId;
     }
 
     @DataBoundSetter
     public void setDateTimePattern(String dateTimePattern) {
         this.dateTimePattern = dateTimePattern;
     }
-    
+
+    @DataBoundSetter
+    public void setThreadExecutorNumber( int threadExecutorNumber ) {
+        this.threadExecutorNumber = threadExecutorNumber;
+    }
+
+    public int getThreadExecutorNumber() {
+        return threadExecutorNumber;
+    }
+
     @DataBoundSetter
     public void setAppendChangeTimestamp(Boolean appendChangeTimestamp) {
         this.appendChangeTimestamp = appendChangeTimestamp;
@@ -346,7 +393,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
         }
         return new JiraSite(url, alternativeUrl, credentialsId, supportsWikiStyleComment, recordScmChanges, userPattern,
-                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
     }
 
     private static Cache<String, Optional<Issue>> makeIssueCache() {
@@ -395,21 +442,29 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         String userName = credentials.getUsername();
         Secret password = credentials.getPassword();
         final HttpClientOptions options = new HttpClientOptions();
-        options.setRequestTimeout(readTimeout != null ? readTimeout : JiraSite.DEFAULT_READ_TIMEOUT, TimeUnit.SECONDS);
-        options.setSocketTimeout(timeout != null ? timeout : JiraSite.DEFAULT_TIMEOUT, TimeUnit.SECONDS);
-        options.setCallbackExecutor( Executors.newCachedThreadPool( new ThreadFactory()
-        {
-            final AtomicInteger threadNumber = new AtomicInteger( 0);
-            @Override
-            public Thread newThread( Runnable r )
-            {
-                 return new Thread( r, "jira-plugin-http-request-" + threadNumber.getAndIncrement() + "-thread" );
-            }
-        }));
+        options.setRequestTimeout(readTimeout, TimeUnit.SECONDS);
+        options.setSocketTimeout(timeout, TimeUnit.SECONDS);
+
+        if (executorService==null){
+            executorService =  Executors.newFixedThreadPool(
+                threadExecutorNumber, //
+                new ThreadFactory()
+                {
+                    final AtomicInteger threadNumber = new AtomicInteger( 0 );
+
+                    @Override
+                    public Thread newThread( Runnable r )
+                    {
+                        return new Thread( r, "jira-plugin-http-request-" + threadNumber.getAndIncrement() + "-thread" );
+                    }
+                } );
+        }
+
+        options.setCallbackExecutor(executorService);
+
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
                 .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),options);
-        int usedTimeout = readTimeout != null ? readTimeout : JiraSite.DEFAULT_READ_TIMEOUT;
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), usedTimeout));
+        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
     }
 
     //-----------------------------------------------------------------------------------
@@ -923,6 +978,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return success;
     }
 
+    public void destroy() {
+        try {
+            if(this.executorService!=null&&!this.executorService.isShutdown()){
+                this.executorService.shutdownNow();
+            }
+        } catch ( Exception e ) {
+            LOGGER.log(Level.INFO, "skip error stopping executorService:" + e.getMessage(), e );
+        }
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
@@ -940,7 +1005,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                          @QueryParameter String roleVisibility,
                                          @QueryParameter boolean useHTTPAuth,
                                          @QueryParameter String alternativeUrl,
-                                         @QueryParameter Integer timeout,
+                                         @QueryParameter int timeout,
+                                         @QueryParameter int readTimeout,
+                                         @QueryParameter int threadExecutorNumber,
                                          @AncestorInPath Item item) {
 
             if (item == null) {
@@ -980,13 +1047,20 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withUseHTTPAuth(useHTTPAuth)
                     .build();
 
-            site.setTimeout(timeout);            
+            site.setTimeout(timeout==0?DEFAULT_TIMEOUT:timeout);
+            site.setReadTimeout(readTimeout==0?DEFAULT_READ_TIMEOUT:readTimeout);
+            site.setThreadExecutorNumber(threadExecutorNumber==0?DEFAULT_THREAD_EXECUTOR_NUMBER:threadExecutorNumber);
+
             try {
                 JiraSession session = site.createSession();
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
                 LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url, e);
+            } finally {
+                if(site!=null){
+                    site.destroy();
+                }
             }
 
             return FormValidation.error("Failed to login to JIRA");

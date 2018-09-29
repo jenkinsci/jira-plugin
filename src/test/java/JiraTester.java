@@ -84,5 +84,30 @@ public class JiraTester {
 //        final Issue updatedIssue = restService.progressWorkflowAction(issueId, actionId);
 //        System.out.println("Updated issue:" + updatedIssue);
 
+
+
+        for(int i=0;i<10;i++){
+            callUniq( restService );
+        }
+
+        for(int i=0;i<10;i++){
+            callDuplicate( restService );
+        }
+
     }
+
+    private static void callUniq(final JiraRestService restService) throws Exception {
+        long start = System.currentTimeMillis();
+        List<Issue> issues = restService.getIssuesFromJqlSearch( "key in ('JENKINS-53320','JENKINS-51057')", Integer.MAX_VALUE );
+        long end = System.currentTimeMillis();
+        System.out.println( "time uniq " + (end -start) );
+    }
+
+    private static void callDuplicate(final JiraRestService restService) throws Exception {
+        long start = System.currentTimeMillis();
+        List<Issue> issues = restService.getIssuesFromJqlSearch( "key in ('JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057')", Integer.MAX_VALUE );
+        long end = System.currentTimeMillis();
+        System.out.println( "time duplicate " + (end -start) );
+    }
+
 }

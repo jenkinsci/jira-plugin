@@ -458,4 +458,6 @@ public class JiraSession {
      */
     public Permissions getMyPermissions(){ return service.getMyPermissions(); }
 
+
+
 }

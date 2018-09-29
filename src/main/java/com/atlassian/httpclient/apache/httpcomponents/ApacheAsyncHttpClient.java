@@ -197,25 +197,24 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                     .setUserAgent(getUserAgent(options))
                     .setDefaultRequestConfig(requestConfig);
 
+            if(Jenkins.getInstance() != null) {
+                ProxyConfiguration proxyConfiguration = Jenkins.getInstance().proxy;
+                if ( proxyConfiguration != null ) {
+                    final HttpHost proxy = new HttpHost( proxyConfiguration.name, proxyConfiguration.port );
+                    //clientBuilder.setProxy( proxy );
+                    if ( StringUtils.isNotBlank( proxyConfiguration.getUserName() ) ) {
+                        clientBuilder.setProxyAuthenticationStrategy( ProxyAuthenticationStrategy.INSTANCE );
+                        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+                        credsProvider.setCredentials( new AuthScope( proxyConfiguration.name, proxyConfiguration.port ),
+                                                      new UsernamePasswordCredentials( proxyConfiguration.getUserName(),
+                                                                                       proxyConfiguration.getPassword() ) );
+                        clientBuilder.setDefaultCredentialsProvider( credsProvider );
+                    }
 
-            ProxyConfiguration proxyConfiguration = Jenkins.getInstance().proxy;
-            if(proxyConfiguration!=null)
-            {
-                final HttpHost proxy = new HttpHost( proxyConfiguration.name, proxyConfiguration.port );
-                //clientBuilder.setProxy( proxy );
-                if(StringUtils.isNotBlank( proxyConfiguration.getUserName()))
-                {
-                    clientBuilder.setProxyAuthenticationStrategy( ProxyAuthenticationStrategy.INSTANCE );
-                    CredentialsProvider credsProvider = new BasicCredentialsProvider();
-                    credsProvider.setCredentials( new AuthScope(  proxyConfiguration.name,  proxyConfiguration.port),
-                                                  new UsernamePasswordCredentials(proxyConfiguration.getUserName(),
-                                                                                  proxyConfiguration.getPassword()) );
-                    clientBuilder.setDefaultCredentialsProvider( credsProvider );
+                    clientBuilder.setRoutePlanner(
+                        new JenkinsProxyRoutePlanner( proxy, proxyConfiguration.getNoProxyHostPatterns() ) );
                 }
-
-                clientBuilder.setRoutePlanner(new JenkinsProxyRoutePlanner(proxy, proxyConfiguration.getNoProxyHostPatterns()));
             }
-
 
             /*
             ProxyConfigFactory.getProxyHost(options).foreach(new Effect<HttpHost>()

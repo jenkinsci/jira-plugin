@@ -67,7 +67,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     public static final class DescriptorImpl extends JobPropertyDescriptor {
-        private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<JiraSite>();
+        private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<>();
 
         public DescriptorImpl() {
             super(JiraProjectProperty.class);
