@@ -315,8 +315,8 @@ public class JiraSession {
 
         for (Issue issue : issues) {
             LOGGER.fine("Adding version: " + newVersion.getName() + " to issue: " + issue.getKey());
-            List<Version> fixVersions = new ArrayList<>(  );
-            issue.getFixVersions().forEach( fixVersions::add );
+            List<Version> fixVersions = new ArrayList<>();
+            issue.getFixVersions().forEach(fixVersions::add);
             fixVersions.add(newVersion);
             service.updateIssue(issue.getKey(), fixVersions);
         }

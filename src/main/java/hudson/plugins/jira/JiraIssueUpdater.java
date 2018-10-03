@@ -132,7 +132,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         }
 
         public boolean hasIssueSelectors() {
-            return Jenkins.getActiveInstance().getDescriptorList(AbstractIssueSelector.class).size() > 1;
+            return Jenkins.getInstance().getDescriptorList(AbstractIssueSelector.class).size() > 1;
         }
     }
 

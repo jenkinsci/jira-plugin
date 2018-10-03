@@ -22,7 +22,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
     /**
      * Hold the JIRA sites configuration.
      */
-    private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<JiraSite>();
+    private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<>();
 
     /**
      * Constructor.

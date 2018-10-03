@@ -2,11 +2,9 @@ package com.atlassian.httpclient.apache.httpcomponents;
 
 import com.atlassian.fugue.Option;
 import com.atlassian.httpclient.api.Response;
-import com.google.common.base.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.InputStream;
 import java.util.Map;
 
@@ -163,12 +161,7 @@ public final class DefaultResponse extends DefaultMessage implements Response
             try
             {
                 Option<Long> parsedLength = Option.some(Long.parseLong(lengthString));
-                return parsedLength.flatMap(
-                        new Function<Long, Option<Long>>()
-                        {
-                            @Override
-                            public Option<Long> apply(Long aLong)
-                            {
+                return parsedLength.flatMap( aLong -> {
                                 if (aLong < 0)
                                 {
                                     log.warn("Unable to parse content length. Received out of range value {}", aLong);
@@ -178,7 +171,6 @@ public final class DefaultResponse extends DefaultMessage implements Response
                                 {
                                     return Option.some(aLong);
                                 }
-                            }
                         });
             }
             catch (NumberFormatException e)

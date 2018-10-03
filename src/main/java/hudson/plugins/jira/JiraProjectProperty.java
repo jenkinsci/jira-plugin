@@ -10,8 +10,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.util.logging.Logger;
-
 /**
  * Associates {@link Job} with {@link JiraSite}.
  *

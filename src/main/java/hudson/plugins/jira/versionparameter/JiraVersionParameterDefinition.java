@@ -3,7 +3,6 @@ package hudson.plugins.jira.versionparameter;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.Extension;
 import hudson.cli.CLICommand;
-import hudson.model.AbstractProject;
 import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
@@ -16,10 +15,12 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class JiraVersionParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 4232979892748310160L;
@@ -69,17 +70,11 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         JiraSession session = site.getSession();
         if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
-        List<Version> versions = session.getVersions(projectKey);
-        SortedSet<Version> orderedVersions = new TreeSet<>(new VersionComparator());
-        orderedVersions.addAll(versions);
-
-        List<Result> projectVersions = new ArrayList<>();
-
-        for (Version version : orderedVersions) {
-            if (match(version)) projectVersions.add(new Result(version));
-        }
-
-        return projectVersions;
+        return session.getVersions(projectKey).stream().
+            sorted( VersionComparator.INSTANCE ).
+            filter( version -> match( version ) ).
+            map( version -> new Result( version )).
+            collect( Collectors.toList() );
     }
 
     private boolean match(Version version) {
