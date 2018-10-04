@@ -325,7 +325,7 @@ public class JiraRestService {
         } catch (Exception e) {
             LOGGER.log(WARNING, "jira rest client process workflow action error. cause: " + e.getMessage(), e);
         }
-        return issue;
+        return getIssue(issueKey);
     }
 
     public List<Transition> getAvailableActions(String issueKey) {

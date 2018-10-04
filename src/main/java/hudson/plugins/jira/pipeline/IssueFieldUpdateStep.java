@@ -86,7 +86,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-            throws IOException {
+            throws IOException, InterruptedException {
         PrintStream logger = listener.getLogger();
 
         AbstractIssueSelector selector = issueSelector;
@@ -116,7 +116,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         }
 
         List<JiraIssueField> fields = Lists.newArrayList();
-        fields.add(new JiraIssueField(prepareFieldId(fieldId), fieldValue));
+        fields.add(new JiraIssueField(prepareFieldId(fieldId), Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(fieldValue))));
 
         for (String issue : issues) {
             submitFields(session, issue, fields, logger);
