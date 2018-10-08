@@ -17,7 +17,21 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.domain.*;
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+import com.atlassian.jira.rest.client.api.domain.BasicProject;
+import com.atlassian.jira.rest.client.api.domain.BasicUser;
+import com.atlassian.jira.rest.client.api.domain.Comment;
+import com.atlassian.jira.rest.client.api.domain.Component;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueFieldId;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Permissions;
+import com.atlassian.jira.rest.client.api.domain.Priority;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.domain.Status;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.atlassian.jira.rest.client.api.domain.User;
+import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
@@ -47,7 +61,10 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 
 public class JiraRestService {
@@ -177,7 +194,7 @@ public class JiraRestService {
                                                             .get(timeout, TimeUnit.SECONDS);
             return Lists.newArrayList(searchResult.getIssues());
         } catch(TimeoutException e) {
-            LOGGER.log(WARNING, "jira rest client get issue from jql search error. cause: " + e.getMessage(), e);
+            LOGGER.log(WARNING, "jira rest client timeout from jql search error. cause: " + e.getMessage(), e);
             throw e;
         } catch (Exception e) {
             LOGGER.log(WARNING, "jira rest client get issue from jql search error. cause: " + e.getMessage(), e);
@@ -202,15 +219,13 @@ public class JiraRestService {
             LOGGER.log(WARNING, "jira rest client get versions error. cause: " + e.getMessage(), e);
         }
 
-        final List<Version> versions = new ArrayList<>();
-        for (Map<String, Object> decodedVersion : decoded) {
+        return decoded.stream().map( decodedVersion -> {
             final DateTime releaseDate = decodedVersion.containsKey("releaseDate") ? DATE_TIME_FORMATTER.parseDateTime((String) decodedVersion.get("releaseDate")) : null;
-            final Version version = new Version(URI.create((String) decodedVersion.get("self")), Long.parseLong((String) decodedVersion.get("id")),
-                    (String) decodedVersion.get("name"), (String) decodedVersion.get("description"), (Boolean) decodedVersion.get("archived"),
-                    (Boolean) decodedVersion.get("released"), releaseDate);
-            versions.add(version);
-        }
-        return versions;
+            return new Version(URI.create((String) decodedVersion.get("self")), Long.parseLong((String) decodedVersion.get("id")),
+                                                (String) decodedVersion.get("name"), (String) decodedVersion.get("description"), (Boolean) decodedVersion.get("archived"),
+                                                (Boolean) decodedVersion.get("released"), releaseDate);
+        }  ).collect( Collectors.toList() );
+
     }
 
 

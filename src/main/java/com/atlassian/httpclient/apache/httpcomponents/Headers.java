@@ -6,9 +6,8 @@ import org.apache.http.protocol.HTTP;
 
 import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-
-import static com.google.common.collect.Maps.newHashMap;
 
 public class Headers
 {
@@ -35,7 +34,7 @@ public class Headers
 
     public Map<String, String> getHeaders()
     {
-        Map<String, String> headers = newHashMap(this.headers);
+        Map<String, String> headers = new HashMap( this.headers);
         if (contentType != null)
         {
             headers.put(Names.CONTENT_TYPE, buildContentType());
@@ -69,7 +68,7 @@ public class Headers
 
     public static class Builder implements Buildable<Headers>
     {
-        private final Map<String, String> headers = newHashMap();
+        private final Map<String, String> headers = new HashMap();
         private String contentType;
         private String contentCharset;
 

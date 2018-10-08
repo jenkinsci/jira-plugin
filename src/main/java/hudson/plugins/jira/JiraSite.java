@@ -1,10 +1,22 @@
 package hudson.plugins.jira;
 
+import com.atlassian.event.api.EventPublisher;
+import com.atlassian.httpclient.apache.httpcomponents.DefaultHttpClientFactory;
+import com.atlassian.httpclient.api.HttpClient;
+import com.atlassian.httpclient.api.factory.HttpClientOptions;
+import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
+import com.atlassian.jira.rest.client.internal.async.AtlassianHttpClientDecorator;
+import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+import com.atlassian.sal.api.ApplicationProperties;
+import com.atlassian.sal.api.UrlMode;
+import com.atlassian.sal.api.executor.ThreadLocalContextManager;
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
@@ -25,8 +37,6 @@ import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
-import hudson.security.AccessDeniedException2;
-import hudson.security.Permission;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -38,7 +48,9 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
@@ -46,21 +58,25 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-import static hudson.model.Item.CONFIGURE;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
@@ -87,6 +103,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * See issue JENKINS-31113 
      */
     public static final int DEFAULT_TIMEOUT = 10;
+
+    public static final int DEFAULT_READ_TIMEOUT = 30;
+
+    public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
     
     /**
      * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
@@ -108,7 +128,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * The id of the credentials to use. Optional.
      */
-    public final String credentialsId;
+    public String credentialsId;
 
     /**
      * Transient stash of the credentials to use, mostly just for providing floating user object.
@@ -175,9 +195,21 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public final boolean updateJiraIssueForAllStatus;
     
     /**
-     * timeout used when calling jira rest api, in seconds
+     * connection timeout used when calling jira rest api, in seconds
      */
-    public Integer timeout;
+    public int timeout = DEFAULT_TIMEOUT;
+
+    /**
+     * response timeout for jira rest call
+     * @since 3.0.3
+     */
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
+
+    /**
+     * thread pool number
+     * @since 3.0.3
+     */
+    private int threadExecutorNumber = DEFAULT_THREAD_EXECUTOR_NUMBER;
 
     /**
      * Configuration  for formatting (date -> text) in jira comments.
@@ -207,7 +239,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     private transient JiraSession jiraSession;
 
-    @DataBoundConstructor
+    private transient ExecutorService executorService;
+
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, @CheckForNull String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
                     boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
         this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url), supportsWikiStyleComment, recordScmChanges, userPattern,
@@ -222,8 +257,23 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
     }
 
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
     public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
                     boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
+        this( url, alternativeUrl, credentials, supportsWikiStyleComment, recordScmChanges, userPattern, updateJiraIssueForAllStatus,
+              groupVisibility, roleVisibility, useHTTPAuth, DEFAULT_TIMEOUT, DEFAULT_READ_TIMEOUT, DEFAULT_THREAD_EXECUTOR_NUMBER);
+    }
+
+    @DataBoundConstructor
+    public JiraSite(URL url, URL alternativeUrl, String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber){
+        this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url), supportsWikiStyleComment, recordScmChanges, userPattern,
+             updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
+    }
+
+    public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber) {
         if (url != null && !url.toExternalForm().endsWith("/"))
             try {
                 url = new URL(url.toExternalForm() + "/");
@@ -239,7 +289,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
         this.url = url;        
-    	this.timeout = JiraSite.DEFAULT_TIMEOUT;
+    	this.timeout = timeout;
+    	this.readTimeout = readTimeout;
+    	this.threadExecutorNumber = threadExecutorNumber;
         
         this.alternativeUrl = alternativeUrl;
         this.credentials = credentials;
@@ -271,20 +323,56 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Sets request timeout (in seconds).
+     * Sets connect timeout (in seconds).
      * If not specified, a default timeout will be used.
      * @param timeoutSec Timeout in seconds
      */
     @DataBoundSetter
-    public void setTimeout(Integer timeoutSec) {
+    public void setTimeout(int timeoutSec) {
 		this.timeout = timeoutSec;
 	}
-    
+
+    public int getTimeout() {
+        return timeout;
+    }
+
+    /**
+     * Sets read timeout (in seconds).
+     * If not specified, a default timeout will be used.
+     * @param readTimeout Timeout in seconds
+     */
+    @DataBoundSetter
+    public void setReadTimeout( int readTimeout ) {
+        this.readTimeout = readTimeout;
+    }
+
+    public int getReadTimeout() {
+        return readTimeout;
+    }
+
+    public String getCredentialsId() {
+        return credentialsId;
+    }
+
+    @DataBoundSetter
+    public void setCredentialsId(String credentialsId) {
+        this.credentialsId = credentialsId;
+    }
+
     @DataBoundSetter
     public void setDateTimePattern(String dateTimePattern) {
         this.dateTimePattern = dateTimePattern;
     }
-    
+
+    @DataBoundSetter
+    public void setThreadExecutorNumber( int threadExecutorNumber ) {
+        this.threadExecutorNumber = threadExecutorNumber;
+    }
+
+    public int getThreadExecutorNumber() {
+        return threadExecutorNumber;
+    }
+
     @DataBoundSetter
     public void setAppendChangeTimestamp(Boolean appendChangeTimestamp) {
         this.appendChangeTimestamp = appendChangeTimestamp;
@@ -305,7 +393,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
         }
         return new JiraSite(url, alternativeUrl, credentialsId, supportsWikiStyleComment, recordScmChanges, userPattern,
-                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
     }
 
     private static Cache<String, Optional<Issue>> makeIssueCache() {
@@ -353,11 +441,197 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         String userName = credentials.getUsername();
         Secret password = credentials.getPassword();
+        final HttpClientOptions options = new HttpClientOptions();
+        options.setRequestTimeout(readTimeout, TimeUnit.SECONDS);
+        options.setSocketTimeout(timeout, TimeUnit.SECONDS);
+
+        if (executorService==null){
+            executorService =  Executors.newFixedThreadPool(
+                threadExecutorNumber, //
+                new ThreadFactory()
+                {
+                    final AtomicInteger threadNumber = new AtomicInteger( 0 );
+
+                    @Override
+                    public Thread newThread( Runnable r )
+                    {
+                        return new Thread( r, "jira-plugin-http-request-" + threadNumber.getAndIncrement() + "-thread" );
+                    }
+                } );
+        }
+
+        options.setCallbackExecutor(executorService);
+
         final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
-                .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());
-        int usedTimeout = timeout != null ? timeout : JiraSite.DEFAULT_TIMEOUT;
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), usedTimeout));
+                .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),options);
+        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
     }
+
+    //-----------------------------------------------------------------------------------
+    // internal classes we want to override
+    //-----------------------------------------------------------------------------------
+
+    private static class AsynchronousJiraRestClientFactory implements JiraRestClientFactory
+    {
+
+        public JiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
+            final DisposableHttpClient httpClient = createClient(serverUri, authenticationHandler, options);
+            return new AsynchronousJiraRestClient( serverUri, httpClient);
+        }
+
+        @Override
+        public JiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler) {
+            final DisposableHttpClient httpClient = createClient(serverUri, authenticationHandler, new HttpClientOptions());
+            return new AsynchronousJiraRestClient( serverUri, httpClient);
+        }
+
+        @Override
+        public JiraRestClient createWithBasicHttpAuthentication(final URI serverUri, final String username, final String password) {
+            return create(serverUri, new BasicHttpAuthenticationHandler( username, password));
+        }
+
+        @Override
+        public JiraRestClient createWithAuthenticationHandler(final URI serverUri, final AuthenticationHandler authenticationHandler) {
+            return create(serverUri, authenticationHandler);
+        }
+
+        @Override
+        public JiraRestClient create(final URI serverUri, final HttpClient httpClient) {
+            final DisposableHttpClient disposableHttpClient = createClient(httpClient);
+            return new AsynchronousJiraRestClient(serverUri, disposableHttpClient);
+        }
+    }
+
+    private static DisposableHttpClient createClient(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
+
+        final DefaultHttpClientFactory
+            defaultHttpClientFactory = new DefaultHttpClientFactory( new NoOpEventPublisher(),
+                                                                     new RestClientApplicationProperties( serverUri),
+                                                                     new ThreadLocalContextManager() {
+                                                                         @Override
+                                                                         public Object getThreadLocalContext() {
+                                                                             return null;
+                                                                         }
+
+                                                                         @Override
+                                                                         public void setThreadLocalContext(Object context) {
+                                                                         }
+
+                                                                         @Override
+                                                                         public void clearThreadLocalContext() {
+                                                                         }
+                                                                     });
+
+        final HttpClient httpClient = defaultHttpClientFactory.create(options);
+
+        return new AtlassianHttpClientDecorator( httpClient, authenticationHandler) {
+            @Override
+            public void destroy() throws Exception {
+                defaultHttpClientFactory.dispose(httpClient);
+            }
+        };
+    }
+
+    private static DisposableHttpClient createClient(final HttpClient client) {
+        return new AtlassianHttpClientDecorator(client, null) {
+            @Override
+            public void destroy() throws Exception {
+                // This should never be implemented. This is simply creation of a wrapper
+                // for AtlassianHttpClient which is extended by a destroy method.
+                // Destroy method should never be called for AtlassianHttpClient coming from
+                // a client! Imagine you create a RestClient, pass your own HttpClient there
+                // and it gets destroy.
+            }
+        };
+    }
+
+    private static class NoOpEventPublisher implements EventPublisher
+    {
+        @Override
+        public void publish(Object o) {
+        }
+
+        @Override
+        public void register(Object o) {
+        }
+
+        @Override
+        public void unregister(Object o) {
+        }
+
+        @Override
+        public void unregisterAll() {
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static class RestClientApplicationProperties implements ApplicationProperties
+    {
+
+        private final String baseUrl;
+
+        private RestClientApplicationProperties(URI jiraURI) {
+            this.baseUrl = jiraURI.getPath();
+        }
+
+        @Override
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        /**
+         * We'll always have an absolute URL as a client.
+         */
+        @Nonnull
+        @Override
+        public String getBaseUrl( UrlMode urlMode) {
+            return baseUrl;
+        }
+
+        @Nonnull
+        @Override
+        public String getDisplayName() {
+            return "Atlassian JIRA Rest Java Client";
+        }
+
+        @Nonnull
+        @Override
+        public String getPlatformId() {
+            return ApplicationProperties.PLATFORM_JIRA;
+        }
+
+        @Nonnull
+        @Override
+        public String getVersion() {
+            return "";
+        }
+
+        @Nonnull
+        @Override
+        public Date getBuildDate() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Nonnull
+        @Override
+        public String getBuildNumber() {
+            return String.valueOf(0);
+        }
+
+        @Override
+        public File getHomeDirectory() {
+            return new File(".");
+        }
+
+        @Override
+        public String getPropertyValue(final String s) {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+    }
+
+    //-----------------------------------------------------------------------------------
+    //
+    //-----------------------------------------------------------------------------------
 
     /**
      * @return the server URL
@@ -704,6 +978,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return success;
     }
 
+    public void destroy() {
+        try {
+            if(this.executorService!=null&&!this.executorService.isShutdown()){
+                this.executorService.shutdownNow();
+            }
+        } catch ( Exception e ) {
+            LOGGER.log(Level.INFO, "skip error stopping executorService:" + e.getMessage(), e );
+        }
+    }
+
     @Extension
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
@@ -721,7 +1005,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                          @QueryParameter String roleVisibility,
                                          @QueryParameter boolean useHTTPAuth,
                                          @QueryParameter String alternativeUrl,
-                                         @QueryParameter Integer timeout,
+                                         @QueryParameter int timeout,
+                                         @QueryParameter int readTimeout,
+                                         @QueryParameter int threadExecutorNumber,
                                          @AncestorInPath Item item) {
 
             if (item == null) {
@@ -761,13 +1047,20 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withUseHTTPAuth(useHTTPAuth)
                     .build();
 
-            site.setTimeout(timeout);            
+            site.setTimeout(timeout==0?DEFAULT_TIMEOUT:timeout);
+            site.setReadTimeout(readTimeout==0?DEFAULT_READ_TIMEOUT:readTimeout);
+            site.setThreadExecutorNumber(threadExecutorNumber==0?DEFAULT_THREAD_EXECUTOR_NUMBER:threadExecutorNumber);
+
             try {
                 JiraSession session = site.createSession();
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
                 LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url, e);
+            } finally {
+                if(site!=null){
+                    site.destroy();
+                }
             }
 
             return FormValidation.error("Failed to login to JIRA");

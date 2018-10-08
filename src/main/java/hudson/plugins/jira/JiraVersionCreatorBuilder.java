@@ -14,8 +14,6 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.IOException;
-
 /**
  * A build step which creates new JIRA version. It has the same functionality as
  * {@link JiraVersionCreator} but can be used multiple times in the same build

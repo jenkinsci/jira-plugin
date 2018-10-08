@@ -51,7 +51,7 @@ public class IssueSelectorStep extends AbstractStepImpl {
         }
 
         public Collection<? extends Descriptor<?>> getApplicableDescriptors() {
-            return Jenkins.getInstance().<AbstractIssueSelector, Descriptor<AbstractIssueSelector>>getDescriptorList(AbstractIssueSelector.class);
+            return Jenkins.getInstance().getDescriptorList(AbstractIssueSelector.class);
         }
 
         @Override

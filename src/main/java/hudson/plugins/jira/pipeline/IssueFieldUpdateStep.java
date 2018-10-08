@@ -1,7 +1,6 @@
 package hudson.plugins.jira.pipeline;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.google.common.collect.Lists;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -26,6 +25,7 @@ import org.kohsuke.stapler.QueryParameter;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -115,7 +115,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
-        List<JiraIssueField> fields = Lists.newArrayList();
+        List<JiraIssueField> fields = new ArrayList();
         fields.add(new JiraIssueField(prepareFieldId(fieldId), fieldValue));
 
         for (String issue : issues) {

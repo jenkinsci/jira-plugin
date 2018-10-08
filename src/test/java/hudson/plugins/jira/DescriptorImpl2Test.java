@@ -58,7 +58,10 @@ public class DescriptorImpl2Test {
     @Test
     public void testValidateConnectionError() throws Exception {
         when(jiraSession.getMyPermissions()).thenThrow(RestClientException.class);
-        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null, null, false, null, JiraSite.DEFAULT_TIMEOUT, r.createFreeStyleProject());
+        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
+                                                          null, false, null,
+                                                          JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                                                          r.createFreeStyleProject());
 
         verify(descriptor).getJiraSiteBuilder();
         verify(builder).build();
@@ -69,7 +72,10 @@ public class DescriptorImpl2Test {
     @Test
     public void testValidateConnectionOK() throws Exception {
         when(jiraSession.getMyPermissions()).thenReturn(mock(Permissions.class));
-        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null, null, false, null, JiraSite.DEFAULT_TIMEOUT, r.createFreeStyleProject());
+        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
+                                                          null, false, null,
+                                                          JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                                                          r.createFreeStyleProject());
 
         verify(descriptor).getJiraSiteBuilder();
         verify(builder).build();

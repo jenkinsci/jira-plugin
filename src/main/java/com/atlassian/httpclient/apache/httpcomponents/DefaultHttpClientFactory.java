@@ -9,11 +9,11 @@ import com.atlassian.sal.api.executor.ThreadLocalContextManager;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.DisposableBean;
 
+import javax.annotation.Nonnull;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
-import javax.annotation.Nonnull;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class DefaultHttpClientFactory implements HttpClientFactory, DisposableBean
 {

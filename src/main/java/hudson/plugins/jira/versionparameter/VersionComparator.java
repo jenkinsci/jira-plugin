@@ -19,6 +19,8 @@ import org.apache.maven.artifact.versioning.ComparableVersion;
  */
 public class VersionComparator implements Comparator<Version> {
 
+    public static VersionComparator INSTANCE = new VersionComparator();
+
     public int compare(Version rev1, Version rev2) {
         ComparableVersion comparableVersion1 = new ComparableVersion(getNumberVersion(rev1.getName()));
         ComparableVersion comparableVersion2 = new ComparableVersion(getNumberVersion(rev2.getName()));
