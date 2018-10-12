@@ -81,9 +81,11 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
+ * <p>
  * Represents an external JIRA installation and configuration
  * needed to access this JIRA.
- * When adding new fields do not misss to look at readResolve method!!
+ * </p>
+ * <b>When adding new fields do not misss to look at readResolve method!!</b>
  * @author Kohsuke Kawaguchi
  */
 public class JiraSite extends AbstractDescribableImpl<JiraSite> {
