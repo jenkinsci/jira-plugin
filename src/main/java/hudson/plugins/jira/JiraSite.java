@@ -388,12 +388,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     @SuppressWarnings("unused")
     protected Object readResolve() {
+        JiraSite jiraSite;
         if (credentialsId == null && userName != null && password != null) { // Migrate credentials
-            return new JiraSite(url, alternativeUrl, userName, password.getPlainText(), supportsWikiStyleComment, recordScmChanges, userPattern,
+            jiraSite = new JiraSite(url, alternativeUrl, userName, password.getPlainText(), supportsWikiStyleComment, recordScmChanges, userPattern,
                     updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+        } else {
+            jiraSite = new JiraSite( url, alternativeUrl, credentialsId, supportsWikiStyleComment, recordScmChanges,
+                                 userPattern, updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth,
+                                 timeout, readTimeout, threadExecutorNumber );
         }
-        return new JiraSite(url, alternativeUrl, credentialsId, supportsWikiStyleComment, recordScmChanges, userPattern,
-                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
+        jiraSite.setAppendChangeTimestamp( appendChangeTimestamp );
+        jiraSite.setDisableChangelogAnnotations( disableChangelogAnnotations );
+        jiraSite.setDateTimePattern( dateTimePattern );
+        return jiraSite;
     }
 
     private static Cache<String, Optional<Issue>> makeIssueCache() {
