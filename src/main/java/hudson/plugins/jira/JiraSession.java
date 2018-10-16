@@ -361,7 +361,7 @@ public class JiraSession {
      * Returns the status name by status id.
      *
      * @param statusId
-     * @return
+     * @return status name
      */
     public String getStatusById(Long statusId) {
         String status = getKnownStatuses().get(statusId);
@@ -381,7 +381,7 @@ public class JiraSession {
     /**
      * Returns all known statuses.
      *
-     * @return
+     * @return Map with statusId and status name
      */
     private Map<Long, String> getKnownStatuses() {
         if (knownStatuses == null) {
@@ -447,7 +447,7 @@ public class JiraSession {
      *
      * @param version    version id to create
      * @param projectKey
-     * @return
+     * @return created Version instance
      *
      */
     public Version addVersion(String version, String projectKey) {
