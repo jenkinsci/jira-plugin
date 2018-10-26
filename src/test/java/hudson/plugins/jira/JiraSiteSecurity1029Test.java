@@ -91,6 +91,7 @@ public class JiraSiteSecurity1029Test {
             String jiraSiteValidateUrl = j.getURL() + "descriptorByName/" + JiraSite.class.getName() + "/validate";
             WebRequest request = new WebRequest(new URL(jiraSiteValidateUrl), HttpMethod.POST);
             request.setRequestParameters(Arrays.asList(
+                    new NameValuePair( "threadExecutorNumber", "1" ),
                     new NameValuePair("url", serverUri.toString()),
                     new NameValuePair("credentialsId", credId_1),
                     new NameValuePair("useHTTPAuth", "true")
@@ -108,6 +109,7 @@ public class JiraSiteSecurity1029Test {
             String jiraSiteValidateUrl = j.getURL() + "descriptorByName/" + JiraSite.class.getName() + "/validate";
             WebRequest request = new WebRequest(new URL(jiraSiteValidateUrl), HttpMethod.POST);
             request.setRequestParameters(Arrays.asList(
+                    new NameValuePair( "threadExecutorNumber", "1" ),
                     new NameValuePair("url", serverUri.toString()),
                     new NameValuePair("credentialsId", credId_2),
                     new NameValuePair("useHTTPAuth", "true")
@@ -132,6 +134,7 @@ public class JiraSiteSecurity1029Test {
 
             WebRequest request = new WebRequest(new URL(jiraSiteValidateUrl), HttpMethod.POST);
             request.setRequestParameters(Arrays.asList(
+                new NameValuePair( "threadExecutorNumber", "1" ),
                 new NameValuePair("url", serverUri.toString()),
                 new NameValuePair("credentialsId", credId_2),
                 new NameValuePair("useHTTPAuth", "true")
@@ -155,6 +158,7 @@ public class JiraSiteSecurity1029Test {
 
             WebRequest request = new WebRequest(new URL(jiraSiteValidateUrl), HttpMethod.POST);
             request.setRequestParameters(Arrays.asList(
+                new NameValuePair( "threadExecutorNumber", "1" ),
                 new NameValuePair("url", serverUri.toString()),
                 new NameValuePair("credentialsId", credId_2),
                 new NameValuePair("useHTTPAuth", "true")
