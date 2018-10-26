@@ -454,8 +454,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         options.setSocketTimeout(timeout, TimeUnit.SECONDS);
 
         if (executorService==null){
+            int nThreads = threadExecutorNumber;
+            if(nThreads<1){
+                LOGGER.warning( "nThreads " + nThreads + " cannot be lower than 1 so use default " + DEFAULT_THREAD_EXECUTOR_NUMBER );
+                nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
+            }
             executorService =  Executors.newFixedThreadPool(
-                threadExecutorNumber, //
+                nThreads, //
                 new ThreadFactory()
                 {
                     final AtomicInteger threadNumber = new AtomicInteger( 0 );
@@ -1043,6 +1048,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 }
             }catch (MalformedURLException e){
                 return FormValidation.error(String.format("Malformed alternative URL (%s)",alternativeUrl), e );
+            }
+
+            if(threadExecutorNumber<1){
+                return FormValidation.error( "threadExecutorNumber must be at least 1" );
             }
 
             credentialsId = Util.fixEmpty(credentialsId);
