@@ -1064,9 +1064,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withUseHTTPAuth(useHTTPAuth)
                     .build();
 
-            site.setTimeout(timeout==0?DEFAULT_TIMEOUT:timeout);
-            site.setReadTimeout(readTimeout==0?DEFAULT_READ_TIMEOUT:readTimeout);
-            site.setThreadExecutorNumber(threadExecutorNumber==0?DEFAULT_THREAD_EXECUTOR_NUMBER:threadExecutorNumber);
+            site.setTimeout(timeout<0?DEFAULT_TIMEOUT:timeout);
+            site.setReadTimeout(readTimeout<0?DEFAULT_READ_TIMEOUT:readTimeout);
+            site.setThreadExecutorNumber(threadExecutorNumber<1?DEFAULT_THREAD_EXECUTOR_NUMBER:threadExecutorNumber);
 
             try {
                 JiraSession session = site.createSession();
