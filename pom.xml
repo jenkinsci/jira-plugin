@@ -119,20 +119,7 @@
       <plugin>
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.1</version>
-        <executions>
-          <execution>
-            <id>prepare-agent</id>
-            <goals>
-              <goal>prepare-agent</goal>
-            </goals>
-            <configuration>
-              <excludes>
-                <exclude>hudson/plugins/jira/Messages*.class</exclude>
-              </excludes>
-            </configuration>
-          </execution>
-        </executions>
+        <version>0.8.2</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.gmaven</groupId>
