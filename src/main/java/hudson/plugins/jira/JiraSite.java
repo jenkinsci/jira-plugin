@@ -41,6 +41,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -120,12 +121,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * URL of JIRA for normal access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
      */
-    public final URL alternativeUrl;
+    public URL alternativeUrl;
 
     /**
      * JIRA requires HTTP Authentication for login
      */
-    public final boolean useHTTPAuth;
+    public boolean useHTTPAuth;
 
     /**
      * The id of the credentials to use. Optional.
@@ -135,7 +136,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Transient stash of the credentials to use, mostly just for providing floating user object.
      */
-    public final transient UsernamePasswordCredentials credentials;
+    public transient UsernamePasswordCredentials credentials;
 
     /**
      * User name needed to login. Optional.
@@ -154,24 +155,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Group visibility to constrain the visibility of the added comment. Optional.
      */
-    public final String groupVisibility;
+    public String groupVisibility;
 
     /**
      * Role visibility to constrain the visibility of the added comment. Optional.
      */
-    public final String roleVisibility;
+    public String roleVisibility;
 
     /**
      * True if this JIRA is configured to allow Confluence-style Wiki comment.
      */
-    public final boolean supportsWikiStyleComment;
+    public boolean supportsWikiStyleComment;
 
     /**
      * to record scm changes in jira issue
      *
      * @since 1.21
      */
-    public final boolean recordScmChanges;
+    public boolean recordScmChanges;
 
     /**
      * Disable annotating the changelogs
@@ -185,7 +186,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @since 1.22
      */
-    private final String userPattern;
+    private String userPattern;
 
     private transient Pattern userPat;
 
@@ -194,7 +195,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @since 1.22
      */
-    public final boolean updateJiraIssueForAllStatus;
+    public boolean updateJiraIssueForAllStatus;
     
     /**
      * connection timeout used when calling jira rest api, in seconds
@@ -267,11 +268,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
               groupVisibility, roleVisibility, useHTTPAuth, DEFAULT_TIMEOUT, DEFAULT_READ_TIMEOUT, DEFAULT_THREAD_EXECUTOR_NUMBER);
     }
 
-    @DataBoundConstructor
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
     public JiraSite(URL url, URL alternativeUrl, String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
                     boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber){
         this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url), supportsWikiStyleComment, recordScmChanges, userPattern,
              updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
+    }
+
+    @DataBoundConstructor
+    public JiraSite(String url){
+        URL mainURL = toURL(url);
+        if (mainURL == null) throw new AssertionError("URL cannot be null");
+        this.url = mainURL;
     }
 
     public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
@@ -290,29 +299,30 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 throw new AssertionError(e);
             }
 
-        this.url = url;        
+        this.url = url;
     	this.timeout = timeout;
     	this.readTimeout = readTimeout;
     	this.threadExecutorNumber = threadExecutorNumber;
-        
         this.alternativeUrl = alternativeUrl;
         this.credentials = credentials;
         this.credentialsId = credentials != null ? credentials.getId() : null;
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
-        this.userPattern = Util.fixEmpty(userPattern);
-        
-        if (this.userPattern != null) {
-            this.userPat = Pattern.compile(this.userPattern);
-        } else {
-            this.userPat = null;
-        }
-
+        setUserPattern(userPattern);
         this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
-        this.groupVisibility = Util.fixEmpty(groupVisibility);
-        this.roleVisibility = Util.fixEmpty(roleVisibility);
+        setGroupVisibility(groupVisibility);
+        setRoleVisibility(roleVisibility);
         this.useHTTPAuth = useHTTPAuth;
         this.jiraSession = null;
+    }
+
+    private URL toURL(String url) {
+        if (StringUtils.isBlank(url)) return null;
+        try{
+            return new URL(url);
+        } catch (MalformedURLException e){
+            throw new AssertionError(e);
+        }
     }
 
     @DataBoundSetter
@@ -358,12 +368,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     @DataBoundSetter
     public void setCredentialsId(String credentialsId) {
-        this.credentialsId = credentialsId;
+        this.credentialsId = Util.fixEmptyAndTrim(credentialsId);
+        if (this.credentialsId != null) {
+            this.credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
+        }
     }
 
     @DataBoundSetter
     public void setDateTimePattern(String dateTimePattern) {
-        this.dateTimePattern = dateTimePattern;
+        this.dateTimePattern = Util.fixEmptyAndTrim(dateTimePattern);
     }
 
     @DataBoundSetter
@@ -386,6 +399,80 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     
     public boolean isAppendChangeTimestamp() {
         return this.appendChangeTimestamp != null && this.appendChangeTimestamp.booleanValue();
+    }
+
+    public URL getAlternativeUrl() {
+        return alternativeUrl;
+    }
+
+    public boolean isUseHTTPAuth() {
+        return useHTTPAuth;
+    }
+
+    public String getGroupVisibility() {
+        return groupVisibility;
+    }
+
+    public String getRoleVisibility() {
+        return roleVisibility;
+    }
+
+    public boolean isSupportsWikiStyleComment() {
+        return supportsWikiStyleComment;
+    }
+
+    public boolean isRecordScmChanges() {
+        return recordScmChanges;
+    }
+
+    public boolean isUpdateJiraIssueForAllStatus() {
+        return updateJiraIssueForAllStatus;
+    }
+
+    @DataBoundSetter
+    public void setAlternativeUrl(String alternativeUrl) {
+        this.alternativeUrl = toURL(alternativeUrl);
+    }
+
+    @DataBoundSetter
+    public void setUseHTTPAuth(boolean useHTTPAuth) {
+        this.useHTTPAuth = useHTTPAuth;
+    }
+
+    @DataBoundSetter
+    public void setGroupVisibility(String groupVisibility) {
+        this.groupVisibility = Util.fixEmptyAndTrim(groupVisibility);
+    }
+
+    @DataBoundSetter
+    public void setRoleVisibility(String roleVisibility) {
+        this.roleVisibility = Util.fixEmptyAndTrim(roleVisibility);
+    }
+
+    @DataBoundSetter
+    public void setSupportsWikiStyleComment(boolean supportsWikiStyleComment) {
+        this.supportsWikiStyleComment = supportsWikiStyleComment;
+    }
+
+    @DataBoundSetter
+    public void setRecordScmChanges(boolean recordScmChanges) {
+        this.recordScmChanges = recordScmChanges;
+    }
+
+    @DataBoundSetter
+    public void setUserPattern(String userPattern) {
+        this.userPattern = Util.fixEmptyAndTrim(userPattern);
+
+        if (this.userPattern == null) {
+            this.userPat = null;
+        } else {
+            this.userPat = Pattern.compile(this.userPattern);
+        }
+    }
+
+    @DataBoundSetter
+    public void setUpdateJiraIssueForAllStatus(boolean updateJiraIssueForAllStatus) {
+        this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
     }
 
     @SuppressWarnings("unused")
