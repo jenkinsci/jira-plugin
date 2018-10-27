@@ -28,13 +28,13 @@
     <c:select />
   </f:entry>
   <f:entry title="${%Connection timeout}" field="timeout">
-    <f:textbox default="10" />
+    <f:number default="10" />
   </f:entry>
   <f:entry title="${%Read timeout}" field="readTimeout">
-    <f:textbox default="30" />
+    <f:number default="30" />
   </f:entry>
   <f:entry title="${%Thread Executor Size}" field="threadExecutorNumber">
-    <f:textbox default="10" />
+    <f:number default="10" />
   </f:entry>
   <f:entry title="${%Visible for Group}" field="groupVisibility">
     <f:textbox />
