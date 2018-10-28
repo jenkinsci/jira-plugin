@@ -41,7 +41,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -223,7 +222,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * To add scm entry change date and time in jira comments.
      *
      */
-    private Boolean appendChangeTimestamp;
+    private boolean appendChangeTimestamp;
 
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
@@ -283,26 +282,22 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.url = mainURL;
     }
 
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
     public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
                     boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber) {
-        if (url != null && !url.toExternalForm().endsWith("/"))
-            try {
-                url = new URL(url.toExternalForm() + "/");
-            } catch (MalformedURLException e) {
-                throw new AssertionError(e);
-            }
+        if (url != null) {
+            url = toURL(url.toExternalForm());
+        }
 
-        if (alternativeUrl != null && !alternativeUrl.toExternalForm().endsWith("/"))
-            try {
-                alternativeUrl = new URL(alternativeUrl.toExternalForm() + "/");
-            } catch (MalformedURLException e) {
-                throw new AssertionError(e);
-            }
+        if (alternativeUrl != null) {
+            alternativeUrl = toURL(alternativeUrl.toExternalForm());
+        }
 
         this.url = url;
-    	this.timeout = timeout;
-    	this.readTimeout = readTimeout;
-    	this.threadExecutorNumber = threadExecutorNumber;
+        this.timeout = timeout;
+        this.readTimeout = readTimeout;
+        this.threadExecutorNumber = threadExecutorNumber;
         this.alternativeUrl = alternativeUrl;
         this.credentials = credentials;
         this.credentialsId = credentials != null ? credentials.getId() : null;
@@ -316,8 +311,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.jiraSession = null;
     }
 
-    private URL toURL(String url) {
-        if (StringUtils.isBlank(url)) return null;
+    static URL toURL(String url) {
+        url = Util.fixEmptyAndTrim(url);
+        if (url == null) return null;
+        if (!url.endsWith("/")) url = url + "/";
         try{
             return new URL(url);
         } catch (MalformedURLException e){
@@ -369,7 +366,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @DataBoundSetter
     public void setCredentialsId(String credentialsId) {
         this.credentialsId = Util.fixEmptyAndTrim(credentialsId);
-        if (this.credentialsId != null) {
+        if (this.credentialsId == null) {
+            this.credentials = null;
+        } else {
             this.credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
         }
     }
@@ -389,7 +388,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     @DataBoundSetter
-    public void setAppendChangeTimestamp(Boolean appendChangeTimestamp) {
+    public void setAppendChangeTimestamp(boolean appendChangeTimestamp) {
         this.appendChangeTimestamp = appendChangeTimestamp;
     }
 
@@ -398,7 +397,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
     
     public boolean isAppendChangeTimestamp() {
-        return this.appendChangeTimestamp != null && this.appendChangeTimestamp.booleanValue();
+        return appendChangeTimestamp;
     }
 
     public URL getAlternativeUrl() {
@@ -520,7 +519,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return null if remote access is not supported.
      */
-    protected JiraSession createSession() {
+    private JiraSession createSession() {
         if (credentials == null) {
             return null;    // remote access not supported
         }
@@ -1156,7 +1155,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setThreadExecutorNumber(threadExecutorNumber<1?DEFAULT_THREAD_EXECUTOR_NUMBER:threadExecutorNumber);
 
             try {
-                JiraSession session = site.createSession();
+                JiraSession session = site.getSession();
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
