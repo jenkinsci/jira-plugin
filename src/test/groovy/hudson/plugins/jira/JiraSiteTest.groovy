@@ -108,7 +108,8 @@ class JiraSiteTest extends Specification {
         1 * folder2.getParent() >> folder3
         1 * folder3.getProperties() >> folder3Properties
         1 * folder3Properties.get(JiraFolderProperty) >> jfp
-        3 * jfp.getSites() >>> [[], [], [site2, site1]]
+        1 * folder3.getParent() >> jenkins
+        4 * jfp.getSites() >>> [[], [], [site2, site1]]
         0 * _._
         result==site2
 

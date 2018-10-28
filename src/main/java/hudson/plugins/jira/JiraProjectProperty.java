@@ -5,12 +5,12 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
-import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.util.ListBoxModel;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
@@ -57,13 +57,12 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             return sites.get(0);
         }
 
-        for (JiraSite site : sites) {
-            if (site.getName().equals(siteName)) {
-                return site;
-            }
-        }
+        Stream<JiraSite> stream1 = sites.stream();
+        Stream<JiraSite> stream2 = JiraFolderProperty.getSitesFromFolders(owner.getParent()).stream();
+        Stream<JiraSite> streams = Stream.concat(stream1, stream2).parallel();
 
-        return null;
+        return streams.filter(jiraSite -> jiraSite.getName().equals(siteName))
+            .findFirst().orElse(null);
     }
 
     @Extension
@@ -103,10 +102,14 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         }
 
         @SuppressWarnings("unused") // Used by stapler
-        public ListBoxModel doFillSiteNameItems() {
+        public ListBoxModel doFillSiteNameItems(@AncestorInPath AbstractFolder<?> folder) {
             ListBoxModel items = new ListBoxModel();
             for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
                 items.add(site.getName());
+            }
+            if (folder != null) {
+                List<JiraSite> sitesFromFolder = JiraFolderProperty.getSitesFromFolders(folder);
+                sitesFromFolder.stream().map(JiraSite::getName).forEach(items::add);
             }
             return items;
         }

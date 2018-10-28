@@ -4,6 +4,10 @@ import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import hudson.Extension;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -49,6 +53,26 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
     @DataBoundSetter
     public void setSites(List<JiraSite> sites) {
         this.sites = sites;
+    }
+
+    public static List<JiraSite> getSitesFromFolders(ItemGroup itemGroup) {
+        List<JiraSite> result = new ArrayList<>();
+        while (itemGroup != null) {
+            if (itemGroup instanceof AbstractFolder<?>) {
+                AbstractFolder<?> folder = (AbstractFolder<?>) itemGroup;
+                JiraFolderProperty jiraFolderProperty = folder.getProperties()
+                    .get(JiraFolderProperty.class);
+                if (jiraFolderProperty != null && jiraFolderProperty.getSites().length != 0) {
+                    result.addAll(Arrays.asList(jiraFolderProperty.getSites()));
+                }
+                itemGroup = folder.getParent();
+            }
+
+            if (!(itemGroup instanceof AbstractFolder<?>)) {
+                itemGroup = null;
+            }
+        }
+        return result;
     }
 
     /**
