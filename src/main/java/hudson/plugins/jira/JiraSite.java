@@ -1064,13 +1064,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .build();
 
             if(threadExecutorNumber<1){
-                return FormValidation.error( "Thread Executor Size must be at least 1" );
+                return FormValidation.error( Messages.JiraSite_threadExecutorMinimunSize("1"));
             }
             if(timeout<0){
-                return FormValidation.error( "Connection timeout must be at least 1" );
+                return FormValidation.error( Messages.JiraSite_timeoutMinimunValue( "1" ));
             }
             if(readTimeout<0){
-                return FormValidation.error( "Read timeout must be at least 1" );
+                return FormValidation.error( Messages.JiraSite_readTimeoutMinimunValue( "1" ));
             }
 
             site.setTimeout(timeout);
