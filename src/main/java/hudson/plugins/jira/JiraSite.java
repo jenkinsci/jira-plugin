@@ -50,6 +50,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -991,6 +992,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return success;
     }
 
+    // not really used but let's leave when it will be implemented
+    @PreDestroy
     public void destroy() {
         try {
             if(this.executorService!=null&&!this.executorService.isShutdown()){
