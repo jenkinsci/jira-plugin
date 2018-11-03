@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import antlr.ANTLRException;
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.httpclient.apache.httpcomponents.DefaultHttpClientFactory;
 import com.atlassian.httpclient.api.HttpClient;
@@ -35,12 +36,15 @@ import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
+import hudson.scheduler.CronTabList;
+import hudson.scheduler.Hash;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -57,6 +61,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -77,6 +83,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
+import static hudson.Util.fixNull;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
@@ -829,11 +836,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Generates release notes for a given version.
      *
-     * @param projectKey
-     * @param versionName
+     * @param projectKey the project key
+     * @param versionName the version
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
      * @return release notes
-     * @throws TimeoutException
+     * @throws TimeoutException if too long
      */
     public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws TimeoutException {
         JiraSession session = getSession();
@@ -885,7 +892,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey The project key
      * @param toVersion  The new fixVersion
      * @param query      A JQL Query
-     * @throws TimeoutException
+     * @throws TimeoutException if too long
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
         JiraSession session = getSession();
@@ -903,7 +910,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey  The project key
      * @param versionName The new fixVersion
      * @param query       A JQL Query
-     * @throws TimeoutException
+     * @throws TimeoutException if too long
      */
     public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
@@ -918,10 +925,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Adds new fix version to issues matching the jql.
      *
-     * @param projectKey
-     * @param versionName
-     * @param query
-     * @throws TimeoutException
+     * @param projectKey the project key
+     * @param versionName the version
+     * @param query the query
+     * @throws TimeoutException if too long
      */
     public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
@@ -937,11 +944,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Progresses all issues matching the JQL search, using the given workflow action. Optionally
      * adds a comment to the issue(s) at the same time.
      *
-     * @param jqlSearch
-     * @param workflowActionName
-     * @param comment
-     * @param console
-     * @throws TimeoutException
+     * @param jqlSearch the query
+     * @param workflowActionName the workflowActionName
+     * @param comment the comment
+     * @param console the console
+     * @throws TimeoutException TimeoutException if too long
      */
     public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
         JiraSession session = getSession();
@@ -1050,10 +1057,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 return FormValidation.error(String.format("Malformed alternative URL (%s)",alternativeUrl), e );
             }
 
-            if(threadExecutorNumber<1){
-                return FormValidation.error( "threadExecutorNumber must be at least 1" );
-            }
-
             credentialsId = Util.fixEmpty(credentialsId);
             JiraSite site = getJiraSiteBuilder()
                     .withMainURL(mainURL)
@@ -1064,9 +1067,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withUseHTTPAuth(useHTTPAuth)
                     .build();
 
-            site.setTimeout(timeout<0?DEFAULT_TIMEOUT:timeout);
-            site.setReadTimeout(readTimeout<0?DEFAULT_READ_TIMEOUT:readTimeout);
-            site.setThreadExecutorNumber(threadExecutorNumber<1?DEFAULT_THREAD_EXECUTOR_NUMBER:threadExecutorNumber);
+            if(threadExecutorNumber<1){
+                return FormValidation.error( "Thread Executor Size must be at least 1" );
+            }
+            if(timeout<0){
+                return FormValidation.error( "Connection timeout must be at least 0" );
+            }
+            if(readTimeout<0){
+                return FormValidation.error( "Read timeout must be at least 0" );
+            }
+
+            site.setTimeout(timeout);
+            site.setReadTimeout(readTimeout);
+            site.setThreadExecutorNumber(threadExecutorNumber);
 
             try {
                 JiraSession session = site.createSession();
