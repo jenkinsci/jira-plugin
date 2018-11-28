@@ -39,7 +39,7 @@ public class JiraCreateIssueNotifierTest {
     private static final String ASSIGNEE = "user.name";
     private static final String DESCRIPTION = "Some description";
 
-    List<Component> jiraComponents = new ArrayList<Component>();
+    List<Component> jiraComponents = new ArrayList<>();
 
     Launcher launcher = mock(Launcher.class);
     BuildListener buildListener = mock(BuildListener.class);

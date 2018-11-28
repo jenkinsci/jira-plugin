@@ -244,7 +244,6 @@ class Updater {
 
     private String getScmComments(boolean wikiStyle, Run<?, ?> run, boolean recordScmChanges, JiraIssue jiraIssue) {
         StringBuilder comment = new StringBuilder();
-        RepositoryBrowser repoBrowser = getRepositoryBrowser(run);
         for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(run)) {
             for (Entry change : set) {
                 if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.getKey())) {

@@ -28,7 +28,13 @@
     <c:select />
   </f:entry>
   <f:entry title="${%Connection timeout}" field="timeout">
-    <f:textbox default="10" />
+    <f:number default="10" />
+  </f:entry>
+  <f:entry title="${%Read timeout}" field="readTimeout">
+    <f:number default="30" />
+  </f:entry>
+  <f:entry title="${%Thread Executor Size}" field="threadExecutorNumber">
+    <f:number default="10" />
   </f:entry>
   <f:entry title="${%Visible for Group}" field="groupVisibility">
     <f:textbox />
@@ -44,7 +50,7 @@
   </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
-            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout" />
+            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout,readTimeout,threadExecutorNumber" />
   </f:entry>
   <f:entry title="">
     <div align="right">

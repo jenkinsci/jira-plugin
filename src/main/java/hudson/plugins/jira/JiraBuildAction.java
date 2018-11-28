@@ -1,10 +1,9 @@
 package hudson.plugins.jira;
 
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.base.Objects;
-import com.google.common.collect.Sets;
 import hudson.model.Action;
 import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
@@ -27,7 +26,7 @@ public class JiraBuildAction implements Action {
 
     public JiraBuildAction(@Nonnull Run<?, ?> owner, @Nonnull Set<JiraIssue> issues) {
         this.owner = owner;
-        this.issues = Sets.newHashSet(issues);
+        this.issues = new HashSet( issues);
     }
 
     public String getIconFileName() {

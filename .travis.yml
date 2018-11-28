@@ -5,6 +5,15 @@ sudo: false
 jdk:
   - openjdk8
 
+install:
+  - mvn clean test-compile -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode -V
+script:
+  - mvn -P enable-jacoco install jacoco:report --batch-mode
 after_success:
-  - mvn clean test jacoco:report coveralls:report
+  - mvn coveralls:report --batch-mode
 
+before_cache:
+  - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
+cache:
+  directories:
+    - $HOME/.m2
