@@ -6,23 +6,23 @@
   <f:entry title="Link URL" field="alternativeUrl" description="${%site.alternativeUrl}">
     <f:textbox />
   </f:entry>
-  <f:entry title="${%Use HTTP authentication instead of normal login}" field="useHTTPAuth">
-    <f:checkbox />
+  <f:entry>
+    <f:checkbox title="${%Use HTTP authentication instead of normal login}" field="useHTTPAuth" />
   </f:entry>
-  <f:entry title="${%Supports Wiki notation}" field="supportsWikiStyleComment">
-    <f:checkbox />
+  <f:entry>
+    <f:checkbox title="${%Supports Wiki notation}" field="supportsWikiStyleComment" />
   </f:entry>
-  <f:entry title="${%Record Scm changes}" field="recordScmChanges">
-    <f:checkbox/>
+  <f:entry>
+    <f:checkbox title="${%Record Scm changes}" field="recordScmChanges" />
   </f:entry>
-  <f:entry title="${%Disable changelog annotations}" field="disableChangelogAnnotations">
-    <f:checkbox/>
+  <f:entry>
+    <f:checkbox title="${%Disable changelog annotations}" field="disableChangelogAnnotations" />
   </f:entry>
   <f:entry title="${%Issue Pattern}" field="userPattern">
     <f:textbox />
   </f:entry>
-  <f:entry title="${%Update Relevant JIRA Issues For All Build Results}" field="updateJiraIssueForAllStatus">
-    <f:checkbox />
+  <f:entry>
+    <f:checkbox title="${%Update Relevant JIRA Issues For All Build Results}" field="updateJiraIssueForAllStatus" />
   </f:entry>
   <f:entry title="${%Credentials}" field="credentialsId">
     <c:select />
@@ -42,9 +42,9 @@
   <f:entry title="${%Visible for Project Role}" field="roleVisibility">
     <f:textbox />
   </f:entry>
-  <f:entry title="${%Add timestamp to JIRA comments}" field="appendChangeTimestamp">
-    <f:checkbox />
-  </f:entry>  
+  <f:entry>
+    <f:checkbox title="${%Add timestamp to JIRA comments}" field="appendChangeTimestamp" />
+  </f:entry>
   <f:entry title="${%JIRA comments timestamp format}" field="dateTimePattern">
     <f:textbox />
   </f:entry>
