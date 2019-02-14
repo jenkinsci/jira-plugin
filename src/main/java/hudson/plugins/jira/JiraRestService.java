@@ -126,12 +126,6 @@ public class JiraRestService {
         baseApiPath = builder.toString();
     }
 
-    public void close() throws IOException {
-        if(this.jiraRestClient!=null){
-            this.jiraRestClient.close();
-        }
-    }
-
     public void addComment(String issueId, String commentBody,
                                          String groupVisibility, String roleVisibility) {
         final URIBuilder builder = new URIBuilder(uri)

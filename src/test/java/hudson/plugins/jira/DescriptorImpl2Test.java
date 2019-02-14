@@ -53,7 +53,7 @@ public class DescriptorImpl2Test {
         when(descriptor.getJiraSiteBuilder()).thenReturn(builder);
         when(builder.build()).thenReturn(jiraSite);
         when(jiraSite.createSession()).thenReturn(jiraSession);
-        when(jiraSite.getSession()).thenReturn(jiraSession);
+        //when(jiraSite.getSession()).thenReturn(jiraSession);
 
     }
 
@@ -67,7 +67,7 @@ public class DescriptorImpl2Test {
 
         verify(descriptor).getJiraSiteBuilder();
         verify(builder).build();
-        verify(jiraSite).getSession();
+        verify(jiraSite).createSession();
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
     }
 
@@ -81,7 +81,7 @@ public class DescriptorImpl2Test {
 
         verify(descriptor).getJiraSiteBuilder();
         verify(builder).build();
-        verify(jiraSite).getSession();
+        verify(jiraSite).createSession();
         assertEquals(FormValidation.Kind.OK, validation.kind);
     }
 }

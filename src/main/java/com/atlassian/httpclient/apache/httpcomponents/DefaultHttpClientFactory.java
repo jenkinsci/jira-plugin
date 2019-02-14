@@ -20,7 +20,8 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     private final EventPublisher eventPublisher;
     private final ApplicationProperties applicationProperties;
     private final ThreadLocalContextManager threadLocalContextManager;
-    private final Set<ApacheAsyncHttpClient> httpClients = new CopyOnWriteArraySet<ApacheAsyncHttpClient>();
+    // shared http client
+    private static final Set<ApacheAsyncHttpClient> httpClients = new CopyOnWriteArraySet<>();
 
     public DefaultHttpClientFactory(EventPublisher eventPublisher, ApplicationProperties applicationProperties, ThreadLocalContextManager threadLocalContextManager)
     {
@@ -65,9 +66,18 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     private HttpClient doCreate(HttpClientOptions options, ThreadLocalContextManager threadLocalContextManager)
     {
         checkNotNull(options);
-        final ApacheAsyncHttpClient httpClient = new ApacheAsyncHttpClient(eventPublisher, applicationProperties, threadLocalContextManager, options);
-        httpClients.add(httpClient);
-        return httpClient;
+        // we create only one http client instance as we don't need more
+
+        if(!httpClients.isEmpty()) {
+            return httpClients.iterator().next();
+        }
+        synchronized ( this )
+        {
+            final ApacheAsyncHttpClient httpClient =
+                new ApacheAsyncHttpClient( eventPublisher, applicationProperties, threadLocalContextManager, options );
+            httpClients.add( httpClient );
+            return httpClient;
+        }
     }
 
     @Override
