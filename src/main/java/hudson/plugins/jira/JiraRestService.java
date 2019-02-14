@@ -52,6 +52,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -123,6 +124,12 @@ public class JiraRestService {
         }
         builder.append(BASE_API_PATH);
         baseApiPath = builder.toString();
+    }
+
+    public void close() throws IOException {
+        if(this.jiraRestClient!=null){
+            this.jiraRestClient.close();
+        }
     }
 
     public void addComment(String issueId, String commentBody,

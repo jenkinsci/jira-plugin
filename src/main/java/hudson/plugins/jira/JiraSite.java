@@ -481,6 +481,22 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
     }
 
+    // not really used but let's leave when it will be implemented
+    @PreDestroy
+    public void destroy() {
+        try {
+            if(this.jiraSession!=null&&this.jiraSession.service!=null) {
+                this.jiraSession.service.close();
+            }
+            if(this.executorService!=null&&!this.executorService.isShutdown()){
+                this.executorService.shutdownNow();
+            }
+            this.jiraSession = null;
+        } catch ( Exception e ) {
+            LOGGER.log(Level.WARNING, "skip error destroying JiraSite:" + e.getMessage(), e );
+        }
+    }
+
     //-----------------------------------------------------------------------------------
     // internal classes we want to override
     //-----------------------------------------------------------------------------------
@@ -992,17 +1008,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return success;
     }
 
-    // not really used but let's leave when it will be implemented
-    @PreDestroy
-    public void destroy() {
-        try {
-            if(this.executorService!=null&&!this.executorService.isShutdown()){
-                this.executorService.shutdownNow();
-            }
-        } catch ( Exception e ) {
-            LOGGER.log(Level.INFO, "skip error stopping executorService:" + e.getMessage(), e );
-        }
-    }
 
     @Extension
     public static class DescriptorImpl extends Descriptor<JiraSite> {
@@ -1076,9 +1081,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setTimeout(timeout);
             site.setReadTimeout(readTimeout);
             site.setThreadExecutorNumber(threadExecutorNumber);
-
+            JiraSession session = null;
             try {
-                JiraSession session = site.createSession();
+                session = site.getSession();
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
