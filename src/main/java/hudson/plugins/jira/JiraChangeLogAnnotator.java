@@ -117,7 +117,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                     text.addMarkup(m.start(1), m.end(1), "<a href='" + url + "'>", "</a>");
                 } else {
                     text.addMarkup(m.start(1), m.end(1),
-                            String.format("<a href='%s' tooltip='%s'>", url, Util.escape(issue.getSummary())), "</a>");
+                            String.format("<a href='%s' tooltip='%s' target="_blank">", url, Util.escape(issue.getSummary())), "</a>");
                 }
 
             } else {
