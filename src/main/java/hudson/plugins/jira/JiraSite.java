@@ -47,6 +47,10 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.PreDestroy;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -915,11 +919,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Generates release notes for a given version.
      *
-     * @param projectKey
-     * @param versionName
+     * @param projectKey the project key
+     * @param versionName the version
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
      * @return release notes
-     * @throws TimeoutException
+     * @throws TimeoutException if too long
      */
     public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws TimeoutException {
         JiraSession session = getSession();
@@ -971,7 +975,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey The project key
      * @param toVersion  The new fixVersion
      * @param query      A JQL Query
-     * @throws TimeoutException
+     * @throws TimeoutException if too long
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
         JiraSession session = getSession();
@@ -989,7 +993,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey  The project key
      * @param versionName The new fixVersion
      * @param query       A JQL Query
-     * @throws TimeoutException
+     * @throws TimeoutException if too long
      */
     public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
@@ -1004,10 +1008,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Adds new fix version to issues matching the jql.
      *
-     * @param projectKey
-     * @param versionName
-     * @param query
-     * @throws TimeoutException
+     * @param projectKey the project key
+     * @param versionName the version
+     * @param query the query
+     * @throws TimeoutException if too long
      */
     public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
@@ -1023,11 +1027,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Progresses all issues matching the JQL search, using the given workflow action. Optionally
      * adds a comment to the issue(s) at the same time.
      *
-     * @param jqlSearch
-     * @param workflowActionName
-     * @param comment
-     * @param console
-     * @throws TimeoutException
+     * @param jqlSearch the query
+     * @param workflowActionName the workflowActionName
+     * @param comment the comment
+     * @param console the console
+     * @throws TimeoutException TimeoutException if too long
      */
     public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
         JiraSession session = getSession();
@@ -1077,6 +1081,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return success;
     }
 
+    // not really used but let's leave when it will be implemented
+    @PreDestroy
     public void destroy() {
         try {
             if(this.executorService!=null&&!this.executorService.isShutdown()){
@@ -1136,10 +1142,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 return FormValidation.error(String.format("Malformed alternative URL (%s)",alternativeUrl), e );
             }
 
-            if(threadExecutorNumber<1){
-                return FormValidation.error( "threadExecutorNumber must be at least 1" );
-            }
-
             credentialsId = Util.fixEmpty(credentialsId);
             JiraSite site = getJiraSiteBuilder()
                     .withMainURL(mainURL)
@@ -1150,9 +1152,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withUseHTTPAuth(useHTTPAuth)
                     .build();
 
-            site.setTimeout(timeout<0?DEFAULT_TIMEOUT:timeout);
-            site.setReadTimeout(readTimeout<0?DEFAULT_READ_TIMEOUT:readTimeout);
-            site.setThreadExecutorNumber(threadExecutorNumber<1?DEFAULT_THREAD_EXECUTOR_NUMBER:threadExecutorNumber);
+            if(threadExecutorNumber<1){
+                return FormValidation.error( Messages.JiraSite_threadExecutorMinimunSize("1"));
+            }
+            if(timeout<0){
+                return FormValidation.error( Messages.JiraSite_timeoutMinimunValue( "1" ));
+            }
+            if(readTimeout<0){
+                return FormValidation.error( Messages.JiraSite_readTimeoutMinimunValue( "1" ));
+            }
+
+            site.setTimeout(timeout);
+            site.setReadTimeout(readTimeout);
+            site.setThreadExecutorNumber(threadExecutorNumber);
 
             try {
                 JiraSession session = site.getSession();
