@@ -47,9 +47,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -76,6 +73,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
@@ -278,7 +278,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @DataBoundConstructor
     public JiraSite(String url){
         URL mainURL = toURL(url);
-        if (mainURL == null) throw new AssertionError("URL cannot be null");
+        if (mainURL == null) throw new AssertionError("URL cannot be empty");
         this.url = mainURL;
     }
 

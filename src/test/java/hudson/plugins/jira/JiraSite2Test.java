@@ -8,13 +8,11 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-
 import hudson.util.Secret;
 import hudson.util.XStream2;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
 
@@ -27,10 +25,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
@@ -44,22 +39,19 @@ public class JiraSite2Test {
     @Rule
     public JenkinsRule j = new JenkinsRule();
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
-
-    private URL nonExistentUrl;
+    private URL validPrimaryUrl;
 
     private URL exampleOrg;
 
     @Before
     public void init() throws MalformedURLException {
-        nonExistentUrl = new URL("https://nonexistent.url");
+        validPrimaryUrl = new URL("https://nonexistent.url");
         exampleOrg = new URL("https://example.org/");
     }
 
     @Test
     public void createSessionWithProvidedCredentials() {
-        JiraSite site = new JiraSite(nonExistentUrl, null,
+        JiraSite site = new JiraSite(validPrimaryUrl, null,
                 new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, null, null, ANY_USER, ANY_PASSWORD),
                 false, false,
                 null, false, null,
@@ -72,7 +64,7 @@ public class JiraSite2Test {
 
     @Test
     public void createSessionReturnsNullIfCredentialsIsNull() {
-        JiraSite site = new JiraSite(nonExistentUrl, null,
+        JiraSite site = new JiraSite(validPrimaryUrl, null,
                 (StandardUsernamePasswordCredentials)null,
                 false, false,
                 null, false, null,
@@ -85,7 +77,7 @@ public class JiraSite2Test {
 
     @Test
     public void testDeserializeMigrateCredentials() throws MalformedURLException {
-        JiraSiteOld old = new JiraSiteOld(nonExistentUrl, null,
+        JiraSiteOld old = new JiraSiteOld(validPrimaryUrl, null,
                 ANY_USER, ANY_PASSWORD,
                 false, false,
                 null, false, null,
@@ -96,7 +88,7 @@ public class JiraSite2Test {
         // trick to get old version config of JiraSite
         xml = xml.replace(this.getClass().getName() + "_-" + JiraSiteOld.class.getSimpleName(), JiraSite.class.getName());
 
-        assertThat(xml, containsString(nonExistentUrl.toExternalForm()));
+        assertThat(xml, containsString(validPrimaryUrl.toExternalForm()));
         assertThat(xml, containsString("userName"));
         assertThat(xml, containsString("password"));
         assertThat(xml, not(containsString("credentialsId")));
@@ -183,7 +175,7 @@ public class JiraSite2Test {
     @Test
     @WithoutJenkins
     public void alternativeURLNotNull() {
-        JiraSite site = new JiraSite(nonExistentUrl, exampleOrg,
+        JiraSite site = new JiraSite(validPrimaryUrl, exampleOrg,
             (StandardUsernamePasswordCredentials) null,
             false, false,
             null, false, null,
@@ -195,11 +187,11 @@ public class JiraSite2Test {
     @Test
     @WithoutJenkins
     public void ensureUrlEndsWithSlash() {
-        JiraSite jiraSite = new JiraSite(nonExistentUrl.toExternalForm());
+        JiraSite jiraSite = new JiraSite(validPrimaryUrl.toExternalForm());
         jiraSite.setAlternativeUrl(exampleOrg.toExternalForm());
         assertTrue(jiraSite.getUrl().toExternalForm().endsWith("/"));
         assertTrue(jiraSite.getAlternativeUrl().toExternalForm().endsWith("/"));
-        URL url1 = JiraSite.toURL(nonExistentUrl.toExternalForm());
+        URL url1 = JiraSite.toURL(validPrimaryUrl.toExternalForm());
         URL url2 = JiraSite.toURL(exampleOrg.toExternalForm());
         assertTrue(url1.toExternalForm().endsWith("/"));
         assertTrue(url2.toExternalForm().endsWith("/"));
@@ -208,56 +200,66 @@ public class JiraSite2Test {
     @Test
     @WithoutJenkins
     public void urlNulls() {
-        JiraSite jiraSite = new JiraSite(nonExistentUrl.toExternalForm());
+        JiraSite jiraSite = new JiraSite(validPrimaryUrl.toExternalForm());
         jiraSite.setAlternativeUrl(" ");
-        URL url1 = JiraSite.toURL("");
-        URL url2 = JiraSite.toURL(" ");
         assertNotNull(jiraSite.getUrl());
         assertNull(jiraSite.getAlternativeUrl());
-        assertNull(url1);
-        assertNull(url2);
     }
 
     @Test
     @WithoutJenkins
+    public void toUrlConvertsEmptyStringToNull() {
+        URL emptyString = JiraSite.toURL("");
+        assertNull(emptyString);
+    }
+
+    @Test
+    @WithoutJenkins
+    public void toUrlConvertsOnlyWhitespaceToNull() {
+        URL whitespace = JiraSite.toURL(" ");
+        assertNull(whitespace);
+    }
+
+    @WithoutJenkins
+    @Test(expected = AssertionError.class)
     public void ensureMainUrlIsMandatory() {
-        thrown.expect(AssertionError.class);
-        thrown.expectMessage("URL cannot be null");
         new JiraSite("");
     }
 
     @Test
     @WithoutJenkins
     public void ensureAlternativeUrlIsNotMandatory() {
-        JiraSite jiraSite = new JiraSite(nonExistentUrl.toExternalForm());
+        JiraSite jiraSite = new JiraSite(validPrimaryUrl.toExternalForm());
         jiraSite.setAlternativeUrl("");
         assertNull(jiraSite.getAlternativeUrl());
     }
 
-    @Test
     @WithoutJenkins
+    @Test(expected = AssertionError.class)
     public void malformedUrl() {
-        thrown.expect(AssertionError.class);
-        thrown.expectMessage("java.net.MalformedURLException: no protocol");
         new JiraSite("malformed.url");
+    }
+
+    @WithoutJenkins
+    @Test(expected = AssertionError.class)
+    public void malformedAlternativeUrl() {
+        JiraSite jiraSite = new JiraSite(validPrimaryUrl.toExternalForm());
+        jiraSite.setAlternativeUrl("malformed.url");
     }
 
     @Test
     @WithoutJenkins
-    public void malformedAlternativeUrl() {
-        JiraSite jiraSite = new JiraSite(nonExistentUrl.toExternalForm());
-        thrown.expect(AssertionError.class);
-        thrown.expectMessage("java.net.MalformedURLException: no protocol");
-        jiraSite.setAlternativeUrl("malformed.url");
+    public void credentialsAreNullByDefault() {
+        JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
+        jiraSite.setCredentialsId("");
+        assertNull(jiraSite.getCredentialsId());
+        assertNull(jiraSite.credentials);
     }
 
     @Test
     public void credentials() throws Exception {
         JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
-        jiraSite.setCredentialsId("");
-        assertNull(jiraSite.getCredentialsId());
-        assertNull(jiraSite.credentials);
-        String cred = "cred-1-id";
+        String cred = "cred-1";
         String user = "user1";
         String pwd = "pwd1";
 
@@ -270,46 +272,7 @@ public class JiraSite2Test {
         jiraSite.setCredentialsId(cred);
         assertNotNull(jiraSite.getCredentialsId());
         assertNotNull(jiraSite.credentials);
-        assertEquals(cred, jiraSite.getCredentialsId());
         assertEquals(credentials.getUsername(), jiraSite.credentials.getUsername());
         assertEquals(credentials.getPassword(), jiraSite.credentials.getPassword());
-    }
-
-    @Test
-    @WithoutJenkins
-    public void gettersAndSetters() throws Exception {
-        JiraSite jiraSite = new JiraSite(nonExistentUrl.toExternalForm());
-        jiraSite.setAlternativeUrl(exampleOrg.toExternalForm());
-        assertFalse(jiraSite.getDisableChangelogAnnotations());
-        assertEquals(JiraSite.DEFAULT_TIMEOUT, jiraSite.getTimeout());
-        assertEquals(JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER, jiraSite.getThreadExecutorNumber());
-        assertEquals(JiraSite.DEFAULT_READ_TIMEOUT, jiraSite.getReadTimeout());
-        assertFalse(jiraSite.isAppendChangeTimestamp());
-        assertNull(jiraSite.getDateTimePattern());
-        assertNull(jiraSite.getGroupVisibility());
-        assertNull(jiraSite.getRoleVisibility());
-        assertFalse(jiraSite.isUseHTTPAuth());
-        assertFalse(jiraSite.isSupportsWikiStyleComment());
-        assertFalse(jiraSite.isUpdateJiraIssueForAllStatus());
-        assertFalse(jiraSite.isRecordScmChanges());
-        assertFalse(jiraSite.isUpdateJiraIssueForAllStatus());
-        jiraSite.setUseHTTPAuth(true);
-        assertTrue(jiraSite.isUseHTTPAuth());
-        jiraSite.setSupportsWikiStyleComment(true);
-        assertTrue(jiraSite.isSupportsWikiStyleComment());
-        jiraSite.setRecordScmChanges(true);
-        assertTrue(jiraSite.isRecordScmChanges());
-        jiraSite.setUpdateJiraIssueForAllStatus(true);
-        assertTrue(jiraSite.isUpdateJiraIssueForAllStatus());
-        assertNull(jiraSite.getUserPattern());
-        jiraSite.setUserPattern("");
-        assertNull(jiraSite.getUserPattern());
-        jiraSite.setUserPattern("[a-zA-Z0-9]");
-        assertNotNull(jiraSite.getUserPattern());
-        String id = "JIRA-1";
-        URL url = jiraSite.getUrl(id);
-        assertEquals(new URL(nonExistentUrl, "browse/" + id.toUpperCase()), url);
-        URL alternativeUrl = jiraSite.getAlternativeUrl(id);
-        assertEquals(new URL(exampleOrg, "browse/" + id.toUpperCase()), alternativeUrl);
     }
 }
