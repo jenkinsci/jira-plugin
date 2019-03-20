@@ -251,7 +251,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
         private final List<Pattern> nonProxyHosts;
 
         public JenkinsProxyRoutePlanner(HttpHost proxy, List<Pattern> nonProxyHosts) {
-            super((SchemePortResolver)null);
+            super(null);
             this.proxy = Args.notNull(proxy, "Proxy host");
             this.nonProxyHosts = nonProxyHosts;
         }
@@ -294,15 +294,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                     .register("https", sslioSessionStrategy)
                     .build();
         }
-        catch (KeyManagementException e)
-        {
-            return getFallbackRegistry(e);
-        }
-        catch (NoSuchAlgorithmException e)
-        {
-            return getFallbackRegistry(e);
-        }
-        catch (KeyStoreException e)
+        catch (KeyManagementException|NoSuchAlgorithmException|KeyStoreException e)
         {
             return getFallbackRegistry(e);
         }
@@ -496,8 +488,16 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
     @Override
     public void destroy() throws Exception
     {
-        callbackExecutor.shutdown();
-        nonCachingHttpClient.close();
+        try {
+            callbackExecutor.shutdown();
+        } catch ( Exception e ) {
+            log.warn( "skip fail to shutdown callbackExecutor:" + e.getMessage(),e);
+        }
+        try {
+            nonCachingHttpClient.close();
+        } catch ( Exception e ) {
+            log.warn( "skip fail to shutdown nonCachingHttpClient:" + e.getMessage(),e);
+        }
     }
 
     @Override

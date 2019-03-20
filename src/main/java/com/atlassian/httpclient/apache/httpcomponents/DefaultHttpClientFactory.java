@@ -21,7 +21,7 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     private final ApplicationProperties applicationProperties;
     private final ThreadLocalContextManager threadLocalContextManager;
     // shared http client
-    private static final Set<ApacheAsyncHttpClient> httpClients = new CopyOnWriteArraySet<>();
+    private ApacheAsyncHttpClient httpClient;
 
     public DefaultHttpClientFactory(EventPublisher eventPublisher, ApplicationProperties applicationProperties, ThreadLocalContextManager threadLocalContextManager)
     {
@@ -47,19 +47,7 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     {
         if (httpClient instanceof ApacheAsyncHttpClient)
         {
-            final ApacheAsyncHttpClient client = (ApacheAsyncHttpClient) httpClient;
-            if (httpClients.remove(client))
-            {
-                client.destroy();
-            }
-            else
-            {
-                throw new IllegalStateException("Client is already disposed");
-            }
-        }
-        else
-        {
-            throw new IllegalArgumentException("Given client is not disposable");
+            ((ApacheAsyncHttpClient) httpClient).destroy();
         }
     }
 
@@ -68,14 +56,13 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
         checkNotNull(options);
         // we create only one http client instance as we don't need more
 
-        if(!httpClients.isEmpty()) {
-            return httpClients.iterator().next();
+        if(httpClient!=null) {
+            return httpClient;
         }
         synchronized ( this )
         {
-            final ApacheAsyncHttpClient httpClient =
+            httpClient =
                 new ApacheAsyncHttpClient( eventPublisher, applicationProperties, threadLocalContextManager, options );
-            httpClients.add( httpClient );
             return httpClient;
         }
     }
@@ -83,15 +70,6 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     @Override
     public void destroy() throws Exception
     {
-        for (ApacheAsyncHttpClient httpClient : httpClients)
-        {
-            httpClient.destroy();
-        }
-    }
-
-    @VisibleForTesting
-    Iterable<ApacheAsyncHttpClient> getHttpClients()
-    {
-        return httpClients;
+        httpClient.destroy();
     }
 }
