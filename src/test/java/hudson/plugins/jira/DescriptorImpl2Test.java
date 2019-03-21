@@ -53,7 +53,6 @@ public class DescriptorImpl2Test {
         when(descriptor.getJiraSiteBuilder()).thenReturn(builder);
         when(builder.build()).thenReturn(jiraSite);
         when(jiraSite.getSession()).thenReturn(jiraSession);
-        when(jiraSite.createSession()).thenReturn(jiraSession);
     }
 
     @Test
