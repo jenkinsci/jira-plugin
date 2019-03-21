@@ -41,6 +41,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
+import org.apache.http.impl.nio.reactor.AbstractMultiworkerIOReactor;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -89,7 +90,7 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
  * Represents an external JIRA installation and configuration
  * needed to access this JIRA.
  * </p>
- * <b>When adding new fields do not misss to look at readResolve method!!</b>
+ * <b>When adding new fields do not miss to look at readResolve method!!</b>
  * @author Kohsuke Kawaguchi
  */
 public class JiraSite extends AbstractDescribableImpl<JiraSite> {
@@ -245,7 +246,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     private transient JiraSession jiraSession;
 
-    private transient ExecutorService executorService;
+    private static ExecutorService executorService;
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
     @Deprecated
@@ -539,35 +540,55 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         String userName = credentials.getUsername();
         Secret password = credentials.getPassword();
+
+        final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
+                .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),getHttpClientOptions());
+        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
+    }
+
+    private HttpClientOptions getHttpClientOptions() {
         final HttpClientOptions options = new HttpClientOptions();
         options.setRequestTimeout(readTimeout, TimeUnit.SECONDS);
         options.setSocketTimeout(timeout, TimeUnit.SECONDS);
+        options.setCallbackExecutor(getExecutorService());
+        return options;
+    }
 
-        if (executorService==null){
-            int nThreads = threadExecutorNumber;
-            if(nThreads<1){
-                LOGGER.warning( "nThreads " + nThreads + " cannot be lower than 1 so use default " + DEFAULT_THREAD_EXECUTOR_NUMBER );
-                nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
-            }
-            executorService =  Executors.newFixedThreadPool(
-                nThreads, //
-                new ThreadFactory()
+    private ExecutorService getExecutorService() {
+        if (executorService==null)
+        {
+            synchronized ( JiraSite.class )
+            {
+                int nThreads = threadExecutorNumber;
+                if ( nThreads < 1 )
                 {
-                    final AtomicInteger threadNumber = new AtomicInteger( 0 );
-
-                    @Override
-                    public Thread newThread( Runnable r )
-                    {
-                        return new Thread( r, "jira-plugin-http-request-" + threadNumber.getAndIncrement() + "-thread" );
-                    }
-                } );
+                    LOGGER.warning( "nThreads " + nThreads + " cannot be lower than 1 so use default " + DEFAULT_THREAD_EXECUTOR_NUMBER );
+                    nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
+                }
+                executorService = Executors.newFixedThreadPool( nThreads, //
+                                                                new ThreadFactory() {
+                                                                    final AtomicInteger threadNumber = new AtomicInteger( 0 );
+                                                                    @Override
+                                                                    public Thread newThread( Runnable r )
+                                                                    {
+                                                                        return new Thread( r,
+                                                                                           "jira-plugin-http-request-" + threadNumber.getAndIncrement()
+                                                                                               + "-thread" );
+                                                                    }
+                                                                } );
+            }
         }
+        return executorService;
+    }
 
-        options.setCallbackExecutor(executorService);
-
-        final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
-                .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),options);
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
+    // not really used but let's leave when it will be implemented
+    @PreDestroy
+    public void destroy() {
+        try {
+            this.jiraSession = null;
+        } catch ( Exception e ) {
+            LOGGER.log(Level.WARNING, "skip error destroying JiraSite:" + e.getMessage(), e );
+        }
     }
 
     //-----------------------------------------------------------------------------------
@@ -1081,18 +1102,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return success;
     }
 
-    // not really used but let's leave when it will be implemented
-    @PreDestroy
-    public void destroy() {
-        try {
-            if(this.executorService!=null&&!this.executorService.isShutdown()){
-                this.executorService.shutdownNow();
-            }
-        } catch ( Exception e ) {
-            LOGGER.log(Level.INFO, "skip error stopping executorService:" + e.getMessage(), e );
-        }
-    }
-
     @Extension
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
@@ -1165,9 +1174,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setTimeout(timeout);
             site.setReadTimeout(readTimeout);
             site.setThreadExecutorNumber(threadExecutorNumber);
-
+            JiraSession session = null;
             try {
-                JiraSession session = site.getSession();
+                session = site.createSession();
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {

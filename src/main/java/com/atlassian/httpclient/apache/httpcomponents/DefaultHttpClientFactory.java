@@ -20,7 +20,8 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     private final EventPublisher eventPublisher;
     private final ApplicationProperties applicationProperties;
     private final ThreadLocalContextManager threadLocalContextManager;
-    private final Set<ApacheAsyncHttpClient> httpClients = new CopyOnWriteArraySet<ApacheAsyncHttpClient>();
+    // shared http client
+    private ApacheAsyncHttpClient httpClient;
 
     public DefaultHttpClientFactory(EventPublisher eventPublisher, ApplicationProperties applicationProperties, ThreadLocalContextManager threadLocalContextManager)
     {
@@ -46,42 +47,29 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     {
         if (httpClient instanceof ApacheAsyncHttpClient)
         {
-            final ApacheAsyncHttpClient client = (ApacheAsyncHttpClient) httpClient;
-            if (httpClients.remove(client))
-            {
-                client.destroy();
-            }
-            else
-            {
-                throw new IllegalStateException("Client is already disposed");
-            }
-        }
-        else
-        {
-            throw new IllegalArgumentException("Given client is not disposable");
+            ((ApacheAsyncHttpClient) httpClient).destroy();
         }
     }
 
     private HttpClient doCreate(HttpClientOptions options, ThreadLocalContextManager threadLocalContextManager)
     {
         checkNotNull(options);
-        final ApacheAsyncHttpClient httpClient = new ApacheAsyncHttpClient(eventPublisher, applicationProperties, threadLocalContextManager, options);
-        httpClients.add(httpClient);
-        return httpClient;
+        // we create only one http client instance as we don't need more
+
+        if(httpClient!=null) {
+            return httpClient;
+        }
+        synchronized ( this )
+        {
+            httpClient =
+                new ApacheAsyncHttpClient( eventPublisher, applicationProperties, threadLocalContextManager, options );
+            return httpClient;
+        }
     }
 
     @Override
     public void destroy() throws Exception
     {
-        for (ApacheAsyncHttpClient httpClient : httpClients)
-        {
-            httpClient.destroy();
-        }
-    }
-
-    @VisibleForTesting
-    Iterable<ApacheAsyncHttpClient> getHttpClients()
-    {
-        return httpClients;
+        httpClient.destroy();
     }
 }
