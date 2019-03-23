@@ -1,14 +1,20 @@
 package hudson.plugins.jira;
 
+import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import hudson.Extension;
+import hudson.Util;
+import hudson.init.InitMilestone;
+import hudson.init.Initializer;
+import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
-import hudson.util.CopyOnWriteList;
-import net.sf.json.JSONObject;
+import hudson.util.ListBoxModel;
+import java.util.List;
+import javax.annotation.Nullable;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Associates {@link Job} with {@link JiraSite}.
@@ -26,11 +32,12 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
 
     @DataBoundConstructor
     public JiraProjectProperty(String siteName) {
+        siteName = Util.fixEmptyAndTrim(siteName);
         if (siteName == null) {
             // defaults to the first one
-            JiraSite[] sites = DESCRIPTOR.getSites();
-            if (sites.length > 0) {
-                siteName = sites[0].getName();
+            List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
+            if (!sites.isEmpty()) {
+                siteName = sites.get(0).getName();
             }
         }
         this.siteName = siteName;
@@ -41,11 +48,13 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
      *
      * @return null if the configuration becomes out of sync.
      */
+    @Nullable
     public JiraSite getSite() {
-        JiraSite[] sites = DESCRIPTOR.getSites();
-        if (siteName == null && sites.length > 0) {
+        List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
+
+        if (siteName == null && sites.size() > 0) {
             // default
-            return sites[0];
+            return sites.get(0);
         }
 
         for (JiraSite site : sites) {
@@ -53,24 +62,14 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
                 return site;
             }
         }
+
         return null;
     }
 
-    @Override
-    public DescriptorImpl getDescriptor() {
-        return DESCRIPTOR;
-    }
-
     @Extension
-    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
-
     public static final class DescriptorImpl extends JobPropertyDescriptor {
-        private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<>();
-
-        public DescriptorImpl() {
-            super(JiraProjectProperty.class);
-            load();
-        }
+        @Deprecated
+        protected transient List<JiraSite> sites;
 
         @Override
         @SuppressWarnings("unchecked")
@@ -83,36 +82,61 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             return Messages.JiraProjectProperty_DisplayName();
         }
 
+        /**
+         * @deprecated use {@link JiraGlobalConfiguration#setSites(List)} instead
+         *
+         * @param site the JIRA site
+         */
+        @Deprecated
         public void setSites(JiraSite site) {
-            sites.add(site);
+            JiraGlobalConfiguration.get().getSites().add(site);
         }
 
+        /**
+         * @deprecated use {@link JiraGlobalConfiguration#getSites()} instead
+         *
+         * @return array of sites
+         */
+        @Deprecated
         public JiraSite[] getSites() {
-            return sites.toArray(new JiraSite[0]);
+            return JiraGlobalConfiguration.get().getSites().toArray(new JiraSite[0]);
         }
 
-        @Override
-        public JobProperty<?> newInstance(StaplerRequest req, JSONObject formData)
-                throws FormException {
-            JiraProjectProperty jpp = req.bindParameters(JiraProjectProperty.class, "jira.");
-            if (jpp.siteName == null) {
-                jpp = null; // not configured
+        @SuppressWarnings("unused") // Used by stapler
+        public ListBoxModel doFillSiteNameItems() {
+            ListBoxModel items = new ListBoxModel();
+            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
+                items.add(site.getName());
             }
-            return jpp;
+            return items;
         }
 
-        @Override
-        public boolean configure(StaplerRequest req, JSONObject formData) {
-            //Fix^H^H^HDirty hack for empty string to URL conversion error
-            //Should check for existing handler etc, but since this is a dirty hack,
-            //we won't
-            Stapler.CONVERT_UTILS.deregister(java.net.URL.class);
-            Stapler.CONVERT_UTILS.register(new EmptyFriendlyURLConverter(), java.net.URL.class);
-            //End hack
+        @SuppressWarnings("unused") // Used to start migration after all extensions are loaded
+        @Initializer(after=InitMilestone.EXTENSIONS_AUGMENTED)
+        public void migrate() {
+            DescriptorImpl descriptor = (DescriptorImpl) Jenkins.getInstance()
+                .getDescriptor(JiraProjectProperty.class);
+            if (descriptor != null) {
+                descriptor.load(); // force readResolve without registering descriptor as configurable
+            }
+        }
 
-            sites.replaceBy(req.bindJSONToList(JiraSite.class, formData.get("sites")));
-            save();
-            return true;
+        @SuppressWarnings("deprecation") // Migrate configuration
+        protected Object readResolve() {
+            if (sites != null) {
+                JiraGlobalConfiguration jiraGlobalConfiguration = (JiraGlobalConfiguration) Jenkins.getInstance()
+                    .getDescriptorOrDie(JiraGlobalConfiguration.class);
+                jiraGlobalConfiguration.load();
+                jiraGlobalConfiguration.getSites().addAll(sites);
+                jiraGlobalConfiguration.save();
+                sites = null;
+                DescriptorImpl oldDescriptor = (DescriptorImpl) Jenkins.getInstance()
+                    .getDescriptor(JiraProjectProperty.class);
+                if (oldDescriptor != null) {
+                    oldDescriptor.save();
+                }
+            }
+            return this;
         }
     }
 }

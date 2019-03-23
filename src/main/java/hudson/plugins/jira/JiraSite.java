@@ -40,6 +40,7 @@ import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -879,9 +880,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         // none is explicitly configured. try the default ---
         // if only one is configured, that must be it.
-        JiraSite[] sites = JiraProjectProperty.DESCRIPTOR.getSites();
-        if (sites.length == 1) {
-            return sites[0];
+        List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
+        if (sites.size() == 1) {
+            return sites.get(0);
         }
 
         return null;
@@ -1106,6 +1107,31 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         @Override
         public String getDisplayName() {
             return "JIRA Site";
+        }
+
+
+        @SuppressWarnings("unused") // used by stapler
+        public FormValidation doCheckUrl(@QueryParameter String value)
+            throws IOException, ServletException {
+            return checkUrl(value);
+        }
+
+        @SuppressWarnings("unused") // used by stapler
+        public FormValidation doCheckAlternativeUrl(@QueryParameter String value)
+            throws IOException, ServletException {
+            return checkUrl(value);
+        }
+
+        private FormValidation checkUrl(String url) {
+            if (Util.fixEmptyAndTrim(url) == null) {
+                return FormValidation.ok();
+            }
+            try{
+                new URL(url);
+            } catch (MalformedURLException e){
+                return FormValidation.error(String.format("Malformed URL (%s)", url), e );
+            }
+            return FormValidation.ok();
         }
 
         /**

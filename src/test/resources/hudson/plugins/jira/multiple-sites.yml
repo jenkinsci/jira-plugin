@@ -1,0 +1,5 @@
+unclassified:
+  jiraglobalconfiguration:
+    sites:
+    - url: "https://issues.jenkins-ci.org/"
+    - url: "https://jira.com/"
