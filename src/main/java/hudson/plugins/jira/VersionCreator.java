@@ -1,11 +1,11 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.model.BuildListener;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.extension.ExtendedVersion;
 
 import java.util.Optional;
 import java.util.logging.Logger;
@@ -36,7 +36,7 @@ class VersionCreator {
 
 			String finalRealVersion = realVersion;
 			JiraSite site = getSiteForProject(project);
-			Optional<Version> sameNamedVersion = site.getVersions(realProjectKey).stream()
+			Optional<ExtendedVersion> sameNamedVersion = site.getVersions(realProjectKey).stream()
 					.filter(version -> version.getName().equals(finalRealVersion) && version.isReleased()).findFirst();
 
 			if (sameNamedVersion.isPresent()) {

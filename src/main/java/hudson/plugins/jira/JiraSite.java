@@ -5,13 +5,10 @@ import com.atlassian.httpclient.apache.httpcomponents.DefaultHttpClientFactory;
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.atlassian.jira.rest.client.api.AuthenticationHandler;
-import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.AtlassianHttpClientDecorator;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.atlassian.sal.api.ApplicationProperties;
@@ -34,6 +31,9 @@ import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
+import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
+import hudson.plugins.jira.extension.ExtendedJiraRestClient;
+import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
@@ -537,9 +537,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         String userName = credentials.getUsername();
         Secret password = credentials.getPassword();
 
-        final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
-                .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),getHttpClientOptions());
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
+		final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
+				.create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),getHttpClientOptions());
+		return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
     }
 
     private HttpClientOptions getHttpClientOptions() {
@@ -591,34 +591,34 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     // internal classes we want to override
     //-----------------------------------------------------------------------------------
 
-    private static class AsynchronousJiraRestClientFactory implements JiraRestClientFactory
+    public static class ExtendedAsynchronousJiraRestClientFactory implements JiraRestClientFactory
     {
 
-        public JiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
+        public ExtendedJiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
             final DisposableHttpClient httpClient = createClient(serverUri, authenticationHandler, options);
-            return new AsynchronousJiraRestClient( serverUri, httpClient);
+            return new ExtendedAsynchronousJiraRestClient( serverUri, httpClient);
         }
 
         @Override
-        public JiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler) {
+        public ExtendedJiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler) {
             final DisposableHttpClient httpClient = createClient(serverUri, authenticationHandler, new HttpClientOptions());
-            return new AsynchronousJiraRestClient( serverUri, httpClient);
+            return new ExtendedAsynchronousJiraRestClient( serverUri, httpClient);
         }
 
         @Override
-        public JiraRestClient createWithBasicHttpAuthentication(final URI serverUri, final String username, final String password) {
+        public ExtendedJiraRestClient createWithBasicHttpAuthentication(final URI serverUri, final String username, final String password) {
             return create(serverUri, new BasicHttpAuthenticationHandler( username, password));
         }
 
         @Override
-        public JiraRestClient createWithAuthenticationHandler(final URI serverUri, final AuthenticationHandler authenticationHandler) {
+        public ExtendedJiraRestClient createWithAuthenticationHandler(final URI serverUri, final AuthenticationHandler authenticationHandler) {
             return create(serverUri, authenticationHandler);
         }
 
         @Override
-        public JiraRestClient create(final URI serverUri, final HttpClient httpClient) {
+        public ExtendedJiraRestClient create(final URI serverUri, final HttpClient httpClient) {
             final DisposableHttpClient disposableHttpClient = createClient(httpClient);
-            return new AsynchronousJiraRestClient(serverUri, disposableHttpClient);
+            return new ExtendedAsynchronousJiraRestClient(serverUri, disposableHttpClient);
         }
     }
 
@@ -923,7 +923,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey Project Key
      * @return A set of JiraVersions
      */
-    public Set<Version> getVersions(String projectKey) {
+    public Set<ExtendedVersion> getVersions(String projectKey) {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
