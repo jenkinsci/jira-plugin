@@ -12,7 +12,7 @@ public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClie
     public ExtendedAsynchronousJiraRestClient(URI serverUri, DisposableHttpClient httpClient) {
         super(serverUri, httpClient);
         final URI baseUri = UriBuilder.fromUri(serverUri).path("/rest/api/latest").build();
-        extendedVersionRestClient = new AsynchronousExtendedVersionRestClient(baseUri, httpClient);
+        extendedVersionRestClient = new ExtendedAsynchronousVersionRestClient(baseUri, httpClient);
     }
 
     @Override

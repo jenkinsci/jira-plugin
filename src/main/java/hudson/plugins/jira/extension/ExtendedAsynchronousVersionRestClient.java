@@ -7,10 +7,10 @@ import com.atlassian.util.concurrent.Promise;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 
-public class AsynchronousExtendedVersionRestClient extends AsynchronousVersionRestClient implements ExtendedVersionRestClient {
+public class ExtendedAsynchronousVersionRestClient extends AsynchronousVersionRestClient implements ExtendedVersionRestClient {
     private final URI versionRootUri;
 
-    AsynchronousExtendedVersionRestClient(URI baseUri, HttpClient client) {
+	ExtendedAsynchronousVersionRestClient(URI baseUri, HttpClient client) {
         super(baseUri, client);
         versionRootUri = UriBuilder.fromUri(baseUri).path("version").build();
     }
