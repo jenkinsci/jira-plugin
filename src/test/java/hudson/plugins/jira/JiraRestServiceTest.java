@@ -1,9 +1,9 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.util.concurrent.Promise;
 
+import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -25,13 +25,13 @@ public class JiraRestServiceTest {
     private final URI JIRA_URI = URI.create("http://example.com:8080/");
     private final String USERNAME = "user";
     private final String PASSWORD = "password";
-    private JiraRestClient client;
+    private ExtendedJiraRestClient client;
     private SearchRestClient searchRestClient;
     private Promise searchResult;
 
     @Before
     public void createMocks() throws InterruptedException, ExecutionException, TimeoutException {
-        client = mock(JiraRestClient.class);
+        client = mock(ExtendedJiraRestClient.class);
         searchRestClient = mock(SearchRestClient.class);
         searchResult = mock(Promise.class);
 

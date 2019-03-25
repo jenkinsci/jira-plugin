@@ -1,27 +1,33 @@
 package hudson.plugins.jira.model;
 
-import com.atlassian.jira.rest.client.api.domain.Version;
+import hudson.plugins.jira.extension.ExtendedVersion;
 
 import java.util.Calendar;
 
 public class JiraVersion implements Comparable<JiraVersion> {
 
     private final String name;
+    private final Calendar startDate;
     private final Calendar releaseDate;
     private final boolean released;
     private final boolean archived;
 
 
-    public JiraVersion(String name, Calendar releaseDate, boolean released, boolean archived) {
+    public JiraVersion(String name, Calendar startDate, Calendar releaseDate, boolean released, boolean archived) {
         this.name = name;
+        this.startDate = startDate;
         this.releaseDate = releaseDate;
         this.released = released;
         this.archived = archived;
     }
 
-    public JiraVersion(Version version) {
-        this(version.getName(), version.getReleaseDate() == null ? null : version.getReleaseDate().toGregorianCalendar(), version.isReleased(), version.isArchived());
-    }
+	public JiraVersion(ExtendedVersion version) {
+		this(version.getName(),
+				version.getStartDate() == null ? null : version.getStartDate().toGregorianCalendar(),
+				version.getReleaseDate() == null ? null : version.getReleaseDate().toGregorianCalendar(),
+				version.isReleased(),
+				version.isArchived());
+	}
 
     public int compareTo(JiraVersion that) {
         int result = this.releaseDate.compareTo(that.releaseDate);
@@ -65,6 +71,13 @@ public class JiraVersion implements Comparable<JiraVersion> {
         } else if (!name.equals(other.name)) {
             return false;
         }
+		if (startDate == null) {
+			if (other.startDate != null) {
+				return false;
+			}
+		} else if (!startDate.equals(other.startDate)) {
+			return false;
+		}
         if (releaseDate == null) {
             if (other.releaseDate != null) {
                 return false;
@@ -81,6 +94,10 @@ public class JiraVersion implements Comparable<JiraVersion> {
     public String getName() {
         return name;
     }
+
+    public Calendar getStartDate() {
+		return startDate;
+	}
 
     public Calendar getReleaseDate() {
         return releaseDate;

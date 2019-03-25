@@ -35,11 +35,13 @@ import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
-import com.atlassian.jira.rest.client.api.domain.input.VersionInput;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
+import hudson.plugins.jira.extension.ExtendedJiraRestClient;
+import hudson.plugins.jira.extension.ExtendedVersion;
+import hudson.plugins.jira.extension.ExtendedVersionInput;
 import hudson.plugins.jira.model.JiraIssueField;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
@@ -83,7 +85,7 @@ public class JiraRestService {
 
     private final URI uri;
 
-    private final JiraRestClient jiraRestClient;
+    private final ExtendedJiraRestClient jiraRestClient;
 
     private final ObjectMapper objectMapper;
 
@@ -94,11 +96,11 @@ public class JiraRestService {
     private final int timeout;
 
     @Deprecated
-    public JiraRestService(URI uri, JiraRestClient jiraRestClient, String username, String password) {
+    public JiraRestService(URI uri, ExtendedJiraRestClient jiraRestClient, String username, String password) {
     	this(uri, jiraRestClient, username, password, JiraSite.DEFAULT_TIMEOUT);
     }
 
-    public JiraRestService(URI uri, JiraRestClient jiraRestClient, String username, String password, int timeout) {
+    public JiraRestService(URI uri, ExtendedJiraRestClient jiraRestClient, String username, String password, int timeout) {
         this.uri = uri;
         this.objectMapper = new ObjectMapper();
         this.timeout = timeout;
@@ -202,7 +204,7 @@ public class JiraRestService {
         }
     }
 
-    public List<Version> getVersions(String projectKey) {
+    public List<ExtendedVersion> getVersions(String projectKey) {
         final URIBuilder builder = new URIBuilder(uri)
                 .setPath(String.format("%s/project/%s/versions", baseApiPath, projectKey));
 
@@ -220,35 +222,36 @@ public class JiraRestService {
         }
 
         return decoded.stream().map( decodedVersion -> {
+            final DateTime startDate = decodedVersion.containsKey("startDate") ? DATE_TIME_FORMATTER.parseDateTime((String) decodedVersion.get("startDate")) : null;
             final DateTime releaseDate = decodedVersion.containsKey("releaseDate") ? DATE_TIME_FORMATTER.parseDateTime((String) decodedVersion.get("releaseDate")) : null;
-            return new Version(URI.create((String) decodedVersion.get("self")), Long.parseLong((String) decodedVersion.get("id")),
+            return new ExtendedVersion(URI.create((String) decodedVersion.get("self")), Long.parseLong((String) decodedVersion.get("id")),
                                                 (String) decodedVersion.get("name"), (String) decodedVersion.get("description"), (Boolean) decodedVersion.get("archived"),
-                                                (Boolean) decodedVersion.get("released"), releaseDate);
+                                                (Boolean) decodedVersion.get("released"), startDate, releaseDate);
         }  ).collect( Collectors.toList() );
 
     }
 
 
     public Version addVersion(String projectKey, String versionName) {
-        final VersionInput versionInput = new VersionInput(projectKey, versionName, null, null, false, false);
+        final ExtendedVersionInput versionInput = new ExtendedVersionInput(projectKey, versionName, null, DateTime.now(), null, false, false);
         try {
-            return jiraRestClient.getVersionRestClient()
-                          .createVersion(versionInput).get(timeout, TimeUnit.SECONDS);
+            return jiraRestClient.getExtendedVersionRestClient()
+                          .createExtendedVersion(versionInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "jira rest client add version error. cause: " + e.getMessage(), e);
             return null;
         }
     }
 
-    public void releaseVersion(String projectKey, Version version) {
+    public void releaseVersion(String projectKey, ExtendedVersion version) {
         final URIBuilder builder = new URIBuilder(uri)
             .setPath(String.format("%s/version/%s", baseApiPath, version.getId()));
 
-        final VersionInput versionInput = new VersionInput(projectKey, version.getName(), version.getDescription(), version
-            .getReleaseDate(), version.isArchived(), version.isReleased());
+        final ExtendedVersionInput versionInput = new ExtendedVersionInput(projectKey, version.getName(), version.getDescription(), version
+                .getStartDate(), version.getReleaseDate(), version.isArchived(), version.isReleased());
 
         try {
-            jiraRestClient.getVersionRestClient().updateVersion(builder.build(), versionInput).get(timeout, TimeUnit.SECONDS);
+            jiraRestClient.getExtendedVersionRestClient().updateExtendedVersion(builder.build(), versionInput).get(timeout, TimeUnit.SECONDS);
         }catch (Exception e) {
             LOGGER.log(WARNING, "jira rest client release version error. cause: " + e.getMessage(), e);
         }

@@ -9,6 +9,7 @@ import com.atlassian.jira.rest.client.api.domain.Priority;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.Version;
+import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssueField;
 import org.apache.commons.lang.StringUtils;
 
@@ -141,7 +142,7 @@ public class JiraSession {
      * @param projectKey The key for the project
      * @return An array of versions
      */
-    public List<Version> getVersions(String projectKey) {
+    public List<ExtendedVersion> getVersions(String projectKey) {
         LOGGER.fine("Fetching versions from project: " + projectKey);
         return service.getVersions(projectKey);
     }
@@ -153,13 +154,13 @@ public class JiraSession {
      * @param name       The version name
      * @return A RemoteVersion, or null if not found
      */
-    public Version getVersionByName(String projectKey, String name) {
+    public ExtendedVersion getVersionByName(String projectKey, String name) {
         LOGGER.fine("Fetching versions from project: " + projectKey);
-        List<Version> versions = getVersions(projectKey);
+        List<ExtendedVersion> versions = getVersions(projectKey);
         if (versions == null) {
             return null;
         }
-        for (Version version : versions) {
+        for (ExtendedVersion version : versions) {
             if (version.getName().equals(name)) {
                 return version;
             }
@@ -204,7 +205,7 @@ public class JiraSession {
      * @param projectKey
      * @param version
      */
-    public void releaseVersion(String projectKey, Version version) {
+    public void releaseVersion(String projectKey, ExtendedVersion version) {
         LOGGER.fine("Releasing version: " + version.getName());
         service.releaseVersion(projectKey, version);
     }
