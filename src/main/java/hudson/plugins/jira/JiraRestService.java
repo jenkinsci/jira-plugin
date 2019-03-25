@@ -249,7 +249,7 @@ public class JiraRestService {
             .setPath(String.format("%s/version/%s", baseApiPath, version.getId()));
 
         final ExtendedVersionInput versionInput = new ExtendedVersionInput(projectKey, version.getName(), version.getDescription(), version
-                .getStartDate(), version.getReleaseDate(), version.isArchived(), version.isReleased());
+            .getStartDate(), version.getReleaseDate(), version.isArchived(), version.isReleased());
 
         try {
             jiraRestClient.getExtendedVersionRestClient().updateExtendedVersion(builder.build(), versionInput).get(timeout, TimeUnit.SECONDS);
