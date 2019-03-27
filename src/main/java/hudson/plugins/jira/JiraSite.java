@@ -225,6 +225,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     private boolean appendChangeTimestamp;
 
+    private int ioThreadCount = Integer.getInteger(JiraSite.class.getName() + ".httpclient.options.ioThreadCount", 2);
+
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
      * last time we checked. Copy on write semantics.
@@ -547,6 +549,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         options.setRequestTimeout(readTimeout, TimeUnit.SECONDS);
         options.setSocketTimeout(timeout, TimeUnit.SECONDS);
         options.setCallbackExecutor(getExecutorService());
+        options.setIoThreadCount(ioThreadCount);
         return options;
     }
 

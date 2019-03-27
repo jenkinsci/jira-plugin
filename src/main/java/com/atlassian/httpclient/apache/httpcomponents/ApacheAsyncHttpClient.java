@@ -177,6 +177,14 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                     // the ClassLoader probably having been removed when the plugin shuts down.  Added a
                     // PluginEventListener to make sure the shutdown method is called while the plugin classloader
                     // is still active.
+                    try
+                    {
+                        this.shutdown();
+                    }
+                    catch ( Throwable e )
+                    {
+                        // ignore e.printStackTrace();
+                    }
                 }
             };
 

@@ -21,7 +21,7 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     private final ApplicationProperties applicationProperties;
     private final ThreadLocalContextManager threadLocalContextManager;
     // shared http client
-    private ApacheAsyncHttpClient httpClient;
+    private static ApacheAsyncHttpClient httpClient;
 
     public DefaultHttpClientFactory(EventPublisher eventPublisher, ApplicationProperties applicationProperties, ThreadLocalContextManager threadLocalContextManager)
     {
