@@ -3,7 +3,6 @@ package hudson.plugins.jira;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.util.concurrent.Promise;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -14,11 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
-
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class JiraRestServiceTest {
 
@@ -38,7 +33,7 @@ public class JiraRestServiceTest {
         when(client.getSearchClient()).thenReturn(searchRestClient);
         when(searchRestClient.searchJql(Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt(), Mockito.anySetOf(String.class)))
             .thenReturn(searchResult);
-        when(searchResult.get(Mockito.anyInt(), (TimeUnit) Mockito.any())).thenReturn(searchResult);
+        when(searchResult.get(Mockito.anyInt(), Mockito.any())).thenReturn(searchResult);
     }
 
     @Test
@@ -54,7 +49,7 @@ public class JiraRestServiceTest {
     @Test(expected = TimeoutException.class)
     public void testGetIssuesFromJqlSearchTimeout() throws TimeoutException, InterruptedException, ExecutionException {
         JiraRestService service = spy(new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT));
-        when(searchResult.get(Mockito.anyInt(), (TimeUnit) Mockito.any()))
+        when(searchResult.get(Mockito.anyInt(), Mockito.any()))
             .thenThrow(new TimeoutException());
         service.getIssuesFromJqlSearch("*", null);
     }

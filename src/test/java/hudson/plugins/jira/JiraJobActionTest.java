@@ -1,6 +1,5 @@
 package hudson.plugins.jira;
 
-import hudson.model.Action;
 import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
 import jenkins.branch.MultiBranchProject;
@@ -14,9 +13,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JiraJobActionTest {
@@ -78,7 +75,7 @@ public class JiraJobActionTest {
     public void testDetectBranchNameIssueNoIssueKey() throws Exception {
         when(job.getName()).thenReturn("NOTHING INTERESTING");
         JiraJobAction.setAction(job, site);
-        verify(job, never()).addAction((Action) anyObject());
+        verify(job, never()).addAction(anyObject());
     }
 
     @Before

@@ -1,6 +1,5 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
-import com.atlassian.event.api.EventPublisher;
 import com.atlassian.httpclient.api.Response;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.atlassian.sal.api.ApplicationProperties;
@@ -80,7 +79,7 @@ public class ApacheAsyncHttpClientTest
         prepare( testHandler );
 
         ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
                                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
 
         Response response = httpClient.newRequest( "http://localhost:" + connector.getLocalPort() + "/foo" ) //
@@ -97,7 +96,7 @@ public class ApacheAsyncHttpClientTest
         prepare( testHandler );
 
         ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
                                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
 
         Response response = httpClient.newRequest( "http://localhost:" + connector.getLocalPort() + "/foo" ) //
@@ -119,7 +118,7 @@ public class ApacheAsyncHttpClientTest
         Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar", "www.apache.org" );
 
         ApacheAsyncHttpClient httpClient =
-                new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+                new ApacheAsyncHttpClient( null, buildApplicationProperties(),
                         new NoOpThreadLocalContextManager(), new HttpClientOptions() );
 
         Response response = httpClient.newRequest( "http://www.apache.org" )
@@ -138,7 +137,7 @@ public class ApacheAsyncHttpClientTest
         Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
 
         ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
                                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
 
         Response response = httpClient.newRequest( "http://jenkins.io" ) //
@@ -157,7 +156,7 @@ public class ApacheAsyncHttpClientTest
         Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
 
         ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
                                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
 
         Response response = httpClient.newRequest( "http://jenkins.io" ) //
