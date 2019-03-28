@@ -2,7 +2,6 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Transition;
-import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -12,6 +11,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.TimeoutException;
 
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
@@ -74,7 +75,7 @@ public class ChangingWorkflowTest {
         when(action1.getName()).thenReturn(null);
         when(action2.getName()).thenReturn("name");
 
-        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(Lists.newArrayList(action1, action2));
+        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn( Arrays.asList(action1, action2));
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), nullValue());
 
         verify(action1, times(1)).getName();
@@ -87,7 +88,7 @@ public class ChangingWorkflowTest {
         Transition action1 = mock(Transition.class);
         when(action1.getName()).thenReturn("name");
 
-        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(Lists.newArrayList(action1));
+        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn( Collections.singletonList(action1));
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, workflowAction), nullValue());
     }
 
@@ -96,7 +97,7 @@ public class ChangingWorkflowTest {
         String id = randomNumeric(5);
         Transition action1 = mock(Transition.class);
         when(action1.getName()).thenReturn(NON_EMPTY_WORKFLOW_LOWERCASE.toUpperCase());
-        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(Lists.newArrayList(action1));
+        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(Arrays.asList(action1));
         when(action1.getId()).thenReturn(Integer.valueOf(id));
 
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), equalTo(Integer.valueOf(id)));
@@ -106,7 +107,7 @@ public class ChangingWorkflowTest {
     @Test
     public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
         when(site.getSession()).thenReturn(mockSession);
-        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
+        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
         when(mockSession.getActionIdForIssue(anyString(),
                 eq(NON_EMPTY_WORKFLOW_LOWERCASE))).thenReturn(Integer.valueOf(randomNumeric(5)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
@@ -124,7 +125,7 @@ public class ChangingWorkflowTest {
     @Test
     public void addCommentsOnNullWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
         when(site.getSession()).thenReturn(mockSession);
-        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
+        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
                 .thenCallRealMethod();
 
@@ -138,7 +139,7 @@ public class ChangingWorkflowTest {
     @Test
     public void dontAddCommentsOnNullWorkflowAndNullComment() throws IOException, TimeoutException {
         when(site.getSession()).thenReturn(mockSession);
-        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Lists.newArrayList(mock(Issue.class)));
+        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
         when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
                 .thenCallRealMethod();
 

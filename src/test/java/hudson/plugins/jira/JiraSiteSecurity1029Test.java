@@ -9,7 +9,6 @@ import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.WebRequest;
 import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.model.Item;
-import hudson.model.TopLevelItem;
 import hudson.model.User;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;

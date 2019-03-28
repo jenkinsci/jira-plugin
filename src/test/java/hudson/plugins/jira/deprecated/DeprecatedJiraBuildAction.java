@@ -49,7 +49,7 @@ public class DeprecatedJiraBuildAction implements Action {
     }
 
     public void addIssues(Set<JiraIssue> issuesToBeSaved) {
-        SortedSet<JiraIssue> allIssues = new TreeSet<JiraIssue>();
+        SortedSet<JiraIssue> allIssues = new TreeSet<>();
         allIssues.addAll(issuesToBeSaved);
         allIssues.addAll(Arrays.asList(this.issues));
 

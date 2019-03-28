@@ -1,23 +1,6 @@
 package hudson.plugins.jira.selector;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.jvnet.hudson.test.Bug;
-
 import com.google.common.collect.Sets;
-
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.ParameterValue;
@@ -27,6 +10,20 @@ import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
+import org.junit.Assert;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class DefaultIssueSelectorTest {
 
@@ -55,7 +52,7 @@ public class DefaultIssueSelectorTest {
     }
 
     @Test
-    @Bug(4132)
+    @Issue("4132")
     public void testProjectNamesAllowed() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
@@ -77,7 +74,7 @@ public class DefaultIssueSelectorTest {
         when(build.getChangeSet()).thenReturn(changeLogSet);
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
@@ -95,7 +92,7 @@ public class DefaultIssueSelectorTest {
      * issues.
      */
     @Test
-    @Bug(12312)
+    @Issue("12312")
     public void testFindIssuesWithJiraParameters() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
@@ -108,7 +105,7 @@ public class DefaultIssueSelectorTest {
         JiraIssueParameterValue parameter = mock(JiraIssueParameterValue.class);
         JiraIssueParameterValue parameterTwo = mock(JiraIssueParameterValue.class);
         ParametersAction action = mock(ParametersAction.class);
-        List<ParameterValue> parameters = new ArrayList<ParameterValue>();
+        List<ParameterValue> parameters = new ArrayList<>();
 
         when(changeLogSet.iterator()).thenReturn(Collections.EMPTY_LIST.iterator());
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -134,7 +131,7 @@ public class DefaultIssueSelectorTest {
     }
 
     @Test
-    @Bug(6043)
+    @Issue("6043")
     public void testUserPatternNotMatch() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
@@ -143,14 +140,14 @@ public class DefaultIssueSelectorTest {
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOO_BAR-4711"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        Set<String> ids = new LinkedHashSet<String>();
+        Set<String> ids = new LinkedHashSet<>();
         DefaultIssueSelector.findIssues(build, ids, Pattern.compile("[(w)]"), mock(BuildListener.class));
 
         Assert.assertEquals(0, ids.size());
     }
 
     @Test
-    @Bug(6043)
+    @Issue("6043")
     public void testUserPatternMatchTwoIssuesInOneComment() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
@@ -165,7 +162,7 @@ public class DefaultIssueSelectorTest {
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
-        Set<String> ids = new LinkedHashSet<String>();
+        Set<String> ids = new LinkedHashSet<>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         DefaultIssueSelector.findIssues(build, ids, pat, mock(BuildListener.class));
         Assert.assertEquals(3, ids.size());
@@ -175,7 +172,7 @@ public class DefaultIssueSelectorTest {
     }
 
     @Test
-    @Bug(6043)
+    @Issue("6043")
     public void testUserPatternMatch() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
@@ -186,11 +183,11 @@ public class DefaultIssueSelectorTest {
                 new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
-        Set<String> ids = new LinkedHashSet<String>();
+        Set<String> ids = new LinkedHashSet<>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         DefaultIssueSelector.findIssues(build, ids, pat, mock(BuildListener.class));
         Assert.assertEquals(2, ids.size());
@@ -213,7 +210,7 @@ public class DefaultIssueSelectorTest {
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("prepare release project-4.7.1"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        Set<String> ids = new LinkedHashSet<String>();
+        Set<String> ids = new LinkedHashSet<>();
         DefaultIssueSelector.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         Assert.assertEquals(0, ids.size());
     }

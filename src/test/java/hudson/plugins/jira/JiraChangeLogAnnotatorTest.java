@@ -7,7 +7,7 @@ import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
 import org.junit.Before;
 import org.junit.Test;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
@@ -18,14 +18,9 @@ import java.util.Collections;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -164,7 +159,7 @@ public class JiraChangeLogAnnotatorTest {
     }
 
     @Test
-    @Bug(4132)
+    @Issue("4132")
     public void testCaseInsensitiveAnnotate() {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
@@ -180,7 +175,7 @@ public class JiraChangeLogAnnotatorTest {
      * are fetched from remote.
      */
     @Test
-    @Bug(5252)
+    @Issue("5252")
     public void testGetIssueDetailsForMissingIssues() throws IOException {
         Run run = mock(Run.class);
 
