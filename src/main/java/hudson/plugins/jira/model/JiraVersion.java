@@ -1,5 +1,6 @@
 package hudson.plugins.jira.model;
 
+import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.plugins.jira.extension.ExtendedVersion;
 
 import java.util.Calendar;
@@ -7,11 +8,17 @@ import java.util.Calendar;
 public class JiraVersion implements Comparable<JiraVersion> {
 
     private final String name;
-    private final Calendar startDate;
+    private Calendar startDate;
     private final Calendar releaseDate;
     private final boolean released;
     private final boolean archived;
 
+    public JiraVersion(String name, Calendar releaseDate, boolean released, boolean archived) {
+        this.name = name;
+        this.releaseDate = releaseDate;
+        this.released = released;
+        this.archived = archived;
+    }
 
     public JiraVersion(String name, Calendar startDate, Calendar releaseDate, boolean released, boolean archived) {
         this.name = name;
@@ -19,6 +26,10 @@ public class JiraVersion implements Comparable<JiraVersion> {
         this.releaseDate = releaseDate;
         this.released = released;
         this.archived = archived;
+    }
+
+    public JiraVersion(Version version) {
+        this(version.getName(), version.getReleaseDate() == null ? null : version.getReleaseDate().toGregorianCalendar(), version.isReleased(), version.isArchived());
     }
 
 	public JiraVersion(ExtendedVersion version) {
