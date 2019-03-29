@@ -1,10 +1,10 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.plugins.jira.extension.ExtendedVersion;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,12 +55,12 @@ public class VersionReleaserTest {
     @Mock
     JiraSession session;
     @Captor
-    ArgumentCaptor<Version> versionCaptor;
+    ArgumentCaptor<ExtendedVersion> versionCaptor;
     @Captor
     ArgumentCaptor<String> projectCaptor;
 
     private VersionReleaser versionReleaser = spy(VersionReleaser.class);
-    private Version existingVersion = new Version(null, ANY_ID, JIRA_VER, null,false, false, ANY_DATE);
+    private ExtendedVersion existingVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, false, ANY_DATE, ANY_DATE);
 
     @Before
     public void createMocks() throws IOException, InterruptedException {
@@ -104,7 +104,7 @@ public class VersionReleaserTest {
 
     @Test
     public void buildDidNotFailWhenVersionExists() {
-        Version releasedVersion = new Version(null, ANY_ID, JIRA_VER, null,false, true, ANY_DATE);
+        ExtendedVersion releasedVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, true, ANY_DATE, ANY_DATE);
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));
 
         versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, build, listener);

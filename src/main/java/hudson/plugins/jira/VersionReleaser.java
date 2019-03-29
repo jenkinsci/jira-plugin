@@ -1,11 +1,11 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.model.BuildListener;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.extension.ExtendedVersion;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 
@@ -38,7 +38,7 @@ public class VersionReleaser {
 
             String finalRealRelease = realRelease;
             JiraSite site = getSiteForProject(project);
-            Optional<Version> sameNamedVersion = site.getVersions(realProjectKey).stream()
+            Optional<ExtendedVersion> sameNamedVersion = site.getVersions(realProjectKey).stream()
                     .filter(version -> version.getName().equals(finalRealRelease) && version.isReleased()).findFirst();
 
             if (sameNamedVersion.isPresent()) {
@@ -73,15 +73,15 @@ public class VersionReleaser {
             return;
         }
 
-        List<Version> versions = session.getVersions(projectKey);
-        java.util.Optional<Version> matchingVersion = versions.stream()
+        List<ExtendedVersion> versions = session.getVersions(projectKey);
+        java.util.Optional<ExtendedVersion> matchingVersion = versions.stream()
                 .filter(version -> version.getName().equals(versionName))
                 .findFirst();
 
         if (matchingVersion.isPresent()) {
-            Version version = matchingVersion.get();
-            Version releaseVersion = new Version(version.getSelf(), version.getId(), version.getName(),
-                    version.getDescription(), version.isArchived(), true, new DateTime());
+            ExtendedVersion version = matchingVersion.get();
+            ExtendedVersion releaseVersion = new ExtendedVersion(version.getSelf(), version.getId(), version.getName(),
+                    version.getDescription(), version.isArchived(), true, version.getStartDate(), new DateTime());
             session.releaseVersion(projectKey, releaseVersion);
         }
 

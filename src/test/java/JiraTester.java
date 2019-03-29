@@ -1,12 +1,14 @@
-import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.*;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import hudson.plugins.jira.JiraRestService;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.extension.ExtendedJiraRestClient;
+import hudson.plugins.jira.extension.ExtendedVersion;
 
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
+
+import static hudson.plugins.jira.JiraSite.ExtendedAsynchronousJiraRestClientFactory;
 
 /**
  * Test bed to play with JIRA.
@@ -17,7 +19,7 @@ public class JiraTester {
     public static void main(String[] args) throws Exception {
 
         final URI uri = new URL(JiraConfig.getUrl()).toURI();
-        final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
+        final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
                 .createWithBasicHttpAuthentication(uri, JiraConfig.getUsername(), JiraConfig.getPassword());
 
         final JiraRestService restService = new JiraRestService(uri, jiraRestClient, JiraConfig.getUsername(), JiraConfig.getPassword(), JiraSite.DEFAULT_TIMEOUT);
@@ -68,8 +70,8 @@ public class JiraTester {
         final User user = restService.getUser("TESTUSER");
         System.out.println("user: " + user);
 
-        final List<Version> versions = restService.getVersions(projectKey);
-        for (Version version : versions) {
+        final List<ExtendedVersion> versions = restService.getVersions(projectKey);
+        for (ExtendedVersion version : versions) {
             System.out.println("version: "  + version);
         }
 

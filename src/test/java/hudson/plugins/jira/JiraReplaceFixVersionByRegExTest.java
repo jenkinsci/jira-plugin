@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
+import hudson.plugins.jira.extension.ExtendedVersion;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,8 +45,8 @@ public class JiraReplaceFixVersionByRegExTest {
 	@Test
 	public void testReplaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
 
-		List<Version> myVersions = new ArrayList<>();
-		myVersions.add(new Version(new URI("self"), 0L, TO_VERSION, null, false, false, null));
+		List<ExtendedVersion> myVersions = new ArrayList<ExtendedVersion>();
+		myVersions.add(new ExtendedVersion(new URI("self"), 0L, TO_VERSION, null, false, false, null, null));
 		when(jiraSession.getVersions(PROJECT_KEY)).thenReturn(myVersions);
 
 		ArrayList<Issue> issues = new ArrayList<>();
