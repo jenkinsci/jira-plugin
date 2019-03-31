@@ -6,9 +6,11 @@ import static org.junit.Assert.assertNull;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import hudson.model.FreeStyleProject;
-import io.jenkins.plugins.casc.ConfigurationAsCode;
+import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
+import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,7 +19,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 public class JiraProjectPropertyTest {
 
     @Rule
-    public final JenkinsRule r = new JenkinsRule();
+    public final JenkinsRule r = new JenkinsConfiguredWithCodeRule();
 
     private FreeStyleProject freeStyleProject;
     private Folder folder;
@@ -38,8 +40,6 @@ public class JiraProjectPropertyTest {
         FreeStyleProject freeStyleProject = r.createFreeStyleProject();
         JiraProjectProperty prop = new JiraProjectProperty(null);
         freeStyleProject.addProperty(prop);
-        JiraSite site = prop.getSite();
-        assertNull(site);
         JiraProjectProperty actual = freeStyleProject.getProperty(JiraProjectProperty.class);
         assertNotNull(actual);
         assertNull(actual.getSite());
@@ -56,76 +56,84 @@ public class JiraProjectPropertyTest {
     }
 
     @Test
-    public void testNoInitialDefault() throws Exception {
+    @ConfiguredWithCode("single-site.yml")
+    public void getSiteFromProjectProperty() {
         JiraProjectProperty prop = new JiraProjectProperty(null);
-        setupGlobalConfig("single-site.yml");
         JiraSite site = prop.getSite();
         assertNotNull(site);
-        assertEquals("https://jira.com/", site.getName());
+        String actual = Objects.requireNonNull(site.getUrl()).toExternalForm();
+        assertEquals("https://jira.com/", actual);
     }
 
     @Test
-    public void testDefault() throws Exception {
+    @ConfiguredWithCode("single-site.yml")
+    public void getSiteFromSingleEntry() throws Exception {
         freeStyleProject = r.createFreeStyleProject();
-        testProperty("single-site.yml", null);
-    }
-
-    @Test
-    public void testDefaultWithTwoEntries() throws Exception {
-        freeStyleProject = r.createFreeStyleProject();
-        testProperty("multiple-sites.yml", null);
-    }
-
-    @Test
-    public void testChooseWithOutFolder() throws Exception {
-        freeStyleProject = r.createFreeStyleProject();
-        JiraSite jiraSite = new JiraSite("https://jira.com/");
-        testProperty("multiple-sites.yml", jiraSite);
-    }
-
-    @Test
-    public void testChooseWithFolder() throws Exception {
-        freeStyleProject = folder.createProject(FreeStyleProject.class, "something");
-        testProperty("single-site.yml", firstList.get(0));
-    }
-
-    @Test
-    public void configRoundtripWithNestedFolder() throws Exception {
-        r.configRoundtrip(folder);
-        Folder secondFolder = folder.createProject(Folder.class, "second");
-        r.configRoundtrip(secondFolder);
-        freeStyleProject = secondFolder.createProject(FreeStyleProject.class, "something");
-        // testing we can get value from folder above.
-        testProperty("single-site.yml", firstList.get(0), true);
-    }
-
-    private void testProperty(String input, JiraSite expected) throws Exception {
-        testProperty(input, expected, false);
-    }
-
-     private void testProperty(String input, JiraSite expected, boolean roundTrip) throws Exception {
-        setupGlobalConfig(input);
-        assertNull(freeStyleProject.getProperty(JiraProjectProperty.class));
-        if (expected != null) {
-            JiraProjectProperty prop = new JiraProjectProperty(expected.getName());
-            freeStyleProject.addProperty(prop);
-        } else {
-            JiraProjectProperty prop = new JiraProjectProperty(null);
-            freeStyleProject.addProperty(prop);
-        }
-        if (roundTrip) r.configRoundtrip(freeStyleProject);
+        JiraSite expected = JiraGlobalConfiguration.get().getSites().get(0);
+        JiraProjectProperty prop = new JiraProjectProperty(null);
+        freeStyleProject.addProperty(prop);
         JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
         assertNotNull(property);
         assertNotNull(property.getSite());
-        if (expected == null) {
-            expected = JiraGlobalConfiguration.get().getSites().get(0);
-        }
         assertEquals(expected.getName(), property.siteName);
         r.assertEqualDataBoundBeans(expected, property.getSite());
     }
 
-    private void setupGlobalConfig(String input) throws Exception {
-        ConfigurationAsCode.get().configure(
-            ConfigAsCodeTest.class.getResource(input).toString());
+    @Test
+    @ConfiguredWithCode("multiple-sites.yml")
+    public void getSiteFromFirstGlobalMultipleEntryMultipleSites() throws Exception {
+        freeStyleProject = r.createFreeStyleProject();
+        JiraSite expected = JiraGlobalConfiguration.get().getSites().get(0);
+        JiraProjectProperty prop = new JiraProjectProperty(null);
+        freeStyleProject.addProperty(prop);
+        JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
+        assertNotNull(property);
+        assertNotNull(property.getSite());
+        assertEquals(expected.getName(), property.siteName);
+        r.assertEqualDataBoundBeans(expected, property.getSite());
+    }
+
+    @Test
+    @ConfiguredWithCode("multiple-sites.yml")
+    public void getSiteFromSecondGlobalEntryMultipleSites() throws Exception {
+        freeStyleProject = r.createFreeStyleProject();
+        JiraSite expected = new JiraSite("https://jira.com/");
+        JiraProjectProperty prop = new JiraProjectProperty(expected.getName());
+        freeStyleProject.addProperty(prop);
+        JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
+        assertNotNull(property);
+        assertNotNull(property.getSite());
+        assertEquals(expected.getName(), property.siteName);
+        r.assertEqualDataBoundBeans(expected, property.getSite());
+    }
+
+    @Test
+    @ConfiguredWithCode("single-site.yml")
+    public void getSiteFromFirstFolderLayer() throws Exception {
+        freeStyleProject = folder.createProject(FreeStyleProject.class, "something");
+        JiraSite expected = firstList.get(0);
+        JiraProjectProperty prop = new JiraProjectProperty(expected.getName());
+        freeStyleProject.addProperty(prop);
+        JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
+        assertNotNull(property);
+        assertNotNull(property.getSite());
+        assertEquals(expected.getName(), property.siteName);
+        r.assertEqualDataBoundBeans(expected, property.getSite());
+    }
+
+    @Test
+    @ConfiguredWithCode("single-site.yml")
+    public void getSiteFromNestedFolderLayer() throws Exception {
+        Folder secondFolder = folder.createProject(Folder.class, "second");
+        freeStyleProject = secondFolder.createProject(FreeStyleProject.class, "something");
+        // testing we can get value from folder above.
+        JiraSite expected = firstList.get(0);
+        JiraProjectProperty prop = new JiraProjectProperty(expected.getName());
+        freeStyleProject.addProperty(prop);
+        JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
+        assertNotNull(property);
+        assertNotNull(property.getSite());
+        assertEquals(expected.getName(), property.siteName);
+        r.assertEqualDataBoundBeans(expected, property.getSite());
     }
 }
