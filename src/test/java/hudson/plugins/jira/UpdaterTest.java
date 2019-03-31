@@ -93,7 +93,6 @@ public class UpdaterTest {
     }
 
     @Test
-    @WithoutJenkins
     public void getScmCommentsFromPreviousBuilds() {
         final FreeStyleProject project = mock(FreeStyleProject.class);
         final FreeStyleBuild build1 = mock(FreeStyleBuild.class);
