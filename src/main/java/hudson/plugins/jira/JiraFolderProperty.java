@@ -57,20 +57,14 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
 
     public static List<JiraSite> getSitesFromFolders(ItemGroup itemGroup) {
         List<JiraSite> result = new ArrayList<>();
-        while (itemGroup != null) {
-            if (itemGroup instanceof AbstractFolder<?>) {
-                AbstractFolder<?> folder = (AbstractFolder<?>) itemGroup;
-                JiraFolderProperty jiraFolderProperty = folder.getProperties()
-                    .get(JiraFolderProperty.class);
-                if (jiraFolderProperty != null && jiraFolderProperty.getSites().length != 0) {
-                    result.addAll(Arrays.asList(jiraFolderProperty.getSites()));
-                }
-                itemGroup = folder.getParent();
+        while (itemGroup instanceof AbstractFolder<?>) {
+            AbstractFolder<?> folder = (AbstractFolder<?>) itemGroup;
+            JiraFolderProperty jiraFolderProperty = folder.getProperties()
+                .get(JiraFolderProperty.class);
+            if (jiraFolderProperty != null && jiraFolderProperty.getSites().length != 0) {
+                result.addAll(Arrays.asList(jiraFolderProperty.getSites()));
             }
-
-            if (!(itemGroup instanceof AbstractFolder<?>)) {
-                itemGroup = null;
-            }
+            itemGroup = folder.getParent();
         }
         return result;
     }
