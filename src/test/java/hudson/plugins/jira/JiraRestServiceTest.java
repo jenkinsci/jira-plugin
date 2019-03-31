@@ -37,7 +37,7 @@ public class JiraRestServiceTest {
     }
 
     @Test
-    public void testBaseApiPath() {
+    public void baseApiPath() {
         JiraRestService service = new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT);
         assertEquals("/" + JiraRestService.BASE_API_PATH, service.getBaseApiPath());
 
@@ -47,7 +47,7 @@ public class JiraRestServiceTest {
     }
 
     @Test(expected = TimeoutException.class)
-    public void testGetIssuesFromJqlSearchTimeout() throws TimeoutException, InterruptedException, ExecutionException {
+    public void getIssuesFromJqlSearchTimeout() throws TimeoutException, InterruptedException, ExecutionException {
         JiraRestService service = spy(new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT));
         when(searchResult.get(Mockito.anyInt(), Mockito.any()))
             .thenThrow(new TimeoutException());

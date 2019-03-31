@@ -51,7 +51,7 @@ public class JiraChangeLogAnnotatorTest {
     }
 
     @Test
-    public void testAnnotate() {
+    public void annotate() {
         Run run = mock(Run.class);
 
         when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
@@ -68,7 +68,7 @@ public class JiraChangeLogAnnotatorTest {
     }
 
     @Test
-    public void testAnnotateDisabledOnSiteLevel() {
+    public void annotateDisabledOnSiteLevel() {
         Run run = mock(Run.class);
 
         when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
@@ -81,7 +81,7 @@ public class JiraChangeLogAnnotatorTest {
     }
 
     @Test
-    public void testAnnotateWf() {
+    public void annotateWf() {
         Run run = mock(Run.class);
 
         when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
@@ -103,7 +103,7 @@ public class JiraChangeLogAnnotatorTest {
      * Regression test for this.
      */
     @Test
-    public void testWordBoundaryProblem() {
+    public void wordBoundaryProblem() {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
@@ -133,7 +133,7 @@ public class JiraChangeLogAnnotatorTest {
     }
 
     @Test
-    public void testMatchMultipleIssueIds() {
+    public void matchMultipleIssueIds() {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
@@ -160,7 +160,7 @@ public class JiraChangeLogAnnotatorTest {
 
     @Test
     @Issue("4132")
-    public void testCaseInsensitiveAnnotate() {
+    public void caseInsensitiveAnnotate() {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
@@ -176,7 +176,7 @@ public class JiraChangeLogAnnotatorTest {
      */
     @Test
     @Issue("5252")
-    public void testGetIssueDetailsForMissingIssues() throws IOException {
+    public void getIssueDetailsForMissingIssues() throws IOException {
         Run run = mock(Run.class);
 
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
@@ -194,7 +194,7 @@ public class JiraChangeLogAnnotatorTest {
      * Tests that no exception is thrown if user issue pattern is invalid (contains no groups)
      */
     @Test
-    public void testInvalidUserPattern() {
+    public void invalidUserPattern() {
         when(site.getIssuePattern()).thenReturn(Pattern.compile("[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"));
 
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
@@ -209,7 +209,7 @@ public class JiraChangeLogAnnotatorTest {
      * Previous implementation did so.
      */
     @Test
-    public void testMatchOnlyMatchGroup1() throws IOException {
+    public void matchOnlyMatchGroup1() throws IOException {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
         when(site.getIssuePattern()).thenReturn(Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)abc"));
@@ -237,7 +237,7 @@ public class JiraChangeLogAnnotatorTest {
      * @throws Exception
      */
     @Test
-    public void testAlternativeURLAnnotate() throws Exception {
+    public void alternativeURLAnnotate() throws Exception {
         when(site.getAlternativeUrl(Mockito.anyString())).thenAnswer(
                 (Answer<URL>) invocation -> {
                     String id = invocation.getArguments()[0].toString();

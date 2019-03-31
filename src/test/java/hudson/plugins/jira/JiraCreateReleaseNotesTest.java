@@ -74,7 +74,7 @@ public class JiraCreateReleaseNotesTest {
     }
 
     @Test
-    public void testDefaults(){
+    public void defaults(){
         JiraCreateReleaseNotes jcrn = new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,"");
         assertEquals(JiraCreateReleaseNotes.DEFAULT_ENVVAR_NAME, jcrn.getJiraEnvironmentVariable());
         assertEquals(JiraCreateReleaseNotes.DEFAULT_FILTER, jcrn.getJiraFilter());

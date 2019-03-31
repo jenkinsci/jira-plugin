@@ -71,26 +71,26 @@ public class JiraEnvironmentVariableBuilderTest {
     
 
     @Test
-    public void testIssueSelectorDefaultsToDefault() {
+    public void issueSelectorDefaultsToDefault() {
         final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(null);
         assertThat(builder.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
     }
 
     @Test
-    public void testSetIssueSelectorPersists() {
+    public void setIssueSelectorPersists() {
         final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(issueSelector);
         assertThat(builder.getIssueSelector(), is(issueSelector));
     }
     
     @Test(expected = AbortException.class)
-    public void testPerformWithNoSiteFailsBuild() throws InterruptedException, IOException {
+    public void performWithNoSiteFailsBuild() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
         doReturn(null).when(builder).getSiteForProject(Mockito.any());
         builder.perform(build, launcher, listener);
     }
     
     @Test
-    public void testPerformAddsAction() throws InterruptedException, IOException {
+    public void performAddsAction() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
         doReturn(site).when(builder).getSiteForProject(Mockito.any());
         

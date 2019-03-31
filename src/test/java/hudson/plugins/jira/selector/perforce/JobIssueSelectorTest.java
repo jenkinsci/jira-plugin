@@ -27,7 +27,7 @@ public abstract class JobIssueSelectorTest {
 
     protected abstract JobIssueSelector createJobIssueSelector(); 
     @Test
-    public void testFindsIssuesWithJiraParameters() {
+    public void findsIssuesWithJiraParameters() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
@@ -65,7 +65,7 @@ public abstract class JobIssueSelectorTest {
         Assert.assertEquals(expected, ids);
     }
     @Test
-    public void testFindsCarriedOnIssues() {
+    public void findsCarriedOnIssues() {
         
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         FreeStyleBuild previousBuild = mock(FreeStyleBuild.class);

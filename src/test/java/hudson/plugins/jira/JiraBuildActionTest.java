@@ -20,7 +20,7 @@ import hudson.util.XStream2;
 public class JiraBuildActionTest {
 
     @Test
-    public void testBinaryCompatibility() {
+    public void binaryCompatibility() {
         XStream2 xStream2 = new XStream2();
 
         FreeStyleBuild b = mock(FreeStyleBuild.class);

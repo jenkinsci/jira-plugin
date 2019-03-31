@@ -47,7 +47,7 @@ public class JiraIssueMigratorTest {
     }
 
     @Test
-    public void testAddingVersion() throws IOException, TimeoutException {
+    public void addingVersion() throws IOException, TimeoutException {
         boolean addRelease = true;
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, addRelease));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
@@ -59,7 +59,7 @@ public class JiraIssueMigratorTest {
     }
 
     @Test
-    public void testMigratingToVersion() throws IOException, TimeoutException {
+    public void migratingToVersion() throws IOException, TimeoutException {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);
@@ -70,7 +70,7 @@ public class JiraIssueMigratorTest {
     }
 
     @Test
-    public void testReplacingVersion() throws IOException, TimeoutException {
+    public void replacingVersion() throws IOException, TimeoutException {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, RELEASE_TO_REPLACE, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);

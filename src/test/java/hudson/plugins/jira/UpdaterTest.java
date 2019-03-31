@@ -94,7 +94,7 @@ public class UpdaterTest {
 
     @Test
     @WithoutJenkins
-    public void testGetScmCommentsFromPreviousBuilds() {
+    public void getScmCommentsFromPreviousBuilds() {
         final FreeStyleProject project = mock(FreeStyleProject.class);
         final FreeStyleBuild build1 = mock(FreeStyleBuild.class);
         final MockEntry entry1 = new MockEntry("FOOBAR-1: The first build");
@@ -155,7 +155,7 @@ public class UpdaterTest {
     @Test
     @org.jvnet.hudson.test.Issue("4572")
     @WithoutJenkins
-    public void testComment() {
+    public void comment() {
         // mock JIRA session:
         JiraSession session = mock(JiraSession.class);
         final Issue mockIssue = Mockito.mock( Issue.class);
@@ -218,7 +218,7 @@ public class UpdaterTest {
     @Test
     @org.jvnet.hudson.test.Issue("17156")
     @WithoutJenkins
-    public void testIssueIsRemovedFromCarryOverListAfterSubmission() throws RestClientException {
+    public void issueIsRemovedFromCarryOverListAfterSubmission() throws RestClientException {
         // mock build:
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         FreeStyleProject project = mock(FreeStyleProject.class);
@@ -281,7 +281,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void testGetChangesUsingReflectionForWorkflowJob() throws IOException {
+    public void getChangesUsingReflectionForWorkflowJob() throws IOException {
         Jenkins jenkins = mock(Jenkins.class);
         
         when(jenkins.getRootDirFor(Mockito.anyObject())).thenReturn(folder.getRoot());
@@ -297,7 +297,7 @@ public class UpdaterTest {
     
     @WithoutJenkins
     @Test(expected=IllegalArgumentException.class)
-    public void testGetChangesUsingReflectionForunknownJob() {
+    public void getChangesUsingReflectionForunknownJob() {
         Run run = mock(Run.class);
         RunScmChangeExtractor.getChangesUsingReflection(run);
     }
@@ -308,7 +308,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void testAppendChangeTimestampToDescription() {
+    public void appendChangeTimestampToDescription() {
         Updater updater = new Updater(null);
         StringBuilder description = new StringBuilder();
         Calendar calendar = Calendar.getInstance();
@@ -325,7 +325,7 @@ public class UpdaterTest {
      *
      */
     @Test
-    public void testDateTimeInChangeDescription() {
+    public void dateTimeInChangeDescription() {
         rule.getInstance();
         Updater updater = new Updater(null);
         Calendar calendar = Calendar.getInstance();
@@ -362,7 +362,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void testAppendChangeTimestampToDescriptionNullFormat() {
+    public void appendChangeTimestampToDescriptionNullFormat() {
         //set default locale -> predictable test without explicit format
         Locale.setDefault(Locale.ENGLISH);
         
@@ -386,7 +386,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void testAppendChangeTimestampToDescriptionNoFormat() {
+    public void appendChangeTimestampToDescriptionNoFormat() {
         //set default locale -> predictable test without explicit format
         Locale.setDefault(Locale.ENGLISH);
         

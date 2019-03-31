@@ -19,7 +19,7 @@ public class ExplicitIssueSelectorTest {
     private final static String TEST_KEY = "EXAMPLE-1";
 
     @Test
-    public void testReturnsExplicitCollections() throws IOException {
+    public void returnsExplicitCollections() throws IOException {
         JiraSession session = mock(JiraSession.class);
         JiraSite site = mock(JiraSite.class);
         when(site.getSession()).thenReturn(session);

@@ -76,7 +76,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void testPerformSuccessFailure() throws Exception {
+    public void performSuccessFailure() throws Exception {
 
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
@@ -92,7 +92,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void testPerformFailureFailure() throws Exception {
+    public void performFailureFailure() throws Exception {
         JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
@@ -124,7 +124,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void testPerformFailureSuccessIssueOpen() throws Exception {
+    public void performFailureSuccessIssueOpen() throws Exception {
         Long typeId = 1L;
         Long priorityId = 0L;
         Integer actionIdOnSuccess = 5;
@@ -163,7 +163,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void testPerformFailureSuccessIssueClosedWithComponents() throws Exception {
+    public void performFailureSuccessIssueClosedWithComponents() throws Exception {
         JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 

@@ -56,7 +56,7 @@ public class CommentStepTest {
     }
 
     @Test
-    public void testCallSessionAddComment() throws Exception {
+    public void callSessionAddComment() throws Exception {
         JiraSession session = mock(JiraSession.class);
         final String issueKey = "KEY";
         final String body = "dsgsags";

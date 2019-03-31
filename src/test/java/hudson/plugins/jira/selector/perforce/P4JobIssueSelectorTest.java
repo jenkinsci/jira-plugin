@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
 
     @Test
-    public void testFindsTwoP4Jobs() {
+    public void findsTwoP4Jobs() {
         final String jobIdIW1231 = "IW-1231";
         final String jobIdEC3453 = "EC-3453";
 
