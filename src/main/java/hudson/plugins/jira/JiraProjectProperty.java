@@ -57,9 +57,12 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             return sites.get(0);
         }
 
-        Stream<JiraSite> stream1 = sites.stream();
-        Stream<JiraSite> stream2 = JiraFolderProperty.getSitesFromFolders(owner.getParent()).stream();
-        Stream<JiraSite> streams = Stream.concat(stream1, stream2).parallel();
+        Stream<JiraSite> streams = sites.stream();
+        if (owner != null) {
+            Stream<JiraSite> stream2 = JiraFolderProperty.getSitesFromFolders(owner.getParent())
+                .stream();
+            streams = Stream.concat(streams, stream2).parallel();
+        }
 
         return streams.filter(jiraSite -> jiraSite.getName().equals(siteName))
             .findFirst().orElse(null);
