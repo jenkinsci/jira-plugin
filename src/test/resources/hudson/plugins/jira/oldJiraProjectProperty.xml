@@ -1,0 +1,17 @@
+<hudson.plugins.jira.JiraProjectProperty_-DescriptorImpl>
+  <sites>
+    <hudson.plugins.jira.JiraSite>
+      <url>https://backwardsCompatURL.com/</url>
+      <useHTTPAuth>false</useHTTPAuth>
+      <supportsWikiStyleComment>false</supportsWikiStyleComment>
+      <recordScmChanges>false</recordScmChanges>
+      <disableChangelogAnnotations>false</disableChangelogAnnotations>
+      <updateJiraIssueForAllStatus>false</updateJiraIssueForAllStatus>
+      <timeout>10</timeout>
+      <readTimeout>30</readTimeout>
+      <threadExecutorNumber>10</threadExecutorNumber>
+      <dateTimePattern></dateTimePattern>
+      <appendChangeTimestamp>false</appendChangeTimestamp>
+    </hudson.plugins.jira.JiraSite>
+  </sites>
+</hudson.plugins.jira.JiraProjectProperty_-DescriptorImpl>
