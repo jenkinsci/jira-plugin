@@ -22,7 +22,7 @@ public class JiraGlobalConfigurationTest {
         String url = "https://backwardsCompatURL.com/";
         XStream xstream = new XStream2();
         JiraSite expected = new JiraSite(url);
-        InputStream resource = getClass().getResourceAsStream("oldJIraProjectProperty.xml");
+        InputStream resource = getClass().getResourceAsStream("oldJiraProjectProperty.xml");
         DescriptorImpl instance = (DescriptorImpl) xstream.fromXML(resource);
         assertNotNull(instance);
         assertNull(instance.sites);
