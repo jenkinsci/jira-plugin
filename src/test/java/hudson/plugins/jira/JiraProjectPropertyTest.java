@@ -8,6 +8,7 @@ import com.cloudbees.hudson.plugins.folder.Folder;
 import hudson.model.FreeStyleProject;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -60,8 +61,8 @@ public class JiraProjectPropertyTest {
     public void getSiteFromProjectProperty() {
         JiraProjectProperty prop = new JiraProjectProperty(null);
         JiraSite site = prop.getSite();
-        assertNotNull(site);
-        String actual = Objects.requireNonNull(site.getUrl()).toExternalForm();
+        @SuppressWarnings("ConstantConditions")
+        String actual = site.getUrl().toExternalForm();
         assertEquals("https://jira.com/", actual);
     }
 
