@@ -1,31 +1,6 @@
 package hudson.plugins.jira.pipeline;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
 import com.google.inject.Inject;
-
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Run;
@@ -33,6 +8,26 @@ import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.pipeline.CommentStep.CommentStepExecution;
+import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.Mockito;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class CommentStepTest {
 
@@ -61,17 +56,14 @@ public class CommentStepTest {
     }
 
     @Test
-    public void testCallSessionAddComment() throws Exception {
+    public void callSessionAddComment() throws Exception {
         JiraSession session = mock(JiraSession.class);
         final String issueKey = "KEY";
         final String body = "dsgsags";
 
-        final List<Object> assertCalledParams = new ArrayList<Object>();
+        final List<Object> assertCalledParams = new ArrayList<>();
 
-        Mockito.doAnswer(new Answer<Void>() {
-
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
+        Mockito.doAnswer( invocation -> {
                 String issueId = invocation.getArgumentAt(0, String.class);
                 String comment = invocation.getArgumentAt(1, String.class);
                 System.out.println("issueId: " + issueId);
@@ -80,9 +72,8 @@ public class CommentStepTest {
                 assertThat(comment, equalTo(body));
                 assertCalledParams.addAll(Arrays.asList(invocation.getArguments()));
                 return null;
-            }
-        }).when(session).addComment(Mockito.<String> anyObject(), Mockito.<String> anyObject(),
-                Mockito.<String> anyObject(), Mockito.<String> anyObject());
+        }).when(session).addComment(Mockito.anyObject(), Mockito.anyObject(),
+                Mockito.anyObject(), Mockito.anyObject());
         JiraSite site = mock(JiraSite.class);
         when(site.getSession()).thenReturn(session);
 

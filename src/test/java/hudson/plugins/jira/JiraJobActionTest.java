@@ -1,6 +1,5 @@
 package hudson.plugins.jira;
 
-import hudson.model.Action;
 import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
 import jenkins.branch.MultiBranchProject;
@@ -14,9 +13,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyObject;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 public class JiraJobActionTest {
@@ -33,7 +30,7 @@ public class JiraJobActionTest {
     final JiraIssue issue = new JiraIssue("EXAMPLE-123", "I like cake");
 
     @Test
-    public void testDetectBranchNameIssue() throws Exception {
+    public void detectBranchNameIssue() throws Exception {
         when(job.getName()).thenReturn("EXAMPLE-123");
         ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
         JiraJobAction.setAction(job, site);
@@ -47,7 +44,7 @@ public class JiraJobActionTest {
     }
 
     @Test
-    public void testDetectBranchNameIssueWithEncodedJobName() throws Exception {
+    public void detectBranchNameIssueWithEncodedJobName() throws Exception {
         when(job.getName()).thenReturn("feature%2FEXAMPLE-123");
         ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
         JiraJobAction.setAction(job, site);
@@ -61,7 +58,7 @@ public class JiraJobActionTest {
     }
 
     @Test
-    public void testDetectBranchNameIssueJustIssueKey() throws Exception {
+    public void detectBranchNameIssueJustIssueKey() throws Exception {
         when(job.getName()).thenReturn("EXAMPLE-123");
         ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
         JiraJobAction.setAction(job, site);
@@ -75,10 +72,10 @@ public class JiraJobActionTest {
     }
 
     @Test
-    public void testDetectBranchNameIssueNoIssueKey() throws Exception {
+    public void detectBranchNameIssueNoIssueKey() throws Exception {
         when(job.getName()).thenReturn("NOTHING INTERESTING");
         JiraJobAction.setAction(job, site);
-        verify(job, never()).addAction((Action) anyObject());
+        verify(job, never()).addAction(anyObject());
     }
 
     @Before

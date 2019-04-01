@@ -3,14 +3,12 @@ package hudson.plugins.jira;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
-import hudson.model.TopLevelItem;
 import hudson.model.User;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.scm.ChangeLogSet;
@@ -26,7 +24,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.jvnet.hudson.test.Bug;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
 import org.mockito.Mockito;
@@ -97,14 +94,14 @@ public class UpdaterTest {
 
     @Test
     @WithoutJenkins
-    public void testGetScmCommentsFromPreviousBuilds() {
+    public void getScmCommentsFromPreviousBuilds() {
         final FreeStyleProject project = mock(FreeStyleProject.class);
         final FreeStyleBuild build1 = mock(FreeStyleBuild.class);
         final MockEntry entry1 = new MockEntry("FOOBAR-1: The first build");
         {
             ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
             when(build1.getChangeSet()).thenReturn(changeLogSet);
-            List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+            List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
             changeSets.add(changeLogSet);
             when(build1.getChangeSets()).thenReturn(changeSets);
             when(build1.getResult()).thenReturn(Result.FAILURE);
@@ -122,7 +119,7 @@ public class UpdaterTest {
         {
             ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
             when(build2.getChangeSet()).thenReturn(changeLogSet);
-            List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+            List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
             changeSets.add(changeLogSet);
             when(build2.getChangeSets()).thenReturn(changeSets);
             when(build2.getPreviousBuild()).thenReturn(build1);
@@ -133,7 +130,7 @@ public class UpdaterTest {
             when(changeLogSet.iterator()).thenAnswer(invocation -> entries.iterator());
         }
 
-        final List<Comment> comments = Lists.newArrayList();
+        final List<Comment> comments = new ArrayList();
         final JiraSession session = mock(JiraSession.class);
         doAnswer((Answer<Object>) invocation -> {
             Comment rc = Comment.createWithGroupLevel((String) invocation.getArguments()[1], (String) invocation.getArguments()[2]);
@@ -156,15 +153,15 @@ public class UpdaterTest {
      * especially that the JIRA id is not stripped from the comment.
      */
     @Test
-    @Bug(4572)
+    @org.jvnet.hudson.test.Issue("4572")
     @WithoutJenkins
-    public void testComment() {
+    public void comment() {
         // mock JIRA session:
         JiraSession session = mock(JiraSession.class);
-        final Issue mockIssue = Mockito.mock(Issue.class);
+        final Issue mockIssue = Mockito.mock( Issue.class);
         when(session.getIssue(Mockito.anyString())).thenReturn(mockIssue);
 
-        final List<String> comments = new ArrayList<String>();
+        final List<String> comments = new ArrayList<>();
 
         Answer answer = (Answer<Object>) invocation -> {
             comments.add((String) invocation.getArguments()[1]);
@@ -183,7 +180,7 @@ public class UpdaterTest {
         Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOOBAR-4711"));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
@@ -217,12 +214,11 @@ public class UpdaterTest {
     /**
     /**
      * Checks if issues are correctly removed from the carry over list.
-     * @throws RemoteException
      */
     @Test
-    @Bug(17156)
+    @org.jvnet.hudson.test.Issue("17156")
     @WithoutJenkins
-    public void testIssueIsRemovedFromCarryOverListAfterSubmission() throws RestClientException {
+    public void issueIsRemovedFromCarryOverListAfterSubmission() throws RestClientException {
         // mock build:
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         FreeStyleProject project = mock(FreeStyleProject.class);
@@ -243,7 +239,7 @@ public class UpdaterTest {
         // mock JIRA session:
         JiraSession session = mock(JiraSession.class);
 
-        final List<Comment> comments = new ArrayList<Comment>();
+        final List<Comment> comments = new ArrayList<>();
 
         Answer answer = (Answer<Object>) invocation -> {
             Comment c = Comment.createWithGroupLevel((String) invocation.getArguments()[0], (String) invocation.getArguments()[1]);
@@ -281,15 +277,14 @@ public class UpdaterTest {
     /**
      * Test that workflow job - run instance of type WorkflowJob - can
      * return changeSets using java reflection api
-     * @throws IOException 
      *
      */
     @Test
     @WithoutJenkins
-    public void testGetChangesUsingReflectionForWorkflowJob() throws IOException {
+    public void getChangesUsingReflectionForWorkflowJob() throws IOException {
         Jenkins jenkins = mock(Jenkins.class);
         
-        when(jenkins.getRootDirFor(Mockito.<TopLevelItem>anyObject())).thenReturn(folder.getRoot());
+        when(jenkins.getRootDirFor(Mockito.anyObject())).thenReturn(folder.getRoot());
         WorkflowJob workflowJob = new WorkflowJob(jenkins, "job");
         WorkflowRun workflowRun = new WorkflowRun(workflowJob);
         
@@ -302,7 +297,7 @@ public class UpdaterTest {
     
     @WithoutJenkins
     @Test(expected=IllegalArgumentException.class)
-    public void testGetChangesUsingReflectionForunknownJob() {
+    public void getChangesUsingReflectionForunknownJob() {
         Run run = mock(Run.class);
         RunScmChangeExtractor.getChangesUsingReflection(run);
     }
@@ -313,7 +308,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void testAppendChangeTimestampToDescription() {
+    public void appendChangeTimestampToDescription() {
         Updater updater = new Updater(null);
         StringBuilder description = new StringBuilder();
         Calendar calendar = Calendar.getInstance();
@@ -330,7 +325,7 @@ public class UpdaterTest {
      *
      */
     @Test
-    public void testDateTimeInChangeDescription() {
+    public void dateTimeInChangeDescription() {
         rule.getInstance();
         Updater updater = new Updater(null);
         Calendar calendar = Calendar.getInstance();
@@ -367,7 +362,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void testAppendChangeTimestampToDescriptionNullFormat() {
+    public void appendChangeTimestampToDescriptionNullFormat() {
         //set default locale -> predictable test without explicit format
         Locale.setDefault(Locale.ENGLISH);
         
@@ -391,7 +386,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void testAppendChangeTimestampToDescriptionNoFormat() {
+    public void appendChangeTimestampToDescriptionNoFormat() {
         //set default locale -> predictable test without explicit format
         Locale.setDefault(Locale.ENGLISH);
         
@@ -436,7 +431,7 @@ public class UpdaterTest {
         when(mockAuthor.getId()).thenReturn("jenkins-user");
         when(entry.getAuthor()).thenReturn(mockAuthor);
         
-        Collection<MockAffectedFile> affectedFiles = Lists.newArrayList();
+        Collection<MockAffectedFile> affectedFiles = new ArrayList();
         MockAffectedFile affectedFile1 = mock(MockAffectedFile.class);
         when(affectedFile1.getEditType()).thenReturn(EditType.ADD);
         when(affectedFile1.getPath()).thenReturn("hudson/plugins/jira/File1");

@@ -27,14 +27,14 @@ public class EmptyFriendlyURLConverterTest {
     public void shouldHandleURLClass() throws Exception {
         URL someUrl = new URL(SOME_VALID_URL);
         assertThat(new EmptyFriendlyURLConverter()
-                .convert(URL.class, someUrl), Matchers.<Object>is(someUrl));
+                .convert(URL.class, someUrl), Matchers.is(someUrl));
     }
 
     @Test
     @WithoutJenkins
     public void shouldHandleStringClass() throws Exception {
         assertThat(new EmptyFriendlyURLConverter()
-                .convert(URL.class, SOME_VALID_URL), Matchers.<Object>is(new URL(SOME_VALID_URL)));
+                .convert(URL.class, SOME_VALID_URL), Matchers.is(new URL(SOME_VALID_URL)));
     }
 
     @Test

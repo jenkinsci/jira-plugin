@@ -1,17 +1,7 @@
 package hudson.plugins.jira;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.TimeoutException;
-
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
-
 import hudson.plugins.jira.extension.ExtendedVersion;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Before;
@@ -21,10 +11,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -48,13 +43,13 @@ public class JiraReplaceFixVersionByRegExTest {
 	}
 
 	@Test
-	public void testReplaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
+	public void replaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
 
 		List<ExtendedVersion> myVersions = new ArrayList<ExtendedVersion>();
 		myVersions.add(new ExtendedVersion(new URI("self"), 0L, TO_VERSION, null, false, false, null, null));
 		when(jiraSession.getVersions(PROJECT_KEY)).thenReturn(myVersions);
 
-		ArrayList<Issue> issues = new ArrayList<Issue>();
+		ArrayList<Issue> issues = new ArrayList<>();
 		issues.add(getIssue("abcXXXXefg", 1L));
 		issues.add(getIssue("dgcXXXXefg", 2L));
 		when(service.getIssuesFromJqlSearch(QUERY, Integer.MAX_VALUE)).thenReturn(issues);

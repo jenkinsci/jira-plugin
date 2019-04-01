@@ -76,7 +76,7 @@ public class JiraSite2Test {
     }
 
     @Test
-    public void testDeserializeMigrateCredentials() throws MalformedURLException {
+    public void deserializeMigrateCredentials() throws MalformedURLException {
         JiraSiteOld old = new JiraSiteOld(validPrimaryUrl, null,
                 ANY_USER, ANY_PASSWORD,
                 false, false,
@@ -106,7 +106,7 @@ public class JiraSite2Test {
     }
 
     @Test
-    public void testDeserializeNormal() throws IOException {
+    public void deserializeNormal() throws IOException {
         Domain domain = new Domain("example", "test domain", Arrays.<DomainSpecification>asList(new HostnameSpecification("example.org", null)));
         StandardUsernamePasswordCredentials c = new UsernamePasswordCredentialsImpl(
                 CredentialsScope.SYSTEM,
@@ -139,7 +139,7 @@ public class JiraSite2Test {
 
     @WithoutJenkins
     @Test
-    public void testDeserializeWithoutCredentials() {
+    public void deserializeWithoutCredentials() {
         JiraSite site = new JiraSite(exampleOrg, null,
                 (String)null,
                 false, false,

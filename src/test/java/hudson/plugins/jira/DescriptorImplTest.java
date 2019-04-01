@@ -1,14 +1,10 @@
 package hudson.plugins.jira;
 
-import java.io.IOException;
-import java.util.Arrays;
-
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
-import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Item;
@@ -23,7 +19,9 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockFolder;
-import org.jvnet.hudson.test.WithoutJenkins;
+
+import java.io.IOException;
+import java.util.Arrays;
 
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
@@ -41,7 +39,7 @@ public class DescriptorImplTest {
     JiraSite.DescriptorImpl descriptor = new JiraSite.DescriptorImpl();
 
     @Test
-    public void testDoValidate() throws Exception {
+    public void doValidate() throws Exception {
         FormValidation validation = descriptor.doValidate(null, null, null, null,
                                                           false, null,
                                                           JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
@@ -68,8 +66,8 @@ public class DescriptorImplTest {
     }
 
     @Test
-    public void testDoFillCredentialsIdItems() throws IOException {
-        Domain domain = new Domain("example", "test domain", Arrays.<DomainSpecification>asList(new HostnameSpecification("example.org", null)));
+    public void doFillCredentialsIdItems() throws IOException {
+        Domain domain = new Domain("example", "test domain", Arrays.asList(new HostnameSpecification("example.org", null)));
         StandardUsernamePasswordCredentials c = new UsernamePasswordCredentialsImpl(
                 CredentialsScope.SYSTEM,
                 null,

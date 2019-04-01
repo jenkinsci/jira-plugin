@@ -19,13 +19,13 @@ import org.junit.Test;
 public class JiraIssueUpdaterTest {
 
     @Test
-    public void testIssueSelectorDefaultsToDefault() {
+    public void issueSelectorDefaultsToDefault() {
         final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, null);
         assertThat(updater.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
     }
 
     @Test
-    public void testSetIssueSelectorPersists() {
+    public void setIssueSelectorPersists() {
         class TestSelector extends AbstractIssueSelector {
 
             @Override
@@ -40,7 +40,7 @@ public class JiraIssueUpdaterTest {
     }
 
     @Test
-    public void testSetScmPersists() {
+    public void setScmPersists() {
         class TestSCM extends SCM {
 
             @Override
@@ -55,7 +55,7 @@ public class JiraIssueUpdaterTest {
     }
 
     @Test
-    public void testSetLabelsPersists() {
+    public void setLabelsPersists() {
         List<String> testLabels = Arrays.asList("testLabel1", "testLabel2");
 
         final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, testLabels);

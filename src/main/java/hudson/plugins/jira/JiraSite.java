@@ -100,17 +100,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * See issue JENKINS-729, JENKINS-4092
      */
     public static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
-
+    
     /**
      * Default rest api client calls timeout, in seconds
-     * See issue JENKINS-31113
+     * See issue JENKINS-31113 
      */
     public static final int DEFAULT_TIMEOUT = 10;
 
     public static final int DEFAULT_READ_TIMEOUT = 30;
 
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
-
+    
     /**
      * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
@@ -196,7 +196,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @since 1.22
      */
     public boolean updateJiraIssueForAllStatus;
-
+    
     /**
      * connection timeout used when calling jira rest api, in seconds
      */
@@ -218,12 +218,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Configuration  for formatting (date -> text) in jira comments.
      */
     private String dateTimePattern;
-
+    
     /**
      * To add scm entry change date and time in jira comments.
      *
      */
     private boolean appendChangeTimestamp;
+
+    private int ioThreadCount = Integer.getInteger(JiraSite.class.getName() + ".httpclient.options.ioThreadCount", 2);
 
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
@@ -396,7 +398,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public String getDateTimePattern() {
         return dateTimePattern;
     }
-
+    
     public boolean isAppendChangeTimestamp() {
         return appendChangeTimestamp;
     }
@@ -538,7 +540,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         Secret password = credentials.getPassword();
 
         final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
-                .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),getHttpClientOptions());
+            .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),getHttpClientOptions());
         return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
     }
 
@@ -547,6 +549,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         options.setRequestTimeout(readTimeout, TimeUnit.SECONDS);
         options.setSocketTimeout(timeout, TimeUnit.SECONDS);
         options.setCallbackExecutor(getExecutorService());
+        options.setIoThreadCount(ioThreadCount);
         return options;
     }
 

@@ -1,33 +1,25 @@
 package hudson.plugins.jira;
 
+import hudson.EnvVars;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.Result;
+import hudson.model.TaskListener;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
-import static org.junit.Assert.assertThat;
-import static org.hamcrest.Matchers.is;
-
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.concurrent.TimeoutException;
 
-import hudson.EnvVars;
-import hudson.FilePath;
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.Job;
-import hudson.model.Result;
-import hudson.model.TaskListener;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.*;
 
 public class JiraIssueUpdateBuilderTest {
 
@@ -66,39 +58,39 @@ public class JiraIssueUpdateBuilderTest {
 				return null;
 			}
 			
-		}).when(build).setResult((Result) Mockito.any());
+		}).when(build).setResult(Mockito.any());
 	}
 	
 	@Test
-	public void testPerformNoSite() throws InterruptedException, IOException  {
+	public void performNoSite() throws InterruptedException, IOException  {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
-		doReturn(null).when(builder).getSiteForJob((Job<?,?>) Mockito.any());
+		doReturn(null).when(builder).getSiteForJob(Mockito.any());
 		builder.perform(build, workspace, launcher, listener);
 		assertThat(result, is(Result.FAILURE));
 	}
 	
 	@Test
-	public void testPerformTimeout() throws InterruptedException, IOException, TimeoutException {
+	public void performTimeout() throws InterruptedException, IOException, TimeoutException {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
-		doReturn(site).when(builder).getSiteForJob((Job<?,?>) Mockito.any());
+		doReturn(site).when(builder).getSiteForJob(Mockito.any());
 		doThrow(new TimeoutException()).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any());
 		builder.perform(build, workspace, launcher, listener);
 		assertThat(result, is(Result.FAILURE));
 	}
 	
 	@Test
-	public void testPerformProgressFails() throws InterruptedException, IOException, TimeoutException {
+	public void performProgressFails() throws InterruptedException, IOException, TimeoutException {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
-		doReturn(site).when(builder).getSiteForJob((Job<?,?>) Mockito.any());
+		doReturn(site).when(builder).getSiteForJob(Mockito.any());
 		doReturn(false).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any());
 		builder.perform(build, workspace, launcher, listener);
 		assertThat(result, is(Result.UNSTABLE));
 	}
 	
 	@Test
-	public void testPerformProgressOK() throws InterruptedException, IOException, TimeoutException {
+	public void performProgressOK() throws InterruptedException, IOException, TimeoutException {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
-		doReturn(site).when(builder).getSiteForJob((Job<?,?>) Mockito.any());
+		doReturn(site).when(builder).getSiteForJob(Mockito.any());
 		doReturn(true).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any());
 		builder.perform(build, workspace, launcher, listener);
 		assertThat(result, is(Result.SUCCESS));

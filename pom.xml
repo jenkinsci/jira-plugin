@@ -16,7 +16,7 @@
   <url>https://wiki.jenkins-ci.org/display/JENKINS/JIRA+Plugin</url>
 
   <properties>
-    <revision>3.0.6</revision>
+    <revision>3.0.7</revision>
     <changelist>-SNAPSHOT</changelist>
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
