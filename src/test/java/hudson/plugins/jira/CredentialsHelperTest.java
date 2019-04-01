@@ -29,7 +29,7 @@ public class CredentialsHelperTest
     public JenkinsRule r = new JenkinsRule();
 
     @Test
-    public void testLookupSystemCredentials()
+    public void lookupSystemCredentials()
         throws IOException
     {
         assertNull( CredentialsHelper.lookupSystemCredentials( "nonexistent-credentials-id", null ) );
@@ -43,7 +43,7 @@ public class CredentialsHelperTest
     }
 
     @Test
-    public void testLookupSystemCredentialsWithDomainRestriction()
+    public void lookupSystemCredentialsWithDomainRestriction()
         throws IOException
     {
         Domain domain = new Domain( "example", "test domain", Arrays.<DomainSpecification>asList(
@@ -58,7 +58,7 @@ public class CredentialsHelperTest
     }
 
     @Test
-    public void testMigrateCredentials()
+    public void migrateCredentials()
         throws MalformedURLException
     {
         assertThat( CredentialsProvider.lookupStores( r.jenkins ).iterator().next().getCredentials( Domain.global() ),
@@ -73,7 +73,7 @@ public class CredentialsHelperTest
     }
 
     @Test
-    public void testMigrateCredentialsWithExsitingCredentials()
+    public void migrateCredentialsWithExsitingCredentials()
         throws IOException
     {
         Domain domain = new Domain( "example", "test domain", Arrays.<DomainSpecification>asList(

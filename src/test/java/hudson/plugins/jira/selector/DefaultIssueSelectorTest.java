@@ -53,7 +53,7 @@ public class DefaultIssueSelectorTest {
 
     @Test
     @Issue("4132")
-    public void testProjectNamesAllowed() {
+    public void projectNamesAllowed() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
@@ -93,7 +93,7 @@ public class DefaultIssueSelectorTest {
      */
     @Test
     @Issue("12312")
-    public void testFindIssuesWithJiraParameters() {
+    public void findIssuesWithJiraParameters() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
@@ -132,7 +132,7 @@ public class DefaultIssueSelectorTest {
 
     @Test
     @Issue("6043")
-    public void testUserPatternNotMatch() {
+    public void userPatternNotMatch() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -148,7 +148,7 @@ public class DefaultIssueSelectorTest {
 
     @Test
     @Issue("6043")
-    public void testUserPatternMatchTwoIssuesInOneComment() {
+    public void userPatternMatchTwoIssuesInOneComment() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -173,7 +173,7 @@ public class DefaultIssueSelectorTest {
 
     @Test
     @Issue("6043")
-    public void testUserPatternMatch() {
+    public void userPatternMatch() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -200,7 +200,7 @@ public class DefaultIssueSelectorTest {
      * These patterns are used e.g. by the maven release plugin.
      */
     @Test
-    public void testDefaultPatternNotToMatchMavenRelease() {
+    public void defaultPatternNotToMatchMavenRelease() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);

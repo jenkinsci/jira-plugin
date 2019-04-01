@@ -43,7 +43,7 @@ public class JiraReplaceFixVersionByRegExTest {
 	}
 
 	@Test
-	public void testReplaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
+	public void replaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
 
 		List<ExtendedVersion> myVersions = new ArrayList<ExtendedVersion>();
 		myVersions.add(new ExtendedVersion(new URI("self"), 0L, TO_VERSION, null, false, false, null, null));

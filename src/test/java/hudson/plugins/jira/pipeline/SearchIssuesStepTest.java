@@ -53,7 +53,7 @@ public class SearchIssuesStepTest {
     }
 
     @Test
-    public void testCallGetIssuesFromJqlSearch() throws Exception {
+    public void callGetIssuesFromJqlSearch() throws Exception {
         JiraSession session = mock(JiraSession.class);
         String jql = "key='EXAMPLE-1'";
         Issue issue = mock(Issue.class);

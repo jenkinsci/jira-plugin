@@ -33,14 +33,14 @@ public class JqlIssueSelectorTest {
     }
 
     @Test
-    public void testDontDependOnRunAndTaskListener() {
+    public void dontDependOnRunAndTaskListener() {
         JqlIssueSelector jqlUpdaterIssueSelector = new JqlIssueSelector(TEST_JQL);
         Set<String> findedIssueIds = jqlUpdaterIssueSelector.findIssueIds(null, site, null);
         assertThat(findedIssueIds, empty());
     }
 
     @Test
-    public void testCallGetIssuesFromJqlSearch() throws IOException, TimeoutException {
+    public void callGetIssuesFromJqlSearch() throws IOException, TimeoutException {
         Issue issue = mock(Issue.class);
         when(issue.getKey()).thenReturn("EXAMPLE-1");
         when(session.getIssuesFromJqlSearch(TEST_JQL)).thenReturn( Collections.singletonList(issue));

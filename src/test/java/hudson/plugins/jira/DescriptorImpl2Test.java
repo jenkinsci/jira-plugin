@@ -40,7 +40,7 @@ public class DescriptorImpl2Test {
     }
 
     @Test
-    public void testValidateConnectionError() throws Exception {
+    public void validateConnectionError() throws Exception {
         when(jiraSession.getMyPermissions()).thenThrow(RestClientException.class);
         FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
                                                           null, false, null,
@@ -54,7 +54,7 @@ public class DescriptorImpl2Test {
     }
 
     @Test
-    public void testValidateConnectionOK() throws Exception {
+    public void validateConnectionOK() throws Exception {
         when(jiraSession.getMyPermissions()).thenReturn(mock(Permissions.class));
         FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
                                                           null, false, null,

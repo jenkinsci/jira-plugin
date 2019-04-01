@@ -62,7 +62,7 @@ public class JiraIssueUpdateBuilderTest {
 	}
 	
 	@Test
-	public void testPerformNoSite() throws InterruptedException, IOException  {
+	public void performNoSite() throws InterruptedException, IOException  {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
 		doReturn(null).when(builder).getSiteForJob(Mockito.any());
 		builder.perform(build, workspace, launcher, listener);
@@ -70,7 +70,7 @@ public class JiraIssueUpdateBuilderTest {
 	}
 	
 	@Test
-	public void testPerformTimeout() throws InterruptedException, IOException, TimeoutException {
+	public void performTimeout() throws InterruptedException, IOException, TimeoutException {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
 		doReturn(site).when(builder).getSiteForJob(Mockito.any());
 		doThrow(new TimeoutException()).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any());
@@ -79,7 +79,7 @@ public class JiraIssueUpdateBuilderTest {
 	}
 	
 	@Test
-	public void testPerformProgressFails() throws InterruptedException, IOException, TimeoutException {
+	public void performProgressFails() throws InterruptedException, IOException, TimeoutException {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
 		doReturn(site).when(builder).getSiteForJob(Mockito.any());
 		doReturn(false).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any());
@@ -88,7 +88,7 @@ public class JiraIssueUpdateBuilderTest {
 	}
 	
 	@Test
-	public void testPerformProgressOK() throws InterruptedException, IOException, TimeoutException {
+	public void performProgressOK() throws InterruptedException, IOException, TimeoutException {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
 		doReturn(site).when(builder).getSiteForJob(Mockito.any());
 		doReturn(true).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any());

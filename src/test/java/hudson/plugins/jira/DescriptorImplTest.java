@@ -39,7 +39,7 @@ public class DescriptorImplTest {
     JiraSite.DescriptorImpl descriptor = new JiraSite.DescriptorImpl();
 
     @Test
-    public void testDoValidate() throws Exception {
+    public void doValidate() throws Exception {
         FormValidation validation = descriptor.doValidate(null, null, null, null,
                                                           false, null,
                                                           JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
@@ -66,7 +66,7 @@ public class DescriptorImplTest {
     }
 
     @Test
-    public void testDoFillCredentialsIdItems() throws IOException {
+    public void doFillCredentialsIdItems() throws IOException {
         Domain domain = new Domain("example", "test domain", Arrays.asList(new HostnameSpecification("example.org", null)));
         StandardUsernamePasswordCredentials c = new UsernamePasswordCredentialsImpl(
                 CredentialsScope.SYSTEM,

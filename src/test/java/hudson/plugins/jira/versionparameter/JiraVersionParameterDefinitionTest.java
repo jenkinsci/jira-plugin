@@ -11,7 +11,7 @@ import hudson.model.ParameterValue;
 
 public class JiraVersionParameterDefinitionTest {
     @Test
-    public void testParameterValueMethodOverrides() throws Exception {
+    public void parameterValueMethodOverrides() throws Exception {
         ParameterDefinition definition = new JiraVersionParameterDefinition("pname", "pdesc", "JIRAKEY", null, "false", "false");
         CLICommand cliCommand = mock(CLICommand.class);
 
