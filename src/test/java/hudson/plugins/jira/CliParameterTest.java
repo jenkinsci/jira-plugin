@@ -24,7 +24,7 @@ public class CliParameterTest {
     public TemporaryFolder temporaryFolderRule = new TemporaryFolder();
 
     @Test
-    public void testJiraIssueParameterViaCli() throws Exception {
+    public void jiraIssueParameterViaCli() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
 
         project.addProperty(
@@ -39,7 +39,7 @@ public class CliParameterTest {
     }
 
     @Test
-    public void testJiraVersionParameterViaCli() throws Exception {
+    public void jiraVersionParameterViaCli() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
 
         project.addProperty(

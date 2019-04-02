@@ -1,6 +1,5 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
-import com.atlassian.event.api.EventPublisher;
 import com.atlassian.httpclient.api.Response;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.atlassian.sal.api.ApplicationProperties;
@@ -80,7 +79,7 @@ public class ApacheAsyncHttpClientTest
         prepare( testHandler );
 
         ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
                                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
 
         Response response = httpClient.newRequest( "http://localhost:" + connector.getLocalPort() + "/foo" ) //
@@ -97,7 +96,7 @@ public class ApacheAsyncHttpClientTest
         prepare( testHandler );
 
         ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
                                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
 
         Response response = httpClient.newRequest( "http://localhost:" + connector.getLocalPort() + "/foo" ) //
@@ -110,6 +109,25 @@ public class ApacheAsyncHttpClientTest
     }
 
     @Test
+    public void simple_get_with_non_proxy_host()
+            throws Exception
+    {
+        ProxyTestHandler testHandler = new ProxyTestHandler();
+        prepare( testHandler );
+
+        Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar", "www.apache.org" );
+
+        ApacheAsyncHttpClient httpClient =
+                new ApacheAsyncHttpClient( null, buildApplicationProperties(),
+                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
+
+        Response response = httpClient.newRequest( "http://www.apache.org" )
+                .get().get( 30, TimeUnit.SECONDS );
+        Assert.assertEquals( 200, response.getStatusCode() );
+        //Assert.assertEquals( CONTENT_RESPONSE, IOUtils.toString( response.getEntityStream() ) );
+    }
+
+    @Test
     public void simple_get_with_proxy()
         throws Exception
     {
@@ -119,7 +137,7 @@ public class ApacheAsyncHttpClientTest
         Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
 
         ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
                                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
 
         Response response = httpClient.newRequest( "http://jenkins.io" ) //
@@ -138,7 +156,7 @@ public class ApacheAsyncHttpClientTest
         Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
 
         ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( (EventPublisher) null, buildApplicationProperties(),
+            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
                                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
 
         Response response = httpClient.newRequest( "http://jenkins.io" ) //

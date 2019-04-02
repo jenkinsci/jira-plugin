@@ -1,23 +1,19 @@
 package hudson.plugins.jira.pipeline;
 
-import java.io.IOException;
-
-import javax.annotation.Nonnull;
-
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import com.google.inject.Inject;
-
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
+import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
+import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
+import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
+import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.annotation.Nonnull;
 
 /**
  * Simple add comment step.
@@ -79,14 +75,11 @@ public class CommentStep extends AbstractStepImpl {
         private transient Run run;
 
         @Override
-        protected Void run() throws Exception {
+        protected Void run() {
             JiraSite site = JiraSite.get(run.getParent());
-            JiraSession session = null;
-            try {
-                session = site.getSession();
-            } catch (IOException e) {
+            JiraSession session = site.getSession();
+            if (session == null) {
                 listener.getLogger().println(Messages.FailedToConnect());
-                e.printStackTrace(listener.getLogger());
                 return null;
             }
 

@@ -25,11 +25,13 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Logger;
 
 import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
@@ -257,12 +259,13 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @throws InterruptedException
      */
     private String getIssue(String filename) throws IOException, InterruptedException {
-
         String issueId = "";
-        BufferedReader br = null;
-        try {
+        Path path = Paths.get(filename);
+        if(Files.notExists(path)){
+            return null;
+        }
+        try (BufferedReader br = Files.newBufferedReader(path)) {
             String issue;
-            br = new BufferedReader(new FileReader(filename));
 
             while ((issue = br.readLine()) != null) {
                 issueId = issue;
@@ -270,12 +273,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             return issueId;
         } catch (FileNotFoundException e) {
             return null;
-        } finally {
-            if (br != null) {
-                br.close();
-            }
         }
-
     }
 
     JiraSite getSiteForProject(AbstractProject<?, ?> project) {
@@ -318,14 +316,17 @@ public class JiraCreateIssueNotifier extends Notifier {
     /**
      * write's the issue id in the file, which is stored in the Job's directory
      *
-     * @param Filename
+     * @param filename
      * @param issue
      * @throws FileNotFoundException
      */
-    private void writeInFile(String Filename, Issue issue) throws FileNotFoundException {
-        PrintWriter writer = new PrintWriter(Filename);
-        writer.println(issue.getKey());
-        writer.close();
+    private void writeInFile(String filename, Issue issue) throws IOException {
+         // olamy really weird to write an empty file especially with null
+        // but backward compat and unit tests assert that.....
+        // can't believe such stuff has been merged......
+        try(BufferedWriter bw =Files.newBufferedWriter( Paths.get( filename ) )) {
+            bw.write(issue.getKey()==null?"null":issue.getKey());
+        }
     }
 
     /**
@@ -444,7 +445,7 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param vars
      * @return
      */
-    private String getBuildDetailsString(EnvVars vars){
+    private String getBuildDetailsString(EnvVars vars) {
         final String buildURL = vars.get("BUILD_URL");
         return String.format("[%s|%s] [console log|%s]", getBuildName(vars), buildURL, buildURL.concat("console"));
     }
@@ -455,7 +456,7 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param vars
      * @return String
      */
-    private String getBuildName(EnvVars vars){
+    private String getBuildName(EnvVars vars) {
         final String jobName = vars.get("JOB_NAME");
         final String buildNumber = vars.get("BUILD_NUMBER");
         return String.format("%s #%s", jobName, buildNumber);
@@ -477,14 +478,11 @@ public class JiraCreateIssueNotifier extends Notifier {
         public ListBoxModel doFillPriorityIdItems() {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
-                try {
-                    JiraSession session = site.getSession();
-                    if (session != null) {
-                        for (Priority priority : session.getPriorities()) {
-                            items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
-                        }
+                JiraSession session = site.getSession();
+                if (session != null) {
+                    for (Priority priority : session.getPriorities()) {
+                        items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
                     }
-                } catch (IOException ignore) {
                 }
             }
             return items;
@@ -493,14 +491,11 @@ public class JiraCreateIssueNotifier extends Notifier {
         public ListBoxModel doFillTypeIdItems() {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
-                try {
-                    JiraSession session = site.getSession();
-                    if (session != null) {
-                        for (IssueType type : session.getIssueTypes()) {
-                            items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
-                        }
+                JiraSession session = site.getSession();
+                if (session != null) {
+                    for (IssueType type : session.getIssueTypes()) {
+                        items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
                     }
-                } catch (IOException ignore) {
                 }
             }
             return items;

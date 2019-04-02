@@ -2,28 +2,24 @@ package hudson.plugins.jira;
 
 import hudson.EnvVars;
 import hudson.Launcher;
-import hudson.model.*;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.plugins.jira.model.JiraIssueField;
-
 import hudson.plugins.jira.pipeline.IssueFieldUpdateStep;
 import org.junit.Test;
 import org.mockito.Matchers;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
-import com.google.common.collect.Lists;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
 
 
 
@@ -75,23 +71,19 @@ public class IssueFieldUpdateStepTest {
 	public void checkSubmit() throws InterruptedException, IOException {
 		PrintStream logger = mock(PrintStream.class);
 		
-		final List<String> issues_after = Lists.newArrayList();
-		final List<JiraIssueField> fields_after = Lists.newArrayList();
+		final List<String> issues_after = new ArrayList();
+		final List<JiraIssueField> fields_after = new ArrayList();
 		JiraSession session = mock(JiraSession.class);
-        doAnswer(new Answer<Object>() {
-
-            public Object answer(final InvocationOnMock invocation) throws Throwable {
+        doAnswer(invocation ->  {
             	issues_after.add( (String) invocation.getArguments()[0] );
             	List<JiraIssueField> fields_tmp = (List<JiraIssueField>) invocation.getArguments()[1]; 
             	for( JiraIssueField field : fields_tmp )
             		fields_after.add( field );
                 return null;
-            }
-
         }).when(session).addFields(Matchers.anyString(), Matchers.anyListOf(JiraIssueField.class));
         
         String issue_test = "issue-10100";
-        List<JiraIssueField> fields_test = Lists.newArrayList();
+        List<JiraIssueField> fields_test = new ArrayList();
         for( int i=0; i<100; i++ )         	
 			fields_test.add(new JiraIssueField(issue_test, "value-"+Integer.toString(10100+i)));
         

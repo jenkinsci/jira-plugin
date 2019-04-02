@@ -1,20 +1,7 @@
 package hudson.plugins.jira.pipeline;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Nonnull;
-
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.inject.Inject;
-
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.Run;
@@ -22,6 +9,15 @@ import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
+import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
+import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
+import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
+import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.annotation.Nonnull;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Simple search issues step
@@ -78,12 +74,9 @@ public class SearchIssuesStep extends AbstractStepImpl {
         @Override
         protected List<String> run() throws Exception {
             JiraSite site = JiraSite.get(run.getParent());
-            JiraSession session = null;
-            try {
-                session = site.getSession();
-            } catch (IOException e) {
+            JiraSession session = site.getSession();
+            if (session == null) {
                 listener.getLogger().println(Messages.FailedToConnect());
-                e.printStackTrace(listener.getLogger());
                 throw new AbortException("Cannot open jira session - error occurred");
             }
 

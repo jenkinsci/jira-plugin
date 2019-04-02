@@ -6,21 +6,22 @@ import com.atlassian.httpclient.api.factory.HttpClientFactory;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
-import com.atlassian.util.concurrent.NotNull;
 import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.DisposableBean;
 
+import javax.annotation.Nonnull;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
-import static com.google.common.base.Preconditions.*;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public final class DefaultHttpClientFactory implements HttpClientFactory, DisposableBean
 {
     private final EventPublisher eventPublisher;
     private final ApplicationProperties applicationProperties;
     private final ThreadLocalContextManager threadLocalContextManager;
-    private final Set<ApacheAsyncHttpClient> httpClients = new CopyOnWriteArraySet<ApacheAsyncHttpClient>();
+    // shared http client
+    private static ApacheAsyncHttpClient httpClient;
 
     public DefaultHttpClientFactory(EventPublisher eventPublisher, ApplicationProperties applicationProperties, ThreadLocalContextManager threadLocalContextManager)
     {
@@ -42,46 +43,33 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     }
 
     @Override
-    public void dispose(@NotNull final HttpClient httpClient) throws Exception
+    public void dispose(@Nonnull final HttpClient httpClient) throws Exception
     {
         if (httpClient instanceof ApacheAsyncHttpClient)
         {
-            final ApacheAsyncHttpClient client = (ApacheAsyncHttpClient) httpClient;
-            if (httpClients.remove(client))
-            {
-                client.destroy();
-            }
-            else
-            {
-                throw new IllegalStateException("Client is already disposed");
-            }
-        }
-        else
-        {
-            throw new IllegalArgumentException("Given client is not disposable");
+            ((ApacheAsyncHttpClient) httpClient).destroy();
         }
     }
 
     private HttpClient doCreate(HttpClientOptions options, ThreadLocalContextManager threadLocalContextManager)
     {
         checkNotNull(options);
-        final ApacheAsyncHttpClient httpClient = new ApacheAsyncHttpClient(eventPublisher, applicationProperties, threadLocalContextManager, options);
-        httpClients.add(httpClient);
-        return httpClient;
+        // we create only one http client instance as we don't need more
+
+        if(httpClient!=null) {
+            return httpClient;
+        }
+        synchronized ( this )
+        {
+            httpClient =
+                new ApacheAsyncHttpClient( eventPublisher, applicationProperties, threadLocalContextManager, options );
+            return httpClient;
+        }
     }
 
     @Override
     public void destroy() throws Exception
     {
-        for (ApacheAsyncHttpClient httpClient : httpClients)
-        {
-            httpClient.destroy();
-        }
-    }
-
-    @VisibleForTesting
-    Iterable<ApacheAsyncHttpClient> getHttpClients()
-    {
-        return httpClients;
+        httpClient.destroy();
     }
 }

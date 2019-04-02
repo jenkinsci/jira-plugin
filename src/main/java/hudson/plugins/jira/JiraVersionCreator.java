@@ -55,12 +55,7 @@ public class JiraVersionCreator extends Notifier {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-    	JiraSite site = getSiteForProject(build.getProject());
-    	return VersionCreator.perform(site, jiraVersion, jiraProjectKey, build, listener);
-    }
-
-    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
-        return JiraSite.get(project);
+        return new VersionCreator().perform(build.getProject(), jiraVersion, jiraProjectKey, build, listener);
     }
 
     @Override

@@ -72,7 +72,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
                 String id = m.group(1);
 
-                if (StringUtils.isNotBlank(site.userName) && !site.existsIssue(id)) {
+                if (StringUtils.isNotBlank(site.credentialsId) && !hasProjectForIssue(id, site)) {
                     LOGGER.log(Level.INFO, "No known JIRA project corresponding to id: ''{0}''", id);
                     continue;
                 }
@@ -121,13 +121,30 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 }
 
             } else {
-                LOGGER.log(Level.WARNING, "The JIRA pattern " + pattern + " doesn't define a capturing group!");
+                LOGGER.log(Level.WARNING, "The JIRA pattern ''{0}'' doesn't define a capturing group!", pattern);
             }
         }
 
         if (!issuesToBeSaved.isEmpty()) {
             saveIssues(build, a, issuesToBeSaved);
         }
+    }
+
+    /**
+     * Checks if the given JIRA id will be likely to exist in this issue tracker.
+     * This method checks whether the key portion is a valid key (except that
+     * it can potentially use stale data). Number portion is not checked at all.
+     *
+     * @param id String like MNG-1234
+     */
+    protected boolean hasProjectForIssue(String id, JiraSite site) {
+        int idx = id.indexOf('-');
+        if (idx == -1) {
+            return false;
+        }
+
+        Set<String> keys = site.getProjectKeys();
+        return keys.contains(id.substring(0, idx).toUpperCase());
     }
 
     private void saveIssues(Run<?, ?> build, JiraBuildAction a,

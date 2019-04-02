@@ -10,8 +10,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.util.logging.Logger;
-
 /**
  * Associates {@link Job} with {@link JiraSite}.
  *
@@ -67,7 +65,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     public static final class DescriptorImpl extends JobPropertyDescriptor {
-        private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<JiraSite>();
+        private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<>();
 
         public DescriptorImpl() {
             super(JiraProjectProperty.class);

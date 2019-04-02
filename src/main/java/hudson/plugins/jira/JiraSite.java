@@ -1,40 +1,77 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.JiraRestClient;
+import com.atlassian.event.api.EventPublisher;
+import com.atlassian.httpclient.apache.httpcomponents.DefaultHttpClientFactory;
+import com.atlassian.httpclient.api.HttpClient;
+import com.atlassian.httpclient.api.factory.HttpClientOptions;
+import com.atlassian.jira.rest.client.api.AuthenticationHandler;
+import com.atlassian.jira.rest.client.api.JiraRestClientFactory;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.Version;
-import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
+import com.atlassian.jira.rest.client.internal.async.AtlassianHttpClientDecorator;
+import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+import com.atlassian.sal.api.ApplicationProperties;
+import com.atlassian.sal.api.UrlMode;
+import com.atlassian.sal.api.executor.ThreadLocalContextManager;
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.*;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
+import hudson.model.Job;
+import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
+import hudson.plugins.jira.extension.ExtendedJiraRestClient;
+import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssue;
-import hudson.plugins.jira.model.JiraVersion;
+import hudson.security.ACL;
+import hudson.security.AccessControlled;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import hudson.util.Secret;
-import org.joda.time.DateTime;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.PreDestroy;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -45,9 +82,11 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
+ * <p>
  * Represents an external JIRA installation and configuration
  * needed to access this JIRA.
- *
+ * </p>
+ * <b>When adding new fields do not miss to look at readResolve method!!</b>
  * @author Kohsuke Kawaguchi
  */
 public class JiraSite extends AbstractDescribableImpl<JiraSite> {
@@ -67,6 +106,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * See issue JENKINS-31113 
      */
     public static final int DEFAULT_TIMEOUT = 10;
+
+    public static final int DEFAULT_READ_TIMEOUT = 30;
+
+    public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
     
     /**
      * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
@@ -78,44 +121,58 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * URL of JIRA for normal access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
      */
-    public final URL alternativeUrl;
+    public URL alternativeUrl;
 
     /**
      * JIRA requires HTTP Authentication for login
      */
-    public final boolean useHTTPAuth;
+    public boolean useHTTPAuth;
+
+    /**
+     * The id of the credentials to use. Optional.
+     */
+    public String credentialsId;
+
+    /**
+     * Transient stash of the credentials to use, mostly just for providing floating user object.
+     */
+    public transient UsernamePasswordCredentials credentials;
 
     /**
      * User name needed to login. Optional.
+     * @deprecated use credentialsId
      */
-    public final String userName;
+    @Deprecated
+    private transient String userName;
 
     /**
      * Password needed to login. Optional.
+     * @deprecated use credentialsId
      */
-    public final Secret password;
+    @Deprecated
+    private transient Secret password;
 
     /**
      * Group visibility to constrain the visibility of the added comment. Optional.
      */
-    public final String groupVisibility;
+    public String groupVisibility;
 
     /**
      * Role visibility to constrain the visibility of the added comment. Optional.
      */
-    public final String roleVisibility;
+    public String roleVisibility;
 
     /**
      * True if this JIRA is configured to allow Confluence-style Wiki comment.
      */
-    public final boolean supportsWikiStyleComment;
+    public boolean supportsWikiStyleComment;
 
     /**
      * to record scm changes in jira issue
      *
      * @since 1.21
      */
-    public final boolean recordScmChanges;
+    public boolean recordScmChanges;
 
     /**
      * Disable annotating the changelogs
@@ -129,7 +186,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @since 1.22
      */
-    private final String userPattern;
+    private String userPattern;
 
     private transient Pattern userPat;
 
@@ -138,12 +195,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @since 1.22
      */
-    public final boolean updateJiraIssueForAllStatus;
+    public boolean updateJiraIssueForAllStatus;
     
     /**
-     * timeout used when calling jira rest api, in seconds
+     * connection timeout used when calling jira rest api, in seconds
      */
-    public Integer timeout;
+    public int timeout = DEFAULT_TIMEOUT;
+
+    /**
+     * response timeout for jira rest call
+     * @since 3.0.3
+     */
+    private int readTimeout = DEFAULT_READ_TIMEOUT;
+
+    /**
+     * thread pool number
+     * @since 3.0.3
+     */
+    private int threadExecutorNumber = DEFAULT_THREAD_EXECUTOR_NUMBER;
 
     /**
      * Configuration  for formatting (date -> text) in jira comments.
@@ -154,7 +223,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * To add scm entry change date and time in jira comments.
      *
      */
-    private Boolean appendChangeTimestamp;
+    private boolean appendChangeTimestamp;
+
+    private int ioThreadCount = Integer.getInteger(JiraSite.class.getName() + ".httpclient.options.ioThreadCount", 2);
 
     /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
@@ -171,46 +242,87 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     private transient Lock projectUpdateLock = new ReentrantLock();
 
-    private transient JiraSession jiraSession = null;
+    private transient JiraSession jiraSession;
 
-    @DataBoundConstructor
+    private static ExecutorService executorService;
+
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
+    public JiraSite(URL url, @CheckForNull URL alternativeUrl, @CheckForNull String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
+                    boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
+        this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url), supportsWikiStyleComment, recordScmChanges, userPattern,
+                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+    }
+
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
     public JiraSite(URL url, @CheckForNull URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
                     boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
-        if (url != null && !url.toExternalForm().endsWith("/"))
-            try {
-                url = new URL(url.toExternalForm() + "/");
-            } catch (MalformedURLException e) {
-                throw new AssertionError(e);
-            }
+        this(url, alternativeUrl, CredentialsHelper.migrateCredentials(userName, password, url), supportsWikiStyleComment, recordScmChanges, userPattern,
+                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+    }
 
-        if (alternativeUrl != null && !alternativeUrl.toExternalForm().endsWith("/"))
-            try {
-                alternativeUrl = new URL(alternativeUrl.toExternalForm() + "/");
-            } catch (MalformedURLException e) {
-                throw new AssertionError(e);
-            }
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
+    public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
+        this( url, alternativeUrl, credentials, supportsWikiStyleComment, recordScmChanges, userPattern, updateJiraIssueForAllStatus,
+              groupVisibility, roleVisibility, useHTTPAuth, DEFAULT_TIMEOUT, DEFAULT_READ_TIMEOUT, DEFAULT_THREAD_EXECUTOR_NUMBER);
+    }
 
-        this.url = url;        
-    	this.timeout = JiraSite.DEFAULT_TIMEOUT;
-        
-        this.alternativeUrl = alternativeUrl;
-        this.userName = Util.fixEmpty(userName);
-        this.password = Secret.fromString(Util.fixEmpty(password));
-        this.supportsWikiStyleComment = supportsWikiStyleComment;
-        this.recordScmChanges = recordScmChanges;
-        this.userPattern = Util.fixEmpty(userPattern);
-        
-        if (this.userPattern != null) {
-            this.userPat = Pattern.compile(this.userPattern);
-        } else {
-            this.userPat = null;
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
+    public JiraSite(URL url, URL alternativeUrl, String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber){
+        this(url, alternativeUrl, CredentialsHelper.lookupSystemCredentials(credentialsId, url), supportsWikiStyleComment, recordScmChanges, userPattern,
+             updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
+    }
+
+    @DataBoundConstructor
+    public JiraSite(String url){
+        URL mainURL = toURL(url);
+        if (mainURL == null) throw new AssertionError("URL cannot be empty");
+        this.url = mainURL;
+    }
+
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
+    public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber) {
+        if (url != null) {
+            url = toURL(url.toExternalForm());
         }
 
+        if (alternativeUrl != null) {
+            alternativeUrl = toURL(alternativeUrl.toExternalForm());
+        }
+
+        this.url = url;
+        this.timeout = timeout;
+        this.readTimeout = readTimeout;
+        this.threadExecutorNumber = threadExecutorNumber;
+        this.alternativeUrl = alternativeUrl;
+        this.credentials = credentials;
+        this.credentialsId = credentials != null ? credentials.getId() : null;
+        this.supportsWikiStyleComment = supportsWikiStyleComment;
+        this.recordScmChanges = recordScmChanges;
+        setUserPattern(userPattern);
         this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
-        this.groupVisibility = Util.fixEmpty(groupVisibility);
-        this.roleVisibility = Util.fixEmpty(roleVisibility);
+        setGroupVisibility(groupVisibility);
+        setRoleVisibility(roleVisibility);
         this.useHTTPAuth = useHTTPAuth;
         this.jiraSession = null;
+    }
+
+    static URL toURL(String url) {
+        url = Util.fixEmptyAndTrim(url);
+        if (url == null) return null;
+        if (!url.endsWith("/")) url = url + "/";
+        try{
+            return new URL(url);
+        } catch (MalformedURLException e){
+            throw new AssertionError(e);
+        }
     }
 
     @DataBoundSetter
@@ -223,22 +335,63 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Sets request timeout (in seconds).
+     * Sets connect timeout (in seconds).
      * If not specified, a default timeout will be used.
      * @param timeoutSec Timeout in seconds
      */
     @DataBoundSetter
-    public void setTimeout(Integer timeoutSec) {
+    public void setTimeout(int timeoutSec) {
 		this.timeout = timeoutSec;
 	}
-    
+
+    public int getTimeout() {
+        return timeout;
+    }
+
+    /**
+     * Sets read timeout (in seconds).
+     * If not specified, a default timeout will be used.
+     * @param readTimeout Timeout in seconds
+     */
+    @DataBoundSetter
+    public void setReadTimeout( int readTimeout ) {
+        this.readTimeout = readTimeout;
+    }
+
+    public int getReadTimeout() {
+        return readTimeout;
+    }
+
+    public String getCredentialsId() {
+        return credentialsId;
+    }
+
+    @DataBoundSetter
+    public void setCredentialsId(String credentialsId) {
+        this.credentialsId = Util.fixEmptyAndTrim(credentialsId);
+        if (this.credentialsId == null) {
+            this.credentials = null;
+        } else {
+            this.credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
+        }
+    }
+
     @DataBoundSetter
     public void setDateTimePattern(String dateTimePattern) {
-        this.dateTimePattern = dateTimePattern;
+        this.dateTimePattern = Util.fixEmptyAndTrim(dateTimePattern);
     }
-    
+
     @DataBoundSetter
-    public void setAppendChangeTimestamp(Boolean appendChangeTimestamp) {
+    public void setThreadExecutorNumber( int threadExecutorNumber ) {
+        this.threadExecutorNumber = threadExecutorNumber;
+    }
+
+    public int getThreadExecutorNumber() {
+        return threadExecutorNumber;
+    }
+
+    @DataBoundSetter
+    public void setAppendChangeTimestamp(boolean appendChangeTimestamp) {
         this.appendChangeTimestamp = appendChangeTimestamp;
     }
 
@@ -247,14 +400,98 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
     
     public boolean isAppendChangeTimestamp() {
-        return this.appendChangeTimestamp != null && this.appendChangeTimestamp.booleanValue();
+        return appendChangeTimestamp;
     }
-    
+
+    public URL getAlternativeUrl() {
+        return alternativeUrl;
+    }
+
+    public boolean isUseHTTPAuth() {
+        return useHTTPAuth;
+    }
+
+    public String getGroupVisibility() {
+        return groupVisibility;
+    }
+
+    public String getRoleVisibility() {
+        return roleVisibility;
+    }
+
+    public boolean isSupportsWikiStyleComment() {
+        return supportsWikiStyleComment;
+    }
+
+    public boolean isRecordScmChanges() {
+        return recordScmChanges;
+    }
+
+    public boolean isUpdateJiraIssueForAllStatus() {
+        return updateJiraIssueForAllStatus;
+    }
+
+    @DataBoundSetter
+    public void setAlternativeUrl(String alternativeUrl) {
+        this.alternativeUrl = toURL(alternativeUrl);
+    }
+
+    @DataBoundSetter
+    public void setUseHTTPAuth(boolean useHTTPAuth) {
+        this.useHTTPAuth = useHTTPAuth;
+    }
+
+    @DataBoundSetter
+    public void setGroupVisibility(String groupVisibility) {
+        this.groupVisibility = Util.fixEmptyAndTrim(groupVisibility);
+    }
+
+    @DataBoundSetter
+    public void setRoleVisibility(String roleVisibility) {
+        this.roleVisibility = Util.fixEmptyAndTrim(roleVisibility);
+    }
+
+    @DataBoundSetter
+    public void setSupportsWikiStyleComment(boolean supportsWikiStyleComment) {
+        this.supportsWikiStyleComment = supportsWikiStyleComment;
+    }
+
+    @DataBoundSetter
+    public void setRecordScmChanges(boolean recordScmChanges) {
+        this.recordScmChanges = recordScmChanges;
+    }
+
+    @DataBoundSetter
+    public void setUserPattern(String userPattern) {
+        this.userPattern = Util.fixEmptyAndTrim(userPattern);
+
+        if (this.userPattern == null) {
+            this.userPat = null;
+        } else {
+            this.userPat = Pattern.compile(this.userPattern);
+        }
+    }
+
+    @DataBoundSetter
+    public void setUpdateJiraIssueForAllStatus(boolean updateJiraIssueForAllStatus) {
+        this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
+    }
+
+    @SuppressWarnings("unused")
     protected Object readResolve() {
-        projectUpdateLock = new ReentrantLock();
-        issueCache = makeIssueCache();
-        jiraSession = null;
-        return this;
+        JiraSite jiraSite;
+        if (credentialsId == null && userName != null && password != null) { // Migrate credentials
+            jiraSite = new JiraSite(url, alternativeUrl, userName, password.getPlainText(), supportsWikiStyleComment, recordScmChanges, userPattern,
+                    updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+        } else {
+            jiraSite = new JiraSite( url, alternativeUrl, credentialsId, supportsWikiStyleComment, recordScmChanges,
+                                 userPattern, updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth,
+                                 timeout, readTimeout, threadExecutorNumber );
+        }
+        jiraSite.setAppendChangeTimestamp( appendChangeTimestamp );
+        jiraSite.setDisableChangelogAnnotations( disableChangelogAnnotations );
+        jiraSite.setDateTimePattern( dateTimePattern );
+        return jiraSite;
     }
 
     private static Cache<String, Optional<Issue>> makeIssueCache() {
@@ -273,11 +510,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null if remote access is not supported.
      */
     @Nullable
-    public JiraSession getSession() throws IOException {
+    public JiraSession getSession() {
         if (jiraSession == null) {
             jiraSession = createSession();
         }
-
         return jiraSession;
     }
 
@@ -286,9 +522,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return null if remote access is not supported.
      */
-    protected JiraSession createSession() throws IOException {
-        if (userName == null || password == null)
+    private JiraSession createSession() {
+        if (credentials == null) {
             return null;    // remote access not supported
+        }
 
         final URI uri;
         try {
@@ -299,11 +536,225 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
         LOGGER.fine("creating JIRA Session: " + uri);
 
-        final JiraRestClient jiraRestClient = new AsynchronousJiraRestClientFactory()
-                .createWithBasicHttpAuthentication(uri, userName, password.getPlainText());
-        int usedTimeout = timeout != null ? timeout : JiraSite.DEFAULT_TIMEOUT;
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), usedTimeout));
+        String userName = credentials.getUsername();
+        Secret password = credentials.getPassword();
+
+        final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
+            .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),getHttpClientOptions());
+        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
     }
+
+    private HttpClientOptions getHttpClientOptions() {
+        final HttpClientOptions options = new HttpClientOptions();
+        options.setRequestTimeout(readTimeout, TimeUnit.SECONDS);
+        options.setSocketTimeout(timeout, TimeUnit.SECONDS);
+        options.setCallbackExecutor(getExecutorService());
+        options.setIoThreadCount(ioThreadCount);
+        return options;
+    }
+
+    private ExecutorService getExecutorService() {
+        if (executorService==null)
+        {
+            synchronized ( JiraSite.class )
+            {
+                int nThreads = threadExecutorNumber;
+                if ( nThreads < 1 )
+                {
+                    LOGGER.warning( "nThreads " + nThreads + " cannot be lower than 1 so use default " + DEFAULT_THREAD_EXECUTOR_NUMBER );
+                    nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
+                }
+                executorService = Executors.newFixedThreadPool( nThreads, //
+                                                                new ThreadFactory() {
+                                                                    final AtomicInteger threadNumber = new AtomicInteger( 0 );
+                                                                    @Override
+                                                                    public Thread newThread( Runnable r )
+                                                                    {
+                                                                        return new Thread( r,
+                                                                                           "jira-plugin-http-request-" + threadNumber.getAndIncrement()
+                                                                                               + "-thread" );
+                                                                    }
+                                                                } );
+            }
+        }
+        return executorService;
+    }
+
+    // not really used but let's leave when it will be implemented
+    @PreDestroy
+    public void destroy() {
+        try {
+            this.jiraSession = null;
+        } catch ( Exception e ) {
+            LOGGER.log(Level.WARNING, "skip error destroying JiraSite:" + e.getMessage(), e );
+        }
+    }
+
+    //-----------------------------------------------------------------------------------
+    // internal classes we want to override
+    //-----------------------------------------------------------------------------------
+
+    public static class ExtendedAsynchronousJiraRestClientFactory implements JiraRestClientFactory
+    {
+
+        public ExtendedJiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
+            final DisposableHttpClient httpClient = createClient(serverUri, authenticationHandler, options);
+            return new ExtendedAsynchronousJiraRestClient( serverUri, httpClient);
+        }
+
+        @Override
+        public ExtendedJiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler) {
+            final DisposableHttpClient httpClient = createClient(serverUri, authenticationHandler, new HttpClientOptions());
+            return new ExtendedAsynchronousJiraRestClient( serverUri, httpClient);
+        }
+
+        @Override
+        public ExtendedJiraRestClient createWithBasicHttpAuthentication(final URI serverUri, final String username, final String password) {
+            return create(serverUri, new BasicHttpAuthenticationHandler( username, password));
+        }
+
+        @Override
+        public ExtendedJiraRestClient createWithAuthenticationHandler(final URI serverUri, final AuthenticationHandler authenticationHandler) {
+            return create(serverUri, authenticationHandler);
+        }
+
+        @Override
+        public ExtendedJiraRestClient create(final URI serverUri, final HttpClient httpClient) {
+            final DisposableHttpClient disposableHttpClient = createClient(httpClient);
+            return new ExtendedAsynchronousJiraRestClient(serverUri, disposableHttpClient);
+        }
+    }
+
+    private static DisposableHttpClient createClient(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
+
+        final DefaultHttpClientFactory
+            defaultHttpClientFactory = new DefaultHttpClientFactory( new NoOpEventPublisher(),
+                                                                     new RestClientApplicationProperties( serverUri),
+                                                                     new ThreadLocalContextManager() {
+                                                                         @Override
+                                                                         public Object getThreadLocalContext() {
+                                                                             return null;
+                                                                         }
+
+                                                                         @Override
+                                                                         public void setThreadLocalContext(Object context) {
+                                                                         }
+
+                                                                         @Override
+                                                                         public void clearThreadLocalContext() {
+                                                                         }
+                                                                     });
+
+        final HttpClient httpClient = defaultHttpClientFactory.create(options);
+
+        return new AtlassianHttpClientDecorator( httpClient, authenticationHandler) {
+            @Override
+            public void destroy() throws Exception {
+                defaultHttpClientFactory.dispose(httpClient);
+            }
+        };
+    }
+
+    private static DisposableHttpClient createClient(final HttpClient client) {
+        return new AtlassianHttpClientDecorator(client, null) {
+            @Override
+            public void destroy() throws Exception {
+                // This should never be implemented. This is simply creation of a wrapper
+                // for AtlassianHttpClient which is extended by a destroy method.
+                // Destroy method should never be called for AtlassianHttpClient coming from
+                // a client! Imagine you create a RestClient, pass your own HttpClient there
+                // and it gets destroy.
+            }
+        };
+    }
+
+    private static class NoOpEventPublisher implements EventPublisher
+    {
+        @Override
+        public void publish(Object o) {
+        }
+
+        @Override
+        public void register(Object o) {
+        }
+
+        @Override
+        public void unregister(Object o) {
+        }
+
+        @Override
+        public void unregisterAll() {
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static class RestClientApplicationProperties implements ApplicationProperties
+    {
+
+        private final String baseUrl;
+
+        private RestClientApplicationProperties(URI jiraURI) {
+            this.baseUrl = jiraURI.getPath();
+        }
+
+        @Override
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        /**
+         * We'll always have an absolute URL as a client.
+         */
+        @Nonnull
+        @Override
+        public String getBaseUrl( UrlMode urlMode) {
+            return baseUrl;
+        }
+
+        @Nonnull
+        @Override
+        public String getDisplayName() {
+            return "Atlassian JIRA Rest Java Client";
+        }
+
+        @Nonnull
+        @Override
+        public String getPlatformId() {
+            return ApplicationProperties.PLATFORM_JIRA;
+        }
+
+        @Nonnull
+        @Override
+        public String getVersion() {
+            return "";
+        }
+
+        @Nonnull
+        @Override
+        public Date getBuildDate() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Nonnull
+        @Override
+        public String getBuildNumber() {
+            return String.valueOf(0);
+        }
+
+        @Override
+        public File getHomeDirectory() {
+            return new File(".");
+        }
+
+        @Override
+        public String getPropertyValue(final String s) {
+            throw new UnsupportedOperationException("Not implemented");
+        }
+    }
+
+    //-----------------------------------------------------------------------------------
+    //
+    //-----------------------------------------------------------------------------------
 
     /**
      * @return the server URL
@@ -354,11 +805,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     public Pattern getIssuePattern() {
-        if (getUserPattern() != null) {
-            return getUserPattern();
-        }
-
-        return DEFAULT_ISSUE_PATTERN;
+        Pattern result = getUserPattern();
+        return result == null ? DEFAULT_ISSUE_PATTERN : result;
     }
 
     /**
@@ -370,15 +818,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             try {
                 if (projectUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
                     try {
-                        if (projects == null) {
-                            JiraSession session = getSession();
-                            if (session != null) {
-                                projects = Collections.unmodifiableSet(session.getProjectKeys());
-                            }
+                        JiraSession session = getSession();
+                        if (session != null) {
+                            projects = Collections.unmodifiableSet(session.getProjectKeys());
                         }
-                    } catch (IOException e) {
-                        // in case of error, set empty set to avoid trying the same thing repeatedly.
-                        LOGGER.log(Level.WARNING, "Failed to obtain JIRA project list", e);
                     } finally {
                         projectUpdateLock.unlock();
                     }
@@ -445,40 +888,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Checks if the given JIRA id will be likely to exist in this issue tracker.
-     * This method checks whether the key portion is a valid key (except that
-     * it can potentially use stale data). Number portion is not checked at all.
-     *
-     * @deprecated Use getIssue instead
-     * @param id String like MNG-1234
-     */
-    @Deprecated
-    public boolean existsIssue(String id) {
-        int idx = id.indexOf('-');
-        if (idx == -1) {
-            return false;
-        }
-
-        Set<String> keys = getProjectKeys();
-        return keys.contains(id.substring(0, idx).toUpperCase());
-    }
-
-    /**
      * Returns the remote issue with the given id or <code>null</code> if it wasn't found.
      */
     @CheckForNull
     public JiraIssue getIssue(final String id) throws IOException {
         try {
-
-            Optional<Issue> issue = issueCache.get(id, new Callable<Optional<Issue>>() {
-                public Optional<Issue> call() throws Exception {
-                    JiraSession session = getSession();
-                    Issue issue = null;
-                    if (session != null) {
-                        issue = session.getIssue(id);
-                    }
-                    return Optional.fromNullable(issue);
+            Optional<Issue> issue = issueCache.get(id, () -> {
+                JiraSession session = getSession();
+                if (session == null) {
+                    return null;
                 }
+                return Optional.fromNullable(session.getIssue(id));
             });
 
             if (!issue.isPresent()) {
@@ -491,28 +911,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
     }
 
-    /**
-     * Release a given version.
-     *
-     * @param projectKey  The Project Key
-     * @param versionName The name of the version
-     * @throws IOException
-     */
-    public void releaseVersion(String projectKey, String versionName) throws IOException {
-        JiraSession session = getSession();
-        if (session != null) {
-            List<Version> versions = session.getVersions(projectKey);
-            if (versions == null || versions.isEmpty()) {
-                return;
-            }
-            for (Version version : versions) {
-                if (version.getName().equals(versionName)) {
-                    Version releaseVersion = new Version(version.getSelf(), version.getId(), version.getName(),
-                        version.getDescription(), version.isArchived(), true, new DateTime());
-                    session.releaseVersion(projectKey, releaseVersion);
-                    return;
-                }
-            }
+    @Deprecated
+    public boolean existsIssue(String id) {
+        try {
+            return getIssue(id) != null;
+        } catch ( IOException e ) { // restoring backward compat means even avoid exception
+            throw new RuntimeException( e.getMessage(),e );
         }
     }
 
@@ -521,52 +925,27 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @param projectKey Project Key
      * @return A set of JiraVersions
-     * @throws IOException
      */
-    public Set<JiraVersion> getVersions(String projectKey) throws IOException {
+    public Set<ExtendedVersion> getVersions(String projectKey) {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return Collections.emptySet();
         }
 
-        List<Version> versions = session.getVersions(projectKey);
-
-        if (versions == null) {
-            return Collections.emptySet();
-        }
-
-        Set<JiraVersion> versionsSet = new HashSet<>(versions.size());
-
-        for (Version version : versions) {
-            versionsSet.add(new JiraVersion(version));
-        }
-
-        return versionsSet;
+        return new HashSet<>(session.getVersions(projectKey));
     }
 
     /**
      * Generates release notes for a given version.
      *
-     * @param projectKey
-     * @param versionName
-     * @return release notes
-     * @throws IOException, TimeoutException
-     */
-    public String getReleaseNotesForFixVersion(String projectKey, String versionName) throws IOException, TimeoutException {
-        return getReleaseNotesForFixVersion(projectKey, versionName, "");
-    }
-
-    /**
-     * Generates release notes for a given version.
-     *
-     * @param projectKey
-     * @param versionName
+     * @param projectKey the project key
+     * @param versionName the version
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
      * @return release notes
-     * @throws IOException, TimeoutException
+     * @throws TimeoutException if too long
      */
-    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws IOException, TimeoutException {
+    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -575,7 +954,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         List<Issue> issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
 
-        if (issues == null) {
+        if (issues.isEmpty()) {
             return "";
         }
 
@@ -585,18 +964,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             String key = issue.getKey();
             String summary = issue.getSummary();
             String status = issue.getStatus().getName();
-            String type = "UNKNOWN";
-
-            if (issue.getIssueType() != null && issue.getIssueType().getName() != null) {
-                type = issue.getIssueType().getName();
-            }
+            String type = issue.getIssueType().getName();
 
             Set<String> issueSet;
-            if (!releaseNotes.containsKey(type)) {
+            if (releaseNotes.containsKey(type)) {
+                issueSet = releaseNotes.get(type);
+            } else {
                 issueSet = new HashSet<>();
                 releaseNotes.put(type, issueSet);
-            } else {
-                issueSet = releaseNotes.get(type);
             }
 
             issueSet.add(String.format(" - [%s] %s (%s)", key, summary, status));
@@ -615,46 +990,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Gets a set of issues that have the given fixVersion associated with them.
-     *
-     * <p>
-     * Kohsuke: this seems to fail if {@link JiraSite#useHTTPAuth} is on. What is the motivation behind JIRA site?
-     *
-     * @param projectKey  The project key
-     * @param versionName The fixVersion
-     * @return A set of JiraIssues
-     * @throws IOException, TimeoutException
-     */
-    public Set<JiraIssue> getIssueWithFixVersion(String projectKey, String versionName) throws IOException, TimeoutException {
-        JiraSession session = getSession();
-        if (session == null) {
-            return Collections.emptySet();
-        }
-
-        List<Issue> issues = session.getIssuesWithFixVersion(projectKey, versionName);
-
-        if (issues == null || issues.isEmpty()) {
-            return Collections.emptySet();
-        }
-
-        Set<JiraIssue> issueSet = new HashSet<>(issues.size());
-
-        for (Issue issue : issues) {
-            issueSet.add(new JiraIssue(issue));
-        }
-
-        return issueSet;
-    }
-
-    /**
      * Migrates issues matching the jql query provided to a new fix version.
      *
      * @param projectKey The project key
      * @param toVersion  The new fixVersion
      * @param query      A JQL Query
-     * @throws IOException, TimeoutException
+     * @throws TimeoutException if too long
      */
-    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws IOException, TimeoutException {
+    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -670,9 +1013,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey  The project key
      * @param versionName The new fixVersion
      * @param query       A JQL Query
-     * @throws IOException, TimeoutException
+     * @throws TimeoutException if too long
      */
-    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws IOException, TimeoutException {
+    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -685,12 +1028,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Adds new fix version to issues matching the jql.
      *
-     * @param projectKey
-     * @param versionName
-     * @param query
-     * @throws IOException, TimeoutException
+     * @param projectKey the project key
+     * @param versionName the version
+     * @param query the query
+     * @throws TimeoutException if too long
      */
-    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws IOException, TimeoutException {
+    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -704,13 +1047,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Progresses all issues matching the JQL search, using the given workflow action. Optionally
      * adds a comment to the issue(s) at the same time.
      *
-     * @param jqlSearch
-     * @param workflowActionName
-     * @param comment
-     * @param console
-     * @throws IOException, TimeoutException
+     * @param jqlSearch the query
+     * @param workflowActionName the workflowActionName
+     * @param comment the comment
+     * @param console the console
+     * @throws TimeoutException TimeoutException if too long
      */
-    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws IOException, TimeoutException {
+    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
         JiraSession session = getSession();
 
         if (session == null) {
@@ -721,7 +1064,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         boolean success = true;
         List<Issue> issues = session.getIssuesFromJqlSearch(jqlSearch);
-
 
         if (isEmpty(workflowActionName)) {
             console.println("[JIRA] No workflow action was specified, " +
@@ -769,14 +1111,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         /**
          * Checks if the user name and password are valid.
          */
-        public FormValidation doValidate(@QueryParameter String userName,
-                                         @QueryParameter String url,
-                                         @QueryParameter String password,
+        @RequirePOST
+        public FormValidation doValidate(@QueryParameter String url,
+                                         @QueryParameter String credentialsId,
                                          @QueryParameter String groupVisibility,
                                          @QueryParameter String roleVisibility,
                                          @QueryParameter boolean useHTTPAuth,
                                          @QueryParameter String alternativeUrl,
-                                         @QueryParameter Integer timeout) throws IOException {
+                                         @QueryParameter int timeout,
+                                         @QueryParameter int readTimeout,
+                                         @QueryParameter int threadExecutorNumber,
+                                         @AncestorInPath Item item) {
+
+            if (item == null) {
+                Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+            } else {
+                item.checkPermission(Item.CONFIGURE);
+            }
+
             url = Util.fixEmpty(url);
             alternativeUrl = Util.fixEmpty(alternativeUrl);
             URL mainURL, alternativeURL = null;
@@ -798,29 +1150,134 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 return FormValidation.error(String.format("Malformed alternative URL (%s)",alternativeUrl), e );
             }
 
-            JiraSite site = new JiraSite(mainURL, alternativeURL, userName, password, false,
-                    false, null, false, groupVisibility, roleVisibility, useHTTPAuth);
-            site.setTimeout(timeout);            
+            credentialsId = Util.fixEmpty(credentialsId);
+            JiraSite site = getJiraSiteBuilder()
+                    .withMainURL(mainURL)
+                    .withAlternativeURL(alternativeURL)
+                    .withCredentialsId(credentialsId)
+                    .withGroupVisibility(groupVisibility)
+                    .withRoleVisibility(roleVisibility)
+                    .withUseHTTPAuth(useHTTPAuth)
+                    .build();
+
+            if(threadExecutorNumber<1){
+                return FormValidation.error( Messages.JiraSite_threadExecutorMinimunSize("1"));
+            }
+            if(timeout<0){
+                return FormValidation.error( Messages.JiraSite_timeoutMinimunValue( "1" ));
+            }
+            if(readTimeout<0){
+                return FormValidation.error( Messages.JiraSite_readTimeoutMinimunValue( "1" ));
+            }
+
+            site.setTimeout(timeout);
+            site.setReadTimeout(readTimeout);
+            site.setThreadExecutorNumber(threadExecutorNumber);
+            JiraSession session = null;
             try {
-                JiraSession session = site.createSession();
+                session = site.getSession();
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
                 LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url, e);
+            } finally {
+                if(site!=null){
+                    site.destroy();
+                }
             }
 
             return FormValidation.error("Failed to login to JIRA");
         }
-    }
 
-    public void addVersion(String version, String projectKey) throws IOException {
-        JiraSession session = getSession();
-        if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
-            return;
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context, @QueryParameter String url) {
+            AccessControlled _context = (context instanceof AccessControlled ? (AccessControlled) context : Jenkins.getInstance());
+            if (_context == null || !_context.hasPermission(Jenkins.ADMINISTER)) {
+                return new StandardUsernameListBoxModel();
+            }
+
+            return new StandardUsernameListBoxModel()
+                    .withEmptySelection()
+                    .withAll(
+                        CredentialsProvider.lookupCredentials(
+                            StandardUsernamePasswordCredentials.class,
+                            Jenkins.getInstance(),
+                            ACL.SYSTEM,
+                            URIRequirementBuilder.fromUri(url).build()
+                        )
+                    );
         }
 
-        session.addVersion(version, projectKey);
-
+        JiraSiteBuilder getJiraSiteBuilder() {
+            return new JiraSiteBuilder();
+        }
     }
+
+    static class JiraSiteBuilder {
+        private URL mainURL;
+        private URL alternativeURL;
+        private String credentialsId;
+        private boolean supportsWikiStyleComment;
+        private boolean recordScmChanges;
+        private String userPattern;
+        private boolean updateJiraIssueForAllStatus;
+        private String groupVisibility;
+        private String roleVisibility;
+        private boolean useHTTPAuth;
+
+        public JiraSiteBuilder withMainURL(URL mainURL) {
+            this.mainURL = mainURL;
+            return this;
+        }
+
+        public JiraSiteBuilder withAlternativeURL(URL alternativeURL) {
+            this.alternativeURL = alternativeURL;
+            return this;
+        }
+
+        public JiraSiteBuilder withCredentialsId(String credentialsId) {
+            this.credentialsId = credentialsId;
+            return this;
+        }
+
+        public JiraSiteBuilder withSupportsWikiStyleComment(boolean supportsWikiStyleComment) {
+            this.supportsWikiStyleComment = supportsWikiStyleComment;
+            return this;
+        }
+
+        public JiraSiteBuilder withRecordScmChanges(boolean recordScmChanges) {
+            this.recordScmChanges = recordScmChanges;
+            return this;
+        }
+
+        public JiraSiteBuilder withUserPattern(String userPattern) {
+            this.userPattern = userPattern;
+            return this;
+        }
+
+        public JiraSiteBuilder withUpdateJiraIssueForAllStatus(boolean updateJiraIssueForAllStatus) {
+            this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
+            return this;
+        }
+
+        public JiraSiteBuilder withGroupVisibility(String groupVisibility) {
+            this.groupVisibility = groupVisibility;
+            return this;
+        }
+
+        public JiraSiteBuilder withRoleVisibility(String roleVisibility) {
+            this.roleVisibility = roleVisibility;
+            return this;
+        }
+
+        public JiraSiteBuilder withUseHTTPAuth(boolean useHTTPAuth) {
+            this.useHTTPAuth = useHTTPAuth;
+            return this;
+        }
+
+        public JiraSite build() {
+            return new JiraSite(mainURL, alternativeURL, credentialsId, supportsWikiStyleComment,
+                    recordScmChanges, userPattern, updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+        }
+    }
+
 }

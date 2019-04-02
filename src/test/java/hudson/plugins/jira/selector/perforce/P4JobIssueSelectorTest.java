@@ -1,32 +1,28 @@
 package hudson.plugins.jira.selector.perforce;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
+import com.google.common.collect.Sets;
+import com.perforce.p4java.impl.generic.core.Fix;
+import hudson.model.BuildListener;
+import hudson.model.FreeStyleBuild;
+import hudson.plugins.jira.JiraSite;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.ChangeLogSet.Entry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.google.common.collect.Sets;
-import com.perforce.p4java.impl.generic.core.Fix;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
-import hudson.model.BuildListener;
-import hudson.model.FreeStyleBuild;
-import hudson.plugins.jira.JiraSite;
-import hudson.plugins.jira.selector.perforce.JobIssueSelector;
-import hudson.plugins.jira.selector.perforce.P4JobIssueSelector;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.Entry;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
 
     @Test
-    public void testFindsTwoP4Jobs() {
+    public void findsTwoP4Jobs() {
         final String jobIdIW1231 = "IW-1231";
         final String jobIdEC3453 = "EC-3453";
 
@@ -55,7 +51,7 @@ public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
         entries.add(entry2);
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 

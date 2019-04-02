@@ -10,7 +10,6 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
-import hudson.model.TaskListener;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,11 +24,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 public class JiraCreateIssueNotifierTest {
@@ -40,7 +35,7 @@ public class JiraCreateIssueNotifierTest {
     private static final String DESCRIPTION = "Some description";
     private static final String FIX_VERSION = "some, fixVersion1";
 
-    List<Component> jiraComponents = new ArrayList<Component>();
+    List<Component> jiraComponents = new ArrayList<>();
 
     Launcher launcher = mock(Launcher.class);
     BuildListener buildListener = mock(BuildListener.class);
@@ -68,7 +63,7 @@ public class JiraCreateIssueNotifierTest {
 
         when(site.getSession()).thenReturn(session);
 
-        doReturn(env).when(currentBuild).getEnvironment((TaskListener) Mockito.any());
+        doReturn(env).when(currentBuild).getEnvironment(Mockito.any());
 
         temporaryDirectory = temporaryFolder.newFolder();
 
@@ -82,13 +77,13 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void testPerformSuccessFailure() throws Exception {
+    public void performSuccessFailure() throws Exception {
 
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
 
         JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", ""));
-        doReturn(site).when(notifier).getSiteForProject((AbstractProject) Mockito.any());
+        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
@@ -98,9 +93,9 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void testPerformFailureFailure() throws Exception {
+    public void performFailureFailure() throws Exception {
         JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT, FIX_VERSION));
-        doReturn(site).when(notifier).getSiteForProject((AbstractProject) Mockito.any());
+        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
         Status status = new Status(null, null, "1","Open",null);
@@ -130,7 +125,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void testPerformFailureSuccessIssueOpen() throws Exception {
+    public void performFailureSuccessIssueOpen() throws Exception {
         Long typeId = 1L;
         Long priorityId = 0L;
         Integer actionIdOnSuccess = 5;
@@ -141,7 +136,7 @@ public class JiraCreateIssueNotifierTest {
         assertEquals(priorityId, notifier.getPriorityId());
         assertEquals(actionIdOnSuccess, notifier.getActionIdOnSuccess());
 
-        doReturn(site).when(notifier).getSiteForProject((AbstractProject) Mockito.any());
+        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
         Status status = new Status(null, null, "1", "Open", null);
@@ -169,9 +164,9 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void testPerformFailureSuccessIssueClosedWithComponents() throws Exception {
+    public void performFailureSuccessIssueClosedWithComponents() throws Exception {
         JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", ""));
-        doReturn(site).when(notifier).getSiteForProject((AbstractProject) Mockito.any());
+        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
         Status status = new Status(null, null, JiraCreateIssueNotifier.finishedStatuses.Closed.toString() , null, null);

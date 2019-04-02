@@ -1,15 +1,9 @@
 package hudson.plugins.jira;
 
-import java.io.IOException;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
-import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -17,6 +11,8 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * A build step which creates new JIRA version. It has the same functionality as
@@ -58,14 +54,8 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
 	}
 
 	@Override
-	public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
-			throws InterruptedException, IOException {
-		JiraSite site = getSiteForProject(build.getParent());
-		VersionCreator.perform(site, jiraVersion, jiraProjectKey, build, listener);
-	}
-
-	JiraSite getSiteForProject(Job<?, ?> project) {
-		return JiraSite.get(project);
+	public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener) {
+		new VersionCreator().perform(build.getParent(), jiraVersion, jiraProjectKey, build, listener);
 	}
 
 	@Override

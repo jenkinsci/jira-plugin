@@ -113,7 +113,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     /**
      * Adds issues to issueIds from the current build. Issues from parameters
      * are added as well as issues matching pattern
-     * {@link #addIssuesFromChangeLog(Run, Pattern, TaskListener, Set)}
+     * {@link #addIssuesFromChangeLog(Run, JiraSite, TaskListener, Set)}
      * {@link #addIssuesFromParameters(Run, JiraSite, TaskListener, Set)}
      */
     protected void addIssuesFromCurrentBuild(Run<?, ?> build, JiraSite site, TaskListener listener,
@@ -125,7 +125,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     /**
      * Adds issues to issueIds by examining dependency changes from last build.
      * For each dependency change
-     * {@link #addIssuesRecursive(Run, JiraSite, TaskListener, Set) is called.
+     * {@link #addIssuesRecursive(Run, JiraSite, TaskListener, Set)} is called.
      */
     protected void addIssuesFromDependentBuilds(Run<?, ?> build, JiraSite site, TaskListener listener,
             Set<String> issueIds) {		

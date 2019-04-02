@@ -1,23 +1,31 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.*;
-import com.google.common.collect.Lists;
+import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+import com.atlassian.jira.rest.client.api.domain.Component;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Permissions;
+import com.atlassian.jira.rest.client.api.domain.Priority;
+import com.atlassian.jira.rest.client.api.domain.Status;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.atlassian.jira.rest.client.api.domain.Version;
+import hudson.plugins.jira.extension.ExtendedVersion;
+import hudson.plugins.jira.model.JiraIssueField;
+import org.apache.commons.lang.StringUtils;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import hudson.plugins.jira.model.JiraIssueField;
-import java.util.concurrent.TimeoutException;
-import org.apache.commons.lang.StringUtils;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
@@ -39,14 +47,11 @@ public class JiraSession {
      */
     private Set<String> projectKeys;
 
-    /**
-     * This session is created for this site.
-     */
-    private final JiraSite site;
+    private final String jiraSiteName;
 
     /* package */JiraSession(JiraSite site, JiraRestService jiraRestService) {
-        this.site = site;
         this.service = jiraRestService;
+        this.jiraSiteName = site.getName();
     }
 
     /**
@@ -56,10 +61,9 @@ public class JiraSession {
      */
     public Set<String> getProjectKeys() {
         if (projectKeys == null) {
-            LOGGER.fine("Fetching remote project key list from " + site.getName());
+            LOGGER.fine("Fetching remote project key list from " + jiraSiteName);
             final List<String> keys = service.getProjectsKeys();
-            projectKeys = new HashSet<>(keys.size());
-            projectKeys.addAll(keys);
+            projectKeys = new HashSet<>(keys);
             LOGGER.fine("Project list=" + projectKeys);
         }
         return projectKeys;
@@ -84,7 +88,7 @@ public class JiraSession {
      * @param labels New labels to add.
      */
     public void addLabels(String issueId, List<String> labels) {
-        List<String> newLabels = Lists.newArrayList();
+        List<String> newLabels = new ArrayList();
         Issue existingIssue = service.getIssue(issueId);
         if(existingIssue.getLabels() != null) {
             newLabels.addAll(existingIssue.getLabels());
@@ -119,11 +123,7 @@ public class JiraSession {
      * @return null if no such issue exists.
      */
     public Issue getIssue(String id) {
-        if (existsIssue(id)) {
-            return service.getIssue(id);
-        } else {
-            return null;
-        }
+        return service.getIssue(id);
     }
 
     /**
@@ -142,9 +142,8 @@ public class JiraSession {
      * @param projectKey The key for the project
      * @return An array of versions
      */
-    public List<Version> getVersions(String projectKey) {
+    public List<ExtendedVersion> getVersions(String projectKey) {
         LOGGER.fine("Fetching versions from project: " + projectKey);
-
         return service.getVersions(projectKey);
     }
 
@@ -155,13 +154,13 @@ public class JiraSession {
      * @param name       The version name
      * @return A RemoteVersion, or null if not found
      */
-    public Version getVersionByName(String projectKey, String name) {
+    public ExtendedVersion getVersionByName(String projectKey, String name) {
         LOGGER.fine("Fetching versions from project: " + projectKey);
-        List<Version> versions = getVersions(projectKey);
+        List<ExtendedVersion> versions = getVersions(projectKey);
         if (versions == null) {
             return null;
         }
-        for (Version version : versions) {
+        for (ExtendedVersion version : versions) {
             if (version.getName().equals(name)) {
                 return version;
             }
@@ -201,13 +200,12 @@ public class JiraSession {
         return service.getPriorities();
     }
 
-    @Deprecated
-    public boolean existsIssue(String id) {
-        return site.existsIssue(id);
-    }
-
-
-    public void releaseVersion(String projectKey, Version version) {
+    /**
+     * Release given version in given project
+     * @param projectKey
+     * @param version
+     */
+    public void releaseVersion(String projectKey, ExtendedVersion version) {
         LOGGER.fine("Releasing version: " + version.getName());
         service.releaseVersion(projectKey, version);
     }
@@ -234,10 +232,10 @@ public class JiraSession {
         }
         LOGGER.fine("Found issues: " + issues.size());
 
-        for (Issue issue : issues) {
+        issues.stream().forEach( issue -> {
             LOGGER.fine("Migrating issue: " + issue.getKey());
-            service.updateIssue(issue.getKey(), Lists.newArrayList(newVersion));
-        }
+            service.updateIssue( issue.getKey(), Collections.singletonList(newVersion));
+        } );
     }
 
     /**
@@ -290,7 +288,7 @@ public class JiraSession {
             }
 
             LOGGER.fine("Replacing version in issue: " + issue.getKey());
-            service.updateIssue(issue.getKey(), Lists.newArrayList(newVersions));
+            service.updateIssue(issue.getKey(), new ArrayList(newVersions));
         }
     }
 
@@ -318,7 +316,8 @@ public class JiraSession {
 
         for (Issue issue : issues) {
             LOGGER.fine("Adding version: " + newVersion.getName() + " to issue: " + issue.getKey());
-            List<Version> fixVersions = Lists.newArrayList(issue.getFixVersions());
+            List<Version> fixVersions = new ArrayList<>();
+            issue.getFixVersions().forEach(fixVersions::add);
             fixVersions.add(newVersion);
             service.updateIssue(issue.getKey(), fixVersions);
         }
@@ -363,7 +362,7 @@ public class JiraSession {
      * Returns the status name by status id.
      *
      * @param statusId
-     * @return
+     * @return status name
      */
     public String getStatusById(Long statusId) {
         String status = getKnownStatuses().get(statusId);
@@ -383,15 +382,13 @@ public class JiraSession {
     /**
      * Returns all known statuses.
      *
-     * @return
+     * @return Map with statusId and status name
      */
     private Map<Long, String> getKnownStatuses() {
         if (knownStatuses == null) {
             List<Status> statuses = service.getStatuses();
             knownStatuses = new HashMap<>(statuses.size());
-            for (Status status : statuses) {
-                knownStatuses.put(status.getId(), status.getName());
-            }
+            statuses.stream().forEach( status ->  knownStatuses.put(status.getId(), status.getName()));
         }
         return knownStatuses;
     }
@@ -451,7 +448,7 @@ public class JiraSession {
      *
      * @param version    version id to create
      * @param projectKey
-     * @return
+     * @return created Version instance
      *
      */
     public Version addVersion(String version, String projectKey) {
@@ -462,5 +459,7 @@ public class JiraSession {
      * Get User's permissions
      */
     public Permissions getMyPermissions(){ return service.getMyPermissions(); }
+
+
 
 }

@@ -4,8 +4,6 @@ import hudson.Extension;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
 
-import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -20,7 +18,7 @@ public class JiraMailAddressResolver extends MailAddressResolver {
 
     /**
      * Boolean to disable the JIRA mail address resolver.
-     *
+     * <p>
      * To disable set the System property "-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true"
      */
     public static boolean disabled = Boolean.getBoolean(JiraMailAddressResolver.class.getName() + ".disabled");
@@ -33,20 +31,18 @@ public class JiraMailAddressResolver extends MailAddressResolver {
         String username = u.getId();
 
         for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
-            try {
-                JiraSession session = site.getSession();
-                if (session != null) {
-                    com.atlassian.jira.rest.client.api.domain.User user = session.service.getUser(username);
-                    if (user != null) {
-                        String email = user.getEmailAddress();
-                        if (email != null) {
-                            email = unmaskEmail(email);
-                            return email;
-                        }
-                    }
+            JiraSession session = site.getSession();
+            if (session == null) {
+                continue;
+            }
+
+            com.atlassian.jira.rest.client.api.domain.User user = session.service.getUser(username);
+            if (user != null) {
+                String email = user.getEmailAddress();
+                if (email != null) {
+                    email = unmaskEmail(email);
+                    return email;
                 }
-            } catch (IOException ex) {
-                LOGGER.log(Level.WARNING, "Unable to create session with " + site.getName(), ex);
             }
         }
         return null;
