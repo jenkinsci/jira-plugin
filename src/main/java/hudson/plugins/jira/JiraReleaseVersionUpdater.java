@@ -27,6 +27,13 @@ public class JiraReleaseVersionUpdater extends Notifier {
 	private String jiraRelease;
 	private String jiraDescription;
 
+	@Deprecated
+	@DataBoundConstructor
+	public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease) {
+		this.jiraRelease = jiraRelease;
+		this.jiraProjectKey = jiraProjectKey;
+	}
+
 	@DataBoundConstructor
 	public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease, String jiraDescription) {
 		this.jiraRelease = jiraRelease;
