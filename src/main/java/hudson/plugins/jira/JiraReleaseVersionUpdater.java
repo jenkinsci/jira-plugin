@@ -25,11 +25,13 @@ public class JiraReleaseVersionUpdater extends Notifier {
 
 	private String jiraProjectKey;
 	private String jiraRelease;
+	private String jiraDescription;
 
 	@DataBoundConstructor
-	public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease) {
+	public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease, String jiraDescription) {
 		this.jiraRelease = jiraRelease;
 		this.jiraProjectKey = jiraProjectKey;
+		this.jiraDescription = jiraDescription;
 	}
 	
 	public String getJiraRelease() {
@@ -47,7 +49,15 @@ public class JiraReleaseVersionUpdater extends Notifier {
 	public void setJiraProjectKey(String jiraProjectKey) {
 		this.jiraProjectKey = jiraProjectKey;
 	}
-	
+
+	public String getJiraDescription() {
+		return jiraDescription;
+	}
+
+	public void setJiraDescription(String jiraDescription) {
+		this.jiraDescription = jiraDescription;
+	}
+
 	@Override
 	public BuildStepDescriptor<Publisher> getDescriptor() {
 		return DESCRIPTOR;
@@ -58,7 +68,7 @@ public class JiraReleaseVersionUpdater extends Notifier {
 
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-		return new VersionReleaser().perform(build.getProject(), jiraProjectKey, jiraRelease, build, listener);
+		return new VersionReleaser().perform(build.getProject(), jiraProjectKey, jiraRelease, jiraDescription, build, listener);
 	}
 
 	public BuildStepMonitor getRequiredMonitorService() {

@@ -20,13 +20,15 @@ public class VersionReleaser {
 
     private static final Logger LOGGER = Logger.getLogger(VersionReleaser.class.getName());
 
-    protected boolean perform(Job<?, ?> project, String jiraProjectKey, String jiraRelease, Run<?, ?> run, TaskListener listener) {
+    protected boolean perform(Job<?, ?> project, String jiraProjectKey, String jiraRelease, String jiraDescription, Run<?, ?> run, TaskListener listener) {
         String realRelease = "NOT_SET";
         String realProjectKey = null;
+        String realDescription;
 
         try {
             realProjectKey = run.getEnvironment(listener).expand(jiraProjectKey);
             realRelease = run.getEnvironment(listener).expand(jiraRelease);
+            realDescription = run.getEnvironment(listener).expand(jiraDescription);
 
             if (StringUtils.isEmpty(realRelease)) {
                 throw new IllegalArgumentException("Release is Empty");
@@ -45,7 +47,7 @@ public class VersionReleaser {
                 listener.getLogger().println(Messages.VersionReleaser_AlreadyReleased(realRelease, realProjectKey));
             } else {
                 listener.getLogger().println(Messages.VersionReleaser_MarkingReleased(realRelease, realProjectKey));
-                releaseVersion(realProjectKey, realRelease, site.getSession());
+                releaseVersion(realProjectKey, realRelease, realDescription, site.getSession());
             }
         } catch (Exception e) {
             listener.fatalError(
@@ -66,8 +68,9 @@ public class VersionReleaser {
      *
      * @param projectKey  The Project Key
      * @param versionName The name of the version
+     * @param versionDescription The description of the version
      */
-    protected void releaseVersion(String projectKey, String versionName, JiraSession session) {
+    protected void releaseVersion(String projectKey, String versionName, String versionDescription, JiraSession session) {
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return;
@@ -81,7 +84,8 @@ public class VersionReleaser {
         if (matchingVersion.isPresent()) {
             ExtendedVersion version = matchingVersion.get();
             ExtendedVersion releaseVersion = new ExtendedVersion(version.getSelf(), version.getId(), version.getName(),
-                    version.getDescription(), version.isArchived(), true, version.getStartDate(), new DateTime());
+                    !versionDescription.isEmpty() ? versionDescription : version.getDescription(), version.isArchived(),
+                    true, version.getStartDate(), new DateTime());
             session.releaseVersion(projectKey, releaseVersion);
         }
 
