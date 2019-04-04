@@ -27,7 +27,6 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     @Deprecated
-    @DataBoundConstructor
     public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease) {
         this.jiraRelease = jiraRelease;
         this.jiraProjectKey = jiraProjectKey;
