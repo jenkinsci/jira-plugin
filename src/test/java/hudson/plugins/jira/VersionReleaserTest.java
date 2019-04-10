@@ -35,8 +35,10 @@ import static org.mockito.Mockito.when;
 public class VersionReleaserTest {
     private static final String JIRA_VER = Long.toString(System.currentTimeMillis());
     private static final String JIRA_PRJ = "TEST_PRJ";
+    private static final String JIRA_DES = "TEST_DES";
     private static final String JIRA_VER_PARAM = "${JIRA_VER}";
     private static final String JIRA_PRJ_PARAM = "${JIRA_PRJ}";
+    private static final String JIRA_DES_PARAM = "${JIRA_DES}";
     private static final Long ANY_ID = System.currentTimeMillis();
     private static final DateTime ANY_DATE = new DateTime();
 
@@ -60,7 +62,7 @@ public class VersionReleaserTest {
     ArgumentCaptor<String> projectCaptor;
 
     private VersionReleaser versionReleaser = spy(VersionReleaser.class);
-    private ExtendedVersion existingVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, false, ANY_DATE, ANY_DATE);
+    private ExtendedVersion existingVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, false, ANY_DATE, ANY_DATE);
 
     @Before
     public void createMocks() throws IOException, InterruptedException {
@@ -72,6 +74,8 @@ public class VersionReleaserTest {
                 return JIRA_PRJ;
             else if (expanded.equals(JIRA_VER_PARAM))
                 return JIRA_VER;
+            else if (expanded.equals(JIRA_DES_PARAM))
+                return JIRA_DES;
             else
                 return expanded;
         });
@@ -85,10 +89,11 @@ public class VersionReleaserTest {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
-        versionReleaser.perform(project, JIRA_PRJ, JIRA_VER, build, listener);
+        versionReleaser.perform(project, JIRA_PRJ, JIRA_VER, JIRA_DES, build, listener);
         verify(session).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue().getName(), is(JIRA_VER));
+        assertThat(versionCaptor.getValue().getDescription(), is(JIRA_DES));
     }
 
     @Test
@@ -96,18 +101,19 @@ public class VersionReleaserTest {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
-        versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, build, listener);
+        versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, JIRA_DES_PARAM, build, listener);
         verify(session).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue().getName(), is(JIRA_VER));
+        assertThat(versionCaptor.getValue().getDescription(), is(JIRA_DES));
     }
 
     @Test
     public void buildDidNotFailWhenVersionExists() {
-        ExtendedVersion releasedVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, true, ANY_DATE, ANY_DATE);
+        ExtendedVersion releasedVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, true, ANY_DATE, ANY_DATE);
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));
 
-        versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, build, listener);
+        versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, JIRA_DES_PARAM, build, listener);
         verify(session, times(0))
                 .releaseVersion(projectCaptor.capture(), versionCaptor.capture());
     }
