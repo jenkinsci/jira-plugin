@@ -93,7 +93,6 @@ public class UpdaterTest {
     }
 
     @Test
-    @WithoutJenkins
     public void getScmCommentsFromPreviousBuilds() {
         final FreeStyleProject project = mock(FreeStyleProject.class);
         final FreeStyleBuild build1 = mock(FreeStyleBuild.class);
@@ -154,7 +153,6 @@ public class UpdaterTest {
      */
     @Test
     @org.jvnet.hudson.test.Issue("4572")
-    @WithoutJenkins
     public void comment() {
         // mock JIRA session:
         JiraSession session = mock(JiraSession.class);

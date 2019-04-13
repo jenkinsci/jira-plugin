@@ -35,6 +35,7 @@
     <!-- tests -->
     <groovy.version>2.4.5</groovy.version>
     <surefire.version>2.20</surefire.version>
+    <configuration-as-code.version>1.8</configuration-as-code.version>
   </properties>
 
   <profiles>
@@ -287,6 +288,19 @@
 
     <!-- test dependencies -->
     <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <version>${configuration-as-code.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <version>${configuration-as-code.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
       <version>${mockito.version}</version>
@@ -303,6 +317,12 @@
           <artifactId>junit</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <version>${powermock.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.spockframework</groupId>
