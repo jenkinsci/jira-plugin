@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
@@ -80,7 +81,7 @@ public class CommentStep extends AbstractStepImpl {
             if(site == null) {
                 return null;
             }
-            JiraSession session = site.getSession();
+            JiraSession session = JiraProjectProperty.getJiraProjectSession(run.getParent());
             if (session == null) {
                 listener.getLogger().println(Messages.FailedToConnect());
                 return null;

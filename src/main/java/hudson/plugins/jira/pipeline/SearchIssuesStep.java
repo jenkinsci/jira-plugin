@@ -6,6 +6,7 @@ import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
@@ -74,7 +75,7 @@ public class SearchIssuesStep extends AbstractStepImpl {
         @Override
         protected List<String> run() throws Exception {
             JiraSite site = JiraSite.get(run.getParent());
-            JiraSession session = site.getSession();
+            JiraSession session = JiraProjectProperty.getJiraProjectSession(run.getParent());
             if (session == null) {
                 listener.getLogger().println(Messages.FailedToConnect());
                 throw new AbortException("Cannot open jira session - error occurred");

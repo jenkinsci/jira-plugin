@@ -512,9 +512,20 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @Nullable
     public JiraSession getSession() {
         if (jiraSession == null) {
-            jiraSession = createSession();
+            jiraSession = createSession(null);
         }
         return jiraSession;
+    }
+    
+    /**
+     * Gets a remote access session to this JIRA site with a project credentials.
+     *
+     * @return
+     */
+    @Nullable
+    public JiraSession getSession(@Nullable String credentialsId, Item item) {
+        UsernamePasswordCredentials projectCredentials = CredentialsHelper.lookupProjectCredentials(credentialsId, this.url, item);
+        return createSession(projectCredentials);
     }
 
     /**
@@ -522,8 +533,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return null if remote access is not supported.
      */
-    private JiraSession createSession() {
-        if (credentials == null) {
+    private JiraSession createSession(@Nullable UsernamePasswordCredentials projectCredentials) {
+        if (credentials == null && projectCredentials == null) {
             return null;    // remote access not supported
         }
 
@@ -536,9 +547,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
         LOGGER.fine("creating JIRA Session: " + uri);
 
-        String userName = credentials.getUsername();
-        Secret password = credentials.getPassword();
-
+        String userName = null == projectCredentials ? credentials.getUsername() : projectCredentials.getUsername();
+        Secret password = null == projectCredentials ? credentials.getPassword() : projectCredentials.getPassword();
+        
         final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
             .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),getHttpClientOptions());
         return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));

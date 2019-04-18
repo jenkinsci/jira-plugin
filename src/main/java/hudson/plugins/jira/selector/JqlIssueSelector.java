@@ -6,6 +6,7 @@ import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
@@ -39,7 +40,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
     @Override
     public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
         try {
-            JiraSession session = site.getSession();
+        	JiraSession session = JiraProjectProperty.getJiraProjectSession(run.getParent());
             if (session == null)
                 throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 

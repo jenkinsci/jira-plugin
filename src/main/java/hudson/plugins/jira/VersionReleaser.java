@@ -47,7 +47,7 @@ public class VersionReleaser {
                 listener.getLogger().println(Messages.VersionReleaser_AlreadyReleased(realRelease, realProjectKey));
             } else {
                 listener.getLogger().println(Messages.VersionReleaser_MarkingReleased(realRelease, realProjectKey));
-                releaseVersion(realProjectKey, realRelease, realDescription, site.getSession());
+                releaseVersion(realProjectKey, realRelease, realDescription, JiraProjectProperty.getJiraProjectSession(run.getParent()));
             }
         } catch (Exception e) {
             listener.fatalError(

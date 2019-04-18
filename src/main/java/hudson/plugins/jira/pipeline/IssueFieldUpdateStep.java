@@ -9,6 +9,7 @@ import hudson.model.AbstractProject;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
@@ -102,7 +103,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
-        JiraSession session = site.getSession();
+        JiraSession session = JiraProjectProperty.getJiraProjectSession(run.getParent());
         if (session == null) {
             logger.println(Messages.NoRemoteAccess());
             run.setResult(Result.FAILURE);

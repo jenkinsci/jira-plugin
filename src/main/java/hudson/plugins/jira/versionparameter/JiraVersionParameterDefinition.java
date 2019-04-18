@@ -6,6 +6,7 @@ import hudson.cli.CLICommand;
 import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
+import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import net.sf.json.JSONObject;
@@ -67,7 +68,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         if (site == null)
             throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
 
-        JiraSession session = site.getSession();
+        JiraSession session = JiraProjectProperty.getJiraProjectSession(context);
         if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
         return session.getVersions(projectKey).stream().
