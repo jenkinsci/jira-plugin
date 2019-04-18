@@ -1,6 +1,13 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:c="/lib/credentials">
   <f:entry title="${%JIRA site}" field="siteName">
     <f:select/>
   </f:entry>
+    <f:optionalBlock title="${%Use alternative credential}" checked="${instance.useAlternativeCredential}"
+             field="useAlternativeCredential" inline="true">
+          <f:entry title="${%Credential :}" field="jobCredentialId">
+               <c:select /><c:select />
+          </f:entry></f:entry>
+          <f:validateButton title="${%Test Connection}" progress="${%Testing...}" method="testConnection" with="jobCredentialId,siteName" />
+    </f:optionalBlock>
 </j:jelly>

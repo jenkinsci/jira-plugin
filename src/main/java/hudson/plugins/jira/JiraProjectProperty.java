@@ -1,20 +1,36 @@
 package hudson.plugins.jira;
 
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
+
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.common.StandardCredentials;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
+
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.Item;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.util.ListBoxModel;
+import hudson.security.ACL;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Associates {@link Job} with {@link JiraSite}.
@@ -29,9 +45,12 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
      * config is changed.)
      */
     public final String siteName;
+    public String credentialId;
+    public boolean useAlternativeCredential = false;
+    private transient JiraSession jiraSession;
 
     @DataBoundConstructor
-    public JiraProjectProperty(String siteName) {
+    public JiraProjectProperty(String siteName, boolean useAlternativeCredential, String credentialId) {
         siteName = Util.fixEmptyAndTrim(siteName);
         if (siteName == null) {
             // defaults to the first one
@@ -41,6 +60,8 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             }
         }
         this.siteName = siteName;
+        this.useAlternativeCredential = useAlternativeCredential;
+        this.credentialId = credentialId;
     }
 
     /**
@@ -63,9 +84,39 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
                 .stream();
             streams = Stream.concat(streams, stream2).parallel();
         }
-
+    
         return streams.filter(jiraSite -> jiraSite.getName().equals(siteName))
             .findFirst().orElse(null);
+    }
+
+    /**
+     * Gets a remote access session to JIRA for this Item.
+     * @param item
+     * @return
+     */
+    public JiraSession getJiraProjectSession(Item item) {
+        JiraSite jiraSite = getSite();
+        if (jiraSite == null) {
+        	throw new IllegalStateException("JIRA site needs to be configured in the project " + item.getFullDisplayName());
+        }
+
+        if (!this.useAlternativeCredential || null == this.credentialId) {
+            return jiraSite.getSession();
+        }
+        if (jiraSession == null) {
+            jiraSession = jiraSite.getSession(this.credentialId, item);
+        }
+    	return jiraSession;
+    }
+    
+    public static JiraSession getJiraProjectSession(Job<?, ?> job) {
+        final JiraProjectProperty jiraProjectProperty = job.getProperty(JiraProjectProperty.class);
+        if (jiraProjectProperty != null) {
+            return jiraProjectProperty.getJiraProjectSession((Item) job);
+        }
+        return null;
+    }
+
     }
 
     @Extension
@@ -143,6 +194,20 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
                 }
             }
             return this;
+        }
+
+        public ListBoxModel doFillJobCredentialIdItems(@AncestorInPath Item item, @QueryParameter String url,
+                @QueryParameter String jobCredentialId) {
+            return new StandardUsernameListBoxModel()
+                    .includeEmptyValue()
+                    .includeMatchingAs(ACL.SYSTEM, item, StandardUsernamePasswordCredentials.class,
+                            URIRequirementBuilder.fromUri(url).build(), CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class))
+                    .includeCurrentValue(jobCredentialId);
+        }
+
+        public FormValidation doTestConnection(@QueryParameter String jobCredentialId,
+                @QueryParameter String siteName, @AncestorInPath Item item) {
+            return FormValidation.ok();
         }
     }
 }
