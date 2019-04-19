@@ -62,10 +62,20 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         this.jobCredentialId = jobCredentialId;
     }
 
+    /**
+     * Get the jobCredentialId to display it in configuration screen
+     * 
+     * @return jobCredentialId
+     */
     public String getJobCredentialId() {
         return jobCredentialId;
     }
 
+    /**
+     * Get useAlternativeCredential to display it in configuration screen
+     * 
+     * @return useAlternativeCredential
+     */
 	public boolean isUseAlternativeCredential() {
         return useAlternativeCredential;
     }
@@ -97,6 +107,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
 
     /**
      * Gets a remote access session to JIRA for this Item.
+     * 
      * @param item
      * @return
      */
@@ -115,6 +126,13 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
     	return jiraSession;
     }
 
+    /**
+     * Gets a remote access session to JIRA.
+     * Because it is a static method, it can be call by a job wich want to get a connection to Jira
+     * 
+     * @param job
+     * @return
+     */
     public static JiraSession getJiraProjectSession(Job<?, ?> job) {
         final JiraProjectProperty jiraProjectProperty = job.getProperty(JiraProjectProperty.class);
         if (jiraProjectProperty != null) {
@@ -202,6 +220,14 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             return this;
         }
 
+        /**
+         * Fill credentials availables for the dropbox on the configuration screen
+         * 
+         * @param item
+         * @param url
+         * @param jobCredentialId
+         * @return
+         */
         public ListBoxModel doFillJobCredentialIdItems(@AncestorInPath Item item, @QueryParameter String url,
                 @QueryParameter String jobCredentialId) {
             return new StandardUsernameListBoxModel()
@@ -211,6 +237,14 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
                     .includeCurrentValue(jobCredentialId);
         }
 
+        /**
+         * Call by the button test connection. Test the connection to Jira with the credential setted.
+         * 
+         * @param jobCredentialId
+         * @param siteName
+         * @param item
+         * @return
+         */
         public FormValidation doTestConnection(@QueryParameter String jobCredentialId,
                 @QueryParameter String siteName, @AncestorInPath Item item) {
             return FormValidation.ok();
