@@ -8,8 +8,6 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
-import com.cloudbees.plugins.credentials.CredentialsProvider;
-import com.cloudbees.plugins.credentials.common.StandardCredentials;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
@@ -45,12 +43,12 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
      * config is changed.)
      */
     public final String siteName;
-    public String credentialId;
-    public boolean useAlternativeCredential = false;
+    private String jobCredentialId;
+    private boolean useAlternativeCredential = false;
     private transient JiraSession jiraSession;
 
     @DataBoundConstructor
-    public JiraProjectProperty(String siteName, boolean useAlternativeCredential, String credentialId) {
+    public JiraProjectProperty(String siteName, boolean useAlternativeCredential, String jobCredentialId) {
         siteName = Util.fixEmptyAndTrim(siteName);
         if (siteName == null) {
             // defaults to the first one
@@ -61,7 +59,15 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         }
         this.siteName = siteName;
         this.useAlternativeCredential = useAlternativeCredential;
-        this.credentialId = credentialId;
+        this.jobCredentialId = jobCredentialId;
+    }
+
+    public String getJobCredentialId() {
+        return jobCredentialId;
+    }
+
+	public boolean isUseAlternativeCredential() {
+        return useAlternativeCredential;
     }
 
     /**
@@ -100,15 +106,15 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         	throw new IllegalStateException("JIRA site needs to be configured in the project " + item.getFullDisplayName());
         }
 
-        if (!this.useAlternativeCredential || null == this.credentialId) {
+        if (!this.useAlternativeCredential || null == this.jobCredentialId) {
             return jiraSite.getSession();
         }
         if (jiraSession == null) {
-            jiraSession = jiraSite.getSession(this.credentialId, item);
+            jiraSession = jiraSite.getSession(this.jobCredentialId, item);
         }
     	return jiraSession;
     }
-    
+
     public static JiraSession getJiraProjectSession(Job<?, ?> job) {
         final JiraProjectProperty jiraProjectProperty = job.getProperty(JiraProjectProperty.class);
         if (jiraProjectProperty != null) {
