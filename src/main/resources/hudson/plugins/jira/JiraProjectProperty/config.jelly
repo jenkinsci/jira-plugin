@@ -4,9 +4,8 @@
     <f:select/>
   </f:entry>
     <f:optionalBlock title="${%Use alternative credential}" checked="${instance.useAlternativeCredential}"
-        field="useAlternativeCredential" name="jira.useAlternativeCredential" inline="true">
-          <f:entry title="${%Credential :}" field="jobCredentialId">
-               <c:select /><c:select />
+        field="useAlternativeCredential" name="useAlternativeCredential" inline="true">
+        <f:entry title="${%Credential :}" field="jobCredentialId" name="jobCredentialId">
             <c:select/>
         </f:entry>
         <f:validateButton title="${%Test Connection}"
