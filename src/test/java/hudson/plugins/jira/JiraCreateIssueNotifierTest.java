@@ -9,6 +9,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
+import hudson.model.Item;
+import hudson.model.Job;
 import hudson.model.Result;
 import org.junit.Before;
 import org.junit.Rule;
@@ -41,11 +43,14 @@ public class JiraCreateIssueNotifierTest {
     PrintStream logger = mock(PrintStream.class);
     JiraSite site = mock(JiraSite.class);
     JiraSession session = mock(JiraSession.class);
+    JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
     EnvVars env;
 
     AbstractProject project = mock(AbstractProject.class);
     AbstractBuild previousBuild = mock(FreeStyleBuild.class);
     AbstractBuild currentBuild = mock(FreeStyleBuild.class);
+    Job job = mock(Job.class);
+    AbstractProject abstractProject = mock(AbstractProject.class);
     File temporaryDirectory;
 
     @Rule
@@ -71,8 +76,11 @@ public class JiraCreateIssueNotifierTest {
         when(currentBuild.getEnvironment(buildListener)).thenReturn(env);
         when(currentBuild.getPreviousBuild()).thenReturn(previousBuild);
         when(buildListener.getLogger()).thenReturn(logger);
-
+        when(jiraProjectProperty.getJiraProjectSession((Item) project)).thenReturn(session);
+        when(jiraProjectProperty.getJiraProjectSession((Item) job)).thenReturn(session);
         when(session.getComponents(Mockito.anyString())).thenReturn(jiraComponents);
+        when(job.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
+        when(project.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
     }
 
     @Test

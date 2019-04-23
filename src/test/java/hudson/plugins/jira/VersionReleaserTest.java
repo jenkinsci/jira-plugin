@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Item;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -56,6 +57,8 @@ public class VersionReleaserTest {
     JiraSite site;
     @Mock
     JiraSession session;
+    @Mock
+    JiraProjectProperty jiraProjectProperty;
     @Captor
     ArgumentCaptor<ExtendedVersion> versionCaptor;
     @Captor
@@ -82,6 +85,8 @@ public class VersionReleaserTest {
         when(listener.getLogger()).thenReturn(logger);
         when(site.getSession()).thenReturn(session);
         doReturn(site).when(versionReleaser).getSiteForProject(any());
+        when(project.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
+        when(jiraProjectProperty.getJiraProjectSession((Item) project)).thenReturn(session);
     }
 
     @Test

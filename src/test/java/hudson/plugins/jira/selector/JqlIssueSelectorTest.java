@@ -1,6 +1,11 @@
 package hudson.plugins.jira.selector;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
+
+import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import org.junit.Before;
@@ -24,18 +29,27 @@ public class JqlIssueSelectorTest {
 
     private JiraSite site;
     private JiraSession session;
+    private Run run;
+    private Job job;
+    private JiraProjectProperty jiraProjectProperty;
 
     @Before
     public void prepare() throws IOException {
         session = mock(JiraSession.class);
         site = mock(JiraSite.class);
+        run = mock(Run.class);
+        job = mock(Job.class);
+        jiraProjectProperty = mock(JiraProjectProperty.class);
         when(site.getSession()).thenReturn(session);
+        when(run.getParent()).thenReturn(job);
+        when(job.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
+        when(jiraProjectProperty.getJiraProjectSession((Item) job)).thenReturn(session);
     }
 
     @Test
     public void dontDependOnRunAndTaskListener() {
         JqlIssueSelector jqlUpdaterIssueSelector = new JqlIssueSelector(TEST_JQL);
-        Set<String> findedIssueIds = jqlUpdaterIssueSelector.findIssueIds(null, site, null);
+        Set<String> findedIssueIds = jqlUpdaterIssueSelector.findIssueIds(run, site, null);
         assertThat(findedIssueIds, empty());
     }
 
@@ -46,7 +60,7 @@ public class JqlIssueSelectorTest {
         when(session.getIssuesFromJqlSearch(TEST_JQL)).thenReturn( Collections.singletonList(issue));
 
         JqlIssueSelector jqlUpdaterIssueSelector = new JqlIssueSelector(TEST_JQL);
-        Set<String> foundIssueIds = jqlUpdaterIssueSelector.findIssueIds(null, site, null);
+        Set<String> foundIssueIds = jqlUpdaterIssueSelector.findIssueIds(run, site, null);
         assertThat(foundIssueIds, hasSize(1));
         assertThat(foundIssueIds.iterator().next(), equalTo("EXAMPLE-1"));
     }

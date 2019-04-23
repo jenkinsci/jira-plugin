@@ -2,6 +2,8 @@ package hudson.plugins.jira.pipeline;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.inject.Inject;
+
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Run;
@@ -75,6 +77,7 @@ public class SearchIssuesStepTest {
 
         JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
         when(jiraProjectProperty.getSite()).thenReturn(site);
+        when(jiraProjectProperty.getJiraProjectSession((Item) mockJob)).thenReturn(session);
         when(mockJob.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
 
         Map<String, Object> r = new HashMap<>();
