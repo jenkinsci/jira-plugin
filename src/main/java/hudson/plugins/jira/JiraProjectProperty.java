@@ -1,6 +1,8 @@
 package hudson.plugins.jira;
 
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import java.net.URL;
+
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -247,7 +249,20 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          */
         public FormValidation doTestConnection(@QueryParameter String jobCredentialId,
                 @QueryParameter String siteName, @AncestorInPath Item item) {
-            return FormValidation.ok();
+            JiraSite currentSite = null;
+            for (JiraSite site : sites) {
+                if (site.getName().equals(siteName)) {
+                    currentSite = site;
+                    break;
+                }
+            }
+            if(null != currentSite) {
+                JiraSession session = currentSite.getSession(jobCredentialId, item);
+                if(session != null) {
+                    return FormValidation.ok("Success");
+                }
+            }
+            return FormValidation.error("Failed to login to JIRA");
         }
     }
 }
