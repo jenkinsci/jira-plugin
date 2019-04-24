@@ -3,6 +3,7 @@ package hudson.plugins.jira;
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import java.net.URL;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -116,16 +117,15 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
     public JiraSession getJiraProjectSession(Item item) {
         JiraSite jiraSite = getSite();
         if (jiraSite == null) {
-        	throw new IllegalStateException("JIRA site needs to be configured in the project " + item.getFullDisplayName());
+            throw new IllegalStateException("JIRA site needs to be configured in the project " + item.getFullDisplayName());
         }
-
         if (!this.useAlternativeCredential || null == this.jobCredentialId) {
             return jiraSite.getSession();
         }
         if (jiraSession == null) {
             jiraSession = jiraSite.getSession(this.jobCredentialId, item);
         }
-    	return jiraSession;
+        return jiraSession;
     }
 
     /**
@@ -230,13 +230,22 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          * @param jobCredentialId
          * @return
          */
-        public ListBoxModel doFillJobCredentialIdItems(@AncestorInPath Item item, @QueryParameter String url,
-                @QueryParameter String jobCredentialId) {
+        public ListBoxModel doFillJobCredentialIdItems(@AncestorInPath Item item, @QueryParameter String siteName) {
+            URL url = null;
+            for (JiraSite site : sites) {
+                if (site.getName().equals(siteName)) {
+                    url = site.getUrl();
+                    break;
+                }
+            }
+            if(null == url) {
+                return new StandardUsernameListBoxModel()
+                        .includeEmptyValue();
+            }
             return new StandardUsernameListBoxModel()
                     .includeEmptyValue()
                     .includeMatchingAs(ACL.SYSTEM, item, StandardUsernamePasswordCredentials.class,
-                            URIRequirementBuilder.fromUri(url).build(), CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class))
-                    .includeCurrentValue(jobCredentialId);
+                            URIRequirementBuilder.fromUri(url.toString()).build(), CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
         }
 
         /**
@@ -250,6 +259,9 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         public FormValidation doTestConnection(@QueryParameter String jobCredentialId,
                 @QueryParameter String siteName, @AncestorInPath Item item) {
             JiraSite currentSite = null;
+            if(StringUtils.isEmpty(jobCredentialId)) {
+                return FormValidation.error("Credential must be specified");
+            }
             for (JiraSite site : sites) {
                 if (site.getName().equals(siteName)) {
                     currentSite = site;
