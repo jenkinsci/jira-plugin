@@ -31,9 +31,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
-import org.kohsuke.stapler.AncestorInPath;
 
 /**
  * Associates {@link Job} with {@link JiraSite}.
@@ -143,8 +141,6 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             return jiraProjectProperty.getJiraProjectSession((Item) job);
         }
         return null;
-    }
-
     }
 
     @Extension
@@ -274,13 +270,15 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         }
 
         /**
-         * Find the site with name in list
+         * Find the site with name
          * 
          * @param siteName
          * @return
          */
         private JiraSite getSiteByName(String siteName) {
-            for (JiraSite site : sites) {
+            JiraGlobalConfiguration jiraGlobalConfiguration = (JiraGlobalConfiguration) Jenkins.getInstance()
+                    .getDescriptorOrDie(JiraGlobalConfiguration.class);
+            for (JiraSite site : jiraGlobalConfiguration.getSites()) {
                 if (site.getName().equals(siteName)) {
                     return site;
                 }

@@ -37,7 +37,7 @@ public class JiraProjectPropertyTest {
     @Test
     public void getSitesNullWithoutFolder() throws Exception {
         FreeStyleProject freeStyleProject = r.createFreeStyleProject();
-        JiraProjectProperty prop = new JiraProjectProperty(null);
+        JiraProjectProperty prop = new JiraProjectProperty(null, false, null);
         freeStyleProject.addProperty(prop);
         JiraProjectProperty actual = freeStyleProject.getProperty(JiraProjectProperty.class);
         assertNotNull(actual);
@@ -47,7 +47,7 @@ public class JiraProjectPropertyTest {
     @Test
     public void getSitesNullWithFolder() throws Exception {
         freeStyleProject = folder.createProject(FreeStyleProject.class, "something");
-        JiraProjectProperty prop = new JiraProjectProperty(null);
+        JiraProjectProperty prop = new JiraProjectProperty(null, false, null);
         freeStyleProject.addProperty(prop);
         JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
         assertNotNull(property);
@@ -57,7 +57,7 @@ public class JiraProjectPropertyTest {
     @Test
     @ConfiguredWithCode("single-site.yml")
     public void getSiteFromProjectProperty() {
-        JiraProjectProperty prop = new JiraProjectProperty(null);
+        JiraProjectProperty prop = new JiraProjectProperty(null, false, null);
         JiraSite site = prop.getSite();
         @SuppressWarnings("ConstantConditions")
         String actual = site.getUrl().toExternalForm();
@@ -69,7 +69,7 @@ public class JiraProjectPropertyTest {
     public void getSiteFromSingleEntry() throws Exception {
         freeStyleProject = r.createFreeStyleProject();
         JiraSite expected = JiraGlobalConfiguration.get().getSites().get(0);
-        JiraProjectProperty prop = new JiraProjectProperty(null);
+        JiraProjectProperty prop = new JiraProjectProperty(null, false, null);
         freeStyleProject.addProperty(prop);
         JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
         assertNotNull(property);
@@ -83,7 +83,7 @@ public class JiraProjectPropertyTest {
     public void getSiteFromFirstGlobalMultipleEntryMultipleSites() throws Exception {
         freeStyleProject = r.createFreeStyleProject();
         JiraSite expected = JiraGlobalConfiguration.get().getSites().get(0);
-        JiraProjectProperty prop = new JiraProjectProperty(null);
+        JiraProjectProperty prop = new JiraProjectProperty(null, false, null);
         freeStyleProject.addProperty(prop);
         JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
         assertNotNull(property);
@@ -97,7 +97,7 @@ public class JiraProjectPropertyTest {
     public void getSiteFromSecondGlobalEntryMultipleSites() throws Exception {
         freeStyleProject = r.createFreeStyleProject();
         JiraSite expected = new JiraSite("https://jira.com/");
-        JiraProjectProperty prop = new JiraProjectProperty(expected.getName());
+        JiraProjectProperty prop = new JiraProjectProperty(expected.getName(), false, null);
         freeStyleProject.addProperty(prop);
         JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
         assertNotNull(property);
@@ -111,7 +111,7 @@ public class JiraProjectPropertyTest {
     public void getSiteFromFirstFolderLayer() throws Exception {
         freeStyleProject = folder.createProject(FreeStyleProject.class, "something");
         JiraSite expected = firstList.get(0);
-        JiraProjectProperty prop = new JiraProjectProperty(expected.getName());
+        JiraProjectProperty prop = new JiraProjectProperty(expected.getName(), false, null);
         freeStyleProject.addProperty(prop);
         JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
         assertNotNull(property);
@@ -127,7 +127,7 @@ public class JiraProjectPropertyTest {
         freeStyleProject = secondFolder.createProject(FreeStyleProject.class, "something");
         // testing we can get value from folder above.
         JiraSite expected = firstList.get(0);
-        JiraProjectProperty prop = new JiraProjectProperty(expected.getName());
+        JiraProjectProperty prop = new JiraProjectProperty(expected.getName(), false, null);
         freeStyleProject.addProperty(prop);
         JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
         assertNotNull(property);
