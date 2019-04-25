@@ -453,7 +453,7 @@ public class JiraCreateIssueNotifier extends Notifier {
 
         public ListBoxModel doFillPriorityIdItems() {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
-            for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
+            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
                 JiraSession session = site.getSession();
                 if (session != null) {
                     for (Priority priority : session.getPriorities()) {
@@ -466,7 +466,7 @@ public class JiraCreateIssueNotifier extends Notifier {
 
         public ListBoxModel doFillTypeIdItems() {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
-            for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
+            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
                 JiraSession session = site.getSession();
                 if (session != null) {
                     for (IssueType type : session.getIssueTypes()) {

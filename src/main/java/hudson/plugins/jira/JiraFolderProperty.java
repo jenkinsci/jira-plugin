@@ -4,13 +4,13 @@ import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import hudson.Extension;
-import hudson.model.Descriptor;
-import hudson.util.CopyOnWriteList;
-import net.sf.json.JSONObject;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -22,30 +22,13 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
     /**
      * Hold the JIRA sites configuration.
      */
-    private final CopyOnWriteList<JiraSite> sites = new CopyOnWriteList<>();
+    private List<JiraSite> sites = Collections.emptyList();
 
     /**
      * Constructor.
      */
     @DataBoundConstructor
     public JiraFolderProperty() {
-    }
-
-    @Override
-    public AbstractFolderProperty<?> reconfigure(StaplerRequest req, JSONObject formData)
-            throws Descriptor.FormException {
-        if (formData == null) {
-            return null;
-        }
-        //Fix^H^H^HDirty hack for empty string to URL conversion error
-        //Should check for existing handler etc, but since this is a dirty hack,
-        //we won't
-        Stapler.CONVERT_UTILS.deregister(java.net.URL.class);
-        Stapler.CONVERT_UTILS.register(new EmptyFriendlyURLConverter(), java.net.URL.class);
-        //End hack
-
-        sites.replaceBy(req.bindJSONToList(JiraSite.class, formData.get("sites")));
-        return this;
     }
 
     /**
@@ -58,13 +41,32 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
     }
 
     /**
-     * Adds a JIRA site.
+     * @deprecated use {@link #setSites(List)} instead
      *
      * @param site the JIRA site
      */
-    @DataBoundSetter
+    @Deprecated
     public void setSites(JiraSite site) {
         sites.add(site);
+    }
+
+    @DataBoundSetter
+    public void setSites(List<JiraSite> sites) {
+        this.sites = sites;
+    }
+
+    public static List<JiraSite> getSitesFromFolders(ItemGroup itemGroup) {
+        List<JiraSite> result = new ArrayList<>();
+        while (itemGroup instanceof AbstractFolder<?>) {
+            AbstractFolder<?> folder = (AbstractFolder<?>) itemGroup;
+            JiraFolderProperty jiraFolderProperty = folder.getProperties()
+                .get(JiraFolderProperty.class);
+            if (jiraFolderProperty != null && jiraFolderProperty.getSites().length != 0) {
+                result.addAll(Arrays.asList(jiraFolderProperty.getSites()));
+            }
+            itemGroup = folder.getParent();
+        }
+        return result;
     }
 
     /**
