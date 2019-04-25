@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import java.net.URL;
+import java.util.logging.Level;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
@@ -10,6 +11,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -231,13 +233,8 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          * @return
          */
         public ListBoxModel doFillJobCredentialIdItems(@AncestorInPath Item item, @QueryParameter String siteName) {
-            URL url = null;
-            for (JiraSite site : sites) {
-                if (site.getName().equals(siteName)) {
-                    url = site.getUrl();
-                    break;
-                }
-            }
+            JiraSite site = getSiteByName(siteName);
+            URL url = null != site ? site.getUrl() : null;
             if(null == url) {
                 return new StandardUsernameListBoxModel()
                         .includeEmptyValue();
@@ -258,23 +255,37 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          */
         public FormValidation doTestConnection(@QueryParameter String jobCredentialId,
                 @QueryParameter String siteName, @AncestorInPath Item item) {
-            JiraSite currentSite = null;
             if(StringUtils.isEmpty(jobCredentialId)) {
                 return FormValidation.error("Credential must be specified");
             }
-            for (JiraSite site : sites) {
-                if (site.getName().equals(siteName)) {
-                    currentSite = site;
-                    break;
-                }
-            }
+            JiraSite currentSite = getSiteByName(siteName);
             if(null != currentSite) {
                 JiraSession session = currentSite.getSession(jobCredentialId, item);
                 if(session != null) {
-                    return FormValidation.ok("Success");
+                    try {
+                        session.getMyPermissions();
+                        return FormValidation.ok("Success");
+                    } catch (RestClientException e) {
+                        return FormValidation.error("Failed to login to JIRA");
+                    }
                 }
             }
             return FormValidation.error("Failed to login to JIRA");
+        }
+
+        /**
+         * Find the site with name in list
+         * 
+         * @param siteName
+         * @return
+         */
+        private JiraSite getSiteByName(String siteName) {
+            for (JiraSite site : sites) {
+                if (site.getName().equals(siteName)) {
+                    return site;
+                }
+            }
+            return null;
         }
     }
 }
