@@ -78,7 +78,7 @@ public class JiraReleaseVersionUpdater extends Notifier {
 	}
 
 	public BuildStepMonitor getRequiredMonitorService() {
-		return BuildStepMonitor.BUILD;
+		return BuildStepMonitor.NONE;
 	}
 	
 	public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {

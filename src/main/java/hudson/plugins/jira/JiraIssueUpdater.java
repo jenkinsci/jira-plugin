@@ -71,7 +71,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.NONE;
     }
 
     @Override
