@@ -2,6 +2,9 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Transition;
+
+import hudson.model.Run;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -106,15 +109,15 @@ public class ChangingWorkflowTest {
 
     @Test
     public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
-        when(site.getSession()).thenReturn(mockSession);
+        when(site.getSession(any(Run.class))).thenReturn(mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
         when(mockSession.getActionIdForIssue(anyString(),
                 eq(NON_EMPTY_WORKFLOW_LOWERCASE))).thenReturn(Integer.valueOf(randomNumeric(5)));
-        when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
+        when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class), any(Run.class)))
                 .thenCallRealMethod();
 
         site.progressMatchingIssues(ISSUE_JQL,
-                NON_EMPTY_WORKFLOW_LOWERCASE, NON_EMPTY_COMMENT, mock(PrintStream.class));
+                NON_EMPTY_WORKFLOW_LOWERCASE, NON_EMPTY_COMMENT, mock(PrintStream.class), mock(Run.class));
 
         verify(mockSession, times(1)).addComment(anyString(), eq(NON_EMPTY_COMMENT),
                 isNull(String.class), isNull(String.class));
@@ -124,12 +127,12 @@ public class ChangingWorkflowTest {
 
     @Test
     public void addCommentsOnNullWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
-        when(site.getSession()).thenReturn(mockSession);
+        when(site.getSession(any(Run.class))).thenReturn(mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
-        when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
+        when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class), any(Run.class)))
                 .thenCallRealMethod();
 
-        site.progressMatchingIssues(ISSUE_JQL, null, NON_EMPTY_COMMENT, mock(PrintStream.class));
+        site.progressMatchingIssues(ISSUE_JQL, null, NON_EMPTY_COMMENT, mock(PrintStream.class), mock(Run.class));
 
         verify(mockSession, times(1)).addComment(anyString(), eq(NON_EMPTY_COMMENT),
                 isNull(String.class), isNull(String.class));
@@ -138,12 +141,12 @@ public class ChangingWorkflowTest {
 
     @Test
     public void dontAddCommentsOnNullWorkflowAndNullComment() throws IOException, TimeoutException {
-        when(site.getSession()).thenReturn(mockSession);
+        when(site.getSession(any(Run.class))).thenReturn(mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
-        when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
+        when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class), any(Run.class)))
                 .thenCallRealMethod();
 
-        site.progressMatchingIssues(ISSUE_JQL, null, null, mock(PrintStream.class));
+        site.progressMatchingIssues(ISSUE_JQL, null, null, mock(PrintStream.class), mock(Run.class));
 
         verify(mockSession, never()).addComment(anyString(), anyString(), isNull(String.class), isNull(String.class));
     }

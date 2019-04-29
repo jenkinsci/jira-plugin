@@ -72,7 +72,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
                 String id = m.group(1);
 
-                if (StringUtils.isNotBlank(site.credentialsId) && !hasProjectForIssue(id, site)) {
+                if (StringUtils.isNotBlank(site.credentialsId) && !hasProjectForIssue(id, site, build)) {
                     LOGGER.log(Level.INFO, "No known JIRA project corresponding to id: ''{0}''", id);
                     continue;
                 }
@@ -104,7 +104,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
                 if (issue == null) {
                     try {
-                        issue = site.getIssue(id);
+                        issue = site.getIssue(id, build);
                         if (issue != null) {
                             issuesToBeSaved.add(issue);
                         }
@@ -136,14 +136,15 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
      * it can potentially use stale data). Number portion is not checked at all.
      *
      * @param id String like MNG-1234
+     * @param build 
      */
-    protected boolean hasProjectForIssue(String id, JiraSite site) {
+    protected boolean hasProjectForIssue(String id, JiraSite site, Run<?, ?> build) {
         int idx = id.indexOf('-');
         if (idx == -1) {
             return false;
         }
 
-        Set<String> keys = site.getProjectKeys();
+        Set<String> keys = site.getProjectKeys(build.getParent().getParent());
         return keys.contains(id.substring(0, idx).toUpperCase());
     }
 

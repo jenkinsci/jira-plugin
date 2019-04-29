@@ -3,6 +3,7 @@ package hudson.plugins.jira;
 import hudson.Extension;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
+import jenkins.model.Jenkins;
 
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -31,7 +32,7 @@ public class JiraMailAddressResolver extends MailAddressResolver {
         String username = u.getId();
 
         for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-            JiraSession session = site.getSession();
+            JiraSession session = site.getSession(Jenkins.getInstance());
             if (session == null) {
                 continue;
             }

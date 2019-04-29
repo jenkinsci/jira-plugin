@@ -3,11 +3,14 @@ package hudson.plugins.jira;
 import com.google.common.collect.Sets;
 import hudson.MarkupText;
 import hudson.model.FreeStyleBuild;
+import hudson.model.ItemGroup;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
 import org.junit.Before;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.powermock.reflect.Whitebox;
@@ -20,6 +23,7 @@ import java.util.regex.Pattern;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 /**
@@ -28,21 +32,26 @@ import static org.mockito.Mockito.*;
 public class JiraChangeLogAnnotatorTest {
     private static final String TITLE = "title with $sign to confuse TextMarkup.replace";
     private JiraSite site;
+    Run run = mock(Run.class);
+    Job job = mock(Job.class);
 
     @Before
     public void before() throws Exception {
+        when(run.getParent()).thenReturn(job);
+        when(job.getParent()).thenReturn(mock(ItemGroup.class));
         JiraSession session = mock(JiraSession.class);
         when(session.getProjectKeys()).thenReturn(
                 Sets.newHashSet("DUMMY", "JENKINS"));
 
         this.site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
+        when(site.getSession(any(Run.class))).thenReturn(session);
+        when(site.getSession(any(ItemGroup.class))).thenReturn(session);
         when(site.getUrl(Mockito.anyString())).thenAnswer(
                 (Answer<URL>) invocation -> {
                     String id = invocation.getArguments()[0].toString();
                     return new URL("http://dummy/" + id);
                 });
-        when(site.getProjectKeys()).thenCallRealMethod();
+        when(site.getProjectKeys(any(ItemGroup.class))).thenCallRealMethod();
         when(site.getIssuePattern()).thenCallRealMethod();
 
         // create inner objects
@@ -153,9 +162,9 @@ public class JiraChangeLogAnnotatorTest {
     @Test
     public void hasProjectForIssueIsCaseInsensitive() {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        assertThat(annotator.hasProjectForIssue("JENKINS-123", site), is(true));
-        assertThat(annotator.hasProjectForIssue("jenKiNs-123", site), is(true));
-        assertThat(annotator.hasProjectForIssue("dummy-4711", site), is(true));
+        assertThat(annotator.hasProjectForIssue("JENKINS-123", site, run), is(true));
+        assertThat(annotator.hasProjectForIssue("jenKiNs-123", site, run), is(true));
+        assertThat(annotator.hasProjectForIssue("dummy-4711", site, run), is(true));
     }
 
     @Test
@@ -177,13 +186,11 @@ public class JiraChangeLogAnnotatorTest {
     @Test
     @Issue("5252")
     public void getIssueDetailsForMissingIssues() throws IOException {
-        Run run = mock(Run.class);
-
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
         JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
-        when(site.getIssue(Mockito.anyString())).thenReturn(issue);
+        when(site.getIssue(Mockito.anyString(), Mockito.any())).thenReturn(issue);
 
         MarkupText text = new MarkupText("fixed DUMMY-42");
         annotator.annotate(run, null, text);
@@ -221,7 +228,7 @@ public class JiraChangeLogAnnotatorTest {
 
         // check again when issue != null:
         JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
-        when(site.getIssue(Mockito.anyString())).thenReturn(issue);
+        when(site.getIssue(Mockito.anyString(), Mockito.any())).thenReturn(issue);
         text = new MarkupText("fixed DUMMY-42abc");
         annotator.annotate(mock(Run.class), null, text);
         assertThat(
@@ -243,8 +250,6 @@ public class JiraChangeLogAnnotatorTest {
                     String id = invocation.getArguments()[0].toString();
                     return new URL("http://altdummy/" + id);
                 });
-
-        Run run = mock(Run.class);
 
         when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
         MarkupText text = new MarkupText("marking up DUMMY-1.");

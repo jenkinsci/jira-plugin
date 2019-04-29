@@ -6,6 +6,7 @@ import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
+import com.cloudbees.plugins.credentials.domains.PathSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Item;
 import hudson.model.User;
@@ -69,15 +70,14 @@ public class DescriptorImplTest {
     public void doFillCredentialsIdItems() throws IOException {
         Domain domain = new Domain("example", "test domain", Arrays.asList(new HostnameSpecification("example.org", null)));
         StandardUsernamePasswordCredentials c = new UsernamePasswordCredentialsImpl(
-                CredentialsScope.SYSTEM,
-                null,
+                CredentialsScope.GLOBAL,
+                "id1",
                 null,
                 "username",
                 "password"
         );
-        CredentialsProvider.lookupStores(r.jenkins).iterator().next().addDomain(domain, c);
-
         MockFolder dummy = r.createFolder("dummy");
+        CredentialsProvider.lookupStores(r.jenkins).iterator().next().addDomain(domain, c);
         r.jenkins.setSecurityRealm(r.createDummySecurityRealm());
         MockAuthorizationStrategy as = new MockAuthorizationStrategy();
         as.grant(Jenkins.ADMINISTER).everywhere().to("admin");

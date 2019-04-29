@@ -40,14 +40,14 @@ public class VersionReleaser {
 
             String finalRealRelease = realRelease;
             JiraSite site = getSiteForProject(project);
-            Optional<ExtendedVersion> sameNamedVersion = site.getVersions(realProjectKey).stream()
+            Optional<ExtendedVersion> sameNamedVersion = site.getVersions(realProjectKey, run).stream()
                     .filter(version -> version.getName().equals(finalRealRelease) && version.isReleased()).findFirst();
 
             if (sameNamedVersion.isPresent()) {
                 listener.getLogger().println(Messages.VersionReleaser_AlreadyReleased(realRelease, realProjectKey));
             } else {
                 listener.getLogger().println(Messages.VersionReleaser_MarkingReleased(realRelease, realProjectKey));
-                releaseVersion(realProjectKey, realRelease, realDescription, site.getSession());
+                releaseVersion(realProjectKey, realRelease, realDescription, site.getSession(run));
             }
         } catch (Exception e) {
             listener.fatalError(

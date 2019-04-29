@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
 import hudson.model.Job;
+import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
 import jenkins.branch.MultiBranchProject;
 import org.junit.Before;
@@ -23,6 +24,9 @@ public class JiraJobActionTest {
 
     @Mock
     Job job;
+    
+    @Mock
+    Run run;
 
     @Mock
     MultiBranchProject mbp;
@@ -31,9 +35,10 @@ public class JiraJobActionTest {
 
     @Test
     public void detectBranchNameIssue() throws Exception {
+    	when(run.getParent()).thenReturn(job);
         when(job.getName()).thenReturn("EXAMPLE-123");
         ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
-        JiraJobAction.setAction(job, site);
+        JiraJobAction.setAction(run, site);
         verify(job).addAction(captor.capture());
 
         JiraJobAction action = captor.getValue();
@@ -45,9 +50,10 @@ public class JiraJobActionTest {
 
     @Test
     public void detectBranchNameIssueWithEncodedJobName() throws Exception {
+        when(run.getParent()).thenReturn(job);
         when(job.getName()).thenReturn("feature%2FEXAMPLE-123");
         ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
-        JiraJobAction.setAction(job, site);
+        JiraJobAction.setAction(run, site);
         verify(job).addAction(captor.capture());
 
         JiraJobAction action = captor.getValue();
@@ -59,9 +65,10 @@ public class JiraJobActionTest {
 
     @Test
     public void detectBranchNameIssueJustIssueKey() throws Exception {
+        when(run.getParent()).thenReturn(job);
         when(job.getName()).thenReturn("EXAMPLE-123");
         ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
-        JiraJobAction.setAction(job, site);
+        JiraJobAction.setAction(run, site);
         verify(job).addAction(captor.capture());
 
         JiraJobAction action = captor.getValue();
@@ -73,8 +80,9 @@ public class JiraJobActionTest {
 
     @Test
     public void detectBranchNameIssueNoIssueKey() throws Exception {
+        when(run.getParent()).thenReturn(job);
         when(job.getName()).thenReturn("NOTHING INTERESTING");
-        JiraJobAction.setAction(job, site);
+        JiraJobAction.setAction(run, site);
         verify(job, never()).addAction(anyObject());
     }
 
@@ -82,6 +90,6 @@ public class JiraJobActionTest {
     public void setup() throws Exception {
         when(job.getParent()).thenReturn(mbp);
         when(site.getIssuePattern()).thenReturn(JiraSite.DEFAULT_ISSUE_PATTERN);
-        when(site.getIssue("EXAMPLE-123")).thenReturn(issue);
+        when(site.getIssue("EXAMPLE-123", run)).thenReturn(issue);
     }
 }

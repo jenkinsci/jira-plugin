@@ -102,7 +102,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
         listener.getLogger().println("[JIRA] JQL: " + realJql);
 
         try {
-            if (!site.progressMatchingIssues(realJql, realWorkflowActionName, realComment, listener.getLogger())) {
+            if (!site.progressMatchingIssues(realJql, realWorkflowActionName, realComment, listener.getLogger(), run)) {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
                 run.setResult(Result.UNSTABLE);
             }

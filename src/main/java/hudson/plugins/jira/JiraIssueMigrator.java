@@ -105,12 +105,12 @@ public class JiraIssueMigrator extends Notifier {
             JiraSite site = getJiraSiteForProject(build.getProject());
 
             if (addRelease == true) {
-                site.addFixVersionToIssue(realProjectKey, realRelease, realQuery);
+                site.addFixVersionToIssue(realProjectKey, realRelease, realQuery, build);
             } else {
                 if (realReplace == null || realReplace.isEmpty()) {
-                    site.migrateIssuesToFixVersion(realProjectKey, realRelease, realQuery);
+                    site.migrateIssuesToFixVersion(realProjectKey, realRelease, realQuery, build);
                 } else {
-                    site.replaceFixVersion(realProjectKey, realReplace, realRelease, realQuery);
+                    site.replaceFixVersion(realProjectKey, realReplace, realRelease, realQuery, build);
                 }
             }
         } catch (Exception e) {

@@ -80,7 +80,7 @@ public class CommentStep extends AbstractStepImpl {
             if(site == null) {
                 return null;
             }
-            JiraSession session = site.getSession();
+            JiraSession session = site.getSession(run);
             if (session == null) {
                 listener.getLogger().println(Messages.FailedToConnect());
                 return null;

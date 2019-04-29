@@ -4,6 +4,8 @@ import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.ItemGroup;
+import hudson.model.Run;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -75,7 +77,8 @@ public class VersionCreatorTest {
                 return expanded;
         });
         when(listener.getLogger()).thenReturn(logger);
-        when(site.getSession()).thenReturn(session);
+        when(site.getSession(any(Run.class))).thenReturn(session);
+        when(site.getSession(any(ItemGroup.class))).thenReturn(session);
         doReturn(site).when(versionCreator).getSiteForProject(any());
     }
 
@@ -83,8 +86,7 @@ public class VersionCreatorTest {
     public void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
-        when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
-
+        when(site.getVersions(JIRA_PRJ, build)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
         versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
         verify(session).addVersion(versionCaptor.capture(), projectCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
@@ -95,7 +97,7 @@ public class VersionCreatorTest {
     public void expandsEnvParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
-        when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
+        when(site.getVersions(JIRA_PRJ, build)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
         versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
         verify(session).addVersion(versionCaptor.capture(), projectCaptor.capture());
@@ -107,7 +109,7 @@ public class VersionCreatorTest {
     public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
         when(build.getEnvironment(listener)).thenReturn(env);
         ExtendedVersion releasedVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, true, ANY_DATE, ANY_DATE);
-        when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));
+        when(site.getVersions(JIRA_PRJ, build)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));
 
         versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
         verify(session, times(0))

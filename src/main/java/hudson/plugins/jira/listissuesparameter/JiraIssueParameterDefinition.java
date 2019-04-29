@@ -76,7 +76,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         if (site == null)
             throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
 
-        JiraSession session = site.getSession();
+        JiraSession session = site.getSession(context.getParent());
         if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
         List<Issue> issues = session.getIssuesFromJqlSearch(jiraIssueFilter);

@@ -11,6 +11,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.ItemGroup;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -20,6 +21,8 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
+
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -280,7 +283,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             throw new IllegalStateException("JIRA site needs to be configured in the project " + build.getFullDisplayName());
         }
 
-        JiraSession session = site.getSession();
+        JiraSession session = site.getSession(build);
         if (session == null) {
             throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
         }
@@ -451,10 +454,10 @@ public class JiraCreateIssueNotifier extends Notifier {
             return FormValidation.ok();
         }
 
-        public ListBoxModel doFillPriorityIdItems() {
+        public ListBoxModel doFillPriorityIdItems(@AncestorInPath ItemGroup context) {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-                JiraSession session = site.getSession();
+                JiraSession session = site.getSession(context);
                 if (session != null) {
                     for (Priority priority : session.getPriorities()) {
                         items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
@@ -464,10 +467,10 @@ public class JiraCreateIssueNotifier extends Notifier {
             return items;
         }
 
-        public ListBoxModel doFillTypeIdItems() {
+        public ListBoxModel doFillTypeIdItems(@AncestorInPath ItemGroup context) {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-                JiraSession session = site.getSession();
+                JiraSession session = site.getSession(context);
                 if (session != null) {
                     for (IssueType type : session.getIssueTypes()) {
                         items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));

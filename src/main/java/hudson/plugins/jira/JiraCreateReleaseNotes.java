@@ -129,7 +129,7 @@ public class JiraCreateReleaseNotes extends SimpleBuildWrapper {
             }
 
             if ((realRelease != null) && !realRelease.isEmpty()) {
-                releaseNotes = site.getReleaseNotesForFixVersion(realProjectKey, realRelease, realFilter);
+                releaseNotes = site.getReleaseNotesForFixVersion(realProjectKey, realRelease, realFilter, run);
             } else {
                 listener.getLogger().printf("No release version found, skipping Release Notes generation\n");
             }

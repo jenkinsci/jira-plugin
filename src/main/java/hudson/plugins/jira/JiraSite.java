@@ -17,7 +17,6 @@ import com.atlassian.sal.api.executor.ThreadLocalContextManager;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
@@ -25,11 +24,13 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractBuild;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
+import hudson.model.Run;
 import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
@@ -132,11 +133,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * The id of the credentials to use. Optional.
      */
     public String credentialsId;
-
-    /**
-     * Transient stash of the credentials to use, mostly just for providing floating user object.
-     */
-    public transient UsernamePasswordCredentials credentials;
 
     /**
      * User name needed to login. Optional.
@@ -302,7 +298,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.readTimeout = readTimeout;
         this.threadExecutorNumber = threadExecutorNumber;
         this.alternativeUrl = alternativeUrl;
-        this.credentials = credentials;
         this.credentialsId = credentials != null ? credentials.getId() : null;
         this.supportsWikiStyleComment = supportsWikiStyleComment;
         this.recordScmChanges = recordScmChanges;
@@ -369,11 +364,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @DataBoundSetter
     public void setCredentialsId(String credentialsId) {
         this.credentialsId = Util.fixEmptyAndTrim(credentialsId);
-        if (this.credentialsId == null) {
-            this.credentials = null;
-        } else {
-            this.credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
-        }
     }
 
     @DataBoundSetter
@@ -510,9 +500,32 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null if remote access is not supported.
      */
     @Nullable
-    public JiraSession getSession() {
+    public JiraSession getSession(ItemGroup context) {
+        if(context == null) {
+            return getSession();
+        }
         if (jiraSession == null) {
-            jiraSession = createSession();
+            StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupItemGroupCredentials(credentialsId, alternativeUrl, context);
+            jiraSession = createSession(credentials);
+        }
+        return jiraSession;
+    }
+    
+    public JiraSession getSession(Run<?, ?> build) {
+        if(build == null) {
+            return getSession();
+        }
+        if (jiraSession == null) {
+            StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupCredentialsById(credentialsId, alternativeUrl, build);
+            jiraSession = createSession(credentials);
+        }
+        return jiraSession;
+    }
+    
+    private JiraSession getSession() {
+        if (jiraSession == null) {
+            StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, alternativeUrl);
+            jiraSession = createSession(credentials);
         }
         return jiraSession;
     }
@@ -522,7 +535,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return null if remote access is not supported.
      */
-    private JiraSession createSession() {
+    private JiraSession createSession(StandardUsernamePasswordCredentials credentials) {
         if (credentials == null) {
             return null;    // remote access not supported
         }
@@ -813,12 +826,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Gets the list of project IDs in this JIRA.
      * This information could be bit old, or it can be null.
      */
-    public Set<String> getProjectKeys() {
+    public Set<String> getProjectKeys(ItemGroup context) {
         if (projects == null) {
             try {
                 if (projectUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
                     try {
-                        JiraSession session = getSession();
+                        JiraSession session = getSession(context);
                         if (session != null) {
                             projects = Collections.unmodifiableSet(session.getProjectKeys());
                         }
@@ -876,10 +889,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Returns the remote issue with the given id or <code>null</code> if it wasn't found.
      */
     @CheckForNull
-    public JiraIssue getIssue(final String id) throws IOException {
+    public JiraIssue getIssue(final String id, Run<?,?> build) throws IOException {
         try {
             Optional<Issue> issue = issueCache.get(id, () -> {
-                JiraSession session = getSession();
+                JiraSession session = getSession(Jenkins.getInstance());
                 if (session == null) {
                     return null;
                 }
@@ -896,23 +909,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
     }
 
-    @Deprecated
-    public boolean existsIssue(String id) {
-        try {
-            return getIssue(id) != null;
-        } catch ( IOException e ) { // restoring backward compat means even avoid exception
-            throw new RuntimeException( e.getMessage(),e );
-        }
-    }
-
     /**
      * Returns all versions for the given project key.
      *
      * @param projectKey Project Key
+     * @param build 
      * @return A set of JiraVersions
      */
-    public Set<ExtendedVersion> getVersions(String projectKey) {
-        JiraSession session = getSession();
+    public Set<ExtendedVersion> getVersions(String projectKey, Run<?, ?> build) {
+        JiraSession session = getSession(build);
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return Collections.emptySet();
@@ -921,17 +926,18 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return new HashSet<>(session.getVersions(projectKey));
     }
 
-    /**
+	/**
      * Generates release notes for a given version.
      *
      * @param projectKey the project key
      * @param versionName the version
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
+	 * @param run 
      * @return release notes
      * @throws TimeoutException if too long
      */
-    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws TimeoutException {
-        JiraSession session = getSession();
+    public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter, Run<?, ?> run) throws TimeoutException {
+        JiraSession session = getSession(run);
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return "";
@@ -980,10 +986,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey The project key
      * @param toVersion  The new fixVersion
      * @param query      A JQL Query
+     * @param build 
      * @throws TimeoutException if too long
      */
-    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
-        JiraSession session = getSession();
+    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query, AbstractBuild<?, ?> build) throws TimeoutException {
+        JiraSession session = getSession(build);
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return;
@@ -998,10 +1005,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey  The project key
      * @param versionName The new fixVersion
      * @param query       A JQL Query
+     * @param build 
      * @throws TimeoutException if too long
      */
-    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException {
-        JiraSession session = getSession();
+    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query, AbstractBuild<?, ?> build) throws TimeoutException {
+        JiraSession session = getSession(build);
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return;
@@ -1016,10 +1024,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey the project key
      * @param versionName the version
      * @param query the query
+     * @param build 
      * @throws TimeoutException if too long
      */
-    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
-        JiraSession session = getSession();
+    public void addFixVersionToIssue(String projectKey, String versionName, String query, AbstractBuild<?, ?> build) throws TimeoutException {
+        JiraSession session = getSession(build);
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
             return;
@@ -1036,10 +1045,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param workflowActionName the workflowActionName
      * @param comment the comment
      * @param console the console
+     * @param run 
      * @throws TimeoutException TimeoutException if too long
      */
-    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
-        JiraSession session = getSession();
+    public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console, Run<?, ?> run) throws TimeoutException {
+        JiraSession session = getSession(run);
 
         if (session == null) {
             LOGGER.warning("JIRA session could not be established");
@@ -1185,7 +1195,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setThreadExecutorNumber(threadExecutorNumber);
             JiraSession session = null;
             try {
-                session = site.getSession();
+                session = site.getSession(item == null ? Jenkins.getInstance() : item.getParent());
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
@@ -1210,7 +1220,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withAll(
                         CredentialsProvider.lookupCredentials(
                             StandardUsernamePasswordCredentials.class,
-                            Jenkins.getInstance(),
+                            context,
                             ACL.SYSTEM,
                             URIRequirementBuilder.fromUri(url).build()
                         )

@@ -1,5 +1,6 @@
 package hudson.plugins.jira.selector;
 
+import hudson.model.Run;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import org.junit.Test;
@@ -11,6 +12,7 @@ import java.util.Set;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,7 +24,7 @@ public class ExplicitIssueSelectorTest {
     public void returnsExplicitCollections() throws IOException {
         JiraSession session = mock(JiraSession.class);
         JiraSite site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
+        when(site.getSession(any(Run.class))).thenReturn(session);
 
         ExplicitIssueSelector jqlUpdaterIssueSelector = new ExplicitIssueSelector( Collections.singletonList(TEST_KEY));
         Set<String> foundIssueIds = jqlUpdaterIssueSelector.findIssueIds(null, site, null);

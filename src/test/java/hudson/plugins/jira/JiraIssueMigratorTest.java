@@ -52,9 +52,9 @@ public class JiraIssueMigratorTest {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, addRelease));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);
-        verify(jiraSite, never()).migrateIssuesToFixVersion(anyString(), anyString(), anyString());
-        verify(jiraSite, never()).replaceFixVersion(anyString(), anyString(), anyString(), anyString());
-        verify(jiraSite, times(1)).addFixVersionToIssue(PROJECT_KEY, RELEASE, QUERY);
+        verify(jiraSite, never()).migrateIssuesToFixVersion(anyString(), anyString(), anyString(), any(AbstractBuild.class));
+        verify(jiraSite, never()).replaceFixVersion(anyString(), anyString(), anyString(), anyString(), any(AbstractBuild.class));
+        verify(jiraSite, times(1)).addFixVersionToIssue(PROJECT_KEY, RELEASE, QUERY, build);
         assertTrue(result);
     }
 
@@ -63,9 +63,9 @@ public class JiraIssueMigratorTest {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);
-        verify(jiraSite, never()).addFixVersionToIssue(anyString(), anyString(), anyString());
-        verify(jiraSite, never()).replaceFixVersion(anyString(), anyString(), anyString(), anyString());
-        verify(jiraSite, times(1)).migrateIssuesToFixVersion(PROJECT_KEY, RELEASE, QUERY);
+        verify(jiraSite, never()).addFixVersionToIssue(anyString(), anyString(), anyString(), any(AbstractBuild.class));
+        verify(jiraSite, never()).replaceFixVersion(anyString(), anyString(), anyString(), anyString(), any(AbstractBuild.class));
+        verify(jiraSite, times(1)).migrateIssuesToFixVersion(PROJECT_KEY, RELEASE, QUERY, build);
         assertTrue(result);
     }
 
@@ -74,9 +74,9 @@ public class JiraIssueMigratorTest {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, RELEASE_TO_REPLACE, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);
-        verify(jiraSite, never()).addFixVersionToIssue(anyString(), anyString(), anyString());
-        verify(jiraSite, never()).migrateIssuesToFixVersion(anyString(), anyString(), anyString());
-        verify(jiraSite, times(1)).replaceFixVersion(PROJECT_KEY, RELEASE_TO_REPLACE, RELEASE, QUERY);
+        verify(jiraSite, never()).addFixVersionToIssue(anyString(), anyString(), anyString(), any(AbstractBuild.class));
+        verify(jiraSite, never()).migrateIssuesToFixVersion(anyString(), anyString(), anyString(), any(AbstractBuild.class));
+        verify(jiraSite, times(1)).replaceFixVersion(PROJECT_KEY, RELEASE_TO_REPLACE, RELEASE, QUERY, build);
         assertTrue(result);
     }
 }

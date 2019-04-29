@@ -9,7 +9,10 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
+import hudson.model.ItemGroup;
 import hudson.model.Result;
+import hudson.model.Run;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,7 +63,10 @@ public class JiraCreateIssueNotifierTest {
 
         jiraComponents.add(new Component(null, null, "componentA", null, null));
 
-        when(site.getSession()).thenReturn(session);
+        when(site.getSession(mock(Run.class))).thenReturn(session);
+        when(site.getSession(mock(AbstractBuild.class))).thenReturn(session);
+        when(site.getSession(currentBuild)).thenReturn(session);
+        when(site.getSession(mock(ItemGroup.class))).thenReturn(session);
 
         doReturn(env).when(currentBuild).getEnvironment(Mockito.any());
 

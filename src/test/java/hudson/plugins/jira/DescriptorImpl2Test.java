@@ -2,6 +2,9 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Permissions;
+
+import hudson.model.ItemGroup;
+import hudson.model.Run;
 import hudson.plugins.jira.JiraSite.JiraSiteBuilder;
 import hudson.util.FormValidation;
 import org.junit.Before;
@@ -11,6 +14,7 @@ import org.junit.rules.ExpectedException;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 /**
@@ -36,7 +40,7 @@ public class DescriptorImpl2Test {
     public void prepareMocks() {
         when(descriptor.getJiraSiteBuilder()).thenReturn(builder);
         when(builder.build()).thenReturn(jiraSite);
-        when(jiraSite.getSession()).thenReturn(jiraSession);
+        when(jiraSite.getSession(any(ItemGroup.class))).thenReturn(jiraSession);
     }
 
     @Test
@@ -49,7 +53,7 @@ public class DescriptorImpl2Test {
 
         verify(descriptor).getJiraSiteBuilder();
         verify(builder).build();
-        verify(jiraSite).getSession();
+        verify(jiraSite).getSession(any(ItemGroup.class));
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
     }
 
@@ -63,7 +67,7 @@ public class DescriptorImpl2Test {
 
         verify(descriptor).getJiraSiteBuilder();
         verify(builder).build();
-        verify(jiraSite).getSession();
+        verify(jiraSite).getSession(any(ItemGroup.class));
         assertEquals(FormValidation.Kind.OK, validation.kind);
     }
 }

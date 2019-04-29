@@ -3,6 +3,7 @@ package hudson.plugins.jira;
 import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Job;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.plugins.jira.model.JiraIssue;
@@ -70,8 +71,9 @@ public class JiraJobAction implements Action {
      * @param site to fetch issue data
      * @throws IOException if something goes wrong fetching the JIRA issue
      */
-    public static void setAction(@Nonnull Job<?, ?> job, @Nonnull JiraSite site) throws IOException {
-        // If there is already a action set then skip
+    public static void setAction(@Nonnull Run<?, ?> run, @Nonnull JiraSite site) throws IOException {
+        Job<?,?> job = run.getParent();
+    	// If there is already a action set then skip
         if (job.getAction(JiraJobAction.class) != null) {
             return;
         }
@@ -96,7 +98,7 @@ public class JiraJobAction implements Action {
         }
 
         if (issueKey != null) {
-            JiraIssue issue = site.getIssue(issueKey);
+            JiraIssue issue = site.getIssue(issueKey, run);
             if (issue != null) {
                 job.addAction(new JiraJobAction(job, issue));
                 job.save();
@@ -127,7 +129,7 @@ public class JiraJobAction implements Action {
             JiraSite site = JiraSite.get(parent);
             if (site != null) {
                 try {
-                    setAction(parent, site);
+                    setAction(workflowRun, site);
                 } catch (IOException e) {
                     LOGGER.log(Level.WARNING, "Could not set JiraJobAction for <" + parent.getFullName() + ">", e);
                 }

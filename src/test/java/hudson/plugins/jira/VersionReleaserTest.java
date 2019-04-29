@@ -4,6 +4,7 @@ import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Run;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -80,14 +81,14 @@ public class VersionReleaserTest {
                 return expanded;
         });
         when(listener.getLogger()).thenReturn(logger);
-        when(site.getSession()).thenReturn(session);
+        when(site.getSession(any(Run.class))).thenReturn(session);
         doReturn(site).when(versionReleaser).getSiteForProject(any());
     }
 
     @Test
     public void callsJiraWithSpecifiedParameters() {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
-        when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
+        when(site.getVersions(JIRA_PRJ, build)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
         versionReleaser.perform(project, JIRA_PRJ, JIRA_VER, JIRA_DES, build, listener);
         verify(session).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
@@ -99,7 +100,7 @@ public class VersionReleaserTest {
     @Test
     public void expandsEnvParameters() {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
-        when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
+        when(site.getVersions(JIRA_PRJ, build)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
         versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, JIRA_DES_PARAM, build, listener);
         verify(session).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
@@ -111,7 +112,7 @@ public class VersionReleaserTest {
     @Test
     public void buildDidNotFailWhenVersionExists() {
         ExtendedVersion releasedVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, true, ANY_DATE, ANY_DATE);
-        when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));
+        when(site.getVersions(JIRA_PRJ, build)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));
 
         versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, JIRA_DES_PARAM, build, listener);
         verify(session, times(0))

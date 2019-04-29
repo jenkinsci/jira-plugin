@@ -26,6 +26,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -75,7 +76,7 @@ public class CommentStepTest {
         }).when(session).addComment(Mockito.anyObject(), Mockito.anyObject(),
                 Mockito.anyObject(), Mockito.anyObject());
         JiraSite site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
+        when(site.getSession(any(Run.class))).thenReturn(session);
 
         Run mockRun = mock(Run.class);
         Job mockJob = mock(Job.class);

@@ -85,7 +85,7 @@ public class JiraCreateReleaseNotesTest {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
         jcrn.setUp(build, launcher, buildListener);
-        verify(site).getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER);
+        verify(site).getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER, build);
     }
 
     @Test
@@ -95,7 +95,7 @@ public class JiraCreateReleaseNotesTest {
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
         Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.anyObject());
         jcrn.setUp(build, launcher, buildListener);
-        verify(site).getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JIRA_OTHER_FILTER);
+        verify(site).getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JIRA_OTHER_FILTER, build);
         //assert that build not fail
         assertThat(finishedListener.getResult(), Matchers.nullValue());
     }
@@ -124,9 +124,9 @@ public class JiraCreateReleaseNotesTest {
     public void releaseNotesContent() throws InterruptedException, IOException, TimeoutException {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
-        when(site.getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER)).thenCallRealMethod();
+        when(site.getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER, build)).thenCallRealMethod();
         JiraSession session = Mockito.mock(JiraSession.class);
-        doReturn(session).when(site).getSession();
+        doReturn(session).when(site).getSession(build);
         Issue issue1 = Mockito.mock(Issue.class);
         IssueType issueType1 = Mockito.mock(IssueType.class);
         Status issueStatus = Mockito.mock(Status.class);

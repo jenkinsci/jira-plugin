@@ -6,6 +6,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,7 +74,7 @@ public class JiraIssueUpdateBuilderTest {
 	public void performTimeout() throws InterruptedException, IOException, TimeoutException {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
 		doReturn(site).when(builder).getSiteForJob(Mockito.any());
-		doThrow(new TimeoutException()).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any());
+		doThrow(new TimeoutException()).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any(), any(Run.class));
 		builder.perform(build, workspace, launcher, listener);
 		assertThat(result, is(Result.FAILURE));
 	}
@@ -82,7 +83,7 @@ public class JiraIssueUpdateBuilderTest {
 	public void performProgressFails() throws InterruptedException, IOException, TimeoutException {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
 		doReturn(site).when(builder).getSiteForJob(Mockito.any());
-		doReturn(false).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any());
+		doReturn(false).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any(), any(Run.class));
 		builder.perform(build, workspace, launcher, listener);
 		assertThat(result, is(Result.UNSTABLE));
 	}
@@ -91,7 +92,7 @@ public class JiraIssueUpdateBuilderTest {
 	public void performProgressOK() throws InterruptedException, IOException, TimeoutException {
 		JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
 		doReturn(site).when(builder).getSiteForJob(Mockito.any());
-		doReturn(true).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any());
+		doReturn(true).when(site).progressMatchingIssues(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), (PrintStream) Mockito.any(), any(Run.class));
 		builder.perform(build, workspace, launcher, listener);
 		assertThat(result, is(Result.SUCCESS));
 	}

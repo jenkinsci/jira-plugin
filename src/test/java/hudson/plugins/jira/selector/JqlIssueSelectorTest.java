@@ -1,6 +1,8 @@
 package hudson.plugins.jira.selector;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
+
+import hudson.model.Run;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import org.junit.Before;
@@ -15,6 +17,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.IsEqual.equalTo;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -29,7 +32,7 @@ public class JqlIssueSelectorTest {
     public void prepare() throws IOException {
         session = mock(JiraSession.class);
         site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
+        when(site.getSession(any(Run.class))).thenReturn(session);
     }
 
     @Test

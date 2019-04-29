@@ -94,7 +94,7 @@ class Updater {
                 return true;    // nothing found here.
             }
 
-            JiraSession session = site.getSession();
+            JiraSession session = site.getSession(build);
             if (session == null) {
                 logger.println(Messages.NoRemoteAccess());
                 build.setResult(Result.FAILURE);
