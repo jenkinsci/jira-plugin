@@ -16,6 +16,9 @@ import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+
+import hudson.model.ItemGroup;
+import hudson.model.Run;
 import hudson.security.ACL;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
@@ -43,6 +46,34 @@ public class CredentialsHelper {
 				),
 				CredentialsMatchers.withId(credentialsId)
 		);
+	}
+
+	@CheckForNull
+	public static StandardUsernamePasswordCredentials lookupItemGroupCredentials(@CheckForNull String credentialsId, @CheckForNull URL url, @CheckForNull ItemGroup context) {
+		if (credentialsId == null) {
+			return null;
+		}
+		return CredentialsMatchers.firstOrNull(
+				CredentialsProvider.lookupCredentials(
+						StandardUsernamePasswordCredentials.class,
+						context,
+						ACL.SYSTEM,
+						URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build()
+				),
+				CredentialsMatchers.withId(credentialsId)
+		);
+	}
+	
+	@CheckForNull
+	public static StandardUsernamePasswordCredentials lookupCredentialsById(@CheckForNull String credentialsId, @CheckForNull URL url, @CheckForNull Run<?,?> build) {
+		if (credentialsId == null) {
+			return null;
+		}
+		return CredentialsProvider.findCredentialById(
+				credentialsId,
+				StandardUsernamePasswordCredentials.class,
+				build,
+				URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build());
 	}
 
 	public static StandardUsernamePasswordCredentials migrateCredentials(@Nonnull String username, String password, @CheckForNull URL url) {
