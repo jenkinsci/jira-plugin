@@ -1220,7 +1220,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withAll(
                         CredentialsProvider.lookupCredentials(
                             StandardUsernamePasswordCredentials.class,
-                            context,
+                            null == context ? Jenkins.getInstance() : context,
                             ACL.SYSTEM,
                             URIRequirementBuilder.fromUri(url).build()
                         )

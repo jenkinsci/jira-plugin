@@ -53,6 +53,9 @@ public class CredentialsHelper {
 		if (credentialsId == null) {
 			return null;
 		}
+		if (null == context) {
+			return lookupSystemCredentials(credentialsId, url);
+		}
 		return CredentialsMatchers.firstOrNull(
 				CredentialsProvider.lookupCredentials(
 						StandardUsernamePasswordCredentials.class,
@@ -68,6 +71,9 @@ public class CredentialsHelper {
 	public static StandardUsernamePasswordCredentials lookupCredentialsById(@CheckForNull String credentialsId, @CheckForNull URL url, @CheckForNull Run<?,?> build) {
 		if (credentialsId == null) {
 			return null;
+		}
+		if (null == build) {
+			return lookupSystemCredentials(credentialsId, url);
 		}
 		return CredentialsProvider.findCredentialById(
 				credentialsId,
