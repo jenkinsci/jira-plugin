@@ -42,9 +42,9 @@ class JiraSiteTest extends Specification {
         AbstractFolder folder1 = Mock()
         AbstractFolder folder2 = Mock()
         AbstractFolder folder3 = Mock()
-        DescribableList<AbstractFolderProperty> folder1Properties = Mock()
-        DescribableList<AbstractFolderProperty> folder2Properties = Mock()
-        DescribableList<AbstractFolderProperty> folder3Properties = Mock()
+        DescribableList folder1Properties = Mock()
+        DescribableList folder2Properties = Mock()
+        DescribableList folder3Properties = Mock()
         JiraSite site1 = Mock()
         JiraSite site2 = Mock()
 
