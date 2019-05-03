@@ -77,7 +77,7 @@ public class SearchIssuesStepTest {
 
         JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
         when(jiraProjectProperty.getSite()).thenReturn(site);
-        when(jiraProjectProperty.getJiraProjectSession((Item) mockJob)).thenReturn(session);
+        when(jiraProjectProperty.getJiraProjectSession()).thenReturn(session);
         when(mockJob.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
 
         Map<String, Object> r = new HashMap<>();

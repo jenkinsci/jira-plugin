@@ -76,8 +76,7 @@ public class JiraCreateIssueNotifierTest {
         when(currentBuild.getEnvironment(buildListener)).thenReturn(env);
         when(currentBuild.getPreviousBuild()).thenReturn(previousBuild);
         when(buildListener.getLogger()).thenReturn(logger);
-        when(jiraProjectProperty.getJiraProjectSession((Item) project)).thenReturn(session);
-        when(jiraProjectProperty.getJiraProjectSession((Item) job)).thenReturn(session);
+        when(jiraProjectProperty.getJiraProjectSession()).thenReturn(session);
         when(session.getComponents(Mockito.anyString())).thenReturn(jiraComponents);
         when(job.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
         when(project.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);

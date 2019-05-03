@@ -81,7 +81,7 @@ public class VersionCreatorTest {
         when(site.getSession()).thenReturn(session);
         doReturn(site).when(versionCreator).getSiteForProject(any());
         when(project.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
-        when(jiraProjectProperty.getJiraProjectSession((Item) project)).thenReturn(session);
+        when(jiraProjectProperty.getJiraProjectSession()).thenReturn(session);
     }
 
     @Test

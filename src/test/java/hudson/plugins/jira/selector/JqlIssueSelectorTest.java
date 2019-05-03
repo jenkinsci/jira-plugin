@@ -43,7 +43,7 @@ public class JqlIssueSelectorTest {
         when(site.getSession()).thenReturn(session);
         when(run.getParent()).thenReturn(job);
         when(job.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
-        when(jiraProjectProperty.getJiraProjectSession((Item) job)).thenReturn(session);
+        when(jiraProjectProperty.getJiraProjectSession()).thenReturn(session);
     }
 
     @Test
