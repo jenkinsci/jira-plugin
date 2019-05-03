@@ -8,7 +8,6 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
-import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -74,8 +73,8 @@ public class SearchIssuesStep extends AbstractStepImpl {
 
         @Override
         protected List<String> run() throws Exception {
-            JiraSite site = JiraSite.get(run.getParent());
-            JiraSession session = JiraProjectProperty.getJiraProjectSession(run.getParent());
+            JiraProjectProperty jiraProjectProperty = (JiraProjectProperty) run.getParent().getProperty(JiraProjectProperty.class);
+            JiraSession session = jiraProjectProperty.getJiraProjectSession();
             if (session == null) {
                 listener.getLogger().println(Messages.FailedToConnect());
                 throw new AbortException("Cannot open jira session - error occurred");

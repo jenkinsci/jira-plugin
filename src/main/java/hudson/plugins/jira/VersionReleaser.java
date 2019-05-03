@@ -47,7 +47,8 @@ public class VersionReleaser {
                 listener.getLogger().println(Messages.VersionReleaser_AlreadyReleased(realRelease, realProjectKey));
             } else {
                 listener.getLogger().println(Messages.VersionReleaser_MarkingReleased(realRelease, realProjectKey));
-                releaseVersion(realProjectKey, realRelease, realDescription, JiraProjectProperty.getJiraProjectSession(project));
+                final JiraProjectProperty jiraProjectProperty = project.getProperty(JiraProjectProperty.class);
+                releaseVersion(realProjectKey, realRelease, realDescription, jiraProjectProperty.getJiraProjectSession());
             }
         } catch (Exception e) {
             listener.fatalError(

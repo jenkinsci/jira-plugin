@@ -43,7 +43,8 @@ class VersionCreator {
 				listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
 			} else {
 				listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
-				addVersion(realVersion, realProjectKey, JiraProjectProperty.getJiraProjectSession(project));
+				final JiraProjectProperty jiraProjectProperty = project.getProperty(JiraProjectProperty.class);
+				addVersion(realVersion, realProjectKey, jiraProjectProperty.getJiraProjectSession());
 			}
 
 		} catch (Exception e) {

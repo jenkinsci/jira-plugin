@@ -93,7 +93,8 @@ class Updater {
                     logger.println("No JIRA issues found.");
                 return true;    // nothing found here.
             }
-            JiraSession session = JiraProjectProperty.getJiraProjectSession(build.getParent());
+            final JiraProjectProperty jiraProjectProperty = build.getParent().getProperty(JiraProjectProperty.class);
+            JiraSession session = jiraProjectProperty.getJiraProjectSession();
             if (session == null) {
                 logger.println(Messages.NoRemoteAccess());
                 build.setResult(Result.FAILURE);

@@ -109,38 +109,23 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
     }
 
     /**
-     * Gets a remote access session to JIRA for this Item.
+     * Gets a remote access session to JIRA.
      * 
      * @param item
      * @return
      */
-    public JiraSession getJiraProjectSession(Item item) {
+    public JiraSession getJiraProjectSession() {
         JiraSite jiraSite = getSite();
         if (jiraSite == null) {
-            throw new IllegalStateException("JIRA site needs to be configured in the project " + item.getFullDisplayName());
+            throw new IllegalStateException("JIRA site needs to be configured in the project");
         }
         if (!this.useAlternativeCredential || null == this.jobCredentialId) {
             return jiraSite.getSession();
         }
         if (jiraSession == null) {
-            jiraSession = jiraSite.getSession(this.jobCredentialId, item);
+            jiraSession = jiraSite.getSession(this.jobCredentialId);
         }
         return jiraSession;
-    }
-
-    /**
-     * Gets a remote access session to JIRA.
-     * Because it is a static method, it can be call by a job wich want to get a connection to Jira
-     * 
-     * @param job
-     * @return
-     */
-    public static JiraSession getJiraProjectSession(Job<?, ?> job) {
-        final JiraProjectProperty jiraProjectProperty = job.getProperty(JiraProjectProperty.class);
-        if (jiraProjectProperty != null) {
-            return jiraProjectProperty.getJiraProjectSession((Item) job);
-        }
-        return null;
     }
 
     @Extension
@@ -250,13 +235,13 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          * @return
          */
         public FormValidation doTestConnection(@QueryParameter String jobCredentialId,
-                @QueryParameter String siteName, @AncestorInPath Item item) {
+                @QueryParameter String siteName) {
             if(StringUtils.isEmpty(jobCredentialId)) {
                 return FormValidation.error("Credential must be specified");
             }
             JiraSite currentSite = getSiteByName(siteName);
             if(null != currentSite) {
-                JiraSession session = currentSite.getSession(jobCredentialId, item);
+                JiraSession session = currentSite.getSession(jobCredentialId);
                 if(session != null) {
                     try {
                         session.getMyPermissions();

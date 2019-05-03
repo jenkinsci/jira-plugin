@@ -523,8 +523,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return
      */
     @Nullable
-    public JiraSession getSession(@Nullable String credentialsId, Item item) {
-        UsernamePasswordCredentials projectCredentials = CredentialsHelper.lookupProjectCredentials(credentialsId, this.url, item);
+    public JiraSession getSession(@Nullable String credentialsId) {
+        UsernamePasswordCredentials projectCredentials = CredentialsHelper.lookupSystemCredentials(credentialsId, this.url);
         return createSession(projectCredentials);
     }
 
@@ -1221,7 +1221,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withAll(
                         CredentialsProvider.lookupCredentials(
                             StandardUsernamePasswordCredentials.class,
-                            context,
+                            Jenkins.getInstance(),
                             ACL.SYSTEM,
                             URIRequirementBuilder.fromUri(url).build()
                         )

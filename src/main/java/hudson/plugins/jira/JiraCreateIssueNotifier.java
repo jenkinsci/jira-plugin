@@ -11,6 +11,8 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Item;
+import hudson.model.Project;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -20,6 +22,8 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
+
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -274,7 +278,8 @@ public class JiraCreateIssueNotifier extends Notifier {
      */
     private JiraSession getJiraSession(AbstractBuild<?, ?> build) throws IOException {
 
-        JiraSession session = JiraProjectProperty.getJiraProjectSession(build.getProject());
+        final JiraProjectProperty jiraProjectProperty = build.getParent().getProperty(JiraProjectProperty.class);
+        JiraSession session = jiraProjectProperty.getJiraProjectSession();
 
         if (session == null) {
             throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
@@ -446,30 +451,40 @@ public class JiraCreateIssueNotifier extends Notifier {
             return FormValidation.ok();
         }
 
-        public ListBoxModel doFillPriorityIdItems() {
+        public ListBoxModel doFillPriorityIdItems(@AncestorInPath Item item) {
+            Project project = null;
             ListBoxModel items = new ListBoxModel().add(""); // optional field
-            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-                JiraSession session = site.getSession();
-                if (session != null) {
-                    for (Priority priority : session.getPriorities()) {
-                        items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
+            if(item instanceof Project) {
+                project = (Project) item;
+                final JiraProjectProperty jiraProjectProperty = (JiraProjectProperty) project.getProperty(JiraProjectProperty.class);
+                JiraSite site = jiraProjectProperty.getSite();
+                if(null != site) {
+                    JiraSession session = site.getSession();
+                    if (session != null) {
+                        for (Priority priority : session.getPriorities()) {
+                            items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
+                        }
                     }
                 }
             }
             return items;
         }
 
-        public ListBoxModel doFillTypeIdItems() {
+        public ListBoxModel doFillTypeIdItems(@AncestorInPath Item item) {
+            Project project = null;
             ListBoxModel items = new ListBoxModel().add(""); // optional field
-            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
+            if(item instanceof Project) {
+                project = (Project) item;
+                final JiraProjectProperty jiraProjectProperty = (JiraProjectProperty) project.getProperty(JiraProjectProperty.class);
+                JiraSite site = jiraProjectProperty.getSite();
                 JiraSession session = site.getSession();
                 if (session != null) {
                     for (IssueType type : session.getIssueTypes()) {
                         items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
-                    }
-                }
-            }
-            return items;
+                   }
+               }
+           }
+           return items;
         }
 
         @Override

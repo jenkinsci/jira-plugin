@@ -47,26 +47,6 @@ public class CredentialsHelper {
 		);
 	}
 	
-	@CheckForNull
-	public static StandardUsernamePasswordCredentials lookupProjectCredentials(@CheckForNull String credentialsId, @CheckForNull URL url, @CheckForNull Item item) {
-		if(item == null) {
-			return lookupSystemCredentials(credentialsId, url);
-		}
-		if (credentialsId == null) {
-			return null;
-		}
-		
-		return CredentialsMatchers.firstOrNull(
-				CredentialsProvider.lookupCredentials(
-						StandardUsernamePasswordCredentials.class,
-						item,
-						ACL.SYSTEM,
-						URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build()
-				),
-				CredentialsMatchers.withId(credentialsId)
-		);
-	}
-
 	public static StandardUsernamePasswordCredentials migrateCredentials(@Nonnull String username, String password, @CheckForNull URL url) {
 		List<StandardUsernamePasswordCredentials> credentials = CredentialsMatchers.filter(
 				CredentialsProvider.lookupCredentials(

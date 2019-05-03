@@ -73,7 +73,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException, TimeoutException {
         Job<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(Job.class);
 
-        JiraSession session = JiraProjectProperty.getJiraProjectSession(context);
+        JiraSession session = context.getProperty(JiraProjectProperty.class).getJiraProjectSession();
         if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
         List<Issue> issues = session.getIssuesFromJqlSearch(jiraIssueFilter);

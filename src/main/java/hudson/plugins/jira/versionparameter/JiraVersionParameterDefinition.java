@@ -68,7 +68,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         if (site == null)
             throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
 
-        JiraSession session = JiraProjectProperty.getJiraProjectSession(context);
+        JiraSession session = context.getProperty(JiraProjectProperty.class).getJiraProjectSession();
         if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
 
         return session.getVersions(projectKey).stream().

@@ -81,7 +81,8 @@ public class CommentStep extends AbstractStepImpl {
             if(site == null) {
                 return null;
             }
-            JiraSession session = JiraProjectProperty.getJiraProjectSession(run.getParent());
+            JiraProjectProperty jiraProjectProperty = (JiraProjectProperty) run.getParent().getProperty(JiraProjectProperty.class);
+            JiraSession session = jiraProjectProperty.getJiraProjectSession();
             if (session == null) {
                 listener.getLogger().println(Messages.FailedToConnect());
                 return null;
