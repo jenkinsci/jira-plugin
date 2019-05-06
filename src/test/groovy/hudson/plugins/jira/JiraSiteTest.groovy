@@ -36,7 +36,7 @@ class JiraSiteTest extends Specification {
         when(JiraGlobalConfiguration.get()).thenReturn(jiraGlobalConfiguration)
         jiraGlobalConfiguration.getSites() >> Collections.emptyList()
         Job<?, ?> job = Mock()
-        JiraProjectProperty jpp = Spy(new JiraProjectProperty("siteName", false, null))
+        JiraProjectProperty jpp = Spy(JiraProjectProperty, constructorArgs: ["siteName", false, null])
         JiraFolderProperty jfp = Mock()
         ItemGroup nonFolderParent = Mock()
         AbstractFolder folder1 = Mock()
