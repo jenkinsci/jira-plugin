@@ -213,7 +213,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          * @param jobCredentialId
          * @return
          */
-        public ListBoxModel doFillJobCredentialIdItems(@AncestorInPath Item item, @QueryParameter String siteName) {
+        public ListBoxModel doFillJobCredentialIdItems(@QueryParameter String siteName) {
             JiraSite site = getSiteByName(siteName);
             URL url = null != site ? site.getUrl() : null;
             if(null == url) {
@@ -222,7 +222,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             }
             return new StandardUsernameListBoxModel()
                     .includeEmptyValue()
-                    .includeMatchingAs(ACL.SYSTEM, item, StandardUsernamePasswordCredentials.class,
+                    .includeMatchingAs(ACL.SYSTEM, Jenkins.getInstance(), StandardUsernamePasswordCredentials.class,
                             URIRequirementBuilder.fromUri(url.toString()).build(), CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class));
         }
 
@@ -260,7 +260,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          * @param siteName
          * @return
          */
-        private JiraSite getSiteByName(String siteName) {
+        public JiraSite getSiteByName(String siteName) {
             JiraGlobalConfiguration jiraGlobalConfiguration = (JiraGlobalConfiguration) Jenkins.getInstance()
                     .getDescriptorOrDie(JiraGlobalConfiguration.class);
             for (JiraSite site : jiraGlobalConfiguration.getSites()) {
