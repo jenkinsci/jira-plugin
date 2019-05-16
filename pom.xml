@@ -21,7 +21,7 @@
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
     <powermock.version>1.6.3</powermock.version>
-    <jira-rest-client.version>5.0.4</jira-rest-client.version>
+    <jira-rest-client.version>5.1.0</jira-rest-client.version>
     <fugue.version>2.6.1</fugue.version>
     <workflow.version>2.0</workflow.version>
 
