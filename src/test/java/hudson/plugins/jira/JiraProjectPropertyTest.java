@@ -3,6 +3,7 @@ package hudson.plugins.jira;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import hudson.model.FreeStyleProject;
@@ -14,6 +15,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.mockito.Mockito;
+import org.mockito.Spy;
 
 public class JiraProjectPropertyTest {
 
@@ -134,5 +137,23 @@ public class JiraProjectPropertyTest {
         assertNotNull(property.getSite());
         assertEquals(expected.getName(), property.siteName);
         r.assertEqualDataBoundBeans(expected, property.getSite());
+    }
+
+    @Test
+    @ConfiguredWithCode("single-site.yml")
+    public void getJiraProjectSession() throws Exception {
+        freeStyleProject = r.createFreeStyleProject();
+        JiraSite site = new JiraSite("https://jira.com/");
+        JiraSite spySite = Mockito.spy(site);
+        JiraSession sessionMock = Mockito.mock(JiraSession.class);
+        Mockito.when(spySite.getSession()).thenReturn(sessionMock);
+        JiraProjectProperty prop = new JiraProjectProperty(spySite.getName(), false, null);
+        freeStyleProject.addProperty(prop);
+        JiraProjectProperty property = freeStyleProject.getProperty(JiraProjectProperty.class);
+        JiraProjectProperty propertySpy = Mockito.spy(property);
+        assertNotNull(propertySpy);
+        Mockito.when(propertySpy.getSite()).thenReturn(spySite);
+        assertNotNull(propertySpy.getSite());
+        assertNotNull(propertySpy.getJiraProjectSession());
     }
 }
