@@ -7,10 +7,10 @@ jdk:
 
 install:
   - mvn clean test-compile -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode -V
-script:
-  - mvn -P enable-jacoco install jacoco:report --batch-mode
 after_success:
   - mvn coveralls:report --batch-mode
+  - mvn -P enable-jacoco install jacoco:report --batch-mode
+  - mvn -DskipTests=true verify
 
 before_cache:
   - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
