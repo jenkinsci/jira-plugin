@@ -111,7 +111,6 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
     /**
      * Gets a remote access session to JIRA.
      * 
-     * @param item
      * @return
      */
     public JiraSession getJiraProjectSession() {
@@ -208,9 +207,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         /**
          * Fill credentials availables for the dropbox on the configuration screen
          * 
-         * @param item
-         * @param url
-         * @param jobCredentialId
+         * @param siteName
          * @return
          */
         public ListBoxModel doFillJobCredentialIdItems(@QueryParameter String siteName) {
@@ -231,7 +228,6 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          * 
          * @param jobCredentialId
          * @param siteName
-         * @param item
          * @return
          */
         public FormValidation doTestConnection(@QueryParameter String jobCredentialId,
@@ -255,7 +251,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         }
 
         /**
-         * Find the site with name
+         * Return the JiraSite with the name passed as a parameter
          * 
          * @param siteName
          * @return

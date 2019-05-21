@@ -451,6 +451,13 @@ public class JiraCreateIssueNotifier extends Notifier {
             return FormValidation.ok();
         }
 
+        /**
+         * <p>Get the list of priorites configured in Jira for this project</p>
+         * <p>Display the list of priorites type as a dropdown list on Jenkins</p>
+         * 
+         * @param item
+         * @return
+         */
         public ListBoxModel doFillPriorityIdItems(@AncestorInPath Item item) {
             Project project = null;
             ListBoxModel items = new ListBoxModel().add(""); // optional field
@@ -458,7 +465,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                 project = (Project) item;
                 final JiraProjectProperty jiraProjectProperty = (JiraProjectProperty) project.getProperty(JiraProjectProperty.class);
                 JiraSite site = jiraProjectProperty.getSite();
-                if(null != site) {
+                if(site != null) {
                     JiraSession session = site.getSession();
                     if (session != null) {
                         for (Priority priority : session.getPriorities()) {
@@ -470,6 +477,13 @@ public class JiraCreateIssueNotifier extends Notifier {
             return items;
         }
 
+        /**
+         * <p>Get the list of issues types configured in Jira for this project</p>
+         * <p>Display a list of theses issues type as a dropdown list on Jenkins</p>
+         * 
+         * @param item
+         * @return
+         */
         public ListBoxModel doFillTypeIdItems(@AncestorInPath Item item) {
             Project project = null;
             ListBoxModel items = new ListBoxModel().add(""); // optional field
@@ -477,12 +491,14 @@ public class JiraCreateIssueNotifier extends Notifier {
                 project = (Project) item;
                 final JiraProjectProperty jiraProjectProperty = (JiraProjectProperty) project.getProperty(JiraProjectProperty.class);
                 JiraSite site = jiraProjectProperty.getSite();
-                JiraSession session = site.getSession();
-                if (session != null) {
-                    for (IssueType type : session.getIssueTypes()) {
-                        items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
-                   }
-               }
+                if(site != null) {
+                    JiraSession session = site.getSession();
+                    if (session != null) {
+                        for (IssueType type : session.getIssueTypes()) {
+                            items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
+                        }
+                    }
+                }
            }
            return items;
         }
