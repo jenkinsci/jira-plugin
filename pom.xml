@@ -390,7 +390,7 @@
     </repository>
     <repository>
       <id>atlassian-public</id>
-      <url>https://packages.atlassian.com/maven/repository/public</url>
+      <url>https://packages.atlassian.com/mvn/maven-public/</url>
       <releases>
         <enabled>true</enabled>
         <checksumPolicy>warn</checksumPolicy>
@@ -405,8 +405,18 @@
 
   <pluginRepositories>
     <pluginRepository>
+       <id>repo.jenkins-ci.org</id>
+       <url>http://repo.jenkins-ci.org/public/</url>
+       <releases>
+         <enabled>true</enabled>
+       </releases>
+       <snapshots>
+         <enabled>false</enabled>
+       </snapshots>
+    </pluginRepository>
+    <pluginRepository>
       <id>atlassian-public</id>
-      <url>https://packages.atlassian.com/maven/repository/public</url>
+      <url>https://packages.atlassian.com/mvn/maven-public/</url>
       <releases>
         <enabled>true</enabled>
         <checksumPolicy>warn</checksumPolicy>
