@@ -212,11 +212,11 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          */
         public ListBoxModel doFillJobCredentialIdItems(@QueryParameter String siteName) {
             JiraSite site = getSiteByName(siteName);
-            URL url = null != site ? site.getUrl() : null;
-            if(null == url) {
-                return new StandardUsernameListBoxModel()
+            if(site == null) {
+                 return new StandardUsernameListBoxModel()
                         .includeEmptyValue();
             }
+            URL url = site.getUrl();
             return new StandardUsernameListBoxModel()
                     .includeEmptyValue()
                     .includeMatchingAs(ACL.SYSTEM, Jenkins.getInstance(), StandardUsernamePasswordCredentials.class,

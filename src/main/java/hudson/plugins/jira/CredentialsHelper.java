@@ -17,7 +17,6 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 
-import hudson.model.Item;
 import hudson.security.ACL;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
