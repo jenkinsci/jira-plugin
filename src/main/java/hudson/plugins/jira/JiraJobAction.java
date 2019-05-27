@@ -67,10 +67,8 @@ public class JiraJobAction implements Action {
     /**
      * Adds a {@link JiraJobAction} to a {@link WorkflowJob} if it belongs to a {@link MultiBranchProject}
      * and its name contains an JIRA issue key
-     * @param job to add the property to
      * @param site to fetch issue data
      * @param run Run in progress
-     * @return
      * @throws IOException if something goes wrong fetching the JIRA issue
      */
     public static void setAction(@Nonnull Run<?, ?> run, @Nonnull JiraSite site) throws IOException {

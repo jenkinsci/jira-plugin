@@ -909,6 +909,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
     }
 
+    @Deprecated
+    public boolean existsIssue(String id) {
+        try {
+            return getIssue(id, null) != null;
+        } catch ( IOException e ) { // restoring backward compat means even avoid exception
+            throw new RuntimeException( e.getMessage(),e );
+        }
+    }
+
     /**
      * Returns all versions for the given project key.
      *
@@ -932,7 +941,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey the project key
      * @param versionName the version
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
-	 * @param run 
+     * @param run         current Run
      * @return release notes
      * @throws TimeoutException if too long
      */
@@ -986,7 +995,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param projectKey The project key
      * @param toVersion  The new fixVersion
      * @param query      A JQL Query
-     * @param build 
+     * @param build      AbstractBuild current build
      * @throws TimeoutException if too long
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query, AbstractBuild<?, ?> build) throws TimeoutException {
