@@ -136,7 +136,9 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
      * it can potentially use stale data). Number portion is not checked at all.
      *
      * @param id String like MNG-1234
-     * @param build 
+     * @param build Run in progress
+     * @param site JiraSite
+     * @return boolean
      */
     protected boolean hasProjectForIssue(String id, JiraSite site, Run<?, ?> build) {
         int idx = id.indexOf('-');

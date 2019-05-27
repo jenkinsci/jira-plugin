@@ -58,6 +58,7 @@ public class JiraSession {
      * Returns the set of project keys (like MNG, JENKINS, etc) that are
      * available in this JIRA.
      * Guarantees to return all project keys in upper case.
+     * @return Set<String> set of project keys
      */
     public Set<String> getProjectKeys() {
         if (projectKeys == null) {
@@ -73,7 +74,10 @@ public class JiraSession {
      * Adds a comment to the existing issue. Constrains the visibility of the
      * comment the the supplied groupVisibility.
      *
-     * @param groupVisibility
+     * @param issueId id of the issue
+     * @param comment String value of the comment
+     * @param groupVisibility 
+     * @param roleVisibility 
      */
     public void addComment(String issueId, String comment,
                            String groupVisibility, String roleVisibility) {
@@ -131,6 +135,7 @@ public class JiraSession {
      *
      * @param jqlSearch JQL query string to execute
      * @return issues matching the JQL query
+     * @throws TimeoutException
      */
     public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException {
         return service.getIssuesFromJqlSearch(jqlSearch, Integer.MAX_VALUE);
@@ -202,8 +207,8 @@ public class JiraSession {
 
     /**
      * Release given version in given project
-     * @param projectKey
-     * @param version
+     * @param projectKey key of the project
+     * @param version version to release
      */
     public void releaseVersion(String projectKey, ExtendedVersion version) {
         LOGGER.fine("Releasing version: " + version.getName());
@@ -216,6 +221,7 @@ public class JiraSession {
      * @param projectKey The JIRA Project key
      * @param version    The replacement version
      * @param query      The JQL Query
+     * @throws TimeoutException
      */
     public void migrateIssuesToFixVersion(String projectKey, String version, String query) throws TimeoutException {
 
@@ -245,6 +251,7 @@ public class JiraSession {
      * @param fromVersion The name of the version to replace
      * @param toVersion   The name of the replacement version
      * @param query       The JQL Query
+     * @throws TimeoutException
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
 
@@ -298,6 +305,7 @@ public class JiraSession {
      * @param projectKey The JIRA Project
      * @param version    The version to add
      * @param query      The JQL Query
+     * @throws TimeoutException
      */
     public void addFixVersion(String projectKey, String version, String query) throws TimeoutException {
 
@@ -326,8 +334,8 @@ public class JiraSession {
     /**
      * Progresses the issue's workflow by performing the specified action. The issue's new status is returned.
      *
-     * @param issueKey
-     * @param actionId
+     * @param issueKey key of the issue
+     * @param actionId id of the action
      * @return The new status
      */
     public String progressWorkflowAction(String issueKey, Integer actionId) {
@@ -340,8 +348,8 @@ public class JiraSession {
     /**
      * Returns the matching action id for a given action name.
      *
-     * @param issueKey
-     * @param workflowAction
+     * @param issueKey key of the issue
+     * @param workflowAction action name
      * @return The action id, or null if the action cannot be found.
      */
     public Integer getActionIdForIssue(String issueKey, String workflowAction) {
@@ -361,7 +369,7 @@ public class JiraSession {
     /**
      * Returns the status name by status id.
      *
-     * @param statusId
+     * @param statusId status id
      * @return status name
      */
     public String getStatusById(Long statusId) {
@@ -396,11 +404,11 @@ public class JiraSession {
     /**
      * Returns issue-id of the created issue
      *
-     * @param projectKey
-     * @param description
-     * @param assignee
-     * @param components
-     * @param summary
+     * @param projectKey key of project
+     * @param description String description of the issue
+     * @param assignee String assignee of the issue
+     * @param components Iterable<String> list of components
+     * @param summary String summary of the issue
      * @return The issue id
      */
     @Deprecated
@@ -416,8 +424,8 @@ public class JiraSession {
     /**
      * Adds a comment to the existing issue.There is no constrains to the visibility of the comment.
      *
-     * @param issueId
-     * @param comment
+     * @param issueId String id of the issue
+     * @param comment String comment body to add
      */
     public void addCommentWithoutConstrains(String issueId, String comment) {
         service.addComment(issueId, comment, null, null);
@@ -426,7 +434,7 @@ public class JiraSession {
     /**
      * Returns information about the specific issue as identified by the issue id
      *
-     * @param issueId
+     * @param issueId id of the issue to return
      * @return issue object
      */
     public Issue getIssueByKey(String issueId) {
@@ -436,7 +444,7 @@ public class JiraSession {
     /**
      * Returns all the components for the particular project
      *
-     * @param projectKey
+     * @param projectKey String key of the project
      * @return An array of components
      */
     public List<Component> getComponents(String projectKey) {
@@ -447,7 +455,7 @@ public class JiraSession {
      * Creates a new version and returns it
      *
      * @param version    version id to create
-     * @param projectKey
+     * @param projectKey String key of the project
      * @return created Version instance
      *
      */
@@ -457,6 +465,7 @@ public class JiraSession {
 
     /**
      * Get User's permissions
+     * @return Permissions
      */
     public Permissions getMyPermissions(){ return service.getMyPermissions(); }
 
