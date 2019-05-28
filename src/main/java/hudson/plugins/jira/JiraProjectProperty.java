@@ -2,14 +2,11 @@ package hudson.plugins.jira;
 
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import java.net.URL;
-import java.util.logging.Level;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
@@ -19,7 +16,6 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.Item;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
 import hudson.model.Job;
@@ -211,7 +207,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          * @return
          */
         public ListBoxModel doFillJobCredentialIdItems(@QueryParameter String siteName) {
-            JiraSite site = getSiteByName(siteName);
+            JiraSite site = JiraSite.get(siteName);
             if(site == null) {
                  return new StandardUsernameListBoxModel()
                         .includeEmptyValue();
@@ -230,12 +226,12 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
          * @param siteName
          * @return
          */
-        public FormValidation doTestConnection(@QueryParameter String jobCredentialId,
+        public static FormValidation doTestConnection(@QueryParameter String jobCredentialId,
                 @QueryParameter String siteName) {
             if(StringUtils.isEmpty(jobCredentialId)) {
                 return FormValidation.error("Credential must be specified");
             }
-            JiraSite currentSite = getSiteByName(siteName);
+            JiraSite currentSite = JiraSite.get(siteName);
             if(null != currentSite) {
                 JiraSession session = currentSite.getSession(jobCredentialId);
                 if(session != null) {
@@ -248,23 +244,6 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
                 }
             }
             return FormValidation.error("Failed to login to JIRA");
-        }
-
-        /**
-         * Return the JiraSite with the name passed as a parameter
-         * 
-         * @param siteName
-         * @return
-         */
-        public JiraSite getSiteByName(String siteName) {
-            JiraGlobalConfiguration jiraGlobalConfiguration = (JiraGlobalConfiguration) Jenkins.getInstance()
-                    .getDescriptorOrDie(JiraGlobalConfiguration.class);
-            for (JiraSite site : jiraGlobalConfiguration.getSites()) {
-                if (site.getName().equals(siteName)) {
-                    return site;
-                }
-            }
-            return null;
         }
     }
 }

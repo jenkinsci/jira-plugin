@@ -7,10 +7,15 @@ import static org.junit.Assert.assertTrue;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import hudson.model.FreeStyleProject;
+import hudson.util.FormValidation;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -156,4 +161,23 @@ public class JiraProjectPropertyTest {
         assertNotNull(propertySpy.getSite());
         assertNotNull(propertySpy.getJiraProjectSession());
     }
+    
+    @Test(expected = Test.None.class)
+    public void doTestConnectionTest() throws IOException {
+        freeStyleProject = r.createFreeStyleProject();
+        JiraSite site = new JiraSite("https://jira.com/");
+        String jobCredentialId = "jobCredentialId";
+        String siteName = "siteName";
+        JiraSite spySite = Mockito.spy(site);
+        JiraSession sessionMock = Mockito.mock(JiraSession.class);
+        Mockito.when(spySite.getSession(jobCredentialId)).thenReturn(sessionMock);
+        JiraProjectProperty prop = new JiraProjectProperty(spySite.getName(), false, null);
+        freeStyleProject.addProperty(prop);
+        FormValidation result = JiraProjectProperty.DescriptorImpl.doTestConnection(jobCredentialId, siteName);
+        Assert.assertEquals("Failed to login to JIRA", result.getMessage());
+        result = JiraProjectProperty.DescriptorImpl.doTestConnection(null, siteName);
+        Assert.assertEquals("Credential must be specified", result.getMessage());
+    }
+    
+    
 }

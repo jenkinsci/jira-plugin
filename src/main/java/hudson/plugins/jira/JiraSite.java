@@ -866,6 +866,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
         }
 
+        
         // Check up the folder chain if a site is defined there
         // This only supports one site per folder
         List<JiraSite> sitesFromFolders = JiraFolderProperty.getSitesFromFolders(p.getParent());
@@ -880,6 +881,23 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return sites.get(0);
         }
 
+        return null;
+    }
+    
+    /**
+     * Gets the effective {@link JiraSite} associated with the given name.
+     *
+     * @return null
+     *         if no such was found.
+     */
+    public static JiraSite get(String siteName) {
+        JiraGlobalConfiguration jiraGlobalConfiguration = (JiraGlobalConfiguration) Jenkins.getInstance()
+                .getDescriptorOrDie(JiraGlobalConfiguration.class);
+        for (JiraSite site : jiraGlobalConfiguration.getSites()) {
+            if (site.getName().equals(siteName)) {
+                return site;
+            }
+        }
         return null;
     }
 
