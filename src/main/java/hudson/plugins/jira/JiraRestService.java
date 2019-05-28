@@ -425,9 +425,8 @@ public class JiraRestService {
     /**
      * Get User's permissions
      * @return Permissions object
-     * @throws RestClientException
      */
-    public Permissions getMyPermissions() throws RestClientException {
+    public Permissions getMyPermissions() {
         return jiraRestClient.getMyPermissionsRestClient().getMyPermissions(null).claim();
     }
 }
