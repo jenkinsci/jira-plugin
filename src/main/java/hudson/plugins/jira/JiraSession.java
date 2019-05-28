@@ -58,7 +58,7 @@ public class JiraSession {
      * Returns the set of project keys (like MNG, JENKINS, etc) that are
      * available in this JIRA.
      * Guarantees to return all project keys in upper case.
-     * @return Set<String> set of project keys
+     * @return set of project keys
      */
     public Set<String> getProjectKeys() {
         if (projectKeys == null) {
