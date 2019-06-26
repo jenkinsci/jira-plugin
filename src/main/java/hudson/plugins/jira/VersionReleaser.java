@@ -84,8 +84,8 @@ public class VersionReleaser {
         if (matchingVersion.isPresent()) {
             ExtendedVersion version = matchingVersion.get();
             ExtendedVersion releaseVersion = new ExtendedVersion(version.getSelf(), version.getId(), version.getName(),
-                    !versionDescription.isEmpty() ? versionDescription : version.getDescription(), version.isArchived(),
-                    true, version.getStartDate(), new DateTime());
+                    !StringUtils.isEmpty(versionDescription) ? versionDescription : version.getDescription(),
+                    version.isArchived(), true, version.getStartDate(), new DateTime());
             session.releaseVersion(projectKey, releaseVersion);
         }
 
