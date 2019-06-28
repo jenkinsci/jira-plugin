@@ -56,6 +56,25 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>owasp</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <version>${owasp.version}</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <scm>
@@ -153,20 +172,6 @@
           </execution>
         </executions>
       </plugin>
-      <!-- olamy disable this because seriously guys it makes build really long and need internet connection
-          and if you add this please fix the issues reported 
-      <!--plugin>
-        <groupId>org.owasp</groupId>
-        <artifactId>dependency-check-maven</artifactId>
-        <version>${owasp.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin-->
       <!-- spotbugs is defined in parent plugin-pom but overriding some things here -->
       <plugin>
        <groupId>com.github.spotbugs</groupId>
