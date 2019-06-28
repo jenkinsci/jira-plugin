@@ -82,6 +82,7 @@ public class DescriptorImplTest {
         MockAuthorizationStrategy as = new MockAuthorizationStrategy();
         as.grant(Jenkins.ADMINISTER).everywhere().to("admin");
         as.grant(Item.READ).onItems(dummy).to("alice");
+        as.grant(Item.CONFIGURE).onItems(dummy).to("dev");
         r.jenkins.setAuthorizationStrategy(as);
 
         try (ACLContext ignored = ACL.as(User.get("admin"))) {
@@ -101,6 +102,10 @@ public class DescriptorImplTest {
         try (ACLContext ignored = ACL.as(User.get("alice"))) {
             ListBoxModel options = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class).doFillCredentialsIdItems(dummy, "http://example.org");
             assertThat(options, empty());
+        }
+        try (ACLContext ignored = ACL.as(User.get("dev"))) {
+            ListBoxModel options = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class).doFillCredentialsIdItems(dummy, "http://example.org");
+            assertThat(options, hasSize(2));
         }
     }
 

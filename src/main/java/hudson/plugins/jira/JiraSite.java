@@ -36,6 +36,7 @@ import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
+import hudson.security.Permission;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -1201,7 +1202,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context, @QueryParameter String url) {
             AccessControlled _context = (context instanceof AccessControlled ? (AccessControlled) context : Jenkins.getInstance());
-            if (_context == null || !_context.hasPermission(Jenkins.ADMINISTER)) {
+            if (_context == null || !_context.hasPermission(Item.CONFIGURE)) {
                 return new StandardUsernameListBoxModel();
             }
 

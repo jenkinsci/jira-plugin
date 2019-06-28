@@ -9,7 +9,7 @@ install:
   - mvn clean test-compile -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode -V
 after_success:
   - mvn coveralls:report --batch-mode
-  - mvn -P enable-jacoco install jacoco:report --batch-mode
+  - mvn -P enable-jacoco install jacoco:report --batch-mode -P owasp
   - mvn -DskipTests=true verify
 
 before_cache:

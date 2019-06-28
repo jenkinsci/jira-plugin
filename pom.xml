@@ -56,6 +56,25 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>owasp</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <version>${owasp.version}</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <scm>
@@ -149,18 +168,6 @@
               <goal>compile</goal>
               <goal>generateTestStubs</goal>
               <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.owasp</groupId>
-        <artifactId>dependency-check-maven</artifactId>
-        <version>${owasp.version}</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
             </goals>
           </execution>
         </executions>
