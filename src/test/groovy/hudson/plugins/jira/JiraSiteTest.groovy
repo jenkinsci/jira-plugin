@@ -7,22 +7,34 @@ import hudson.model.ItemGroup
 import hudson.model.Job
 import hudson.util.DescribableList
 import jenkins.model.Jenkins
+import org.powermock.api.mockito.PowerMockito
 import org.junit.runner.RunWith
-import org.powermock.core.PowerMockUtils
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.PowerMockRunner
+import org.powermock.modules.junit4.PowerMockRunnerDelegate
+import org.spockframework.runtime.Sputnik
 import spock.lang.Specification
 import spock.lang.Unroll
+
+import static org.mockito.Mockito.*
 
 /**
  * @author saville
  */
 @Unroll
+@RunWith(PowerMockRunner.class)
+@PowerMockRunnerDelegate(Sputnik.class)
+@PrepareForTest([JiraGlobalConfiguration.class])
 class JiraSiteTest extends Specification {
+
     def "get"() {
         given:
         Jenkins jenkins = Mock()
         Jenkins.theInstance = jenkins
+        PowerMockito.mockStatic(JiraGlobalConfiguration.class)
+        JiraGlobalConfiguration jiraGlobalConfiguration = Mock()
+        when(JiraGlobalConfiguration.get()).thenReturn(jiraGlobalConfiguration)
+        jiraGlobalConfiguration.getSites() >> Collections.emptyList()
         Job<?, ?> job = Mock()
         JiraProjectProperty jpp = Spy(JiraProjectProperty)
         JiraFolderProperty jfp = Mock()
@@ -52,6 +64,7 @@ class JiraSiteTest extends Specification {
         1 * job.getProperty(JiraProjectProperty) >> jpp
         1 * jpp.getSite() >> null
         1 * job.getParent() >> null
+        1 * jiraGlobalConfiguration.getSites() >> Collections.emptyList()
         0 * _._
         result==null
 
@@ -61,6 +74,7 @@ class JiraSiteTest extends Specification {
         then:
         1 * job.getProperty(JiraProjectProperty) >> null
         1 * job.getParent() >> nonFolderParent
+        1 * jiraGlobalConfiguration.getSites() >> Collections.emptyList()
         0 * _._
         result==null
 
@@ -76,6 +90,7 @@ class JiraSiteTest extends Specification {
         1 * folder2.getProperties() >> folder2Properties
         1 * folder2Properties.get(JiraFolderProperty) >> null
         1 * folder2.getParent() >> nonFolderParent
+        1 * jiraGlobalConfiguration.getSites() >> Collections.emptyList()
         0 * _._
         result==null
 
@@ -93,17 +108,18 @@ class JiraSiteTest extends Specification {
         1 * folder2.getParent() >> folder3
         1 * folder3.getProperties() >> folder3Properties
         1 * folder3Properties.get(JiraFolderProperty) >> jfp
-        3 * jfp.getSites() >>> [null, [] as JiraSite[], [site2, site1] as JiraSite[]]
+        1 * folder3.getParent() >> jenkins
+        4 * jfp.getSites() >>> [[], [], [site2, site1]]
         0 * _._
         result==site2
 
         when: "site is configured globally"
-        JiraProjectProperty.DESCRIPTOR.setSites(site2)
         result = JiraSite.get(job)
 
         then:
         1 * job.getProperty(JiraProjectProperty.class) >> null
         1 * job.getParent() >> nonFolderParent
+        1 * jiraGlobalConfiguration.getSites() >> [site2]
         0 * _._
         result==site2
     }

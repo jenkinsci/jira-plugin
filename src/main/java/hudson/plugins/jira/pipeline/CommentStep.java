@@ -77,6 +77,9 @@ public class CommentStep extends AbstractStepImpl {
         @Override
         protected Void run() {
             JiraSite site = JiraSite.get(run.getParent());
+            if(site == null) {
+                return null;
+            }
             JiraSession session = site.getSession();
             if (session == null) {
                 listener.getLogger().println(Messages.FailedToConnect());

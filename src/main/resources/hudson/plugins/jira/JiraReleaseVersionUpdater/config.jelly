@@ -6,4 +6,7 @@
   <f:entry title="${%JIRA Project Key}" field="jiraProjectKey">
         <f:textbox/>
   </f:entry>
+  <f:entry title="${%JIRA Description}" field="jiraDescription">
+        <f:textbox/>
+  </f:entry>
 </j:jelly>

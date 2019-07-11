@@ -14,7 +14,6 @@ import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.UrlMode;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
-import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -37,9 +36,11 @@ import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.security.ACL;
 import hudson.security.AccessControlled;
+import hudson.security.Permission;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -857,31 +858,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         // Check up the folder chain if a site is defined there
         // This only supports one site per folder
-        ItemGroup parent = p.getParent();
-        while (parent != null) {
-            if (parent instanceof AbstractFolder) {
-                AbstractFolder folder = (AbstractFolder) parent;
-                JiraFolderProperty jfp = (JiraFolderProperty) folder.getProperties().get(JiraFolderProperty.class);
-                if (jfp != null) {
-                    JiraSite[] sites = jfp.getSites();
-                    if (sites != null && sites.length > 0) {
-                        return sites[0];
-                    }
-                }
-            }
-
-            if (parent instanceof Item) {
-                parent = ((Item) parent).getParent();
-            } else {
-                parent = null;
-            }
+        List<JiraSite> sitesFromFolders = JiraFolderProperty.getSitesFromFolders(p.getParent());
+        if (sitesFromFolders.size() > 0) {
+            return sitesFromFolders.get(0);
         }
 
         // none is explicitly configured. try the default ---
         // if only one is configured, that must be it.
-        JiraSite[] sites = JiraProjectProperty.DESCRIPTOR.getSites();
-        if (sites.length == 1) {
-            return sites[0];
+        List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
+        if (sites.size() == 1) {
+            return sites.get(0);
         }
 
         return null;
@@ -1108,6 +1094,31 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return "JIRA Site";
         }
 
+
+        @SuppressWarnings("unused") // used by stapler
+        public FormValidation doCheckUrl(@QueryParameter String value)
+            throws IOException, ServletException {
+            return checkUrl(value);
+        }
+
+        @SuppressWarnings("unused") // used by stapler
+        public FormValidation doCheckAlternativeUrl(@QueryParameter String value)
+            throws IOException, ServletException {
+            return checkUrl(value);
+        }
+
+        private FormValidation checkUrl(String url) {
+            if (Util.fixEmptyAndTrim(url) == null) {
+                return FormValidation.ok();
+            }
+            try{
+                new URL(url);
+            } catch (MalformedURLException e){
+                return FormValidation.error(String.format("Malformed URL (%s)", url), e );
+            }
+            return FormValidation.ok();
+        }
+
         /**
          * Checks if the user name and password are valid.
          */
@@ -1191,7 +1202,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context, @QueryParameter String url) {
             AccessControlled _context = (context instanceof AccessControlled ? (AccessControlled) context : Jenkins.getInstance());
-            if (_context == null || !_context.hasPermission(Jenkins.ADMINISTER)) {
+            if (_context == null || !_context.hasPermission(Item.CONFIGURE)) {
                 return new StandardUsernameListBoxModel();
             }
 

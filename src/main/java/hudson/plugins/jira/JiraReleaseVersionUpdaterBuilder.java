@@ -21,14 +21,22 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
 
     private String jiraProjectKey;
     private String jiraRelease;
+    private String jiraDescription;
 
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
-    @DataBoundConstructor
+    @Deprecated
     public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease) {
         this.jiraRelease = jiraRelease;
         this.jiraProjectKey = jiraProjectKey;
+    }
+
+    @DataBoundConstructor
+    public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease, String jiraDescription) {
+        this.jiraRelease = jiraRelease;
+        this.jiraProjectKey = jiraProjectKey;
+        this.jiraDescription = jiraDescription;
     }
 
     public String getJiraRelease() {
@@ -47,9 +55,17 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
         this.jiraProjectKey = jiraProjectKey;
     }
 
+    public String getJiraDescription() {
+        return jiraDescription;
+    }
+
+    public void setJiraDescription(String jiraDescription) {
+        this.jiraDescription = jiraDescription;
+    }
+
     @Override
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) {
-        new VersionReleaser().perform(run.getParent(), jiraProjectKey, jiraRelease, run, listener);
+        new VersionReleaser().perform(run.getParent(), jiraProjectKey, jiraRelease, jiraDescription, run, listener);
     }
 
     @Override

@@ -93,7 +93,6 @@ public class UpdaterTest {
     }
 
     @Test
-    @WithoutJenkins
     public void getScmCommentsFromPreviousBuilds() {
         final FreeStyleProject project = mock(FreeStyleProject.class);
         final FreeStyleBuild build1 = mock(FreeStyleBuild.class);
@@ -122,7 +121,7 @@ public class UpdaterTest {
             List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
             changeSets.add(changeLogSet);
             when(build2.getChangeSets()).thenReturn(changeSets);
-            when(build2.getPreviousBuild()).thenReturn(build1);
+            when(build2.getPreviousCompletedBuild()).thenReturn(build1);
             when(build2.getResult()).thenReturn(Result.SUCCESS);
             doReturn(project).when(build2).getProject();
 
@@ -154,7 +153,6 @@ public class UpdaterTest {
      */
     @Test
     @org.jvnet.hudson.test.Issue("4572")
-    @WithoutJenkins
     public void comment() {
         // mock JIRA session:
         JiraSession session = mock(JiraSession.class);

@@ -4,19 +4,19 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.25</version>
+    <version>3.43</version>
     <relativePath />
   </parent>
 
   <artifactId>jira</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>3.0.8</version>
   <packaging>hpi</packaging>
   <name>Jenkins JIRA plugin</name>
   <description>Integrates Jenkins to JIRA</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/JIRA+Plugin</url>
 
   <properties>
-    <revision>3.0.7</revision>
+    <revision>3.0.8</revision>
     <changelist>-SNAPSHOT</changelist>
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
@@ -29,12 +29,13 @@
     <jenkins.version>2.60.3</jenkins.version>
 
     <!-- security -->
-    <owasp.version>1.3.1</owasp.version>
+    <owasp.version>4.0.2</owasp.version>
     <findbugs.failOnError>false</findbugs.failOnError>
 
     <!-- tests -->
     <groovy.version>2.4.5</groovy.version>
     <surefire.version>2.20</surefire.version>
+    <configuration-as-code.version>1.8</configuration-as-code.version>
   </properties>
 
   <profiles>
@@ -55,13 +56,32 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>owasp</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <version>${owasp.version}</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/jira-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/jira-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/jira-plugin</url>
-    <tag>${scmTag}</tag>
+    <tag>jira-3.0.8</tag>
   </scm>
 
   <licenses>
@@ -152,11 +172,30 @@
           </execution>
         </executions>
       </plugin>
+      <!-- spotbugs is defined in parent plugin-pom but overriding some things here -->
       <plugin>
-        <groupId>org.owasp</groupId>
-        <artifactId>dependency-check-maven</artifactId>
-        <version>${owasp.version}</version>
-      </plugin>
+       <groupId>com.github.spotbugs</groupId>
+       <artifactId>spotbugs-maven-plugin</artifactId>
+       <!-- <configuration>
+         <failOnError>${spotbugs.failOnError}</failOnError>
+       </configuration> -->
+       <executions>
+         <execution>
+           <id>spotbugs</id>
+           <goals>
+             <goal>check</goal>
+           </goals>
+           <phase>verify</phase>
+           <configuration>
+             <failOnError>${spotbugs.failOnError}</failOnError>
+             <spotbugsXmlOutput>false</spotbugsXmlOutput>
+             <effort>${spotbugs.effort}</effort>
+             <threshold>${spotbugs.threshold}</threshold>
+             <onlyAnalyze>hudson.plugins.jira.*</onlyAnalyze>
+           </configuration>
+         </execution>
+       </executions>
+     </plugin>
     </plugins>
   </build>
 
@@ -287,6 +326,19 @@
 
     <!-- test dependencies -->
     <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <version>${configuration-as-code.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins</groupId>
+      <artifactId>configuration-as-code</artifactId>
+      <version>${configuration-as-code.version}</version>
+      <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
       <version>${mockito.version}</version>
@@ -303,6 +355,12 @@
           <artifactId>junit</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <version>${powermock.version}</version>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.spockframework</groupId>
@@ -370,7 +428,7 @@
     </repository>
     <repository>
       <id>atlassian-public</id>
-      <url>https://packages.atlassian.com/maven/repository/public</url>
+      <url>https://packages.atlassian.com/mvn/maven-public/</url>
       <releases>
         <enabled>true</enabled>
         <checksumPolicy>warn</checksumPolicy>
@@ -385,8 +443,18 @@
 
   <pluginRepositories>
     <pluginRepository>
+       <id>repo.jenkins-ci.org</id>
+       <url>http://repo.jenkins-ci.org/public/</url>
+       <releases>
+         <enabled>true</enabled>
+       </releases>
+       <snapshots>
+         <enabled>false</enabled>
+       </snapshots>
+    </pluginRepository>
+    <pluginRepository>
       <id>atlassian-public</id>
-      <url>https://packages.atlassian.com/maven/repository/public</url>
+      <url>https://packages.atlassian.com/mvn/maven-public/</url>
       <releases>
         <enabled>true</enabled>
         <checksumPolicy>warn</checksumPolicy>
