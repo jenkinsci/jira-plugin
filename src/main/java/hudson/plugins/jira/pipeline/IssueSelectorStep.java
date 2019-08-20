@@ -1,9 +1,12 @@
 package hudson.plugins.jira.pipeline;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import hudson.model.Descriptor;
+import hudson.model.Result;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -79,12 +82,19 @@ public class IssueSelectorStep extends AbstractStepImpl {
         private transient Run run;
 
         @Override
-        protected Set<String> run() throws Exception {
-            JiraSite site = JiraSite.get(run.getParent());
-            Set<String> ids = step.getIssueSelector().findIssueIds(run, site, listener);
-            return ids;
+        protected Set<String> run() {
+            return getOptionalJiraSite()
+                .map(site -> step.getIssueSelector().findIssueIds(run, site, listener))
+                .orElseGet(() -> {
+                    listener.getLogger().println(Messages.NoJiraSite());
+                    run.setResult(Result.FAILURE);
+                    return new HashSet<>();
+                });
         }
 
+        Optional<JiraSite> getOptionalJiraSite() {
+            return Optional.ofNullable(JiraSite.get(run.getParent()));
+        }
     }
 
 }
