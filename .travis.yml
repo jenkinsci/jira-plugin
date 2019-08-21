@@ -14,7 +14,7 @@ after_success:
   - mvn -DskipTests verify
 
 before_cache:
-  - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
+  - rm -fr /home/travis/.m2/repository/org/jenkins-ci/plugins/jira
 cache:
   directories:
-    - $HOME/.m2
+    - /home/travis/.m2/repository
