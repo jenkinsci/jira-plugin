@@ -6,11 +6,12 @@ jdk:
   - openjdk8
 
 install:
-  - mvn clean test-compile -DskipTests=true -Dmaven.javadoc.skip=true --batch-mode -V
+  - mvn clean install -DskipTests -Dmaven.javadoc.skip=true --batch-mode -V
+script:
+  - mvn -P enable-jacoco install jacoco:report --batch-mode -P owasp
 after_success:
   - mvn coveralls:report --batch-mode
-  - mvn -P enable-jacoco install jacoco:report --batch-mode -P owasp
-  - mvn -DskipTests=true verify
+  - mvn -DskipTests verify
 
 before_cache:
   - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
