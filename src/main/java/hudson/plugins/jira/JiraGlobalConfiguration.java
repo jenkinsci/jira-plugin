@@ -29,5 +29,6 @@ public class JiraGlobalConfiguration extends GlobalConfiguration {
     @DataBoundSetter
     public void setSites(List<JiraSite> sites) {
         this.sites = sites;
+        save();
     }
 }
