@@ -7,8 +7,9 @@ jdk:
 
 install:
   - mvn clean install -DskipTests -Dmaven.javadoc.skip=true --batch-mode -V
-after_success:
+script:
   - mvn -P enable-jacoco install jacoco:report --batch-mode -P owasp
+after_success:
   - mvn coveralls:report --batch-mode
   - mvn -DskipTests verify
 
