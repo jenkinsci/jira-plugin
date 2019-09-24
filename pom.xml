@@ -250,10 +250,6 @@
           <groupId>com.atlassian.httpclient</groupId>
           <artifactId>atlassian-httpclient-library</artifactId>
         </exclusion>
-        <exclusion>
-          <groupId>org.codehaus.jackson</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
