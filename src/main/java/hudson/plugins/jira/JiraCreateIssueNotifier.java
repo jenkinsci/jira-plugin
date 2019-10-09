@@ -201,8 +201,10 @@ public class JiraCreateIssueNotifier extends Notifier {
                 getBuildDetailsString(vars)
         );
         String assignee = vars.expand(getAssignee());
-        Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
-        Iterable<String> fixVersionsNames = Splitter.on(",").trimResults().omitEmptyStrings().split(fixVersion);
+        String interpolatedVersion = vars.expand(getFixVersion());
+        String interpolatedComponent = vars.expand(getComponent());
+        Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(interpolatedComponent);
+        Iterable<String> fixVersionsNames = Splitter.on(",").trimResults().omitEmptyStrings().split(interpolatedVersion);
 
         Long type = typeId;
         if (type == null || type == 0) { // zero is default / invalid selection
