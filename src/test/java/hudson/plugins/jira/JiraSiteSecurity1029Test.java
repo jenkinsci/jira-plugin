@@ -20,6 +20,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 
@@ -49,6 +50,7 @@ public class JiraSiteSecurity1029Test {
     private FakeJiraServlet servlet;
     
     @Test
+    @Issue( "SECURITY-1029" )
     public void cannotLeakCredentials() throws Exception {
         setupServer();
         
