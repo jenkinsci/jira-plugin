@@ -13,7 +13,6 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.annotation.Nonnull;
-import java.util.List;
 
 /**
  * Provides folder level JIRA configuration.

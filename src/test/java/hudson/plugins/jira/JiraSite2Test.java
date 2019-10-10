@@ -21,15 +21,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.hasItem;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 
 public class JiraSite2Test {
 
@@ -97,12 +90,9 @@ public class JiraSite2Test {
         JiraSite site = (JiraSite)xStream2.fromXML(xml);
 
         assertNotNull(site);
-        assertNotNull(site.credentials);
         assertNotNull(site.credentialsId);
-        assertEquals(CredentialsHelper.lookupSystemCredentials(site.credentialsId, null), site.credentials);
-        assertEquals(ANY_USER, site.credentials.getUsername());
-        assertEquals(ANY_PASSWORD, site.credentials.getPassword().getPlainText());
-        assertThat(CredentialsProvider.lookupStores(j.jenkins).iterator().next().getCredentials(Domain.global()), hasItem(site.credentials));
+        assertEquals(ANY_USER, CredentialsHelper.lookupSystemCredentials(site.credentialsId, null).getUsername());
+        assertEquals(ANY_PASSWORD, CredentialsHelper.lookupSystemCredentials(site.credentialsId, null).getPassword().getPlainText());
     }
 
     @Test
@@ -131,10 +121,7 @@ public class JiraSite2Test {
         assertThat(xml, containsString("credentialsId"));
 
         JiraSite site1 = (JiraSite)xStream2.fromXML(xml);
-
-        assertNotNull(site1.credentials);
         assertNotNull(site1.credentialsId);
-        assertEquals(c, site1.credentials);
     }
 
     @WithoutJenkins
@@ -155,7 +142,6 @@ public class JiraSite2Test {
 
         assertNotNull(site1.url);
         assertEquals(exampleOrg, site1.url);
-        assertNull(site1.credentials);
         assertNull(site1.credentialsId);
     }
 
@@ -253,7 +239,6 @@ public class JiraSite2Test {
         JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
         jiraSite.setCredentialsId("");
         assertNull(jiraSite.getCredentialsId());
-        assertNull(jiraSite.credentials);
     }
 
     @Test
@@ -271,8 +256,7 @@ public class JiraSite2Test {
         systemProvider.save();
         jiraSite.setCredentialsId(cred);
         assertNotNull(jiraSite.getCredentialsId());
-        assertNotNull(jiraSite.credentials);
-        assertEquals(credentials.getUsername(), jiraSite.credentials.getUsername());
-        assertEquals(credentials.getPassword(), jiraSite.credentials.getPassword());
+        assertEquals(credentials.getUsername(), CredentialsHelper.lookupSystemCredentials(cred, null).getUsername());
+        assertEquals(credentials.getPassword(), CredentialsHelper.lookupSystemCredentials(cred, null).getPassword());
     }
 }

@@ -3,6 +3,7 @@ package hudson.plugins.jira;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
@@ -23,10 +24,8 @@ import org.jvnet.hudson.test.MockFolder;
 import java.io.IOException;
 import java.util.Arrays;
 
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  * Created by warden on 14.09.15.
@@ -66,42 +65,66 @@ public class DescriptorImplTest {
     }
 
     @Test
-    public void testDoFillCredentialsIdItems() throws IOException {
-        Domain domain = new Domain("example", "test domain", Arrays.asList(new HostnameSpecification("example.org", null)));
-        StandardUsernamePasswordCredentials c = new UsernamePasswordCredentialsImpl(
-                CredentialsScope.SYSTEM,
-                null,
-                null,
-                "username",
-                "password"
-        );
-        CredentialsProvider.lookupStores(r.jenkins).iterator().next().addDomain(domain, c);
+    public void doFillCredentialsIdItems() throws IOException {
 
         MockFolder dummy = r.createFolder("dummy");
         r.jenkins.setSecurityRealm(r.createDummySecurityRealm());
         MockAuthorizationStrategy as = new MockAuthorizationStrategy();
         as.grant(Jenkins.ADMINISTER).everywhere().to("admin");
         as.grant(Item.READ).onItems(dummy).to("alice");
+        as.grant(Item.CONFIGURE).onItems(dummy).to("dev");
         r.jenkins.setAuthorizationStrategy(as);
 
-        try (ACLContext ignored = ACL.as(User.get("admin"))) {
-            ListBoxModel options = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class).doFillCredentialsIdItems(null, "http://example.org");
-            assertThat(options, hasSize(2));
-            assertEquals(CredentialsNameProvider.name(c), options.get(1).name);
+        Domain domain = new Domain("example", "test domain", Arrays.asList(new HostnameSpecification("example.org", null)));
+        StandardUsernamePasswordCredentials c1 = new UsernamePasswordCredentialsImpl(
+            CredentialsScope.SYSTEM,
+            null,
+            null,
+            "username",
+            "password"
+        );
+        CredentialsStore credentialsStore = CredentialsProvider.lookupStores(r.jenkins).iterator().next();
+        credentialsStore.addDomain(domain, c1);
 
-            options = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class).doFillCredentialsIdItems(null, "http://nonexistent.url");
-            assertThat(options, hasSize(1));
+        StandardUsernamePasswordCredentials c2 = new UsernamePasswordCredentialsImpl(
+            CredentialsScope.GLOBAL,
+            null,
+            null,
+            "uid",
+            "pwd"
+        );
+
+        credentialsStore = CredentialsProvider.lookupStores(dummy).iterator().next();
+        credentialsStore.addCredentials( domain, c2 );
+
+        JiraSite.DescriptorImpl descriptor = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class);
+
+        try (ACLContext ignored = ACL.as(User.get("admin"))) {
+            ListBoxModel options = descriptor.doFillCredentialsIdItems(null,null, "http://example.org");
+            assertThat(options.toString(), options, hasSize(3));
+            assertTrue(options.toString(), listBoxModelContainsName(options,CredentialsNameProvider.name(c1)));
+
+            options = descriptor.doFillCredentialsIdItems(null, null, "http://nonexistent.url");
+            assertThat(options.toString(), options, hasSize(1));
             assertEquals("", options.get(0).value);
 
-            options = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class).doFillCredentialsIdItems(dummy, "http://example.org");
-            assertThat(options, hasSize(2));
-            assertEquals(CredentialsNameProvider.name(c), options.get(1).name);
+            options = descriptor.doFillCredentialsIdItems(dummy, null, "http://example.org");
+            assertThat(options.toString(), options, hasSize(2));
+            assertTrue(options.toString(), listBoxModelContainsName(options,CredentialsNameProvider.name(c2)));
         }
 
         try (ACLContext ignored = ACL.as(User.get("alice"))) {
-            ListBoxModel options = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class).doFillCredentialsIdItems(dummy, "http://example.org");
-            assertThat(options, empty());
+            ListBoxModel options = descriptor.doFillCredentialsIdItems(dummy, null,"http://example.org");
+            assertThat(options.toString(), options, hasSize(1));
         }
+        try (ACLContext ignored = ACL.as(User.get("dev"))) {
+            ListBoxModel options = descriptor.doFillCredentialsIdItems(dummy, null,"http://example.org");
+            assertThat(options.toString(), options, hasSize(2));
+        }
+    }
+
+    private boolean listBoxModelContainsName(ListBoxModel options, String name) {
+        return options.stream().filter( option -> name.equals(option.name) ).findFirst().isPresent();
     }
 
 }
