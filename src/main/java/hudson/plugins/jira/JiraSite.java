@@ -521,8 +521,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
         return jiraSession;
     }
-    
-    private JiraSession getSession() {
+
+    @Deprecated
+    public JiraSession getSession() {
         if (jiraSession == null) {
             StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, alternativeUrl);
             jiraSession = createSession(credentials);
