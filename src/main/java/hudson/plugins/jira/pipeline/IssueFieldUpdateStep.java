@@ -59,19 +59,19 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         this.fieldId = fieldId;
     }
 
-    public String fieldValue;
+    public Object fieldValue;
 
-    public String getFieldValue() {
+    public Object getFieldValue() {
         return this.fieldValue;
     }
 
     @DataBoundSetter
-    public void setFieldValue(String fieldValue) {
+    public void setFieldValue(Object fieldValue) {
         this.fieldValue = fieldValue;
     }
 
     @DataBoundConstructor
-    public IssueFieldUpdateStep(AbstractIssueSelector issueSelector, String fieldId, String fieldValue) {
+    public IssueFieldUpdateStep(AbstractIssueSelector issueSelector, String fieldId, Object fieldValue) {
         this.issueSelector = issueSelector;
         this.fieldId = fieldId;
         this.fieldValue = fieldValue;
