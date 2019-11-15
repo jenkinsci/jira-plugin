@@ -1,5 +1,24 @@
 package hudson.plugins.jira;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
+
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
+import org.junit.Test;
+import org.mockito.Matchers;
+
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -8,8 +27,6 @@ import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.plugins.jira.model.JiraIssueField;
 import hudson.plugins.jira.pipeline.IssueFieldUpdateStep;
-import org.junit.Test;
-import org.mockito.Matchers;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -29,26 +46,27 @@ import static org.mockito.Mockito.when;
  */
 public class IssueFieldUpdateStepTest {
 
-    @Test
-    public void checkPrepareFieldId() {
-    	
-    	List<String> field_test= Arrays.asList(
-    			"10100", 
-    			"customfield_10100", 
-    			"field_10100");
-    	
-    	List<String> field_after = Arrays.asList(
-    			"customfield_10100", 
-    			"customfield_10100", 
-    			"customfield_field_10100");
-    	
-    	IssueFieldUpdateStep jifu = new IssueFieldUpdateStep(null, null, "");
-    	for( int i=0; i<field_test.size(); i++ )
-	    	assertEquals("Check field id conversion #" + Integer.toString(i),
-	    			jifu.prepareFieldId(field_test.get(i)),
-	    			field_after.get(i) );
-    }
-    
+	@Test
+	public void checkPrepareFieldId() {
+
+		List<String> field_test = Arrays.asList(
+		        "10100",
+		        "customfield_10100",
+		        "field_10100");
+
+		List<String> field_after = Arrays.asList(
+		        "customfield_10100",
+		        "customfield_10100",
+		        "customfield_field_10100");
+
+		IssueFieldUpdateStep jifu = new IssueFieldUpdateStep(null, null, "");
+		for (int i = 0; i < field_test.size(); i++) {
+			assertEquals("Check field id conversion #" + Integer.toString(i),
+			        jifu.prepareFieldId(field_test.get(i)),
+			        field_after.get(i));
+		}
+	}
+
 	@Test(expected = IOException.class)
 	public void checkSelectorIsNull() throws InterruptedException, IOException {
 		AbstractBuild build = mock(AbstractBuild.class);
@@ -56,45 +74,124 @@ public class IssueFieldUpdateStepTest {
 		BuildListener listener = mock(BuildListener.class);
 		EnvVars env = mock(EnvVars.class);
 		AbstractProject project = mock(AbstractProject.class);
-        PrintStream logger = mock(PrintStream.class);
+		PrintStream logger = mock(PrintStream.class);
 
-        when(build.getParent()).thenReturn(project);
-        when(build.getProject()).thenReturn(project);
-        when(build.getEnvironment(listener)).thenReturn(env);
-        when(listener.getLogger()).thenReturn(logger);
-        
-		IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep( null, "", "") );
+		when(build.getParent()).thenReturn(project);
+		when(build.getProject()).thenReturn(project);
+		when(build.getEnvironment(listener)).thenReturn(env);
+		when(listener.getLogger()).thenReturn(logger);
+
+		IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(null, "", ""));
 		jifu.perform(build, null, launcher, listener);
 		assertTrue("Check selector is null", build.getResult() == Result.FAILURE);
 	}
-		
+
 	@Test
-	public void checkSubmit() throws InterruptedException, IOException {
+	public void checkSubmitOfString() throws InterruptedException, IOException {
 		PrintStream logger = mock(PrintStream.class);
-		
+
 		final List<String> issues_after = new ArrayList();
 		final List<JiraIssueField> fields_after = new ArrayList();
 		JiraSession session = mock(JiraSession.class);
-        doAnswer(invocation ->  {
-            	issues_after.add( (String) invocation.getArguments()[0] );
-            	List<JiraIssueField> fields_tmp = (List<JiraIssueField>) invocation.getArguments()[1]; 
-            	for( JiraIssueField field : fields_tmp )
-            		fields_after.add( field );
-                return null;
-        }).when(session).addFields(Matchers.anyString(), Matchers.anyListOf(JiraIssueField.class));
-        
-        String issue_test = "issue-10100";
-        List<JiraIssueField> fields_test = new ArrayList();
-        for( int i=0; i<100; i++ )         	
-			fields_test.add(new JiraIssueField(issue_test, "value-"+Integer.toString(10100+i)));
-        
-		IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(null, "", "") );
+		doAnswer(invocation -> {
+			issues_after.add((String) invocation.getArguments()[0]);
+			List<JiraIssueField> fields_tmp = (List<JiraIssueField>) invocation.getArguments()[1];
+			for (JiraIssueField field : fields_tmp) {
+				fields_after.add(field);
+			}
+			return null;
+		}).when(session).addFields(Matchers.anyString(), Matchers.anyListOf(JiraIssueField.class));
+
+		String issue_test = "issue-10100";
+		List<JiraIssueField> fields_test = new ArrayList();
+		for (int i = 0; i < 100; i++) {
+			fields_test.add(new JiraIssueField(issue_test, "value-" + Integer.toString(10100 + i)));
+		}
+
+		IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(null, "", ""));
 		jifu.submitFields(session, issue_test, fields_test, logger);
-		
+
 		assertEquals("Check issues list size", issues_after.size(), 1);
 		assertEquals("Check issue value", issues_after.get(0), issue_test);
 		assertEquals("Check fields list size", fields_after.size(), fields_test.size());
-		for( int i=0; i<fields_test.size(); i++ ) {
+		for (int i = 0; i < fields_test.size(); i++) {
+			assertEquals("Check #" + Integer.toString(i) + " field id", fields_after.get(i).getId(), fields_test.get(i).getId());
+			assertEquals("Check #" + Integer.toString(i) + " field value", fields_after.get(i).getValue(), fields_test.get(i).getValue());
+		}
+	}
+
+	@Test
+	public void checkSubmitOfArray() throws InterruptedException, IOException {
+		PrintStream logger = mock(PrintStream.class);
+
+		final List<String> issues_after = new ArrayList();
+		final List<JiraIssueField> fields_after = new ArrayList();
+		JiraSession session = mock(JiraSession.class);
+		doAnswer(invocation -> {
+			issues_after.add((String) invocation.getArguments()[0]);
+			List<JiraIssueField> fields_tmp = (List<JiraIssueField>) invocation.getArguments()[1];
+			for (JiraIssueField field : fields_tmp) {
+				fields_after.add(field);
+			}
+			return null;
+		}).when(session).addFields(Matchers.anyString(), Matchers.anyListOf(JiraIssueField.class));
+
+		String issue_test = "label-field-10100";
+		List<JiraIssueField> fields_test = new ArrayList();
+		for (int i = 0; i < 100; i++) {
+			fields_test.add(new JiraIssueField(issue_test, Arrays.asList("value-" + Integer.toString(10100 + i))));
+		}
+
+		IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(null, "", ""));
+		jifu.submitFields(session, issue_test, fields_test, logger);
+
+		assertEquals("Check issues list size", issues_after.size(), 1);
+		assertEquals("Check issue value", issues_after.get(0), issue_test);
+		assertEquals("Check fields list size", fields_after.size(), fields_test.size());
+		for (int i = 0; i < fields_test.size(); i++) {
+			assertEquals("Check #" + Integer.toString(i) + " field id", fields_after.get(i).getId(), fields_test.get(i).getId());
+			assertEquals("Check #" + Integer.toString(i) + " field value", fields_after.get(i).getValue(), fields_test.get(i).getValue());
+		}
+	}
+
+	@Test
+	public void checkSubmitOfISODate() throws InterruptedException, IOException {
+		PrintStream logger = mock(PrintStream.class);
+
+		final List<String> issues_after = new ArrayList();
+		final List<JiraIssueField> fields_after = new ArrayList();
+		JiraSession session = mock(JiraSession.class);
+		doAnswer(invocation -> {
+			issues_after.add((String) invocation.getArguments()[0]);
+			List<JiraIssueField> fields_tmp = (List<JiraIssueField>) invocation.getArguments()[1];
+			for (JiraIssueField field : fields_tmp) {
+				fields_after.add(field);
+			}
+			return null;
+		}).when(session).addFields(Matchers.anyString(), Matchers.anyListOf(JiraIssueField.class));
+
+		String issue_test = "date-field-10100";
+		List<JiraIssueField> fields_test = new ArrayList();
+		DateTimeFormatter df = ISODateTimeFormat.basicDateTime();
+		for (int i = 0; i < 100; i++) {
+			Calendar cal = Calendar.getInstance();
+			if (i % 2 == 0) {
+				cal.add(Calendar.DAY_OF_YEAR, -i);
+			} else if (i % 3 == 0) {
+				cal.add(Calendar.HOUR, -i);
+			} else {
+				cal.add(Calendar.MINUTE, -i);
+			}
+			fields_test.add(new JiraIssueField(issue_test, df.print(cal.getTimeInMillis())));
+		}
+
+		IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(null, "", ""));
+		jifu.submitFields(session, issue_test, fields_test, logger);
+
+		assertEquals("Check issues list size", issues_after.size(), 1);
+		assertEquals("Check issue value", issues_after.get(0), issue_test);
+		assertEquals("Check fields list size", fields_after.size(), fields_test.size());
+		for (int i = 0; i < fields_test.size(); i++) {
 			assertEquals("Check #" + Integer.toString(i) + " field id", fields_after.get(i).getId(), fields_test.get(i).getId());
 			assertEquals("Check #" + Integer.toString(i) + " field value", fields_after.get(i).getValue(), fields_test.get(i).getValue());
 		}
