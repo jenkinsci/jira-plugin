@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>jira</artifactId>
-  <version>${revision}${changelist}</version>
+  <version>3.0.11</version>
   <packaging>hpi</packaging>
   <name>Jenkins JIRA plugin</name>
   <description>Integrates Jenkins to JIRA</description>
@@ -81,7 +81,7 @@
     <connection>scm:git:git://github.com/jenkinsci/jira-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/jira-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/jira-plugin</url>
-    <tag>${scmTag}</tag>
+    <tag>jira-3.0.11</tag>
   </scm>
 
   <licenses>
