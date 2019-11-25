@@ -39,12 +39,14 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 3927562542249244416L;
 
     private String jiraIssueFilter;
+    private String altSummaryFields;
 
     @DataBoundConstructor
-    public JiraIssueParameterDefinition(String name, String description, String jiraIssueFilter) {
+    public JiraIssueParameterDefinition(String name, String description, String jiraIssueFilter, String altSummaryFields) {
         super(name, description);
 
         this.jiraIssueFilter = jiraIssueFilter;
+        this.altSummaryFields = altSummaryFields;
     }
 
     @Override
@@ -84,7 +86,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         List<Result> issueValues = new ArrayList<>();
 
         for (Issue issue : fixNull(issues)) {
-            issueValues.add(new Result(issue));
+            issueValues.add(new Result(issue, this.altSummaryFields));
         }
 
         return issueValues;
@@ -110,9 +112,19 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         public final String key;
         public final String summary;
 
-        public Result(final Issue issue) {
+        public Result(final Issue issue, String altSummaryFields) {
             this.key = issue.getKey();
-            this.summary = issue.getSummary();
+            if(altSummaryFields == null) {
+            	this.summary = issue.getSummary();
+            } else {
+            	String[] fields = altSummaryFields.split(",");
+            	StringBuilder sb = new StringBuilder();
+            	for(String f : fields) {
+            		sb.append(issue.getField(f).getValue());
+            		sb.append(' ');
+            	}
+            	this.summary = sb.toString();
+            }
         }
     }
 }
