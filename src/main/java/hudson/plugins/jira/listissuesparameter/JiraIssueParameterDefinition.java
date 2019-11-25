@@ -100,7 +100,15 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         this.jiraIssueFilter = jiraIssueFilter;
     }
 
-    @Extension
+    public String getAltSummaryFields() {
+		return altSummaryFields;
+	}
+
+	public void setAltSummaryFields(String altSummaryFields) {
+		this.altSummaryFields = altSummaryFields;
+	}
+
+	@Extension
     public static class DescriptorImpl extends ParameterDescriptor {
         @Override
         public String getDisplayName() {
@@ -114,13 +122,13 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 
         public Result(final Issue issue, String altSummaryFields) {
             this.key = issue.getKey();
-            if(altSummaryFields == null) {
+            if(altSummaryFields == null || altSummaryFields.isEmpty() ) {
             	this.summary = issue.getSummary();
             } else {
             	String[] fields = altSummaryFields.split(",");
             	StringBuilder sb = new StringBuilder();
             	for(String f : fields) {
-            		sb.append(issue.getField(f).getValue());
+            		sb.append(issue.getFieldByName(f).getValue());
             		sb.append(' ');
             	}
             	this.summary = sb.toString();
