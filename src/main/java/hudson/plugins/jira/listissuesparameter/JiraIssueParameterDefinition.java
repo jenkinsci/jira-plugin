@@ -24,6 +24,8 @@ import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import net.sf.json.JSONObject;
+
+import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -101,14 +103,14 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     }
 
     public String getAltSummaryFields() {
-		return altSummaryFields;
-	}
+        return altSummaryFields;
+    }
 
-	public void setAltSummaryFields(String altSummaryFields) {
-		this.altSummaryFields = altSummaryFields;
-	}
+    public void setAltSummaryFields(String altSummaryFields) {
+        this.altSummaryFields = altSummaryFields;
+    }
 
-	@Extension
+    @Extension
     public static class DescriptorImpl extends ParameterDescriptor {
         @Override
         public String getDisplayName() {
@@ -122,7 +124,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 
         public Result(final Issue issue, String altSummaryFields) {
             this.key = issue.getKey();
-            if(altSummaryFields == null || altSummaryFields.isEmpty() ) {
+            if(StringUtils.isEmpty(altSummaryFields)) {
             	this.summary = issue.getSummary();
             } else {
             	String[] fields = altSummaryFields.split(",");
