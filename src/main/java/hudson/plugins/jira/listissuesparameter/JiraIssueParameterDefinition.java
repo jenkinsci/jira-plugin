@@ -27,6 +27,7 @@ import net.sf.json.JSONObject;
 
 import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -44,11 +45,9 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     private String altSummaryFields;
 
     @DataBoundConstructor
-    public JiraIssueParameterDefinition(String name, String description, String jiraIssueFilter, String altSummaryFields) {
+    public JiraIssueParameterDefinition(String name, String description, String jiraIssueFilter) {
         super(name, description);
-
         this.jiraIssueFilter = jiraIssueFilter;
-        this.altSummaryFields = altSummaryFields;
     }
 
     @Override
@@ -106,6 +105,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         return altSummaryFields;
     }
 
+    @DataBoundSetter
     public void setAltSummaryFields(String altSummaryFields) {
         this.altSummaryFields = altSummaryFields;
     }
@@ -121,6 +121,10 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     public static class Result {
         public final String key;
         public final String summary;
+
+        public Result(final Issue issue) {
+            this(issue, null);
+        }
 
         public Result(final Issue issue, String altSummaryFields) {
             this.key = issue.getKey();

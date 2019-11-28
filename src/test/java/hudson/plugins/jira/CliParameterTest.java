@@ -29,7 +29,7 @@ public class CliParameterTest {
 
         project.addProperty(
             new ParametersDefinitionProperty(
-                new JiraIssueParameterDefinition("jiraissue", "description", "filter", "")
+                new JiraIssueParameterDefinition("jiraissue", "description", "filter")
             )
         );
 
