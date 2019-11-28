@@ -16,6 +16,7 @@
 package hudson.plugins.jira.listissuesparameter;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueField;
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.model.Job;
@@ -129,15 +130,24 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         public Result(final Issue issue, String altSummaryFields) {
             this.key = issue.getKey();
             if(StringUtils.isEmpty(altSummaryFields)) {
-            	this.summary = issue.getSummary();
+                this.summary = issue.getSummary();
             } else {
-            	String[] fields = altSummaryFields.split(",");
-            	StringBuilder sb = new StringBuilder();
-            	for(String f : fields) {
-            		sb.append(issue.getFieldByName(f).getValue());
-            		sb.append(' ');
-            	}
-            	this.summary = sb.toString();
+                String[] fields = altSummaryFields.split(",");
+                StringBuilder sb = new StringBuilder();
+                for(String f : fields) {
+                    String fn = f.trim();
+                    if(StringUtils.isNotEmpty(fn)) {
+                        IssueField field = issue.getFieldByName(fn);
+                        if(field != null && field.getValue() != null) {
+                            String fv = field.getValue().toString();
+                            if(StringUtils.isNotEmpty(fv)) {
+                                sb.append(fv);
+                                sb.append(' ');
+                            }
+                        }
+                    }
+                }
+                this.summary = sb.toString().trim();
             }
         }
     }

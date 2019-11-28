@@ -25,7 +25,8 @@ limitations under the License.
     <f:entry title="${%JQL Search Query}" field="jiraIssueFilter">
         <f:textbox />
     </f:entry>
-        <f:entry title="${%Alternate Summary Fields}" field="altSummaryFields">
+        <f:entry title="${%Alternate Summary Fields}" field="altSummaryFields"
+        description="Optional comma-separated list of field names">
         <f:textbox />
     </f:entry>
 </j:jelly>
