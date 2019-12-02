@@ -16,6 +16,7 @@
 package hudson.plugins.jira.listissuesparameter;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueField;
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.model.Job;
@@ -24,7 +25,10 @@ import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import net.sf.json.JSONObject;
+
+import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
@@ -39,11 +43,11 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 3927562542249244416L;
 
     private String jiraIssueFilter;
+    private String altSummaryFields;
 
     @DataBoundConstructor
     public JiraIssueParameterDefinition(String name, String description, String jiraIssueFilter) {
         super(name, description);
-
         this.jiraIssueFilter = jiraIssueFilter;
     }
 
@@ -84,7 +88,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         List<Result> issueValues = new ArrayList<>();
 
         for (Issue issue : fixNull(issues)) {
-            issueValues.add(new Result(issue));
+            issueValues.add(new Result(issue, this.altSummaryFields));
         }
 
         return issueValues;
@@ -96,6 +100,15 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 
     public void setJiraIssueFilter(String jiraIssueFilter) {
         this.jiraIssueFilter = jiraIssueFilter;
+    }
+
+    public String getAltSummaryFields() {
+        return altSummaryFields;
+    }
+
+    @DataBoundSetter
+    public void setAltSummaryFields(String altSummaryFields) {
+        this.altSummaryFields = altSummaryFields;
     }
 
     @Extension
@@ -111,8 +124,31 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         public final String summary;
 
         public Result(final Issue issue) {
+            this(issue, null);
+        }
+
+        public Result(final Issue issue, String altSummaryFields) {
             this.key = issue.getKey();
-            this.summary = issue.getSummary();
+            if(StringUtils.isEmpty(altSummaryFields)) {
+                this.summary = issue.getSummary();
+            } else {
+                String[] fields = altSummaryFields.split(",");
+                StringBuilder sb = new StringBuilder();
+                for(String f : fields) {
+                    String fn = f.trim();
+                    if(StringUtils.isNotEmpty(fn)) {
+                        IssueField field = issue.getFieldByName(fn);
+                        if(field != null && field.getValue() != null) {
+                            String fv = field.getValue().toString();
+                            if(StringUtils.isNotEmpty(fv)) {
+                                sb.append(fv);
+                                sb.append(' ');
+                            }
+                        }
+                    }
+                }
+                this.summary = sb.toString().trim();
+            }
         }
     }
 }
