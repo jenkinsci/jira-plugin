@@ -15,7 +15,7 @@ following warnings before using an older version:
 -   [Folder-scoped Jira sites are able to access System-scoped credentials](https://jenkins.io/security/advisory/2019-11-21/#SECURITY-1106){.external-link}
 
 This plugin integrates [Atlassian
-JIRA](http://www.atlassian.com/software/jira/){.external-link} to Jenkins.
+JIRA](http://www.atlassian.com/software/jira/) to Jenkins.
 
   
 **TOC:**
@@ -38,8 +38,7 @@ automatically hyperlink all matching issue names to JIRA.
 If you have additionally provided username/password to JIRA, the
 hyperlinks will also contain tooltips with the issue summary.
 
-![](docs/images/example_annotated_changelog.png){.confluence-embedded-image
-.confluence-content-image-border}
+![](docs/images/example_annotated_changelog.png)
 
 #### Updating JIRA issues with back pointers
 
@@ -51,12 +50,11 @@ Now you also need to configure jobs. I figured you might not always have
 write access to the JIRA (say you have a Jenkins build for one of the
 Apache commons project that you depend on), so that's why this is
 optional.  
-![](http://weblogs.java.net/blog/kohsuke/archive/20070312/jobConfig.png){.confluence-embedded-image
-.confluence-external-resource .image-center}
+![](http://weblogs.java.net/blog/kohsuke/archive/20070312/jobConfig.png)
 
 And the following screen shows how JIRA issue is updated:
 
-![](docs/images/JIRA_Comments.jpg){.confluence-embedded-image}
+![](docs/images/JIRA_Comments.jpg)
 
 By taking advantages of Jenkins'
 [fingerprint](https://wiki.jenkins.io/display/JENKINS/Fingerprint)
@@ -77,28 +75,27 @@ Parameter. 
 
 This can be useful for generating release notes, trigerring
 parameterized build, etc.  
-![](docs/images/version_parameters.png){.confluence-embedded-image}
+![](docs/images/version_parameters.png)
 
 #### Generating Release Notes
 
 You can also generate release notes to be used during your build. These
 notes can be retrieved from an environment variable. See the [Maven Project Plugin](https://wiki.jenkins.io/display/JENKINS/Maven+Project+Plugin) for
 the environment variables found within the POM.  
-![](docs/images/release_notes.png){.confluence-embedded-image}
+![](docs/images/release_notes.png)
 
 After your build has run, you can also have the plugin mark a release as
 resolved. This typically will be a release you specified in your Build
 Parameters.  
-![](docs/images/mark_as_resolved.png){.confluence-embedded-image}
+![](docs/images/mark_as_resolved.png)
 
 The plugin can also move certain issues matching a JQL query to a new
 release version.  
-![](docs/images/move_issues.png){.confluence-embedded-image}
+![](docs/images/move_issues.png)
 
 Sample usage of generated Release Notes:
 
-![](docs/images/release_notes_config.png){.confluence-embedded-image
-.confluence-content-image-border}
+![](docs/images/release_notes_config.png)
 
 #### JIRA Authentication & Permissions required
 
@@ -134,7 +131,7 @@ $ curl -X GET -u <email>:<API token> -H "Content-Type: application/json"  https:
 ```
 
 Also make sure that CAPTCHA is not triggered for your user as this will
-prevent the API token to work - see [CAPTCHA section in Atlassian REST API documentation.](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/){.external-link}
+prevent the API token to work - see [CAPTCHA section in Atlassian REST API documentation.](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/)
 
   
 
@@ -146,15 +143,13 @@ prevent the API token to work - see [CAPTCHA section in Atlassian REST API docu
 
 #### Related Resources
 
--   Check also the Marvelution [Jira Hudson Integration](http://www.marvelution.com/atlassian/jira-hudson-integration/){.external-link}
+-   Check also the Marvelution [Jira Hudson Integration](http://www.marvelution.com/atlassian/jira-hudson-integration/)
     which provides a two-way solution Hudson-\>JIRA and JIRA-\>Hudson
--   [Hudson integration for JIRA](https://plugins.atlassian.com/plugin/details/11858){.external-link}
-    adds Hudson information to JIRA.
--   The [Subversion JIRA plugin](https://studio.plugins.atlassian.com/wiki/display/SVN/Subversion+JIRA+plugin){.external-link}
-    also allows recording of scm changes to JIRA issues (for other SCMs
+-   [Hudson integration for JIRA](https://plugins.atlassian.com/plugin/details/11858) adds Hudson information to JIRA.
+-   The [Subversion JIRA plugin](https://studio.plugins.atlassian.com/wiki/display/SVN/Subversion+JIRA+plugin) also allows recording of scm changes to JIRA issues (for other SCMs
     there are similar plugins)
 -   For JIRA Workflow (Pipeline) plugin compatibility
-    see [COMPATIBILITY.md](https://github.com/jenkinsci/jira-plugin/blob/master/COMPATIBILITY.md){.external-link}
+    see [COMPATIBILITY.md](https://github.com/jenkinsci/jira-plugin/blob/master/COMPATIBILITY.md)
 
 Reported Issues:
 * Next Release:
