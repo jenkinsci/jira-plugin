@@ -151,6 +151,10 @@ prevent the API token to work - see [CAPTCHA section in Atlassian REST API docu
 -   For JIRA Workflow (Pipeline) plugin compatibility
     see [COMPATIBILITY.md](https://github.com/jenkinsci/jira-plugin/blob/master/COMPATIBILITY.md)
 
+#### Releases
+
+See [CHANGELOG.md](https://github.com/jenkinsci/jira-plugin/blob/master/CHANGELOG.md)
+
 Reported Issues:
 * Next Release:
 [[ToDo]](https://issues.jenkins-ci.org/issues/?filter=14997)
