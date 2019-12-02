@@ -7,6 +7,155 @@ Jenkins JIRA Plugin
 
 Check documentation at [JIRA plugin page](https://plugins.jenkins.io/jira).
 
+
+Older versions of this plugin may not be safe to use. Please review the
+following warnings before using an older version:
+
+-   [CSRF vulnerability and missing permission checks allowed capturing credentials](https://jenkins.io/security/advisory/2018-09-25/#SECURITY-1029){.external-link}
+-   [Folder-scoped Jira sites are able to access System-scoped credentials](https://jenkins.io/security/advisory/2019-11-21/#SECURITY-1106){.external-link}
+
+This plugin integrates [Atlassian
+JIRA](http://www.atlassian.com/software/jira/){.external-link} to Jenkins.
+
+  
+**TOC:**
+
+#### Using JIRA REST API
+
+This plugin has an optional feature to update JIRA issues with a back
+pointer to Jenkins build pages. This allows the submitter and watchers
+to quickly find out which build they need to pick up to get the fix.
+
+![](docs/images/Plugin_Configuration.jpg){.confluence-embedded-image}
+
+  
+
+#### JIRA Issue links in build Changelog
+
+When you configure your JIRA site in Jenkins, the plugin will
+automatically hyperlink all matching issue names to JIRA.
+
+If you have additionally provided username/password to JIRA, the
+hyperlinks will also contain tooltips with the issue summary.
+
+![](docs/images/example_annotated_changelog.png){.confluence-embedded-image
+.confluence-content-image-border}
+
+#### Updating JIRA issues with back pointers
+
+If you also want to use this feature, you need to supply a valid user
+id/password. If you need the comment only to be visible to a certain
+JIRA group, e.g. *Software Development*, enter the groupname. 
+
+Now you also need to configure jobs. I figured you might not always have
+write access to the JIRA (say you have a Jenkins build for one of the
+Apache commons project that you depend on), so that's why this is
+optional.  
+![](http://weblogs.java.net/blog/kohsuke/archive/20070312/jobConfig.png){.confluence-embedded-image
+.confluence-external-resource .image-center}
+
+And the following screen shows how JIRA issue is updated:
+
+![](docs/images/JIRA_Comments.jpg){.confluence-embedded-image}
+
+By taking advantages of Jenkins'
+[fingerprint](https://wiki.jenkins.io/display/JENKINS/Fingerprint)
+feature, when your other projects that depend on this project pick up a
+build with a fix, those build numbers can also be recorded in JIRA.
+
+This is quite handy when a bug is fixed in one of the libraries, yet the
+submitter wants a fix in a different project. This happens often in my
+work, where a bug is reported against JAX-WS but the fix is in JAXB. 
+
+For curious mind, see [this thread for how this works behind the scene](http://jenkins.361315.n4.nabble.com/How-can-does-Hudson-Jira-integration-works-td374680.html){.external-link}.
+
+#### Referencing JIRA Release version 
+
+To reference JIRA Release versions in your build, you can pull these
+releases directly from JIRA by adding the JIRA Release Version
+Parameter. 
+
+This can be useful for generating release notes, trigerring
+parameterized build, etc.  
+![](docs/images/version_parameters.png){.confluence-embedded-image}
+
+#### Generating Release Notes
+
+You can also generate release notes to be used during your build. These
+notes can be retrieved from an environment variable. See the [Maven Project Plugin](https://wiki.jenkins.io/display/JENKINS/Maven+Project+Plugin) for
+the environment variables found within the POM.  
+![](docs/images/release_notes.png){.confluence-embedded-image}
+
+After your build has run, you can also have the plugin mark a release as
+resolved. This typically will be a release you specified in your Build
+Parameters.  
+![](docs/images/mark_as_resolved.png){.confluence-embedded-image}
+
+The plugin can also move certain issues matching a JQL query to a new
+release version.  
+![](docs/images/move_issues.png){.confluence-embedded-image}
+
+Sample usage of generated Release Notes:
+
+![](docs/images/release_notes_config.png){.confluence-embedded-image
+.confluence-content-image-border}
+
+#### JIRA Authentication & Permissions required
+
+**Note:** As a rule of thumb, **you should be always using a service
+account** (instead of a personal account) to integrate Jenkins with
+JIRA.
+
+Make sure that the JIRA user used by Jenkins has enough permissions to
+execute its actions. You can do that via JIRA Permission Helper tool.
+
+-   For creating JIRA issues, the user has to be able to Create Issues
+    in the specified project
+-   If you additionally enter assignee or component field values, make
+    sure that:
+    -   both of the fields are assigned to the corresponding JIRA Screen
+    -   the JIRA user is Assignable in the project
+    -   the Jenkins JIRA user can Assign issues
+
+##### JIRA Cloud
+
+In Atlassian JIRA Cloud, it's not possible to create a user without an
+email, so you need to create API token.
+
+Then create a global Jenkins credential, where you put *Atlassian ID
+email* as username and *API token* as password.
+
+You can check if your API token works correctly by getting a correct
+JSON issue response with this command (where TEST-1 is an example issue
+in your project):
+
+``` syntaxhighlighter-pre
+$ curl -X GET -u <email>:<API token> -H "Content-Type: application/json"  https://<YourCloudInstanceName>.atlassian.net/rest/api/latest/issue/TEST-1
+```
+
+Also make sure that CAPTCHA is not triggered for your user as this will
+prevent the API token to work - see [CAPTCHA section in Atlassian REST API documentation.](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/){.external-link}
+
+  
+
+#### System properties
+
+| Property Name                                                   | Functionality Change                                                                                  |
+|-----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| **-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true** | Use to disable resolving user email from JIRA usernames. Currently there is no option for this in UI. |
+
+#### Related Resources
+
+-   Check also the Marvelution [Jira Hudson Integration](http://www.marvelution.com/atlassian/jira-hudson-integration/){.external-link}
+    which provides a two-way solution Hudson-\>JIRA and JIRA-\>Hudson
+-   [Hudson integration for JIRA](https://plugins.atlassian.com/plugin/details/11858){.external-link}
+    adds Hudson information to JIRA.
+-   The [Subversion JIRA plugin](https://studio.plugins.atlassian.com/wiki/display/SVN/Subversion+JIRA+plugin){.external-link}
+    also allows recording of scm changes to JIRA issues (for other SCMs
+    there are similar plugins)
+-   For JIRA Workflow (Pipeline) plugin compatibility
+    see [COMPATIBILITY.md](https://github.com/jenkinsci/jira-plugin/blob/master/COMPATIBILITY.md){.external-link}
+
 Reported Issues:
 * Next Release:
 [[ToDo]](https://issues.jenkins-ci.org/issues/?filter=14997)
