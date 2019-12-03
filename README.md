@@ -5,20 +5,7 @@ Jenkins JIRA Plugin
 [![Build Status](https://travis-ci.org/jenkinsci/jira-plugin.svg?branch=master)](https://travis-ci.org/jenkinsci/jira-plugin)
 [![Coverage Status](https://coveralls.io/repos/jenkinsci/jira-plugin/badge.svg?branch=master&service=github)](https://coveralls.io/github/jenkinsci/jira-plugin?branch=master)
 
-Check documentation at [JIRA plugin page](https://plugins.jenkins.io/jira).
-
-
-Older versions of this plugin may not be safe to use. Please review the
-following warnings before using an older version:
-
--   [CSRF vulnerability and missing permission checks allowed capturing credentials](https://jenkins.io/security/advisory/2018-09-25/#SECURITY-1029){.external-link}
--   [Folder-scoped Jira sites are able to access System-scoped credentials](https://jenkins.io/security/advisory/2019-11-21/#SECURITY-1106){.external-link}
-
-This plugin integrates [Atlassian
-JIRA](http://www.atlassian.com/software/jira/) to Jenkins.
-
-  
-**TOC:**
+This plugin integrates [Atlassian JIRA](http://www.atlassian.com/software/jira/) to Jenkins.
 
 #### Using JIRA REST API
 
