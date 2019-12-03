@@ -26,7 +26,7 @@ This plugin has an optional feature to update JIRA issues with a back
 pointer to Jenkins build pages. This allows the submitter and watchers
 to quickly find out which build they need to pick up to get the fix.
 
-![](docs/images/Plugin_Configuration.jpg){.confluence-embedded-image}
+![](docs/images/Plugin_Configuration.jpg)
 
   
 
