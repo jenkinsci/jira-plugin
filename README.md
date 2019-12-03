@@ -65,7 +65,7 @@ This is quite handy when a bug is fixed in one of the libraries, yet the
 submitter wants a fix in a different project. This happens often in my
 work, where a bug is reported against JAX-WS but the fix is in JAXB. 
 
-For curious mind, see [this thread for how this works behind the scene](http://jenkins.361315.n4.nabble.com/How-can-does-Hudson-Jira-integration-works-td374680.html){.external-link}.
+For curious mind, see [this thread for how this works behind the scene](http://jenkins.361315.n4.nabble.com/How-can-does-Hudson-Jira-integration-works-td374680.html).
 
 #### Referencing JIRA Release version 
 
