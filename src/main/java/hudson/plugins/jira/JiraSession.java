@@ -11,7 +11,7 @@ import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssueField;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -166,10 +166,6 @@ public class JiraSession {
             }
         }
         return null;
-    }
-
-    public List<Issue> getIssuesWithFixVersion(String projectKey, String version) throws TimeoutException {
-        return getIssuesWithFixVersion(projectKey, version, "");
     }
 
     public List<Issue> getIssuesWithFixVersion(String projectKey, String version, String filter) throws TimeoutException {
