@@ -37,7 +37,6 @@ Now you also need to configure jobs. I figured you might not always have
 write access to the JIRA (say you have a Jenkins build for one of the
 Apache commons project that you depend on), so that's why this is
 optional.  
-![](http://weblogs.java.net/blog/kohsuke/archive/20070312/jobConfig.png)
 
 And the following screen shows how JIRA issue is updated:
 
