@@ -137,112 +137,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
 
         try
         {
-            final IOReactorConfig reactorConfig = IOReactorConfig.custom()
-                    .setIoThreadCount(options.getIoThreadCount())
-                    .setSelectInterval(options.getIoSelectInterval())
-                    .setInterestOpQueued(true)
-                    .build();
-
-            final DefaultConnectingIOReactor ioReactor = new DefaultConnectingIOReactor(reactorConfig);
-            ioReactor.setExceptionHandler(new IOReactorExceptionHandler()
-            {
-                @Override
-                public boolean handle(final IOException e)
-                {
-                    log.error("IO exception in reactor ", e);
-                    return false;
-                }
-
-                @Override
-                public boolean handle(final RuntimeException e)
-                {
-                    log.error("Fatal runtime error", e);
-                    return false;
-                }
-            });
-
-            final PoolingNHttpClientConnectionManager connectionManager = new PoolingNHttpClientConnectionManager(
-                    ioReactor,
-                    ManagedNHttpClientConnectionFactory.INSTANCE,
-                    getRegistry(options),
-                    DefaultSchemePortResolver.INSTANCE,
-                    SystemDefaultDnsResolver.INSTANCE,
-                    options.getConnectionPoolTimeToLive(),
-                    TimeUnit.MILLISECONDS)
-            {
-                @Override
-                protected void finalize() throws Throwable
-                {
-                    // prevent the PoolingClientAsyncConnectionManager from logging - this causes exceptions due to
-                    // the ClassLoader probably having been removed when the plugin shuts down.  Added a
-                    // PluginEventListener to make sure the shutdown method is called while the plugin classloader
-                    // is still active.
-                    try
-                    {
-                        this.shutdown();
-                    }
-                    catch ( Throwable e )
-                    {
-                        // ignore e.printStackTrace();
-                    }
-                }
-            };
-
-            connectionManager.setDefaultMaxPerRoute(options.getMaxConnectionsPerHost());
-
-            final RequestConfig requestConfig = RequestConfig.custom()
-                    .setConnectTimeout((int) options.getConnectionTimeout())
-                    .setConnectionRequestTimeout((int) options.getLeaseTimeout())
-                    .setCookieSpec(options.getIgnoreCookies() ? CookieSpecs.IGNORE_COOKIES : CookieSpecs.DEFAULT)
-                    .setSocketTimeout((int) options.getSocketTimeout())
-                    .build();
-
-            final HttpAsyncClientBuilder clientBuilder = HttpAsyncClients.custom()
-                    .setThreadFactory(ThreadFactories.namedThreadFactory(options.getThreadPrefix() + "-io", ThreadFactories.Type.DAEMON))
-                    .setDefaultIOReactorConfig(reactorConfig)
-                    .setConnectionManager(connectionManager)
-                    .setRedirectStrategy(new RedirectStrategy())
-                    .setUserAgent(getUserAgent(options))
-                    .setDefaultRequestConfig(requestConfig);
-
-            if(Jenkins.getInstance() != null) {
-                ProxyConfiguration proxyConfiguration = Jenkins.getInstance().proxy;
-                if ( proxyConfiguration != null ) {
-                    final HttpHost proxy = new HttpHost( proxyConfiguration.name, proxyConfiguration.port );
-                    //clientBuilder.setProxy( proxy );
-                    if ( StringUtils.isNotBlank( proxyConfiguration.getUserName() ) ) {
-                        clientBuilder.setProxyAuthenticationStrategy( ProxyAuthenticationStrategy.INSTANCE );
-                        CredentialsProvider credsProvider = new BasicCredentialsProvider();
-                        credsProvider.setCredentials( new AuthScope( proxyConfiguration.name, proxyConfiguration.port ),
-                                                      new UsernamePasswordCredentials( proxyConfiguration.getUserName(),
-                                                                                       proxyConfiguration.getPassword() ) );
-                        clientBuilder.setDefaultCredentialsProvider( credsProvider );
-                    }
-
-                    clientBuilder.setRoutePlanner(
-                        new JenkinsProxyRoutePlanner( proxy, proxyConfiguration.getNoProxyHostPatterns() ) );
-                }
-            }
-
-            /*
-            ProxyConfigFactory.getProxyHost(options).foreach(new Effect<HttpHost>()
-            {
-                @Override
-                public void apply(final HttpHost httpHost)
-                {
-                    clientBuilder.setProxy(httpHost);
-                    ProxyCredentialsProvider.build(options).foreach(new Effect<ProxyCredentialsProvider>()
-                    {
-                        @Override
-                        public void apply(final ProxyCredentialsProvider proxyCredentialsProvider)
-                        {
-                            clientBuilder.setProxyAuthenticationStrategy(ProxyAuthenticationStrategy.INSTANCE);
-                            clientBuilder.setDefaultCredentialsProvider(proxyCredentialsProvider);
-                        }
-                    });
-                }
-            });
-            */
+            final HttpAsyncClientBuilder clientBuilder = createClientBuilder();
 
             this.nonCachingHttpClient = clientBuilder.build();
             this.callbackExecutor = options.getCallbackExecutor();
@@ -252,6 +147,118 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
         {
             throw new RuntimeException("Reactor " + options.getThreadPrefix() + "not set up correctly", e);
         }
+    }
+
+    private HttpAsyncClientBuilder createClientBuilder() throws IOReactorException {
+
+        final HttpClientOptions options = httpClientOptions;
+        final IOReactorConfig reactorConfig = IOReactorConfig.custom()
+                .setIoThreadCount(options.getIoThreadCount())
+                .setSelectInterval(options.getIoSelectInterval())
+                .setInterestOpQueued(true)
+                .build();
+
+        final DefaultConnectingIOReactor ioReactor = new DefaultConnectingIOReactor(reactorConfig);
+        ioReactor.setExceptionHandler(new IOReactorExceptionHandler()
+        {
+            @Override
+            public boolean handle(final IOException e)
+            {
+                log.error("IO exception in reactor ", e);
+                return false;
+            }
+
+            @Override
+            public boolean handle(final RuntimeException e)
+            {
+                log.error("Fatal runtime error", e);
+                return false;
+            }
+        });
+
+        final PoolingNHttpClientConnectionManager connectionManager = new PoolingNHttpClientConnectionManager(
+                ioReactor,
+                ManagedNHttpClientConnectionFactory.INSTANCE,
+                getRegistry(options),
+                DefaultSchemePortResolver.INSTANCE,
+                SystemDefaultDnsResolver.INSTANCE,
+                options.getConnectionPoolTimeToLive(),
+                TimeUnit.MILLISECONDS)
+        {
+            @Override
+            protected void finalize() throws Throwable
+            {
+                // prevent the PoolingClientAsyncConnectionManager from logging - this causes exceptions due to
+                // the ClassLoader probably having been removed when the plugin shuts down.  Added a
+                // PluginEventListener to make sure the shutdown method is called while the plugin classloader
+                // is still active.
+                try
+                {
+                    this.shutdown();
+                }
+                catch ( Throwable e )
+                {
+                    // ignore e.printStackTrace();
+                }
+            }
+        };
+
+        connectionManager.setDefaultMaxPerRoute(options.getMaxConnectionsPerHost());
+
+        final RequestConfig requestConfig = RequestConfig.custom()
+                .setConnectTimeout((int) options.getConnectionTimeout())
+                .setConnectionRequestTimeout((int) options.getLeaseTimeout())
+                .setCookieSpec(options.getIgnoreCookies() ? CookieSpecs.IGNORE_COOKIES : CookieSpecs.DEFAULT)
+                .setSocketTimeout((int) options.getSocketTimeout())
+                .build();
+
+        final HttpAsyncClientBuilder clientBuilder = HttpAsyncClients.custom()
+                .setThreadFactory(ThreadFactories.namedThreadFactory(options.getThreadPrefix() + "-io", ThreadFactories.Type.DAEMON))
+                .setDefaultIOReactorConfig(reactorConfig)
+                .setConnectionManager(connectionManager)
+                .setRedirectStrategy(new RedirectStrategy())
+                .setUserAgent(getUserAgent(options))
+                .setDefaultRequestConfig(requestConfig);
+
+        if(Jenkins.getInstance() != null) {
+            ProxyConfiguration proxyConfiguration = Jenkins.getInstance().proxy;
+            if ( proxyConfiguration != null ) {
+                final HttpHost proxy = new HttpHost( proxyConfiguration.name, proxyConfiguration.port );
+                //clientBuilder.setProxy( proxy );
+                if ( StringUtils.isNotBlank( proxyConfiguration.getUserName() ) ) {
+                    clientBuilder.setProxyAuthenticationStrategy( ProxyAuthenticationStrategy.INSTANCE );
+                    CredentialsProvider credsProvider = new BasicCredentialsProvider();
+                    credsProvider.setCredentials( new AuthScope( proxyConfiguration.name, proxyConfiguration.port ),
+                                                  new UsernamePasswordCredentials( proxyConfiguration.getUserName(),
+                                                                                   proxyConfiguration.getPassword() ) );
+                    clientBuilder.setDefaultCredentialsProvider( credsProvider );
+                }
+
+                clientBuilder.setRoutePlanner(
+                    new JenkinsProxyRoutePlanner( proxy, proxyConfiguration.getNoProxyHostPatterns() ) );
+            }
+        }
+
+        /*
+        ProxyConfigFactory.getProxyHost(options).foreach(new Effect<HttpHost>()
+        {
+            @Override
+            public void apply(final HttpHost httpHost)
+            {
+                clientBuilder.setProxy(httpHost);
+                ProxyCredentialsProvider.build(options).foreach(new Effect<ProxyCredentialsProvider>()
+                {
+                    @Override
+                    public void apply(final ProxyCredentialsProvider proxyCredentialsProvider)
+                    {
+                        clientBuilder.setProxyAuthenticationStrategy(ProxyAuthenticationStrategy.INSTANCE);
+                        clientBuilder.setDefaultCredentialsProvider(proxyCredentialsProvider);
+                    }
+                });
+            }
+        });
+        */
+        return clientBuilder;
     }
 
     private class JenkinsProxyRoutePlanner extends DefaultRoutePlanner {
@@ -264,6 +271,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
             this.nonProxyHosts = nonProxyHosts;
         }
 
+        @Override
         protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context) throws HttpException {
             return bypassProxy(target.getHostName()) ? null : this.proxy;
         }
@@ -469,6 +477,18 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
 
     private PromiseHttpAsyncClient getPromiseHttpAsyncClient(Request request)
     {
+
+        log.info( "Creating new HttpAsyncClient" );
+        final CloseableHttpAsyncClient nonCachingHttpClient;
+        try {
+            final HttpAsyncClientBuilder clientBuilder = createClientBuilder();
+
+            nonCachingHttpClient = clientBuilder.build();
+            nonCachingHttpClient.start();
+        } catch ( IOReactorException e ) {
+            throw new RuntimeException( "Reactor " + httpClientOptions.getThreadPrefix() + "not set up correctly" , e );
+        }
+
         return new SettableFuturePromiseHttpPromiseAsyncClient<C>(nonCachingHttpClient, threadLocalContextManager, callbackExecutor);
     }
 
