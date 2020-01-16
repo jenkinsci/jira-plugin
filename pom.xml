@@ -26,7 +26,7 @@
     <workflow.version>2.0</workflow.version>
 
     <!-- jenkins -->
-    <jenkins.version>2.60.3</jenkins.version>
+    <jenkins.version>2.138.4</jenkins.version>
 
     <!-- security -->
     <owasp.version>4.0.2</owasp.version>
