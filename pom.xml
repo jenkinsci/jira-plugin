@@ -33,7 +33,7 @@
     <findbugs.failOnError>false</findbugs.failOnError>
 
     <!-- tests -->
-    <groovy.version>2.4.5</groovy.version>
+    <groovy.version>2.4.11</groovy.version>
     <surefire.version>2.20</surefire.version>
     <configuration-as-code.version>1.35</configuration-as-code.version>
   </properties>
@@ -329,6 +329,12 @@
     </dependency>
 
     <!-- test dependencies -->
+    <dependency>
+      <groupId>org.codehaus.groovy</groupId>
+      <artifactId>groovy-all</artifactId>
+      <version>${groovy.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
