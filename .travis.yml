@@ -5,17 +5,20 @@ sudo: false
 jdk:
   - openjdk8
 
-install:
-  - mvn clean install -DskipTests -Dmaven.javadoc.skip=true --batch-mode -V
+# TravisCI build is running only for coveralls.io/Coverage
+# Test verification pipeline is on ci.jenkins.io
+
+install: skip       # skip install phase as no deps are required
+
 script:
-  - mvn -P enable-jacoco install jacoco:report --batch-mode -P owasp
+  - mvn -DskipTests -Dmaven.javadoc.skip=true clean package
+
 after_success:
-  - mvn coveralls:report --batch-mode
-  - mvn -DskipTests verify
+  - mvn -P quality clean test jacoco:report coveralls:report
 
 before_cache:
-  - rm -fr /home/travis/.m2/repository/org/jenkins-ci/plugins/jira
-  
+  - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
+
 cache:
   directories:
     - "$HOME/.m2/repository"
