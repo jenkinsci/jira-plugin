@@ -29,7 +29,7 @@
     <jenkins.version>2.60.3</jenkins.version>
 
     <!-- security -->
-    <owasp.version>4.0.2</owasp.version>
+    <owasp.version>5.3.0</owasp.version>
     <findbugs.failOnError>false</findbugs.failOnError>
 
     <!-- tests -->
@@ -57,7 +57,7 @@
       </build>
     </profile>
     <profile>
-      <id>owasp</id>
+      <id>quality</id>
       <build>
         <plugins>
           <plugin>
@@ -70,6 +70,19 @@
                   <goal>check</goal>
                 </goals>
               </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.2</version>
+            <executions>
+                <execution>
+                    <id>prepare-agent</id>
+                    <goals>
+                        <goal>prepare-agent</goal>
+                    </goals>
+                </execution>
             </executions>
           </plugin>
         </plugins>
@@ -136,11 +149,6 @@
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
         <version>4.3.0</version>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.2</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.gmaven</groupId>
