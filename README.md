@@ -206,7 +206,7 @@ Fork the repository on GitHub, prepare your change on your forked copy, and subm
 Your pull request will be evaluated by the [Travis CI Job](https://travis-ci.org/jenkinsci/jira-plugin)  and you should receive e-mail with the results of the evaluation.
 
 If you are adding new features please make sure that they support Jenkins Pipeline Plugin.
-See (here](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for some information.
+See [here](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for some information.
 
 Before submitting your change make sure that:
 * you added tests - the coverage will be checked after submitting PRs
