@@ -14,10 +14,16 @@ script:
   - mvn -DskipTests -Dmaven.javadoc.skip=true clean package
 
 after_success:
-  - mvn -P quality clean test jacoco:report coveralls:report
+  - mvn -Dsonar.projectKey=jenkins-jira-plugin -P quality clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar jacoco:report coveralls:report
 
 before_cache:
   - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
+
+addons:
+  sonarcloud:
+    organization: "warden"
+    token:
+      secure: "b9yLgCY2fmS0Cm9BQy4cKj+xcnmz2ssVpXeiv9f2Y6Qr16EJRFYkOep8ya+T77/7iCmPrbaIklBslC9FFS0i1F0yVEjCRcaU09mXpV29fbjwX2nucM6Dv1ctActvUBFXqkC4+dS2Aetbb8BzB7CWJUj+tLHV5Woi71Jsgn+j6L4="
 
 cache:
   directories:
