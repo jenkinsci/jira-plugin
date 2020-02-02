@@ -20,7 +20,7 @@ script:
 # enable-jacoco profile is coming from the parent pom:
 # https://github.com/jenkinsci/plugin-pom/blob/master/pom.xml
 after_success:
-  - mvn -Penable-jacoco -Dsonar.projectKey=jenkins-jira-plugin -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml clean verify coveralls:report sonar:sonar
+  - mvn -Penable-jacoco -Dsonar.projectKey=jenkins-jira-plugin -Dsonar.coverage.jacoco.xmlReportPaths=/home/travis/build/jenkinsci/jira-plugin/target/site/jacoco/jacoco.xml clean verify coveralls:report sonar:sonar
 
 before_cache:
   - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
