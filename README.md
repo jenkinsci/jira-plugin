@@ -8,6 +8,7 @@ Jenkins JIRA Plugin
 
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/jira.svg?color=blue)](https://stats.jenkins.io/pluginversions/jira.html)
 [![Coverage](https://coveralls.io/repos/jenkinsci/jira-plugin/badge.svg?branch=master&service=github)](https://coveralls.io/github/jenkinsci/jira-plugin?branch=master)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jenkins-jira-plugin&metric=alert_status)](https://sonarcloud.io/dashboard?id=jenkins-jira-plugin)
 [![Contributors](https://img.shields.io/github/contributors/jenkinsci/jira-plugin.svg)](https://github.com/jenkinsci/jira-plugin/graphs/contributors)
 
 
@@ -23,7 +24,7 @@ to quickly find out which build they need to pick up to get the fix.
 
 ![](docs/images/Plugin_Configuration.jpg)
 
-  
+
 
 #### JIRA Issue links in build Changelog
 
@@ -127,7 +128,7 @@ $ curl -X GET -u <email>:<API token> -H "Content-Type: application/json"  https:
 Also make sure that CAPTCHA is not triggered for your user as this will
 prevent the API token to work - see [CAPTCHA section in Atlassian REST API documentation.](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/)
 
-  
+
 
 #### System properties
 

@@ -29,7 +29,6 @@
     <jenkins.version>2.60.3</jenkins.version>
 
     <!-- security -->
-    <owasp.version>5.3.0</owasp.version>
     <findbugs.failOnError>false</findbugs.failOnError>
 
     <!-- tests -->
@@ -52,38 +51,6 @@
             <configuration>
               <additionalparam>-Xdoclint:none</additionalparam>
             </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>quality</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.owasp</groupId>
-            <artifactId>dependency-check-maven</artifactId>
-            <version>${owasp.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.jacoco</groupId>
-            <artifactId>jacoco-maven-plugin</artifactId>
-            <version>0.8.2</version>
-            <executions>
-                <execution>
-                    <id>prepare-agent</id>
-                    <goals>
-                        <goal>prepare-agent</goal>
-                    </goals>
-                </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>

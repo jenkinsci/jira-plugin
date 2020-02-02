@@ -14,7 +14,7 @@ script:
   - mvn -DskipTests -Dmaven.javadoc.skip=true clean package
 
 after_success:
-  - mvn -Dsonar.projectKey=jenkins-jira-plugin -P quality clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar jacoco:report coveralls:report
+  - mvn -Dsonar.projectKey=jenkins-jira-plugin clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar jacoco:report coveralls:report
 
 before_cache:
   - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
