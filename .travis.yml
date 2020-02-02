@@ -2,6 +2,10 @@ language: java
 dist: xenial
 sudo: false
 
+# required for SonarCloud
+git:
+  depth: false
+
 jdk:
   - openjdk8
 
@@ -13,8 +17,10 @@ install: skip       # skip install phase as no deps are required
 script:
   - mvn -DskipTests -Dmaven.javadoc.skip=true clean package
 
+# enable-jacoco profile is coming from the parent pom:
+# https://github.com/jenkinsci/plugin-pom/blob/master/pom.xml
 after_success:
-  - mvn -Dsonar.projectKey=jenkins-jira-plugin -P quality clean org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar jacoco:report coveralls:report
+  - mvn -Penable-jacoco -Dsonar.projectKey=jenkins-jira-plugin -Dsonar.coverage.jacoco.xmlReportPaths=/home/travis/build/jenkinsci/jira-plugin/target/site/jacoco/jacoco.xml clean verify coveralls:report sonar:sonar
 
 before_cache:
   - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
