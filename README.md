@@ -16,6 +16,28 @@ Jenkins JIRA Plugin
 
 This plugin integrates with Jenkins the [Atlassian JIRA Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions).
 
+#### Usage with JIRA Cloud
+
+With Atlassian JIRA Cloud, it's not possible to create a user without an
+email, so you need to create API token that will be used as a _service user_ 
+by Jenkins to execute API calls to JIRA Cloud - follow [Atlassian API tokens documentation](https://confluence.atlassian.com/cloud/api-tokens-938839638.html)
+
+Then create a global Jenkins credential:
+- put *Atlassian ID email* as username
+- *API token* as password.
+
+You can check if your API token works correctly by getting a correct
+JSON issue response with this command (where TEST-1 is an example issue
+in your project):
+
+```bash
+$ curl -X GET -u <email>:<API token> -H "Content-Type: application/json"  https://<YourCloudInstanceName>.atlassian.net/rest/api/latest/issue/TEST-1
+```
+
+Also make sure that CAPTCHA is not triggered for your user as this will
+prevent the API token to work - see [CAPTCHA section in Atlassian REST API documentation.](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/)
+
+
 #### Using JIRA REST API
 
 This plugin has an optional feature to update JIRA issues with a back
@@ -23,8 +45,6 @@ pointer to Jenkins build pages. This allows the submitter and watchers
 to quickly find out which build they need to pick up to get the fix.
 
 ![](docs/images/Plugin_Configuration.jpg)
-
-
 
 #### JIRA Issue links in build Changelog
 
@@ -108,26 +128,6 @@ execute its actions. You can do that via JIRA Permission Helper tool.
     -   both of the fields are assigned to the corresponding JIRA Screen
     -   the JIRA user is Assignable in the project
     -   the Jenkins JIRA user can Assign issues
-
-##### JIRA Cloud
-
-In Atlassian JIRA Cloud, it's not possible to create a user without an
-email, so you need to create API token.
-
-Then create a global Jenkins credential, where you put *Atlassian ID
-email* as username and *API token* as password.
-
-You can check if your API token works correctly by getting a correct
-JSON issue response with this command (where TEST-1 is an example issue
-in your project):
-
-``` syntaxhighlighter-pre
-$ curl -X GET -u <email>:<API token> -H "Content-Type: application/json"  https://<YourCloudInstanceName>.atlassian.net/rest/api/latest/issue/TEST-1
-```
-
-Also make sure that CAPTCHA is not triggered for your user as this will
-prevent the API token to work - see [CAPTCHA section in Atlassian REST API documentation.](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/)
-
 
 
 #### System properties
