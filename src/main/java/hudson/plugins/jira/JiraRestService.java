@@ -68,6 +68,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
 public class JiraRestService {
@@ -153,7 +154,14 @@ public class JiraRestService {
         try {
             return jiraRestClient.getIssueClient().getIssue(issueKey).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOGGER.log(WARNING, "jira rest client get issue error. cause: " + e.getMessage(), e);
+            if (e.getCause() != null
+                    && e.getCause() instanceof RestClientException
+                    && ((RestClientException)e.getCause()).getStatusCode().isPresent()
+                    && ((RestClientException)e.getCause()).getStatusCode().get() == 404) {
+                LOGGER.log(INFO, "Issue '" + issueKey + "' not found in JIRA.");
+            } else {
+                LOGGER.log(WARNING, "jira rest client get issue error. cause: " + e.getMessage(), e);
+            }
             return null;
         }
     }
@@ -295,7 +303,14 @@ public class JiraRestService {
         try {
             return jiraRestClient.getUserClient().getUser(username).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOGGER.log(WARNING, "jira rest client get user error. cause: " + e.getMessage(), e);
+            if (e.getCause() != null
+                    && e.getCause() instanceof RestClientException
+                    && ((RestClientException)e.getCause()).getStatusCode().isPresent()
+                    && ((RestClientException)e.getCause()).getStatusCode().get() == 404) {
+                LOGGER.log(INFO, "User '" + username + "' not found in JIRA.");
+            } else {
+                LOGGER.log(WARNING, "jira rest client get user error. cause: " + e.getMessage(), e);
+            }
             return null;
         }
     }
