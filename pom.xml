@@ -21,7 +21,10 @@
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
     <powermock.version>1.6.3</powermock.version>
-    <jira-rest-client.version>5.0.4</jira-rest-client.version>
+    <!-- TODO with https://bitbucket.org/atlassian/jira-rest-java-client/pull-requests/93 switch to 5.1.7 -->
+    <!-- see https://issues.jenkins-ci.org/browse/JENKINS-53794 -->
+    <!-- https://packages.atlassian.com/content/repositories/atlassian-public/com/atlassian/jira/jira-rest-java-client-api/ -->
+    <jira-rest-client.version>5.1.6</jira-rest-client.version>
     <fugue.version>2.6.1</fugue.version>
     <workflow.version>2.0</workflow.version>
 
@@ -197,6 +200,24 @@
       </exclusions>
     </dependency>
     <dependency>
+      <!-- TODO maybe these dependency needs to be changed/removed -->
+      <groupId>io.atlassian.util.concurrent</groupId>
+      <artifactId>atlassian-util-concurrent</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
+      <!-- TODO maybe these dependency needs to be changed/removed -->
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpasyncclient</artifactId>
+      <version>4.1.4</version>
+    </dependency>
+    <dependency>
+      <!-- TODO maybe these dependency needs to be changed/removed -->
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpasyncclient-cache</artifactId>
+      <version>4.1.4</version>
+    </dependency>
+    <dependency>
       <groupId>com.atlassian.jira</groupId>
       <artifactId>jira-rest-java-client-core</artifactId>
       <version>${jira-rest-client.version}</version>
@@ -221,20 +242,28 @@
           <groupId>com.atlassian.httpclient</groupId>
           <artifactId>atlassian-httpclient-plugin</artifactId>
         </exclusion>
+        <!--
         <exclusion>
           <groupId>com.atlassian.httpclient</groupId>
           <artifactId>atlassian-httpclient-library</artifactId>
-        </exclusion>
+        </exclusion> -->
         <exclusion>
           <groupId>org.codehaus.jackson</groupId>
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
+    <!--
     <dependency>
       <groupId>com.atlassian.fugue</groupId>
       <artifactId>fugue</artifactId>
       <version>${fugue.version}</version>
+    </dependency>
+     -->
+    <dependency>
+      <groupId>io.atlassian.fugue</groupId>
+      <artifactId>fugue</artifactId>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

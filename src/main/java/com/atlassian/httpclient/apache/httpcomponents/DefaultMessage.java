@@ -1,6 +1,6 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
-import com.atlassian.fugue.Option;
+import io.atlassian.fugue.Option;
 import com.atlassian.httpclient.api.Message;
 import org.apache.http.util.CharArrayBuffer;
 

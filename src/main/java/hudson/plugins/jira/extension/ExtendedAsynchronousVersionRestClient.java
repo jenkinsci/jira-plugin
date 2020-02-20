@@ -2,7 +2,7 @@ package hudson.plugins.jira.extension;
 
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousVersionRestClient;
-import com.atlassian.util.concurrent.Promise;
+import io.atlassian.util.concurrent.Promise;
 
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
