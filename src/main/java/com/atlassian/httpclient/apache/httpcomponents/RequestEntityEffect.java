@@ -1,6 +1,6 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
-import com.atlassian.fugue.Effect;
+import io.atlassian.fugue.Effect;
 import com.atlassian.httpclient.api.Request;
 import com.google.common.io.ByteStreams;
 import org.apache.http.HttpEntity;

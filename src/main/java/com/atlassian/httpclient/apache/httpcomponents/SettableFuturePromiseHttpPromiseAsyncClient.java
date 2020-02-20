@@ -1,8 +1,8 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
-import com.atlassian.util.concurrent.Promise;
-import com.atlassian.util.concurrent.Promises;
+import io.atlassian.util.concurrent.Promise;
+import io.atlassian.util.concurrent.Promises;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.SettableFuture;
 import org.apache.http.HttpResponse;
@@ -54,7 +54,7 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
                 executor.execute(() -> future.setException(timeoutException));
             }
         });
-        return Promises.forListenableFuture(future);
+        return Promises.forFuture(future,executor);
     }
 
     @VisibleForTesting
