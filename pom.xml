@@ -21,11 +21,8 @@
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
     <powermock.version>1.6.3</powermock.version>
-    <!-- TODO with https://bitbucket.org/atlassian/jira-rest-java-client/pull-requests/93 switch to 5.1.7 -->
-    <!-- see https://issues.jenkins-ci.org/browse/JENKINS-53794 -->
-    <!-- https://packages.atlassian.com/content/repositories/atlassian-public/com/atlassian/jira/jira-rest-java-client-api/ -->
-    <jira-rest-client.version>5.1.6</jira-rest-client.version>
-    <fugue.version>2.6.1</fugue.version>
+    <jira-rest-client.version>5.2.1</jira-rest-client.version>
+    <fugue.version>3.0.0</fugue.version>
     <workflow.version>2.0</workflow.version>
 
     <!-- jenkins -->
@@ -252,17 +249,10 @@
         </exclusion>
       </exclusions>
     </dependency>
-    <!--
-    <dependency>
-      <groupId>com.atlassian.fugue</groupId>
-      <artifactId>fugue</artifactId>
-      <version>${fugue.version}</version>
-    </dependency>
-     -->
     <dependency>
       <groupId>io.atlassian.fugue</groupId>
       <artifactId>fugue</artifactId>
-      <version>3.0.0</version>
+      <version>${fugue.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
