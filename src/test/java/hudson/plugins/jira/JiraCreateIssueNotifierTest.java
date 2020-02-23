@@ -97,7 +97,8 @@ public class JiraCreateIssueNotifierTest {
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
-        Status status = new Status(null, null, "1","Open",null);
+
+        Status status =  new Status(null, null, "1", "Open", null, null);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
                 Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
@@ -117,7 +118,7 @@ public class JiraCreateIssueNotifierTest {
 
         assertEquals(1, temporaryDirectory.list().length);
 
-        when(issue.getStatus()).thenReturn(new Status(null, null, "6", JiraCreateIssueNotifier.finishedStatuses.Closed.toString(), null));
+        when(issue.getStatus()).thenReturn(new Status(null, null, "6", JiraCreateIssueNotifier.finishedStatuses.Closed.toString(), null, null));
         assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
         assertEquals(1, temporaryDirectory.list().length);
@@ -138,7 +139,7 @@ public class JiraCreateIssueNotifierTest {
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
-        Status status = new Status(null, null, "1", "Open", null);
+        Status status =  new Status(null, null, "1", "Open", null, null);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
                 Mockito.eq(typeId), Mockito.isNull(Long.class))).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
@@ -168,7 +169,7 @@ public class JiraCreateIssueNotifierTest {
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
-        Status status = new Status(null, null, JiraCreateIssueNotifier.finishedStatuses.Closed.toString() , null, null);
+        Status status = new Status(null, null, "", JiraCreateIssueNotifier.finishedStatuses.Closed.toString() , null, null);
 
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
                 Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
