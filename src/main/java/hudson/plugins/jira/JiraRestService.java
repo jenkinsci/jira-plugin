@@ -32,6 +32,8 @@ import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
+import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
@@ -275,8 +277,15 @@ public class JiraRestService {
             builder.setPriorityId(priorityId);
         }
 
-        if (!assignee.equals(""))
-            builder.setAssigneeName(assignee);
+        if (StringUtils.isNotBlank(assignee)) {
+            //builder.setAssigneeName(assignee);
+            // Need to use "accountId" as specified here:
+            //    https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/
+            //
+            // See upstream fix for setAssigneeName:
+            //    https://bitbucket.org/atlassian/jira-rest-java-client/pull-requests/104/change-field-name-from-name-to-id-for/diff 
+            builder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", assignee)));
+	}
         if (Iterators.size(components.iterator()) > 0){
             builder.setComponentsNames(components);
         }
