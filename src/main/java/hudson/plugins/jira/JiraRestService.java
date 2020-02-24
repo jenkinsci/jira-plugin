@@ -388,7 +388,7 @@ public class JiraRestService {
                 if (decodeComponent.containsKey("lead")) {
                     final Map<String, Object> decodedLead = (Map<String, Object>) decodeComponent.get("lead");
                     lead = new BasicUser(URI.create((String) decodedLead.get("self")), (String) decodedLead.get("name"), (String) decodedLead
-                        .get("displayName"));
+                        .get("displayName"), (String) decodedLead.get("accountId"));
                 }
                 final Component component = new Component(
                     URI.create((String) decodeComponent.get("self")),
