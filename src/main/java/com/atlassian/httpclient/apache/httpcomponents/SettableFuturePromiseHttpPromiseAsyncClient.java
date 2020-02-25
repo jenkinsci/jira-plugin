@@ -12,6 +12,7 @@ import org.apache.http.nio.client.HttpAsyncClient;
 import org.apache.http.protocol.HttpContext;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -32,8 +33,9 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
     @Override
     public Promise<HttpResponse> execute(HttpUriRequest request, HttpContext context)
     {
+    	// TODO after migrating from atlassian-util-concurrent 3.0.0 to 4.0.0 the SettableFuture.create() maybe obsolete ?
         final SettableFuture<HttpResponse> future = SettableFuture.create();
-        client.execute(request, context, new ThreadLocalContextAwareFutureCallback<C, HttpResponse>(threadLocalContextManager)
+        Future<org.apache.http.HttpResponse> clientFuture = client.execute(request, context, new ThreadLocalContextAwareFutureCallback<C, HttpResponse>(threadLocalContextManager)
         {
             @Override
             void doCompleted(final HttpResponse httpResponse)
@@ -54,7 +56,7 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
                 executor.execute(() -> future.setException(timeoutException));
             }
         });
-        return Promises.forFuture(future,executor);
+        return Promises.forFuture(clientFuture,executor);
     }
 
     @VisibleForTesting
