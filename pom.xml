@@ -210,18 +210,6 @@
       <version>4.0.1</version>
     </dependency>
     <dependency>
-      <!-- TODO maybe these dependency needs to be changed/removed -->
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpasyncclient</artifactId>
-      <version>4.1.4</version>
-    </dependency>
-    <dependency>
-      <!-- TODO maybe these dependency needs to be changed/removed -->
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpasyncclient-cache</artifactId>
-      <version>4.1.4</version>
-    </dependency>
-    <dependency>
       <groupId>com.atlassian.jira</groupId>
       <artifactId>jira-rest-java-client-core</artifactId>
       <version>${jira-rest-client.version}</version>
@@ -265,7 +253,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <version>4.5.5-3.0</version>
+      <version>4.5.10-1.0</version>
     </dependency>
 
     <dependency>
