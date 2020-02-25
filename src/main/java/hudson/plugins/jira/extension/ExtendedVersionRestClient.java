@@ -6,9 +6,7 @@ import io.atlassian.util.concurrent.Promise;
 import java.net.URI;
 
 public interface ExtendedVersionRestClient extends VersionRestClient {
-	Promise<ExtendedVersion> getExtendedVersion(URI versionUri);
-
-	Promise<ExtendedVersion> createExtendedVersion(ExtendedVersionInput versionInput);
-
-	Promise<ExtendedVersion> updateExtendedVersion(URI versionUri, ExtendedVersionInput versionInput);
+    Promise<ExtendedVersion> getExtendedVersion(URI versionUri);
+    Promise<ExtendedVersion> createExtendedVersion(ExtendedVersionInput versionInput);
+    Promise<ExtendedVersion> updateExtendedVersion(URI versionUri, ExtendedVersionInput versionInput);
 }
