@@ -197,6 +197,13 @@
       </exclusions>
     </dependency>
     <dependency>
+    	<!-- version 18 is the first one containing com.google.common.base.MoreObjects.ToStringHelper which is used by com.atlassian.jira.rest.client.api.domain.Issue -->
+    	<!-- Remove this dependency and the exclusion above when jenkins provides a up-to-date guava version (currently 11.0.1) -->
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>18.0</version>
+    </dependency>
+    <dependency>
       <!-- TODO maybe these dependency needs to be changed/removed -->
       <groupId>io.atlassian.util.concurrent</groupId>
       <artifactId>atlassian-util-concurrent</artifactId>
