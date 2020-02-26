@@ -255,7 +255,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             while ((issue = br.readLine()) != null) {
                 issueId = issue;
             }
-            return issueId;
+            return issueId.trim().length() > 0 ? issueId : null;
         } catch (FileNotFoundException e) {
             return null;
         }

@@ -1,11 +1,42 @@
 Jenkins JIRA Plugin
 ===================
 
-[![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/jira-plugin/master)](https://ci.jenkins.io/blue/organizations/jenkins/Plugins%2Fjira-plugin/activity/)
-[![Build Status](https://travis-ci.org/jenkinsci/jira-plugin.svg?branch=master)](https://travis-ci.org/jenkinsci/jira-plugin)
-[![Coverage Status](https://coveralls.io/repos/jenkinsci/jira-plugin/badge.svg?branch=master&service=github)](https://coveralls.io/github/jenkinsci/jira-plugin?branch=master)
+[![Documentation](https://img.shields.io/jenkins/plugin/v/jira.svg?label=Documentation)](https://plugins.jenkins.io/jira)
+[![GitHub release](https://img.shields.io/github/release/jenkinsci/jira-plugin.svg?label=Release)](https://github.com/jenkinsci/jira-plugin/releases/latest)
+[![Jenkins CI](https://ci.jenkins.io/buildStatus/icon?job=Plugins/jira-plugin/master)](https://ci.jenkins.io/blue/organizations/jenkins/Plugins%2Fjira-plugin/activity/)
+[![Travis CI](https://travis-ci.org/jenkinsci/jira-plugin.svg?branch=master)](https://travis-ci.org/jenkinsci/jira-plugin)
 
-This plugin integrates [Atlassian JIRA](http://www.atlassian.com/software/jira/) to Jenkins.
+[![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/jira.svg?color=blue)](https://stats.jenkins.io/pluginversions/jira.html)
+[![Coverage](https://coveralls.io/repos/jenkinsci/jira-plugin/badge.svg?branch=master&service=github)](https://coveralls.io/github/jenkinsci/jira-plugin?branch=master)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jenkins-jira-plugin&metric=alert_status)](https://sonarcloud.io/dashboard?id=jenkins-jira-plugin)
+[![Contributors](https://img.shields.io/github/contributors/jenkinsci/jira-plugin.svg)](https://github.com/jenkinsci/jira-plugin/graphs/contributors)
+
+
+#### About the plugin
+
+This plugin integrates with Jenkins the [Atlassian JIRA Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions).
+
+#### Usage with JIRA Cloud
+
+With Atlassian JIRA Cloud, it's not possible to create a user without an
+email, so you need to create API token that will be used as a _service user_ 
+by Jenkins to execute API calls to JIRA Cloud - follow [Atlassian API tokens documentation](https://confluence.atlassian.com/cloud/api-tokens-938839638.html)
+
+Then create a global Jenkins credential:
+- put *Atlassian ID email* as username
+- *API token* as password.
+
+You can check if your API token works correctly by getting a correct
+JSON issue response with this command (where TEST-1 is an example issue
+in your project):
+
+```bash
+$ curl -X GET -u <email>:<API token> -H "Content-Type: application/json"  https://<YourCloudInstanceName>.atlassian.net/rest/api/latest/issue/TEST-1
+```
+
+Also make sure that CAPTCHA is not triggered for your user as this will
+prevent the API token to work - see [CAPTCHA section in Atlassian REST API documentation.](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/)
+
 
 #### Using JIRA REST API
 
@@ -13,9 +44,7 @@ This plugin has an optional feature to update JIRA issues with a back
 pointer to Jenkins build pages. This allows the submitter and watchers
 to quickly find out which build they need to pick up to get the fix.
 
-![](docs/images/Plugin_Configuration.jpg)
-
-  
+![](docs/images/Plugin_Configuration.png)
 
 #### JIRA Issue links in build Changelog
 
@@ -100,26 +129,6 @@ execute its actions. You can do that via JIRA Permission Helper tool.
     -   the JIRA user is Assignable in the project
     -   the Jenkins JIRA user can Assign issues
 
-##### JIRA Cloud
-
-In Atlassian JIRA Cloud, it's not possible to create a user without an
-email, so you need to create API token.
-
-Then create a global Jenkins credential, where you put *Atlassian ID
-email* as username and *API token* as password.
-
-You can check if your API token works correctly by getting a correct
-JSON issue response with this command (where TEST-1 is an example issue
-in your project):
-
-``` syntaxhighlighter-pre
-$ curl -X GET -u <email>:<API token> -H "Content-Type: application/json"  https://<YourCloudInstanceName>.atlassian.net/rest/api/latest/issue/TEST-1
-```
-
-Also make sure that CAPTCHA is not triggered for your user as this will
-prevent the API token to work - see [CAPTCHA section in Atlassian REST API documentation.](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/)
-
-  
 
 #### System properties
 
@@ -198,7 +207,7 @@ Fork the repository on GitHub, prepare your change on your forked copy, and subm
 Your pull request will be evaluated by the [Travis CI Job](https://travis-ci.org/jenkinsci/jira-plugin)  and you should receive e-mail with the results of the evaluation.
 
 If you are adding new features please make sure that they support Jenkins Pipeline Plugin.
-See (here](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for some information.
+See [here](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for some information.
 
 Before submitting your change make sure that:
 * you added tests - the coverage will be checked after submitting PRs

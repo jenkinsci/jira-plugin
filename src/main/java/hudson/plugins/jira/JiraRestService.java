@@ -32,6 +32,8 @@ import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.User;
 import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.jira.rest.client.api.domain.input.ComplexIssueInputFieldValue;
+import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
@@ -275,8 +277,12 @@ public class JiraRestService {
             builder.setPriorityId(priorityId);
         }
 
-        if (!assignee.equals(""))
-            builder.setAssigneeName(assignee);
+        if (!assignee.equals("")) {
+            //builder.setAssigneeName(assignee);
+            // Need to use "id" as specified here:
+            //    https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/
+            builder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("id", assignee)));
+	}
         if (Iterators.size(components.iterator()) > 0){
             builder.setComponentsNames(components);
         }
@@ -388,7 +394,7 @@ public class JiraRestService {
                 if (decodeComponent.containsKey("lead")) {
                     final Map<String, Object> decodedLead = (Map<String, Object>) decodeComponent.get("lead");
                     lead = new BasicUser(URI.create((String) decodedLead.get("self")), (String) decodedLead.get("name"), (String) decodedLead
-                        .get("displayName"));
+                        .get("displayName"), (String) decodedLead.get("accountId"));
                 }
                 final Component component = new Component(
                     URI.create((String) decodeComponent.get("self")),
@@ -427,6 +433,6 @@ public class JiraRestService {
      *
      */
     public Permissions getMyPermissions() throws RestClientException {
-        return jiraRestClient.getMyPermissionsRestClient().getMyPermissions(null).claim();
+        return jiraRestClient.getExtendedMyPermissionsRestClient().getMyPermissions().claim();
     }
 }

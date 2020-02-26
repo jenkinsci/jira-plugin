@@ -1,7 +1,7 @@
 package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.SearchRestClient;
-import com.atlassian.util.concurrent.Promise;
+import io.atlassian.util.concurrent.Promise;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import org.junit.Before;
 import org.junit.Test;

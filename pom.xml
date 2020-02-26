@@ -16,20 +16,19 @@
   <url>https://github.com/jenkinsci/jira-plugin</url>
 
   <properties>
-    <revision>3.0.12</revision>
+    <revision>3.0.13</revision>
     <changelist>-SNAPSHOT</changelist>
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
     <powermock.version>1.6.3</powermock.version>
-    <jira-rest-client.version>5.0.4</jira-rest-client.version>
-    <fugue.version>2.6.1</fugue.version>
+    <jira-rest-client.version>5.2.0</jira-rest-client.version>
+    <fugue.version>3.0.0</fugue.version>
     <workflow.version>2.0</workflow.version>
 
     <!-- jenkins -->
     <jenkins.version>2.60.3</jenkins.version>
 
     <!-- security -->
-    <owasp.version>4.0.2</owasp.version>
     <findbugs.failOnError>false</findbugs.failOnError>
 
     <!-- tests -->
@@ -52,25 +51,6 @@
             <configuration>
               <additionalparam>-Xdoclint:none</additionalparam>
             </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
-      <id>owasp</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.owasp</groupId>
-            <artifactId>dependency-check-maven</artifactId>
-            <version>${owasp.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>check</goal>
-                </goals>
-              </execution>
-            </executions>
           </plugin>
         </plugins>
       </build>
@@ -136,11 +116,6 @@
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
         <version>4.3.0</version>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <version>0.8.2</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.gmaven</groupId>
@@ -222,6 +197,19 @@
       </exclusions>
     </dependency>
     <dependency>
+    	<!-- version 18 is the first one containing com.google.common.base.MoreObjects.ToStringHelper which is used by com.atlassian.jira.rest.client.api.domain.Issue -->
+    	<!-- Remove this dependency and the exclusion above when jenkins provides a up-to-date guava version (currently 11.0.1) -->
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>18.0</version>
+    </dependency>
+    <dependency>
+      <!-- TODO maybe these dependency needs to be changed/removed -->
+      <groupId>io.atlassian.util.concurrent</groupId>
+      <artifactId>atlassian-util-concurrent</artifactId>
+      <version>4.0.1</version>
+    </dependency>
+    <dependency>
       <groupId>com.atlassian.jira</groupId>
       <artifactId>jira-rest-java-client-core</artifactId>
       <version>${jira-rest-client.version}</version>
@@ -257,14 +245,14 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.atlassian.fugue</groupId>
+      <groupId>io.atlassian.fugue</groupId>
       <artifactId>fugue</artifactId>
       <version>${fugue.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <version>4.5.5-3.0</version>
+      <version>4.5.10-1.0</version>
     </dependency>
 
     <dependency>

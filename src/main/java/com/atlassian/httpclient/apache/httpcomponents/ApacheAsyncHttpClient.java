@@ -14,7 +14,7 @@ import com.atlassian.httpclient.base.event.HttpRequestCompletedEvent;
 import com.atlassian.httpclient.base.event.HttpRequestFailedEvent;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
-import com.atlassian.util.concurrent.ThreadFactories;
+import io.atlassian.util.concurrent.ThreadFactories;
 import com.google.common.base.Function;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -90,7 +90,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-import static com.atlassian.util.concurrent.Promises.rejected;
+import static io.atlassian.util.concurrent.Promises.rejected;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
@@ -373,13 +373,13 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
         }
         catch (Throwable t)
         {
-            return ResponsePromises.toResponsePromise(rejected(t, Response.class));
+            return ResponsePromises.toResponsePromise(rejected(t));
         }
     }
 
     private ResponsePromise doExecute(final Request request)
     {
-        httpClientOptions.getRequestPreparer().apply(request);
+        httpClientOptions.getRequestPreparer().accept(request);
 
         final long start = System.currentTimeMillis();
         final HttpRequestBase op;
