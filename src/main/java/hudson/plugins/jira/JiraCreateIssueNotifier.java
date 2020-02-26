@@ -20,6 +20,7 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -255,7 +256,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             while ((issue = br.readLine()) != null) {
                 issueId = issue;
             }
-            return issueId;
+            return StringUtils.trimToNull(issueId);
         } catch (FileNotFoundException e) {
             return null;
         }
