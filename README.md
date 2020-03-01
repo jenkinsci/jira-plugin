@@ -1,4 +1,4 @@
-Jenkins JIRA Plugin
+Jenkins Jira Plugin
 ===================
 
 [![Documentation](https://img.shields.io/jenkins/plugin/v/jira.svg?label=Documentation)](https://plugins.jenkins.io/jira)
@@ -14,13 +14,13 @@ Jenkins JIRA Plugin
 
 #### About the plugin
 
-This plugin integrates with Jenkins the [Atlassian JIRA Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions).
+This plugin integrates with Jenkins the [Atlassian Jira Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions).
 
-#### Usage with JIRA Cloud
+#### Usage with Jira Cloud
 
-With Atlassian JIRA Cloud, it's not possible to create a user without an
+With Atlassian Jira Cloud, it's not possible to create a user without an
 email, so you need to create API token that will be used as a _service user_ 
-by Jenkins to execute API calls to JIRA Cloud - follow [Atlassian API tokens documentation](https://confluence.atlassian.com/cloud/api-tokens-938839638.html)
+by Jenkins to execute API calls to Jira Cloud - follow [Atlassian API tokens documentation](https://confluence.atlassian.com/cloud/api-tokens-938839638.html)
 
 Then create a global Jenkins credential:
 - put *Atlassian ID email* as username
@@ -38,43 +38,43 @@ Also make sure that CAPTCHA is not triggered for your user as this will
 prevent the API token to work - see [CAPTCHA section in Atlassian REST API documentation.](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/)
 
 
-#### Using JIRA REST API
+#### Using Jira REST API
 
-This plugin has an optional feature to update JIRA issues with a back
+This plugin has an optional feature to update Jira issues with a back
 pointer to Jenkins build pages. This allows the submitter and watchers
 to quickly find out which build they need to pick up to get the fix.
 
 ![](docs/images/Plugin_Configuration.png)
 
-#### JIRA Issue links in build Changelog
+#### Jira Issue links in build Changelog
 
-When you configure your JIRA site in Jenkins, the plugin will
-automatically hyperlink all matching issue names to JIRA.
+When you configure your Jira site in Jenkins, the plugin will
+automatically hyperlink all matching issue names to Jira.
 
-If you have additionally provided username/password to JIRA, the
+If you have additionally provided username/password to Jira, the
 hyperlinks will also contain tooltips with the issue summary.
 
 ![](docs/images/example_annotated_changelog.png)
 
-#### Updating JIRA issues with back pointers
+#### Updating Jira issues with back pointers
 
 If you also want to use this feature, you need to supply a valid user
 id/password. If you need the comment only to be visible to a certain
-JIRA group, e.g. *Software Development*, enter the groupname. 
+Jira group, e.g. *Software Development*, enter the groupname. 
 
 Now you also need to configure jobs. I figured you might not always have
-write access to the JIRA (say you have a Jenkins build for one of the
+write access to the Jira (say you have a Jenkins build for one of the
 Apache commons project that you depend on), so that's why this is
 optional.  
 
-And the following screen shows how JIRA issue is updated:
+And the following screen shows how Jira issue is updated:
 
-![](docs/images/JIRA_Comments.jpg)
+![](docs/images/Jira_Comments.jpg)
 
 By taking advantages of Jenkins'
 [fingerprint](https://wiki.jenkins.io/display/JENKINS/Fingerprint)
 feature, when your other projects that depend on this project pick up a
-build with a fix, those build numbers can also be recorded in JIRA.
+build with a fix, those build numbers can also be recorded in Jira.
 
 This is quite handy when a bug is fixed in one of the libraries, yet the
 submitter wants a fix in a different project. This happens often in my
@@ -82,10 +82,10 @@ work, where a bug is reported against JAX-WS but the fix is in JAXB. 
 
 For curious mind, see [this thread for how this works behind the scene](http://jenkins.361315.n4.nabble.com/How-can-does-Hudson-Jira-integration-works-td374680.html).
 
-#### Referencing JIRA Release version 
+#### Referencing Jira Release version 
 
-To reference JIRA Release versions in your build, you can pull these
-releases directly from JIRA by adding the JIRA Release Version
+To reference Jira Release versions in your build, you can pull these
+releases directly from Jira by adding the Jira Release Version
 Parameter. 
 
 This can be useful for generating release notes, trigerring
@@ -112,38 +112,38 @@ Sample usage of generated Release Notes:
 
 ![](docs/images/release_notes_config.png)
 
-#### JIRA Authentication & Permissions required
+#### Jira Authentication & Permissions required
 
 **Note:** As a rule of thumb, **you should be always using a service
 account** (instead of a personal account) to integrate Jenkins with
-JIRA.
+Jira.
 
-Make sure that the JIRA user used by Jenkins has enough permissions to
-execute its actions. You can do that via JIRA Permission Helper tool.
+Make sure that the Jira user used by Jenkins has enough permissions to
+execute its actions. You can do that via Jira Permission Helper tool.
 
--   For creating JIRA issues, the user has to be able to Create Issues
+-   For creating Jira issues, the user has to be able to Create Issues
     in the specified project
 -   If you additionally enter assignee or component field values, make
     sure that:
-    -   both of the fields are assigned to the corresponding JIRA Screen
-    -   the JIRA user is Assignable in the project
-    -   the Jenkins JIRA user can Assign issues
+    -   both of the fields are assigned to the corresponding Jira Screen
+    -   the Jira user is Assignable in the project
+    -   the Jenkins Jira user can Assign issues
 
 
 #### System properties
 
 | Property Name                                                   | Functionality Change                                                                                  |
 |-----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| **-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true** | Use to disable resolving user email from JIRA usernames. Currently there is no option for this in UI. |
+| **-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true** | Use to disable resolving user email from Jira usernames. Currently there is no option for this in UI. |
 
 #### Related Resources
 
 -   Check also the Marvelution [Jira Hudson Integration](http://www.marvelution.com/atlassian/jira-hudson-integration/)
-    which provides a two-way solution Hudson-\>JIRA and JIRA-\>Hudson
--   [Hudson integration for JIRA](https://plugins.atlassian.com/plugin/details/11858) adds Hudson information to JIRA.
--   The [Subversion JIRA plugin](https://studio.plugins.atlassian.com/wiki/display/SVN/Subversion+JIRA+plugin) also allows recording of scm changes to JIRA issues (for other SCMs
+    which provides a two-way solution Hudson-\>Jira and Jira-\>Hudson
+-   [Hudson integration for Jira](https://plugins.atlassian.com/plugin/details/11858) adds Hudson information to Jira.
+-   The [Subversion Jira plugin](https://studio.plugins.atlassian.com/wiki/display/SVN/Subversion+Jira+plugin) also allows recording of scm changes to Jira issues (for other SCMs
     there are similar plugins)
--   For JIRA Workflow (Pipeline) plugin compatibility
+-   For Jira Workflow (Pipeline) plugin compatibility
     see [COMPATIBILITY.md](https://github.com/jenkinsci/jira-plugin/blob/master/COMPATIBILITY.md)
 
 #### Releases
@@ -163,14 +163,14 @@ Reported Issues:
 
 ### Common issues
 
-#### Jenkins<>JIRA SSL connectivity problems
+#### Jenkins<>Jira SSL connectivity problems
 
 If you encounter stacktraces like this:
 ```
 Caused by: javax.net.ssl.SSLHandshakeException: sun.security.validator.ValidatorException: PKIX path building failed: sun.security.provider.certpath.SunCertPathBuilderException: unable to find valid certification path to requested target
 ```
 
-make sure the JRE/JDK that Jenkins master is running (or the Jenkins slaves are running) contain the valid CA chain certificates that JIRA is running with.
+make sure the JRE/JDK that Jenkins master is running (or the Jenkins slaves are running) contain the valid CA chain certificates that Jira is running with.
 You can test it using this [SSLPoke.java class](https://gist.github.com/warden/e4ef13ea60f24d458405613be4ddbc51)
 
 like this:

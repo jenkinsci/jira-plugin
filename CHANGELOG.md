@@ -5,6 +5,11 @@ Changelog
 
 See [GitHub releases](https://github.com/jenkinsci/jira-plugin/releases)
 
+### Unreleased
+
+Release date:  _ , 2020_
+* Changed all references of JIRA to Jira per vendor naming
+
 ### 3.0.11 
 
 Release date:  _Nov 21, 2019_
