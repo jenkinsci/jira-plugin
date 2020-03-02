@@ -11,7 +11,7 @@ import java.util.List;
 import static hudson.plugins.jira.JiraSite.ExtendedAsynchronousJiraRestClientFactory;
 
 /**
- * Test bed to play with JIRA.
+ * Test bed to play with Jira.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -50,7 +50,7 @@ public class JiraTester {
 
 //        BasicComponent backendComponent = null;
 //        final Iterable<BasicComponent> components1 = Lists.newArrayList(backendComponent);
-//        restService.createIssue("TESTPROJECT", "This is a test issue created using JIRA jenkins plugin. Please ignore it.", "TESTUSER", components1, "test issue from JIRA jenkins plugin");
+//        restService.createIssue("TESTPROJECT", "This is a test issue created using Jira jenkins plugin. Please ignore it.", "TESTUSER", components1, "test issue from Jira jenkins plugin");
 
         final List<Issue> searchResults = restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", 3);
         for (Issue searchResult : searchResults) {

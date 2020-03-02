@@ -4,7 +4,7 @@
   It turns out this seems to be rather redundant, as links in changelogs seem to be enough 
 
   <t:summary icon="orange-square.gif">
-    JIRA issues
+    Jira issues
     <table>
       <j:forEach var="issue" items="${it.issues}">
         <tr>

@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-  This plugin integrates Jenkins to <a href="http://www.atlassian.com/software/jira/">Atlassian JIRA</a>.
+  This plugin integrates Jenkins to <a href="http://www.atlassian.com/software/jira/">Atlassian Jira</a>.
 </div>
