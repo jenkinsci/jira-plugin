@@ -138,9 +138,7 @@ execute its actions. You can do that via Jira Permission Helper tool.
 
 #### Related Resources
 
--   Check also the Marvelution [Jira Hudson Integration](http://www.marvelution.com/atlassian/jira-hudson-integration/)
-    which provides a two-way solution Hudson-\>Jira and Jira-\>Hudson
--   [Hudson integration for Jira](https://plugins.atlassian.com/plugin/details/11858) adds Hudson information to Jira.
+-   Check also the Marvelution [Jenkins Integration for Jira](https://www.marvelution.com/products/jenkins-integration-for-jira/) which provides a two-way solution (Jenkins-\>Jira and Jira-\>Jenkins)
 -   The [Subversion Jira plugin](https://studio.plugins.atlassian.com/wiki/display/SVN/Subversion+JIRA+plugin) also allows recording of scm changes to Jira issues (for other SCMs
     there are similar plugins)
 -   For Jira Workflow (Pipeline) plugin compatibility
