@@ -31,8 +31,8 @@ import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
 
 /**
- * Parses build changelog for JIRA issue IDs and then
- * updates JIRA issues accordingly.
+ * Parses build changelog for Jira issue IDs and then
+ * updates Jira issues accordingly.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -101,7 +101,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
             @Override
             public boolean endBuild() throws InterruptedException, IOException {
                 PrintStream logger = listener.getLogger();
-                logger.println("End of Matrix Build. Updating JIRA.");
+                logger.println("End of Matrix Build. Updating Jira.");
                 Updater updater = new Updater(this.build.getParent().getScm(), labels);
                 return updater.perform(this.build, this.listener, getIssueSelector());
             }

@@ -91,8 +91,8 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
         AbstractIssueSelector selector = issueSelector;
         if (selector == null) {
-            logger.println("[JIRA][IssueFieldUpdateStep] No issue selector found!");
-            throw new IOException("[JIRA][IssueFieldUpdateStep] No issue selector found!");
+            logger.println("[Jira][IssueFieldUpdateStep] No issue selector found!");
+            throw new IOException("[Jira][IssueFieldUpdateStep] No issue selector found!");
         }
 
         JiraSite site = JiraSite.get(run.getParent());
@@ -111,7 +111,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
         Set<String> issues = selector.findIssueIds(run, site, listener);
         if (issues.isEmpty()) {
-            logger.println("[JIRA][IssueFieldUpdateStep] Issue list is empty!");
+            logger.println("[Jira][IssueFieldUpdateStep] Issue list is empty!");
             return;
         }
 
@@ -129,17 +129,17 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         } catch (RestClientException e) {
 
             if (e.getStatusCode().or(0).equals(404)) {
-                logger.println(issueId + " - JIRA issue not found");
+                logger.println(issueId + " - Jira issue not found");
             }
 
             if (e.getStatusCode().or(0).equals(403)) {
                 logger.println(issueId
-                        + " - Jenkins JIRA user does not have permissions to comment on this issue");
+                        + " - Jenkins Jira user does not have permissions to comment on this issue");
             }
 
             if (e.getStatusCode().or(0).equals(401)) {
                 logger.println(
-                        issueId + " - Jenkins JIRA authentication problem");
+                        issueId + " - Jenkins Jira authentication problem");
             }
 
             logger.println(Messages.FailedToUpdateIssue(issueId));

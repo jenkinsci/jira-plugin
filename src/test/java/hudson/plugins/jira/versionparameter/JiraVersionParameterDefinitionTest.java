@@ -15,8 +15,8 @@ public class JiraVersionParameterDefinitionTest {
         ParameterDefinition definition = new JiraVersionParameterDefinition("pname", "pdesc", "JIRAKEY", null, "false", "false");
         CLICommand cliCommand = mock(CLICommand.class);
 
-        ParameterValue value = definition.createValue(cliCommand, "JIRA Version 1.2.3");
+        ParameterValue value = definition.createValue(cliCommand, "Jira Version 1.2.3");
         assertEquals("pname", value.getName());
-        assertEquals("JIRA Version 1.2.3", value.getValue());
+        assertEquals("Jira Version 1.2.3", value.getValue());
     }
 }

@@ -15,11 +15,11 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Provides folder level JIRA configuration.
+ * Provides folder level Jira configuration.
  */
 public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>> {
     /**
-     * Hold the JIRA sites configuration.
+     * Hold the Jira sites configuration.
      */
     private List<JiraSite> sites = Collections.emptyList();
 
@@ -31,9 +31,9 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
     }
 
     /**
-     * Return the JIRA sites.
+     * Return the Jira sites.
      *
-     * @return the JIRA sites
+     * @return the Jira sites
      */
     public JiraSite[] getSites() {
         return sites.toArray(new JiraSite[0]);
@@ -42,7 +42,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
     /**
      * @deprecated use {@link #setSites(List)} instead
      *
-     * @param site the JIRA site
+     * @param site the Jira site
      */
     @Deprecated
     public void setSites(JiraSite site) {

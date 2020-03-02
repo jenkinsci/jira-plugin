@@ -5,8 +5,11 @@ Changelog
 
 See [GitHub releases](https://github.com/jenkinsci/jira-plugin/releases)
 
-### 3.0.11 
+### Unreleased
+Release date:  _March 2, 2020_
+* Changed all references of JIRA to Jira per [Atlassian branding updates](https://community.atlassian.com/t5/Feedback-Forum-articles/A-new-look-for-Atlassian/ba-p/638077)
 
+### 3.0.11 
 Release date:  _Nov 21, 2019_
 * Fix security issue
 

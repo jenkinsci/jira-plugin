@@ -15,7 +15,7 @@ import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
 
 /**
- * A build step which creates new JIRA version
+ * A build step which creates new Jira version
  *
  * @author Artem Koshelev artkoshelev@gmail.com
  * @deprecated Replaced by {@link JiraVersionCreatorBuilder}. Read its description to see why.

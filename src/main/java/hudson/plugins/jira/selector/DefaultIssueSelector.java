@@ -63,16 +63,16 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     }
 
     /**
-     * Finds the strings that match JIRA issue ID patterns. This method returns
+     * Finds the strings that match Jira issue ID patterns. This method returns
      * all likely candidates and doesn't check if such ID actually exists or
      * not. We don't want to use {@link JiraSite#existsIssue(String)} here so
-     * that new projects in JIRA can be detected.
+     * that new projects in Jira can be detected.
      * 
      */
     protected static void findIssues(Run<?, ?> build, Set<String> issueIds, Pattern pattern, TaskListener listener) {
         for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(build)) {
             for (Entry change : set) {
-                LOGGER.fine("Looking for JIRA ID in " + change.getMsg());
+                LOGGER.fine("Looking for Jira ID in " + change.getMsg());
                 Matcher m = pattern.matcher(change.getMsg());
 
                 while (m.find()) {
@@ -81,7 +81,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
                         issueIds.add(content);
                     } else {
                         listener.getLogger()
-                                .println("Warning: The JIRA pattern " + pattern + " doesn't define a capturing group!");
+                                .println("Warning: The Jira pattern " + pattern + " doesn't define a capturing group!");
                     }
                 }
             }
@@ -133,7 +133,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
 
         for (DependencyChange depc : RunScmChangeExtractor.getDependencyChanges(build).values()) {
             for (AbstractBuild<?, ?> b : depc.getBuilds()) {
-                getLogger().finer("Searching for JIRA issues in dependency " + b + " of " + build);
+                getLogger().finer("Searching for Jira issues in dependency " + b + " of " + build);
 
                 // Fix JENKINS-44989
                 // The original code before refactoring just called "findIssues", not "findIssueIdsRecursive"
@@ -172,7 +172,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
         if (prev != null) {
             JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
             if (a != null) {
-                getLogger().finer("Searching for JIRA issues in previously failed build " + prev.number);
+                getLogger().finer("Searching for Jira issues in previously failed build " + prev.number);
                 Collection<String> jobIDs = a.getIDs();
                 ids.addAll(jobIDs);
                 if (getLogger().isLoggable(Level.FINER)) {

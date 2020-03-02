@@ -87,7 +87,7 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         /**
          * @deprecated use {@link JiraGlobalConfiguration#setSites(List)} instead
          *
-         * @param site the JIRA site
+         * @param site the Jira site
          */
         @Deprecated
         public void setSites(JiraSite site) {

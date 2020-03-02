@@ -278,12 +278,12 @@ public class JiraCreateIssueNotifier extends Notifier {
         JiraSite site = getSiteForProject(build.getProject());
 
         if (site == null) {
-            throw new IllegalStateException("JIRA site needs to be configured in the project " + build.getFullDisplayName());
+            throw new IllegalStateException("Jira site needs to be configured in the project " + build.getFullDisplayName());
         }
 
         JiraSession session = site.getSession();
         if (session == null) {
-            throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
+            throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
         }
 
         return session;
@@ -342,13 +342,13 @@ public class JiraCreateIssueNotifier extends Notifier {
                         deleteFile(filename);
                         Issue issue = createJiraIssue(build, filename);
                         LOG.info(String.format("[%s] created.", issue.getKey()));
-                        listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
+                        listener.getLogger().println("Build failed, created Jira issue " + issue.getKey());
                     } else {
                         addComment(build, listener, issueId, comment);
                         LOG.info(String.format("[%s] The previous build also failed, comment added.", issueId));
                     }
                 } catch (IOException e) {
-                    LOG.warning(String.format("[%s] - error processing JIRA change: %s", issueId, e.getMessage()));
+                    LOG.warning(String.format("[%s] - error processing Jira change: %s", issueId, e.getMessage()));
                 }
             }
         }
@@ -357,10 +357,10 @@ public class JiraCreateIssueNotifier extends Notifier {
             try {
                 Issue issue = createJiraIssue(build, filename);
                 LOG.info(String.format("[%s] created.", issue.getKey()));
-                listener.getLogger().println("Build failed, created JIRA issue " + issue.getKey());
+                listener.getLogger().println("Build failed, created Jira issue " + issue.getKey());
             } catch (IOException e) {
-                listener.error("Error creating JIRA issue : " + e.getMessage());
-                LOG.warning("Error creating JIRA issue\n" + e.getMessage());
+                listener.error("Error creating Jira issue : " + e.getMessage());
+                LOG.warning("Error creating Jira issue\n" + e.getMessage());
             }
         }
     }
@@ -403,8 +403,8 @@ public class JiraCreateIssueNotifier extends Notifier {
                     }
 
                 } catch (IOException e) {
-                    listener.error("Error updating JIRA issue " + issueId + " : " + e.getMessage());
-                    LOG.warning("Error updating JIRA issue " + issueId + "\n" + e);
+                    listener.error("Error updating Jira issue " + issueId + " : " + e.getMessage());
+                    LOG.warning("Error updating Jira issue " + issueId + "\n" + e);
                 }
             }
 
