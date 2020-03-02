@@ -72,7 +72,7 @@ public class VersionReleaser {
      */
     protected void releaseVersion(String projectKey, String versionName, String versionDescription, JiraSession session) {
         if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
+            LOGGER.warning("Jira session could not be established");
             return;
         }
 

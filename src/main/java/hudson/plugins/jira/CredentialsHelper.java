@@ -79,7 +79,7 @@ public class CredentialsHelper {
 		StandardUsernamePasswordCredentials newCredentials = new UsernamePasswordCredentialsImpl(
 				CredentialsScope.SYSTEM,
 				null,
-				"Migrated by JIRA Plugin",
+				"Migrated by Jira Plugin",
 				username,
 				password
 		);

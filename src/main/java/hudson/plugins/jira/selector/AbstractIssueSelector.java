@@ -18,13 +18,13 @@ import hudson.plugins.jira.JiraSite;
 public abstract class AbstractIssueSelector extends AbstractDescribableImpl<AbstractIssueSelector> implements ExtensionPoint {
 
     /**
-     * Finds the strings that match JIRA issue ID patterns.
+     * Finds the strings that match Jira issue ID patterns.
      *
      * This method returns all likely candidates and shouldn't check
      * if such ID actually exists or not.
      *
      * @param run The completed run.
-     * @param site JIRA site configured for current job.
+     * @param site Jira site configured for current job.
      * @param listener Current's run listener.
      * @return Set of ids of issues which should be updated.
      */

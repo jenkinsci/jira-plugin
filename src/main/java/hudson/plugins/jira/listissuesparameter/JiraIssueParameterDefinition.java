@@ -78,10 +78,10 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 
         JiraSite site = JiraSite.get(context);
         if (site == null)
-            throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
+            throw new IllegalStateException("Jira site needs to be configured in the project " + context.getFullDisplayName());
 
         JiraSession session = site.getSession();
-        if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
+        if (session == null) throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
 
         List<Issue> issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
 
@@ -115,7 +115,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     public static class DescriptorImpl extends ParameterDescriptor {
         @Override
         public String getDisplayName() {
-            return "JIRA Issue Parameter";
+            return "Jira Issue Parameter";
         }
     }
 

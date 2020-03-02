@@ -22,7 +22,7 @@ import hudson.scm.ChangeLogAnnotator;
 import hudson.scm.ChangeLogSet.Entry;
 
 /**
- * {@link ChangeLogAnnotator} that picks up JIRA issue IDs.
+ * {@link ChangeLogAnnotator} that picks up Jira issue IDs.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -41,8 +41,8 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         JiraSite site = getSiteForProject(build.getParent());
         
         if (site == null) {
-            LOGGER.fine("not configured with JIRA site");
-            return;    // not configured with JIRA
+            LOGGER.fine("not configured with Jira site");
+            return;    // not configured with Jira
         }
 
         if (site.getDisableChangelogAnnotations()) {
@@ -73,11 +73,11 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 String id = m.group(1);
 
                 if (StringUtils.isNotBlank(site.credentialsId) && !hasProjectForIssue(id, site)) {
-                    LOGGER.log(Level.INFO, "No known JIRA project corresponding to id: ''{0}''", id);
+                    LOGGER.log(Level.INFO, "No known Jira project corresponding to id: ''{0}''", id);
                     continue;
                 }
 
-                LOGGER.log(Level.INFO, "Annotating JIRA id: ''{0}''", id);
+                LOGGER.log(Level.INFO, "Annotating Jira id: ''{0}''", id);
 
                 URL url, alternativeUrl;
                 try {
@@ -92,7 +92,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                         url = alternativeUrl;
                     }
                 } catch (MalformedURLException e) {
-                    LOGGER.log(Level.WARNING, "Failed to construct alternative URL for JIRA link. " + e.getMessage());
+                    LOGGER.log(Level.WARNING, "Failed to construct alternative URL for Jira link. " + e.getMessage());
                     // This should not fail, since we already have an URL object. Exceptions would happen elsewhere.
                     throw new AssertionError(e);
                 }
@@ -121,7 +121,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 }
 
             } else {
-                LOGGER.log(Level.WARNING, "The JIRA pattern ''{0}'' doesn't define a capturing group!", pattern);
+                LOGGER.log(Level.WARNING, "The Jira pattern ''{0}'' doesn't define a capturing group!", pattern);
             }
         }
 
@@ -131,7 +131,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
     }
 
     /**
-     * Checks if the given JIRA id will be likely to exist in this issue tracker.
+     * Checks if the given Jira id will be likely to exist in this issue tracker.
      * This method checks whether the key portion is a valid key (except that
      * it can potentially use stale data). Number portion is not checked at all.
      *

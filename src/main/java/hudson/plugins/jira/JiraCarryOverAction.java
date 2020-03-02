@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Set;
 
 /**
- * Remembers JIRA IDs that need to be updated later,
+ * Remembers Jira IDs that need to be updated later,
  * when we get a successful build.
  *
  * @author Kohsuke Kawaguchi

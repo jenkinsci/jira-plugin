@@ -30,8 +30,8 @@ import java.util.regex.Pattern;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
- * Connection to JIRA.
- * JIRA has a built-in timeout for a session, so after some inactive period the
+ * Connection to Jira.
+ * Jira has a built-in timeout for a session, so after some inactive period the
  * session will become invalid. The caller must make sure that this doesn't
  * happen.
  *
@@ -56,7 +56,7 @@ public class JiraSession {
 
     /**
      * Returns the set of project keys (like MNG, JENKINS, etc) that are
-     * available in this JIRA.
+     * available in this Jira.
      * Guarantees to return all project keys in upper case.
      */
     public Set<String> getProjectKeys() {
@@ -84,7 +84,7 @@ public class JiraSession {
      * Adds new labels to the existing issue.
      * Old labels remains untouched.
      *
-     * @param issueId JIRA issue ID like "MNG-1235".
+     * @param issueId Jira issue ID like "MNG-1235".
      * @param labels New labels to add.
      */
     public void addLabels(String issueId, List<String> labels) {
@@ -109,7 +109,7 @@ public class JiraSession {
      * Adds new to or updates existing fields of the issue.
      * Can add or update custom fields.
      * 
-     * @param issueId JIRA issue ID like "PRJ-123"
+     * @param issueId Jira issue ID like "PRJ-123"
      * @param fields Fields to add or update
      */
     public void addFields(String issueId, List<JiraIssueField> fields) {
@@ -213,7 +213,7 @@ public class JiraSession {
     /**
      * Replaces the fix version list of all issues matching the JQL Query with the version specified.
      *
-     * @param projectKey The JIRA Project key
+     * @param projectKey The Jira Project key
      * @param version    The replacement version
      * @param query      The JQL Query
      */
@@ -241,7 +241,7 @@ public class JiraSession {
     /**
      * Replaces the given fromVersion with toVersion in all issues matching the JQL query.
      *
-     * @param projectKey  The JIRA Project
+     * @param projectKey  The Jira Project
      * @param fromVersion The name of the version to replace
      * @param toVersion   The name of the replacement version
      * @param query       The JQL Query
@@ -295,7 +295,7 @@ public class JiraSession {
     /**
      * Adds the specified version to the fix version list of all issues matching the JQL.
      *
-     * @param projectKey The JIRA Project
+     * @param projectKey The Jira Project
      * @param version    The version to add
      * @param query      The JQL Query
      */
@@ -368,7 +368,7 @@ public class JiraSession {
         String status = getKnownStatuses().get(statusId);
 
         if (status == null) {
-            LOGGER.warning("JIRA status could not be found: " + statusId + ". Checking JIRA for new status types.");
+            LOGGER.warning("Jira status could not be found: " + statusId + ". Checking Jira for new status types.");
             knownStatuses = null;
             // Try again, just in case the admin has recently added a new status. This should be a rare condition.
             status = getKnownStatuses().get(statusId);

@@ -67,7 +67,7 @@ public class CredentialsHelperTest
         StandardUsernamePasswordCredentials c =
             CredentialsHelper.migrateCredentials( "username", "password", new URL( "http://example.org" ) );
 
-        assertEquals( "Migrated by JIRA Plugin", c.getDescription() );
+        assertEquals( "Migrated by Jira Plugin", c.getDescription() );
         assertThat( CredentialsProvider.lookupStores( r.jenkins ).iterator().next().getCredentials( Domain.global() ),
                     hasSize( 1 ) );
     }

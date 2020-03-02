@@ -41,7 +41,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
         try {
             JiraSession session = site.getSession();
             if (session == null)
-                throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
+                throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
 
             List<Issue> issues = session.getIssuesFromJqlSearch(jql);
 
@@ -54,7 +54,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
             // deduplication
             return Sets.newHashSet(issueKeys);
         } catch (TimeoutException e) {
-            throw new IllegalStateException("Can't open rest session to JIRA site " + site, e);
+            throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
         }
     }
 

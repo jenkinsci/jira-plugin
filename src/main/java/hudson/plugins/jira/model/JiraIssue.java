@@ -8,9 +8,9 @@ import org.kohsuke.stapler.export.ExportedBean;
 import javax.annotation.Nonnull;
 
 /**
- * One JIRA issue.
+ * One Jira issue.
  * This class is used to persist crucial issue information
- * so that Jenkins can display it without talking to JIRA.
+ * so that Jenkins can display it without talking to Jira.
  *
  * @author Kohsuke Kawaguchi
  * @see JiraSite#getUrl(JiraIssue)
@@ -28,7 +28,7 @@ public final class JiraIssue implements Comparable<JiraIssue> {
     }
 
     /**
-     * @return JIRA ID, like "MNG-1235".
+     * @return Jira ID, like "MNG-1235".
      */
     @Exported
     public String getKey() {

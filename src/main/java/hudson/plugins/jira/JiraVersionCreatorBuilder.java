@@ -15,7 +15,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
 /**
- * A build step which creates new JIRA version. It has the same functionality as
+ * A build step which creates new Jira version. It has the same functionality as
  * {@link JiraVersionCreator} but can be used multiple times in the same build
  * (e.g. for different projects) and supports conditional triggering.
  * 

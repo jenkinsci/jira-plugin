@@ -78,8 +78,8 @@ import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
  * <p>
- * Represents an external JIRA installation and configuration
- * needed to access this JIRA.
+ * Represents an external Jira installation and configuration
+ * needed to access this Jira.
  * </p>
  * <b>When adding new fields do not miss to look at readResolve method!!</b>
  * @author Kohsuke Kawaguchi
@@ -89,7 +89,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private static final Logger LOGGER = Logger.getLogger(JiraSite.class.getName());
 
     /**
-     * Regexp pattern that identifies JIRA issue token.
+     * Regexp pattern that identifies Jira issue token.
      * If this pattern changes help pages (help-issue-pattern_xy.html) must be updated
      * First char must be a letter, then at least one letter, digit or underscore.
      * See issue JENKINS-729, JENKINS-4092
@@ -107,19 +107,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
     
     /**
-     * URL of JIRA for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
+     * URL of Jira for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
      */
     public final URL url;
 
     /**
-     * URL of JIRA for normal access, like <tt>http://jira.codehaus.org/</tt>.
+     * URL of Jira for normal access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
      */
     public URL alternativeUrl;
 
     /**
-     * JIRA requires HTTP Authentication for login
+     * Jira requires HTTP Authentication for login
      */
     public boolean useHTTPAuth;
 
@@ -153,7 +153,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public String roleVisibility;
 
     /**
-     * True if this JIRA is configured to allow Confluence-style Wiki comment.
+     * True if this Jira is configured to allow Confluence-style Wiki comment.
      */
     public boolean supportsWikiStyleComment;
 
@@ -496,7 +496,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Gets a remote access session to this JIRA site.
+     * Gets a remote access session to this Jira site.
      * Creates one if none exists already.
      *
      * @return null if remote access is not supported.
@@ -510,7 +510,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Creates a remote access session to this JIRA.
+     * Creates a remote access session to this Jira.
      *
      * @return null if remote access is not supported.
      */
@@ -526,7 +526,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             LOGGER.warning("convert URL to URI error: " + e.getMessage());
             throw new RuntimeException("failed to create JiraSession due to convert URI error");
         }
-        LOGGER.fine("creating JIRA Session: " + uri);
+        LOGGER.fine("creating Jira Session: " + uri);
         StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
         String userName = credentials.getUsername();
         Secret password = credentials.getPassword();
@@ -706,7 +706,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         @Nonnull
         @Override
         public String getDisplayName() {
-            return "Atlassian JIRA Rest Java Client";
+            return "Atlassian Jira Rest Java Client";
         }
 
         @Nonnull
@@ -802,7 +802,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Gets the list of project IDs in this JIRA.
+     * Gets the list of project IDs in this Jira.
      * This information could be bit old, or it can be null.
      */
     public Set<String> getProjectKeys() {
@@ -906,7 +906,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public Set<ExtendedVersion> getVersions(String projectKey) {
         JiraSession session = getSession();
         if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
+            LOGGER.warning("Jira session could not be established");
             return Collections.emptySet();
         }
 
@@ -925,7 +925,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
+            LOGGER.warning("Jira session could not be established");
             return "";
         }
 
@@ -977,7 +977,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
+            LOGGER.warning("Jira session could not be established");
             return;
         }
 
@@ -995,7 +995,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
+            LOGGER.warning("Jira session could not be established");
             return;
         }
 
@@ -1013,7 +1013,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
         JiraSession session = getSession();
         if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
+            LOGGER.warning("Jira session could not be established");
             return;
         }
 
@@ -1034,7 +1034,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         JiraSession session = getSession();
 
         if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
+            LOGGER.warning("Jira session could not be established");
             console.println(Messages.FailedToConnect());
             return false;
         }
@@ -1043,7 +1043,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         List<Issue> issues = session.getIssuesFromJqlSearch(jqlSearch);
 
         if (isEmpty(workflowActionName)) {
-            console.println("[JIRA] No workflow action was specified, " +
+            console.println("[Jira] No workflow action was specified, " +
                     "thus no status update will be made for any of the matching issues.");
         }
 
@@ -1071,7 +1071,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
             String newStatus = session.progressWorkflowAction(issueKey, actionId);
 
-            console.println(String.format("[JIRA] Issue %s transitioned to \"%s\" due to action \"%s\".",
+            console.println(String.format("[Jira] Issue %s transitioned to \"%s\" due to action \"%s\".",
                     issueKey, newStatus, workflowActionName));
         }
 
@@ -1082,7 +1082,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
         public String getDisplayName() {
-            return "JIRA Site";
+            return "Jira Site";
         }
 
 
@@ -1181,14 +1181,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
-                LOGGER.log(Level.WARNING, "Failed to login to JIRA at " + url, e);
+                LOGGER.log(Level.WARNING, "Failed to login to Jira at " + url, e);
             } finally {
                 if(site!=null){
                     site.destroy();
                 }
             }
 
-            return FormValidation.error("Failed to login to JIRA");
+            return FormValidation.error("Failed to login to Jira");
         }
 
         @SuppressWarnings("unused") // Used by stapler

@@ -88,7 +88,7 @@ public class DefaultIssueSelectorTest {
     }
 
     /**
-     * Tests that the JiraIssueParameters are identified as updateable JIRA
+     * Tests that the JiraIssueParameters are identified as updateable Jira
      * issues.
      */
     @Test

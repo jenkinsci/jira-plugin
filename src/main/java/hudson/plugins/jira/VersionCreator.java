@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 /**
- * Performs an action which creates new jira version.
+ * Performs an action which creates new Jira version.
  */
 class VersionCreator {
 
@@ -48,7 +48,7 @@ class VersionCreator {
 
 		} catch (Exception e) {
 			e.printStackTrace(
-					listener.fatalError("Unable to add version %s to JIRA project %s", realVersion, realProjectKey, e));
+					listener.fatalError("Unable to add version %s to Jira project %s", realVersion, realProjectKey, e));
 			if (listener instanceof BuildListener)
 				((BuildListener) listener).finished(Result.FAILURE);
 			return false;
@@ -64,7 +64,7 @@ class VersionCreator {
      */
     protected void addVersion(String version, String projectKey, JiraSession session) {
         if (session == null) {
-            LOGGER.warning("JIRA session could not be established");
+            LOGGER.warning("Jira session could not be established");
             return;
         }
 

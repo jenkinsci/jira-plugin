@@ -50,7 +50,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * Test case for the JIRA {@link Updater}.
+ * Test case for the Jira {@link Updater}.
  *
  * @author kutzi
  */
@@ -149,12 +149,12 @@ public class UpdaterTest {
 
     /**
      * Tests that the generated comment matches the expectations -
-     * especially that the JIRA id is not stripped from the comment.
+     * especially that the Jira id is not stripped from the comment.
      */
     @Test
     @org.jvnet.hudson.test.Issue("4572")
     public void comment() {
-        // mock JIRA session:
+        // mock Jira session:
         JiraSession session = mock(JiraSession.class);
         final Issue mockIssue = Mockito.mock( Issue.class);
         when(session.getIssue(Mockito.anyString())).thenReturn(mockIssue);
@@ -234,7 +234,7 @@ public class UpdaterTest {
         // assume that there is a following list of jira issues from scm commit messages out of hudson.plugins.jira.JiraCarryOverAction
         Set<JiraIssue> issues = Sets.newHashSet(firstIssue, secondIssue, forbiddenIssue, thirdIssue);
 
-        // mock JIRA session:
+        // mock Jira session:
         JiraSession session = mock(JiraSession.class);
 
         final List<Comment> comments = new ArrayList<>();

@@ -13,7 +13,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 import javax.annotation.Nonnull;
 
 /**
- * JIRA issues related to the build.
+ * Jira issues related to the build.
  *
  * @author Kohsuke Kawaguchi
  */

@@ -44,10 +44,10 @@ public class P4JobIssueSelector extends JobIssueSelector {
 
     @Override
     protected void addJobIdsFromChangeLog(Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
-        getLogger().finer("Searching for JIRA issues in perforce jobs in " + build);
+        getLogger().finer("Searching for Jira issues in perforce jobs in " + build);
         for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(build)) {
             for (Entry change : set) {
-                getLogger().fine("Looking for JIRA IDs as Perforce Jobs in " + change.getMsg());
+                getLogger().fine("Looking for Jira as Perforce Jobs in " + change.getMsg());
                 if (P4ChangeEntry.class.isAssignableFrom(change.getClass())) {
                     P4ChangeEntry p4ChangeEntry = (P4ChangeEntry) change;
 

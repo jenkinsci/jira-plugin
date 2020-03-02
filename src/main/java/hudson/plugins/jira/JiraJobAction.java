@@ -53,7 +53,7 @@ public class JiraJobAction implements Action {
     }
 
     /**
-     * @return url of the JIRA server
+     * @return url of the Jira server
      */
     @Exported
     @Nullable
@@ -65,10 +65,10 @@ public class JiraJobAction implements Action {
 
     /**
      * Adds a {@link JiraJobAction} to a {@link WorkflowJob} if it belongs to a {@link MultiBranchProject}
-     * and its name contains an JIRA issue key
+     * and its name contains an Jira issue key
      * @param job to add the property to
      * @param site to fetch issue data
-     * @throws IOException if something goes wrong fetching the JIRA issue
+     * @throws IOException if something goes wrong fetching the Jira issue
      */
     public static void setAction(@Nonnull Job<?, ?> job, @Nonnull JiraSite site) throws IOException {
         // If there is already a action set then skip
@@ -81,7 +81,7 @@ public class JiraJobAction implements Action {
             return;
         }
 
-        // Find the first JIRA issue key in the branch name
+        // Find the first Jira issue key in the branch name
         // If it exists, create the action and set it
         Pattern pattern = site.getIssuePattern();
         // Pipeline will URL encode job names if the branch or PR name contains a '/' or other non-URL safe characters
@@ -111,7 +111,7 @@ public class JiraJobAction implements Action {
 
     @Override
     public String getDisplayName() {
-        return "JIRA";
+        return "Jira";
     }
 
     @Override

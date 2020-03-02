@@ -8,7 +8,7 @@ import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.selector.DefaultIssueSelector;
 
 /**
- * Base class for job selectors. Perforce offers mechanism to associate JIRA
+ * Base class for job selectors. Perforce offers mechanism to associate Jira
  * issues with change lists called jobs. The classes inheriting from this class
  * find issues by examining jobs associated with changes
  * 

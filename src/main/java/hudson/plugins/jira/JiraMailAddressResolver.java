@@ -8,7 +8,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**
- * Resolve user email by searching his userId as username in JIRA.
+ * Resolve user email by searching his userId as username in Jira.
  *
  * @author Honza Brázdil jbrazdil@redhat.com
  */
@@ -17,7 +17,7 @@ public class JiraMailAddressResolver extends MailAddressResolver {
     private static final Logger LOGGER = Logger.getLogger(JiraMailAddressResolver.class.getName());
 
     /**
-     * Boolean to disable the JIRA mail address resolver.
+     * Boolean to disable the Jira mail address resolver.
      * <p>
      * To disable set the System property "-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true"
      */

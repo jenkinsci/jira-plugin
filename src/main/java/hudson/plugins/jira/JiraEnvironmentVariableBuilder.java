@@ -16,7 +16,7 @@ import java.util.Set;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Adds JIRA related environment variables to the build
+ * Adds Jira related environment variables to the build
  */
 public class JiraEnvironmentVariableBuilder extends Builder  {
     

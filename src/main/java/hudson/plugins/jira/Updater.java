@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 import static java.lang.String.format;
 
 /**
- * Actual JIRA update logic.
+ * Actual Jira update logic.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -90,7 +90,7 @@ class Updater {
 
             if (ids.isEmpty()) {
                 if (debug)
-                    logger.println("No JIRA issues found.");
+                    logger.println("No Jira issues found.");
                 return true;    // nothing found here.
             }
 
@@ -121,8 +121,8 @@ class Updater {
                 build.addAction(new JiraCarryOverAction(issues));
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error updating JIRA issues. Saving issues for next build.", e);
-            logger.println("Error updating JIRA issues. Saving issues for next build.\n" + e);
+            LOGGER.log(Level.WARNING, "Error updating Jira issues. Saving issues for next build.", e);
+            logger.println("Error updating Jira issues. Saving issues for next build.\n" + e);
             if (issues != null && !issues.isEmpty()) {
                 // updating issues failed, so carry forward issues to the next build
                 build.addAction(new JiraCarryOverAction(issues));
@@ -170,16 +170,16 @@ class Updater {
             } catch (RestClientException e) {
 
                 if (e.getStatusCode().or(0).equals(404)) {
-                    logger.println(issue.getKey() + " - JIRA issue not found. Dropping comment from update queue.");
+                    logger.println(issue.getKey() + " - Jira issue not found. Dropping comment from update queue.");
                 }
 
                 if (e.getStatusCode().or(0).equals(403)) {
-                    logger.println(issue.getKey() + " - Jenkins JIRA user does not have permissions to comment on this issue. Preserving comment for future update.");
+                    logger.println(issue.getKey() + " - Jenkins Jira user does not have permissions to comment on this issue. Preserving comment for future update.");
                     continue;
                 }
 
                 if (e.getStatusCode().or(0).equals(401)) {
-                    logger.println(issue.getKey() + " - Jenkins JIRA authentication problem. Preserving comment for future update.");
+                    logger.println(issue.getKey() + " - Jenkins Jira authentication problem. Preserving comment for future update.");
                     continue;
                 }
 
@@ -198,7 +198,7 @@ class Updater {
         for (String id : ids) {
             Issue issue = session.getIssue(id);
             if (issue == null) {
-                logger.println(id + " issue doesn't exist in JIRA");
+                logger.println(id + " issue doesn't exist in Jira");
                 continue;
             }
             
@@ -209,7 +209,7 @@ class Updater {
 
 
     /**
-     * Creates a comment to be used in JIRA for the build.
+     * Creates a comment to be used in Jira for the build.
      * For example:
      * <pre>
      *  SUCCESS: Integrated in Job #nnnn (See [http://jenkins.domain/job/Job/nnnn/])\r
