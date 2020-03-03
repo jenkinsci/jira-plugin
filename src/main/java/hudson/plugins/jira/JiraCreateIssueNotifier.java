@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.StatusCategory;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Priority;
@@ -334,9 +335,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                     Status status = getStatus(build, issueId);
 
                     // Issue Closed, need to open new one
-                    if (status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString())) {
+                    if (isDone(status)) {
 
                         listener.getLogger().println("The previous build also failed but the issue is closed");
                         deleteFile(filename);
@@ -389,9 +388,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                     Status status = getStatus(build, issueId);
 
                     //if issue is in closed status
-                    if (status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-                            status.getName().equalsIgnoreCase(finishedStatuses.Done.toString())) {
+                    if (isDone(status)) {
                         LOG.info(String.format("%s is closed", issueId));
                         deleteFile(filename);
                     } else {
@@ -409,6 +406,20 @@ public class JiraCreateIssueNotifier extends Notifier {
             }
 
         }
+    }
+
+    static boolean isDone(Status status) {
+        if (status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
+          status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
+          status.getName().equalsIgnoreCase(finishedStatuses.Done.toString())) {
+          return true;
+        }
+
+        StatusCategory category = status.getStatusCategory();
+        if (category == null) {
+            return false;
+        }
+        return "done".equals(category.getKey());
     }
 
     private void progressWorkflowAction(AbstractBuild<?, ?> build, String issueId, Integer actionId) throws IOException {
