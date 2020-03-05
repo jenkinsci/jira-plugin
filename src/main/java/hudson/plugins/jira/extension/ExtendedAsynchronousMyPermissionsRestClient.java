@@ -4,7 +4,7 @@ import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.api.domain.Permissions;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousMyPermissionsRestClient;
 import com.atlassian.jira.rest.client.internal.json.PermissionsJsonParser;
-import com.atlassian.util.concurrent.Promise;
+import io.atlassian.util.concurrent.Promise;
 
 import java.net.URI;
 
