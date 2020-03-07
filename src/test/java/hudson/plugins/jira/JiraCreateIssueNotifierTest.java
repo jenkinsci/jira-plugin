@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.StatusCategory;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Status;
@@ -23,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 
@@ -192,4 +194,14 @@ public class JiraCreateIssueNotifierTest {
         assertEquals(0, temporaryDirectory.list().length);
     }
 
+    @Test
+    public void isDone() {
+        assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Closed", null, null, null)));
+        assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Done", null, null, null)));
+        assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Resolved", null, null, null)));
+        assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Abandoned", null, null,
+          new StatusCategory(null, "Done", null, "done", null))));
+        assertFalse(JiraCreateIssueNotifier.isDone(new Status(null, null, "Abandoned", null, null,
+          new StatusCategory(null, "ToDo", null, "todo", null))));
+    }
 }
