@@ -1126,7 +1126,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                          @AncestorInPath Item item) {
 
             if (item == null) {
-                Jenkins.getInstance().checkPermission(Jenkins.ADMINISTER);
+                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             } else {
                 item.checkPermission(Item.CONFIGURE);
             }

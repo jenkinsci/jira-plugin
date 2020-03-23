@@ -11,6 +11,7 @@ import com.gargoylesoftware.htmlunit.util.NameValuePair;
 import hudson.model.Item;
 import hudson.model.User;
 import jenkins.model.Jenkins;
+import jenkins.security.ApiTokenProperty;
 import net.sf.json.JSONObject;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -81,13 +82,20 @@ public class JiraSiteSecurity1029Test {
         systemProvider.save();
         
         User admin = User.getById(ADMIN, true);
+        admin.addProperty( new ApiTokenProperty() );
+        admin.getProperty( ApiTokenProperty.class ).changeApiToken();
         User user = User.getById(USER, true);
+        user.addProperty( new ApiTokenProperty() );
+        user.getProperty( ApiTokenProperty.class ).changeApiToken();
+
         User userFolderConfigure = User.getById(USER_FOLDER_CONFIGURE, true);
+        userFolderConfigure.addProperty( new ApiTokenProperty() );
+        userFolderConfigure.getProperty( ApiTokenProperty.class ).changeApiToken();
         
         { // as an admin I should be able to validate my url / credentials
             JenkinsRule.WebClient wc = j.createWebClient();
             wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
-            wc.withBasicApiToken(admin);
+            wc = wc.withBasicApiToken(admin);
 
             String jiraSiteValidateUrl = j.getURL() + "descriptorByName/" + JiraSite.class.getName() + "/validate";
             WebRequest request = new WebRequest(new URL(jiraSiteValidateUrl), HttpMethod.POST);
