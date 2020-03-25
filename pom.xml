@@ -9,14 +9,14 @@
   </parent>
 
   <artifactId>jira</artifactId>
-  <version>3.0.14</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Jenkins Jira plugin</name>
   <description>Integrates Jenkins to Jira</description>
   <url>https://github.com/jenkinsci/jira-plugin</url>
 
   <properties>
-    <revision>3.0.14</revision>
+    <revision>3.0.15</revision>
     <changelist>-SNAPSHOT</changelist>
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
@@ -62,7 +62,7 @@
     <connection>scm:git:git://github.com/jenkinsci/jira-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/jira-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/jira-plugin</url>
-    <tag>jira-3.0.14</tag>
+    <tag>${scmTag}</tag>
   </scm>
 
   <licenses>
