@@ -31,7 +31,7 @@ public class JiraMailAddressResolver extends MailAddressResolver {
         String username = u.getId();
 
         for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-            JiraSession session = site.getSession();
+            JiraSession session = site.getSession(null);
             if (session == null) {
                 continue;
             }

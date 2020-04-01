@@ -282,7 +282,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             throw new IllegalStateException("Jira site needs to be configured in the project " + build.getFullDisplayName());
         }
 
-        JiraSession session = site.getSession();
+        JiraSession session = site.getSession(build.getProject());
         if (session == null) {
             throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
         }
@@ -466,7 +466,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         public ListBoxModel doFillPriorityIdItems() {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-                JiraSession session = site.getSession();
+                JiraSession session = site.getSession(null);
                 if (session != null) {
                     for (Priority priority : session.getPriorities()) {
                         items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
@@ -479,7 +479,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         public ListBoxModel doFillTypeIdItems() {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
             for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-                JiraSession session = site.getSession();
+                JiraSession session = site.getSession(null);
                 if (session != null) {
                     for (IssueType type : session.getIssueTypes()) {
                         items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));

@@ -2,6 +2,8 @@ package hudson.plugins.jira.pipeline;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.inject.Inject;
+import hudson.model.AbstractProject;
+import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Run;
@@ -66,16 +68,18 @@ public class SearchIssuesStepTest {
                 assertCalledList.add(issue2);
                 return assertCalledList;
         });
-        JiraSite site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
 
+        JiraSite site = mock(JiraSite.class);
+
+        AbstractProject mockProject = mock(FreeStyleProject.class);
         Run mockRun = mock(Run.class);
         Job mockJob = mock(Job.class);
-        when(mockRun.getParent()).thenReturn(mockJob);
-
         JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
+
         when(jiraProjectProperty.getSite()).thenReturn(site);
-        when(mockJob.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
+        when(site.getSession(mockProject)).thenReturn(session);
+        when(mockRun.getParent()).thenReturn(mockProject);
+        when(mockRun.getParent().getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
 
         Map<String, Object> r = new HashMap<>();
         r.put("jql", jql);

@@ -3,11 +3,13 @@ package hudson.plugins.jira;
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -19,8 +21,8 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.cloudbees.plugins.credentials.common.UsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import com.google.common.base.Optional;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
 import hudson.security.ACL;
@@ -30,9 +32,6 @@ import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
-import static com.google.common.base.Optional.absent;
-import static com.google.common.base.Optional.fromNullable;
-import static com.google.common.base.Strings.isNullOrEmpty;
 
 /**
  * Helper class for vary credentials operations.
@@ -43,14 +42,15 @@ public class CredentialsHelper {
 	private static final Logger LOGGER = Logger.getLogger(CredentialsHelper.class.getName());
 
 	@CheckForNull
-	protected static StandardUsernamePasswordCredentials lookupSystemCredentials(@CheckForNull String credentialsId, @CheckForNull URL url) {
+	protected static StandardUsernamePasswordCredentials lookupSystemCredentials(@CheckForNull String credentialsId,
+                                                                                 @CheckForNull URL url) {
 		if (credentialsId == null) {
 			return null;
 		}
 		return CredentialsMatchers.firstOrNull(
 				CredentialsProvider.lookupCredentials(
 						StandardUsernamePasswordCredentials.class,
-						Jenkins.getInstance(),
+						Jenkins.get(),
 						ACL.SYSTEM,
 						URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build()
 				),
@@ -62,7 +62,7 @@ public class CredentialsHelper {
 		List<StandardUsernamePasswordCredentials> credentials = CredentialsMatchers.filter(
 				CredentialsProvider.lookupCredentials(
 						StandardUsernamePasswordCredentials.class,
-						Jenkins.getInstance(),
+						Jenkins.get(),
 						ACL.SYSTEM,
 						URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build()
 				),
@@ -96,7 +96,7 @@ public class CredentialsHelper {
 	protected static ListBoxModel doFillCredentialsIdItems( Item item, String credentialsId, String uri) {
 		StandardListBoxModel result = new StandardListBoxModel();
 		if (item == null) {
-			if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+			if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
 				return result.includeCurrentValue(credentialsId);
 			}
 		} else {
@@ -121,7 +121,7 @@ public class CredentialsHelper {
 	protected static FormValidation doCheckFillCredentialsId(
 		Item item, String credentialsId, String uri) {
 		if (item == null) {
-			if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+			if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
 				return FormValidation.ok();
 			}
 		} else {
@@ -130,7 +130,7 @@ public class CredentialsHelper {
 				return FormValidation.ok();
 			}
 		}
-		if (isNullOrEmpty(credentialsId)) {
+		if (StringUtils.isEmpty(credentialsId)) {
 			return FormValidation.ok();
 		}
 		if (!(findCredentials(item, credentialsId, uri).isPresent())) {
@@ -141,10 +141,7 @@ public class CredentialsHelper {
 
 	protected static Optional<StandardUsernamePasswordCredentials> findCredentials(
 		Item item, String credentialsId, String uri) {
-		if (isNullOrEmpty(credentialsId)) {
-			return absent();
-		}
-		return fromNullable(
+		return Optional.ofNullable(
 			CredentialsMatchers.firstOrNull(
 				CredentialsProvider.lookupCredentials(
 					StandardUsernamePasswordCredentials.class,
@@ -153,10 +150,8 @@ public class CredentialsHelper {
 						? Tasks.getAuthenticationOf( (Queue.Task) item)
 						: ACL.SYSTEM,
 					URIRequirementBuilder.fromUri(uri).build()),
-				CredentialsMatchers.allOf(
-					CredentialsMatchers.withId(credentialsId),
-					CredentialsMatchers.anyOf(
-						CredentialsMatchers.instanceOf(StandardUsernamePasswordCredentials.class)))));
+			CredentialsMatchers.withId(credentialsId)
+		));
 	}
 
 }

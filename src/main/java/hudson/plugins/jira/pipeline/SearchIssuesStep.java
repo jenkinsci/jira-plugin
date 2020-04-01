@@ -74,7 +74,7 @@ public class SearchIssuesStep extends AbstractStepImpl {
         @Override
         protected List<String> run() throws Exception {
             JiraSite site = JiraSite.get(run.getParent());
-            JiraSession session = site.getSession();
+            JiraSession session = site.getSession(run.getParent());
             if (session == null) {
                 listener.getLogger().println(Messages.FailedToConnect());
                 throw new AbortException("Cannot open Jira session - error occurred");

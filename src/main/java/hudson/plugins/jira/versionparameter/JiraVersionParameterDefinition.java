@@ -14,11 +14,7 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -61,13 +57,13 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
     }
 
     public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException {
-        Job<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(Job.class);
+        Job<?, ?> contextJob = Stapler.getCurrentRequest().findAncestorObject(Job.class);
         
-        JiraSite site = JiraSite.get(context);
+        JiraSite site = JiraSite.get(contextJob);
         if (site == null)
-            throw new IllegalStateException("Jira site needs to be configured in the project " + context.getFullDisplayName());
+            throw new IllegalStateException("Jira site needs to be configured in the project " + contextJob.getFullDisplayName());
 
-        JiraSession session = site.getSession();
+        JiraSession session = site.getSession(contextJob);
         if (session == null) throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
 
         return session.getVersions(projectKey).stream().

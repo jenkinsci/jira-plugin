@@ -14,7 +14,11 @@ import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.UrlMode;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
@@ -24,16 +28,17 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssue;
+import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -498,12 +503,28 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Gets a remote access session to this Jira site.
      * Creates one if none exists already.
      *
+     * @deprecated Use {@link #getSession(Item item)}
      * @return null if remote access is not supported.
      */
     @Nullable
+    @Deprecated
     public JiraSession getSession() {
         if (jiraSession == null) {
-            jiraSession = createSession();
+            jiraSession = createSession(null);
+        }
+        return jiraSession;
+    }
+
+    /**
+     * Gets a remote access session to this Jira site (job-aware)
+     * Creates one if none exists already.
+     *
+     * @return null if remote access is not supported.
+     */
+    @Nullable
+    public JiraSession getSession(Item item) {
+        if (jiraSession == null) {
+            jiraSession = createSession(item);
         }
         return jiraSession;
     }
@@ -513,9 +534,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return null if remote access is not supported.
      */
-    private JiraSession createSession() {
-        if (StringUtils.isEmpty(credentialsId)) {
-            LOGGER.warning("Jira session could not be created. No credentials supplied.");
+    private JiraSession createSession(Item item) {
+        StandardUsernamePasswordCredentials credentials = resolveCredentials(item);
+
+        if (credentials == null) {
             return null;    // remote access not supported
         }
 
@@ -527,13 +549,43 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             throw new RuntimeException("failed to create JiraSession due to convert URI error");
         }
         LOGGER.fine("creating Jira Session: " + uri);
-        StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
-        String userName = credentials.getUsername();
-        Secret password = credentials.getPassword();
 
         final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
-            .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),getHttpClientOptions());
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
+            .create(uri, new BasicHttpAuthenticationHandler(
+                        credentials.getUsername(), credentials.getPassword().getPlainText()
+                    ),
+                    getHttpClientOptions()
+            );
+        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, credentials.getUsername(),
+                credentials.getPassword().getPlainText(), readTimeout));
+    }
+
+    /**
+     * This method only supports credential matching by credentialsId.
+     * Older methods are not and will not be supported as the credentials should have been migrated already.
+     */
+    private StandardUsernamePasswordCredentials resolveCredentials(Item item) {
+        if (credentialsId == null) {
+            return null;    // remote access not supported
+        }
+
+        ItemGroup itemGroup;
+        if (item != null){
+            itemGroup = item.getParent();
+        } else {
+            LOGGER.log(Level.FINE, "Unknown context of the Run, using Jenkins.get()");
+            itemGroup = Jenkins.get();
+        }
+
+        List<DomainRequirement> req = URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build();
+
+        return CredentialsMatchers.firstOrNull(
+            CredentialsProvider.lookupCredentials(
+                    StandardUsernamePasswordCredentials.class, itemGroup, ACL.SYSTEM, req
+            ),
+            CredentialsMatchers.withId(credentialsId)
+        );
+
     }
 
     private HttpClientOptions getHttpClientOptions() {
@@ -546,27 +598,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     private ExecutorService getExecutorService() {
-        if (executorService==null)
-        {
-            synchronized ( JiraSite.class )
-            {
+        if (executorService == null) {
+            synchronized (JiraSite.class) {
                 int nThreads = threadExecutorNumber;
-                if ( nThreads < 1 )
-                {
-                    LOGGER.warning( "nThreads " + nThreads + " cannot be lower than 1 so use default " + DEFAULT_THREAD_EXECUTOR_NUMBER );
+                if (nThreads < 1) {
+                    LOGGER.warning("nThreads " + nThreads + " cannot be lower than 1 so use default " + DEFAULT_THREAD_EXECUTOR_NUMBER);
                     nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
                 }
-                executorService = Executors.newFixedThreadPool( nThreads, //
-                                                                new ThreadFactory() {
-                                                                    final AtomicInteger threadNumber = new AtomicInteger( 0 );
-                                                                    @Override
-                                                                    public Thread newThread( Runnable r )
-                                                                    {
-                                                                        return new Thread( r,
-                                                                                           "jira-plugin-http-request-" + threadNumber.getAndIncrement()
-                                                                                               + "-thread" );
-                                                                    }
-                                                                } );
+                executorService = Executors.newFixedThreadPool(nThreads, //
+                    new ThreadFactory() {
+                        final AtomicInteger threadNumber = new AtomicInteger(0);
+
+                        @Override
+                        public Thread newThread(Runnable r) {
+                            return new Thread(r,
+                                "jira-plugin-http-request-" + threadNumber.getAndIncrement()
+                                    + "-thread");
+                        }
+                    });
             }
         }
         return executorService;
@@ -620,22 +669,22 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private static DisposableHttpClient createClient(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
 
         final DefaultHttpClientFactory
-            defaultHttpClientFactory = new DefaultHttpClientFactory( new NoOpEventPublisher(),
-                                                                     new RestClientApplicationProperties( serverUri),
-                                                                     new ThreadLocalContextManager() {
-                                                                         @Override
-                                                                         public Object getThreadLocalContext() {
-                                                                             return null;
-                                                                         }
+            defaultHttpClientFactory = new DefaultHttpClientFactory(new NoOpEventPublisher(),
+            new RestClientApplicationProperties(serverUri),
+            new ThreadLocalContextManager() {
+                @Override
+                public Object getThreadLocalContext() {
+                    return null;
+                }
 
-                                                                         @Override
-                                                                         public void setThreadLocalContext(Object context) {
-                                                                         }
+                @Override
+                public void setThreadLocalContext(Object context) {
+                }
 
-                                                                         @Override
-                                                                         public void clearThreadLocalContext() {
-                                                                         }
-                                                                     });
+                @Override
+                public void clearThreadLocalContext() {
+                }
+            });
 
         final HttpClient httpClient = defaultHttpClientFactory.create(options);
 
@@ -805,12 +854,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Gets the list of project IDs in this Jira.
      * This information could be bit old, or it can be null.
      */
-    public Set<String> getProjectKeys() {
+    public Set<String> getProjectKeys(Item item) {
         if (projects == null) {
             try {
                 if (projectUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
                     try {
-                        JiraSession session = getSession();
+                        JiraSession session = getSession(item);
                         if (session != null) {
                             projects = Collections.unmodifiableSet(session.getProjectKeys());
                         }
@@ -871,7 +920,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public JiraIssue getIssue(final String id) throws IOException {
         try {
             Optional<Issue> issue = issueCache.get(id, () -> {
-                JiraSession session = getSession();
+                JiraSession session = getSession(null);
                 if (session == null) {
                     return Optional.absent();
                 }
@@ -1177,7 +1226,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setThreadExecutorNumber(threadExecutorNumber);
             JiraSession session = null;
             try {
-                session = site.getSession();
+                session = site.getSession(item);
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {

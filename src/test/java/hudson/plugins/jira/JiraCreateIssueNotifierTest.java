@@ -65,7 +65,9 @@ public class JiraCreateIssueNotifierTest {
 
         jiraComponents.add(new Component(null, null, "componentA", null, null));
 
-        when(site.getSession()).thenReturn(session);
+        when(currentBuild.getParent()).thenReturn(project);
+        when(site.getSession(currentBuild.getParent())).thenReturn(session);
+        when(site.getSession(previousBuild.getParent())).thenReturn(session);
 
         doReturn(env).when(currentBuild).getEnvironment(Mockito.any());
 
