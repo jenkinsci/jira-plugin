@@ -1,7 +1,8 @@
 package hudson.plugins.jira.pipeline;
 
 import com.google.inject.Inject;
-import hudson.model.Job;
+import hudson.model.AbstractProject;
+import hudson.model.FreeStyleProject;
 import hudson.model.Node;
 import hudson.model.Run;
 import hudson.plugins.jira.JiraProjectProperty;
@@ -61,6 +62,16 @@ public class CommentStepTest {
         final String issueKey = "KEY";
         final String body = "dsgsags";
 
+        AbstractProject mockProject = mock(FreeStyleProject.class);
+        Run mockRun = mock(Run.class);
+        JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
+        JiraSite site = mock(JiraSite.class);
+
+        when(jiraProjectProperty.getSite()).thenReturn(site);
+        when(site.getSession(mockProject)).thenReturn(session);
+        when(mockRun.getParent()).thenReturn(mockProject);
+        when(mockRun.getParent().getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
+
         final List<Object> assertCalledParams = new ArrayList<>();
 
         Mockito.doAnswer( invocation -> {
@@ -74,16 +85,7 @@ public class CommentStepTest {
                 return null;
         }).when(session).addComment(Mockito.anyObject(), Mockito.anyObject(),
                 Mockito.anyObject(), Mockito.anyObject());
-        JiraSite site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
 
-        Run mockRun = mock(Run.class);
-        Job mockJob = mock(Job.class);
-        when(mockRun.getParent()).thenReturn(mockJob);
-
-        JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
-        when(jiraProjectProperty.getSite()).thenReturn(site);
-        when(mockJob.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
 
         Map<String, Object> r = new HashMap<>();
         r.put("issueKey", issueKey);

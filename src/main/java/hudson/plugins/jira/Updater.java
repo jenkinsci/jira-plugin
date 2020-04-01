@@ -3,7 +3,6 @@ package hudson.plugins.jira;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import hudson.Util;
-import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -14,6 +13,7 @@ import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
+import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
@@ -68,26 +68,26 @@ class Updater {
         }
     }
 
-    boolean perform(Run<?, ?> build, TaskListener listener, AbstractIssueSelector selector) {
+    boolean perform(Run<?, ?> run, TaskListener listener, AbstractIssueSelector selector) {
         PrintStream logger = listener.getLogger();
         Set<JiraIssue> issues = null;
 
         try {
-            JiraSite site = JiraSite.get(build.getParent());
+            JiraSite site = JiraSite.get(run.getParent());
             if (site == null) {
                 logger.println(Messages.NoJiraSite());
-                build.setResult(Result.FAILURE);
+                run.setResult(Result.FAILURE);
                 return true;
             }
 
-            String rootUrl = Hudson.getInstance().getRootUrl();
+            String rootUrl = Jenkins.get().getRootUrl();
             if (rootUrl == null) {
                 logger.println(Messages.NoJenkinsUrl());
-                build.setResult(Result.FAILURE);
+                run.setResult(Result.FAILURE);
                 return true;
             }
 
-            Set<String> ids = selector.findIssueIds(build, site, listener);
+            Set<String> ids = selector.findIssueIds(run, site, listener);
 
             if (ids.isEmpty()) {
                 if (debug)
@@ -95,38 +95,38 @@ class Updater {
                 return true;    // nothing found here.
             }
 
-            JiraSession session = site.getSession();
+            JiraSession session = site.getSession(run.getParent());
             if (session == null) {
                 logger.println(Messages.NoRemoteAccess());
-                build.setResult(Result.FAILURE);
+                run.setResult(Result.FAILURE);
                 return true;
             }
 
             boolean doUpdate = false;
             //in case of workflow, it may be null
-            if (site.updateJiraIssueForAllStatus || build.getResult() == null) {
+            if (site.updateJiraIssueForAllStatus || run.getResult() == null) {
                 doUpdate = true;
             } else {
-                doUpdate = build.getResult().isBetterOrEqualTo(Result.UNSTABLE);
+                doUpdate = run.getResult().isBetterOrEqualTo(Result.UNSTABLE);
             }
             boolean useWikiStyleComments = site.supportsWikiStyleComment;
 
             issues = getJiraIssues(ids, session, logger);
-            build.addAction(new JiraBuildAction(build, issues));
+            run.addAction(new JiraBuildAction(run, issues));
 
             if (doUpdate) {
-                submitComments(build, logger, rootUrl, issues,
+                submitComments(run, logger, rootUrl, issues,
                         session, useWikiStyleComments, site.recordScmChanges, site.groupVisibility, site.roleVisibility);
             } else {
                 // this build didn't work, so carry forward the issues to the next build
-                build.addAction(new JiraCarryOverAction(issues));
+                run.addAction(new JiraCarryOverAction(issues));
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error updating Jira issues. Saving issues for next build.", e);
             logger.println("Error updating Jira issues. Saving issues for next build.\n" + e);
             if (issues != null && !issues.isEmpty()) {
                 // updating issues failed, so carry forward issues to the next build
-                build.addAction(new JiraCarryOverAction(issues));
+                run.addAction(new JiraCarryOverAction(issues));
             }
         }
 

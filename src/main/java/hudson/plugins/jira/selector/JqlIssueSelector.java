@@ -40,7 +40,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
     @Override
     public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
         try {
-            JiraSession session = site.getSession();
+            JiraSession session = site.getSession(run.getParent());
             if (session == null)
                 throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
 
