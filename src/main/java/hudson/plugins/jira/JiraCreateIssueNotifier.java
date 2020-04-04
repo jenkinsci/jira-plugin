@@ -76,11 +76,6 @@ public class JiraCreateIssueNotifier extends Notifier {
         this.actionIdOnSuccess = actionIdOnSuccess;
     }
 
-    @Deprecated
-    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component) {
-        this(projectKey, testDescription, assignee, component, null, null, null);
-    }
-
     public String getProjectKey() {
         return projectKey;
     }

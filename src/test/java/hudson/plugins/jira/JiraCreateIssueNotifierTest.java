@@ -38,6 +38,9 @@ public class JiraCreateIssueNotifierTest {
     private static final String COMPONENT = "some, componentA";
     private static final String ASSIGNEE = "user.name";
     private static final String DESCRIPTION = "Some description";
+    private static final Long TYPE_ID = 100L;
+    private static final Long PRIORITY_ID = 200L;
+    private static final Integer ACTION_ON_SUCCESS = 300;
 
     List<Component> jiraComponents = new ArrayList<>();
 
@@ -86,7 +89,7 @@ public class JiraCreateIssueNotifierTest {
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
 
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", null, null, null ));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
@@ -98,7 +101,7 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     public void performFailureFailure() throws Exception {
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT, TYPE_ID, PRIORITY_ID, ACTION_ON_SUCCESS));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
@@ -131,23 +134,21 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     public void performFailureSuccessIssueOpen() throws Exception {
-        Long typeId = 1L;
-        Long priorityId = 0L;
-        Integer actionIdOnSuccess = 5;
-
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", typeId, priorityId, actionIdOnSuccess));
-
-        assertEquals(typeId, notifier.getTypeId());
-        assertEquals(priorityId, notifier.getPriorityId());
-        assertEquals(actionIdOnSuccess, notifier.getActionIdOnSuccess());
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", TYPE_ID, PRIORITY_ID, ACTION_ON_SUCCESS));
+//
+        assertEquals(TYPE_ID, notifier.getTypeId());
+        assertEquals(PRIORITY_ID, notifier.getPriorityId());
+        assertEquals(ACTION_ON_SUCCESS, notifier.getActionIdOnSuccess());
 
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
-        Issue issue = mock(Issue.class);
         Status status =  new Status(null, null, "1", "Open", null, null);
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.eq(typeId), Mockito.isNull(Long.class))).thenReturn(issue);
+        Issue issue = mock(Issue.class);
         when(issue.getStatus()).thenReturn(status);
+
+        doReturn(issue).when(session).createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
+                Mockito.eq(TYPE_ID), Mockito.eq(PRIORITY_ID));
+
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 
 
@@ -163,14 +164,14 @@ public class JiraCreateIssueNotifierTest {
         when(currentBuild.getResult()).thenReturn(Result.SUCCESS);
         assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        verify(session).progressWorkflowAction("null", actionIdOnSuccess);
+        verify(session).progressWorkflowAction("null", ACTION_ON_SUCCESS);
 
         assertEquals(1, temporaryDirectory.list().length);
     }
 
     @Test
     public void performFailureSuccessIssueClosedWithComponents() throws Exception {
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", null, null, null ));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);

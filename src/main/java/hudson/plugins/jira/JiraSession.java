@@ -393,21 +393,6 @@ public class JiraSession {
         return knownStatuses;
     }
 
-    /**
-     * Returns issue-id of the created issue
-     *
-     * @param projectKey
-     * @param description
-     * @param assignee
-     * @param components
-     * @param summary
-     * @return The issue id
-     */
-    @Deprecated
-    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
-        return createIssue(projectKey, description, assignee, components, summary, null, null);
-    }
-
     public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, @Nonnull Long issueTypeId, @Nullable Long priorityId) {
         final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
         return service.getIssue(basicIssue.getKey());

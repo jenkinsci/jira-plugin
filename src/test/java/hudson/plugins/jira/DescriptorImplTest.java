@@ -1,5 +1,7 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.api.domain.Permissions;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -22,12 +24,17 @@ import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockFolder;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by warden on 14.09.15.
@@ -37,7 +44,8 @@ public class DescriptorImplTest {
     @Rule
     public JenkinsRule r = new JenkinsRule();
 
-    JiraSite.DescriptorImpl descriptor = new JiraSite.DescriptorImpl();
+    JiraSite.DescriptorImpl descriptor = spy(new JiraSite.DescriptorImpl());
+    JiraSite.JiraSiteBuilder builder = spy(new JiraSite.JiraSiteBuilder());
 
     @Test
     public void doValidate() throws Exception {
@@ -127,6 +135,73 @@ public class DescriptorImplTest {
 
     private boolean listBoxModelContainsName(ListBoxModel options, String name) {
         return options.stream().filter( option -> name.equals(option.name) ).findFirst().isPresent();
+    }
+
+    @Test
+    public void validateFormConnectionError() throws Exception {
+        JiraSite site = mock(JiraSite.class);
+        JiraSession session = mock(JiraSession.class);
+        builder.withMainURL(new URL("http://test.com"));
+
+        when(descriptor.getJiraSiteBuilder()).thenReturn(builder);
+        when(builder.build()).thenReturn(site);
+        when(site.getSession()).thenReturn(session);
+        when(session.getMyPermissions()).thenThrow(RestClientException.class);
+
+        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
+                null, false, null,
+                JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                r.createFreeStyleProject());
+
+        verify(site).getSession();
+        assertEquals(FormValidation.Kind.ERROR, validation.kind);
+
+
+
+        validation = descriptor.doValidate("http://localhost:8080", null, null,
+                null, false, null,
+                -1, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                r.createFreeStyleProject());
+        assertEquals(Messages.JiraSite_timeoutMinimunValue( "1" ), validation.getLocalizedMessage());
+        assertEquals(FormValidation.Kind.ERROR, validation.kind);
+
+        validation = descriptor.doValidate("http://localhost:8080", null, null,
+                null, false, null,
+                JiraSite.DEFAULT_TIMEOUT, -1, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                r.createFreeStyleProject());
+
+        assertEquals(Messages.JiraSite_readTimeoutMinimunValue( "1" ), validation.getMessage());
+        assertEquals(FormValidation.Kind.ERROR, validation.kind);
+
+        validation = descriptor.doValidate("http://localhost:8080", null, null,
+                null, false, null,
+                JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, -1,
+                r.createFreeStyleProject());
+        assertEquals(Messages.JiraSite_threadExecutorMinimunSize("1"), validation.getMessage());
+        assertEquals(FormValidation.Kind.ERROR, validation.kind);
+
+
+    }
+
+    @Test
+    public void validateFormConnectionOK() throws Exception {
+        JiraSite site = mock(JiraSite.class);
+        JiraSession session = mock(JiraSession.class);
+        builder.withMainURL(new URL("http://test.com"));
+
+        when(descriptor.getJiraSiteBuilder()).thenReturn(builder);
+        when(builder.build()).thenReturn(site);
+        when(site.getSession()).thenReturn(session);
+        when(session.getMyPermissions()).thenReturn(mock(Permissions.class));
+
+        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
+                null, false, null,
+                JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                r.createFreeStyleProject());
+
+        verify(builder).build();
+        verify(site).getSession();
+        assertEquals(FormValidation.Kind.OK, validation.kind);
     }
 
 }

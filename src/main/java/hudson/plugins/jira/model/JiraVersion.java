@@ -21,15 +21,6 @@ public class JiraVersion implements Comparable<JiraVersion> {
         this.archived = archived;
     }
 
-    @Deprecated
-    public JiraVersion(String name, Calendar startDate, Calendar releaseDate, boolean released, boolean archived) {
-        this.name = name;
-        this.startDate = startDate;
-        this.releaseDate = releaseDate;
-        this.released = released;
-        this.archived = archived;
-    }
-
     public JiraVersion(String name, String description, Calendar startDate, Calendar releaseDate, boolean released, boolean archived) {
         this.name = name;
         this.description = description;

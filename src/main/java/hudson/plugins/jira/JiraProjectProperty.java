@@ -70,8 +70,6 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
 
     @Extension
     public static final class DescriptorImpl extends JobPropertyDescriptor {
-        @Deprecated
-        protected transient List<JiraSite> sites;
 
         @Override
         @SuppressWarnings("unchecked")
@@ -82,67 +80,6 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         @Override
         public String getDisplayName() {
             return Messages.JiraProjectProperty_DisplayName();
-        }
-
-        /**
-         * @deprecated use {@link JiraGlobalConfiguration#setSites(List)} instead
-         *
-         * @param site the Jira site
-         */
-        @Deprecated
-        public void setSites(JiraSite site) {
-            JiraGlobalConfiguration.get().getSites().add(site);
-        }
-
-        /**
-         * @deprecated use {@link JiraGlobalConfiguration#getSites()} instead
-         *
-         * @return array of sites
-         */
-        @Deprecated
-        public JiraSite[] getSites() {
-            return JiraGlobalConfiguration.get().getSites().toArray(new JiraSite[0]);
-        }
-
-        @SuppressWarnings("unused") // Used by stapler
-        public ListBoxModel doFillSiteNameItems(@AncestorInPath AbstractFolder<?> folder) {
-            ListBoxModel items = new ListBoxModel();
-            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-                items.add(site.getName());
-            }
-            if (folder != null) {
-                List<JiraSite> sitesFromFolder = JiraFolderProperty.getSitesFromFolders(folder);
-                sitesFromFolder.stream().map(JiraSite::getName).forEach(items::add);
-            }
-            return items;
-        }
-
-        @SuppressWarnings("unused") // Used to start migration after all extensions are loaded
-        @Initializer(after=InitMilestone.EXTENSIONS_AUGMENTED)
-        public void migrate() {
-            DescriptorImpl descriptor = (DescriptorImpl) Jenkins.getInstance()
-                .getDescriptor(JiraProjectProperty.class);
-            if (descriptor != null) {
-                descriptor.load(); // force readResolve without registering descriptor as configurable
-            }
-        }
-
-        @SuppressWarnings("deprecation") // Migrate configuration
-        protected Object readResolve() {
-            if (sites != null) {
-                JiraGlobalConfiguration jiraGlobalConfiguration = (JiraGlobalConfiguration) Jenkins.getInstance()
-                    .getDescriptorOrDie(JiraGlobalConfiguration.class);
-                jiraGlobalConfiguration.load();
-                jiraGlobalConfiguration.getSites().addAll(sites);
-                jiraGlobalConfiguration.save();
-                sites = null;
-                DescriptorImpl oldDescriptor = (DescriptorImpl) Jenkins.getInstance()
-                    .getDescriptor(JiraProjectProperty.class);
-                if (oldDescriptor != null) {
-                    oldDescriptor.save();
-                }
-            }
-            return this;
         }
     }
 }

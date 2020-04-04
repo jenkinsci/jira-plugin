@@ -52,19 +52,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -113,7 +102,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * URL of Jira for normal access, like <tt>http://jira.codehaus.org/</tt>.
-     * Mandatory. Normalized to end with '/'
+     * Optional, normalized to end with '/'
      */
     public URL alternativeUrl;
 
@@ -123,23 +112,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public boolean useHTTPAuth;
 
     /**
-     * The id of the credentials to use. Optional.
+     * The id of the credentials to use.
      */
     public String credentialsId;
-
-    /**
-     * User name needed to login. Optional.
-     * @deprecated use credentialsId
-     */
-    @Deprecated
-    private transient String userName;
-
-    /**
-     * Password needed to login. Optional.
-     * @deprecated use credentialsId
-     */
-    @Deprecated
-    private transient Secret password;
 
     /**
      * Group visibility to constrain the visibility of the added comment. Optional.
@@ -235,79 +210,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     private static ExecutorService executorService;
 
-    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
-    public JiraSite(URL url, @CheckForNull URL alternativeUrl, @CheckForNull String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
-                    boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
-        this(url, alternativeUrl, credentialsId, supportsWikiStyleComment, recordScmChanges, userPattern,
-                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, DEFAULT_TIMEOUT, DEFAULT_READ_TIMEOUT, DEFAULT_THREAD_EXECUTOR_NUMBER);
-    }
-
-    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
-    public JiraSite(URL url, @CheckForNull URL alternativeUrl, String userName, String password, boolean supportsWikiStyleComment, boolean recordScmChanges, @CheckForNull String userPattern,
-                    boolean updateJiraIssueForAllStatus, @CheckForNull String groupVisibility, @CheckForNull String roleVisibility, boolean useHTTPAuth) {
-        this(url, alternativeUrl, CredentialsHelper.migrateCredentials(userName, password, url), supportsWikiStyleComment, recordScmChanges, userPattern,
-                updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
-    }
-
-    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
-    public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
-                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth) {
-        this( url, alternativeUrl,(String)null, supportsWikiStyleComment, recordScmChanges, userPattern, updateJiraIssueForAllStatus,
-              groupVisibility, roleVisibility, useHTTPAuth, DEFAULT_TIMEOUT, DEFAULT_READ_TIMEOUT, DEFAULT_THREAD_EXECUTOR_NUMBER);
-        if(credentials!=null){
-            // we verify the credential really exists otherwise we migrate it
-            StandardUsernamePasswordCredentials standardUsernamePasswordCredentials = CredentialsHelper.lookupSystemCredentials(credentials.getId(), url);
-            if(standardUsernamePasswordCredentials==null){
-                credentials = CredentialsHelper.migrateCredentials( credentials.getUsername(), credentials.getPassword().getPlainText(), url);
-            }
-        }
-        setCredentialsId(credentials==null?null:credentials.getId());
-    }
-
-    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
-    public JiraSite(URL url, URL alternativeUrl, String credentialsId, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
-                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber){
-        if (url != null) {
-            url = toURL(url.toExternalForm());
-        }
-
-        if (alternativeUrl != null) {
-            alternativeUrl = toURL(alternativeUrl.toExternalForm());
-        }
-
-        this.url = url;
-        this.credentialsId = credentialsId;
-        this.timeout = timeout;
-        this.readTimeout = readTimeout;
-        this.threadExecutorNumber = threadExecutorNumber;
-        this.alternativeUrl = alternativeUrl;
-        this.supportsWikiStyleComment = supportsWikiStyleComment;
-        this.recordScmChanges = recordScmChanges;
-        setUserPattern(userPattern);
-        this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
-        setGroupVisibility(groupVisibility);
-        setRoleVisibility(roleVisibility);
-        this.useHTTPAuth = useHTTPAuth;
-        this.jiraSession = null;
-    }
-
     @DataBoundConstructor
     public JiraSite(String url){
         URL mainURL = toURL(url);
         if (mainURL == null) throw new AssertionError("URL cannot be empty");
         this.url = mainURL;
-    }
-
-    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
-    public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
-                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber) {
-        this(url, alternativeUrl, credentials==null?null:credentials.getId(), supportsWikiStyleComment, recordScmChanges, userPattern,
-        updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
     }
 
     static URL toURL(String url) {
@@ -470,19 +377,18 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     @SuppressWarnings("unused")
     protected Object readResolve() {
-        JiraSite jiraSite;
-        if (credentialsId == null && userName != null && password != null) { // Migrate credentials
-            jiraSite = new JiraSite(url, alternativeUrl, userName, password.getPlainText(), supportsWikiStyleComment, recordScmChanges, userPattern,
-                    updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
-        } else {
-            jiraSite = new JiraSite( url, alternativeUrl, credentialsId, supportsWikiStyleComment, recordScmChanges,
-                                 userPattern, updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth,
-                                 timeout, readTimeout, threadExecutorNumber );
-        }
-        jiraSite.setAppendChangeTimestamp( appendChangeTimestamp );
-        jiraSite.setDisableChangelogAnnotations( disableChangelogAnnotations );
-        jiraSite.setDateTimePattern( dateTimePattern );
-        return jiraSite;
+        return new JiraSiteBuilder()
+                .withMainURL(url)
+                .withAlternativeURL(alternativeUrl)
+                .withCredentialsId(credentialsId)
+                .withGroupVisibility(groupVisibility)
+                .withRoleVisibility(roleVisibility)
+                .withUseHTTPAuth(useHTTPAuth)
+                .withSupportsWikiStyleComment(supportsWikiStyleComment)
+                .withRecordScmChanges(recordScmChanges)
+                .withUserPattern(userPattern)
+                .withUpdateJiraIssueForAllStatus(updateJiraIssueForAllStatus)
+                .build();
     }
 
     protected static Cache<String, Optional<Issue>> makeIssueCache() {
@@ -887,15 +793,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
     }
 
-    @Deprecated
-    public boolean existsIssue(String id) {
-        try {
-            return getIssue(id) != null;
-        } catch ( IOException e ) { // restoring backward compat means even avoid exception
-            throw new RuntimeException( e.getMessage(),e );
-        }
-    }
-
     /**
      * Returns all versions for the given project key.
      *
@@ -1084,6 +981,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return "Jira Site";
         }
 
+        private JiraSession session;
 
         @SuppressWarnings("unused") // used by stapler
         public FormValidation doCheckUrl(@QueryParameter String value)
@@ -1159,6 +1057,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withGroupVisibility(groupVisibility)
                     .withRoleVisibility(roleVisibility)
                     .withUseHTTPAuth(useHTTPAuth)
+                    .withTimeout(timeout)
+                    .withReadTimeout(readTimeout)
                     .build();
 
             if(threadExecutorNumber<1){
@@ -1171,15 +1071,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 return FormValidation.error( Messages.JiraSite_readTimeoutMinimunValue( "1" ));
             }
 
-            site.setTimeout(timeout);
-            site.setReadTimeout(readTimeout);
             site.setThreadExecutorNumber(threadExecutorNumber);
-            JiraSession session = null;
+
+            session = null;
             try {
                 session = site.getSession();
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
-            } catch (RestClientException e) {
+            } catch (RuntimeException e) {
                 LOGGER.log(Level.WARNING, "Failed to login to Jira at " + url, e);
             } finally {
                 if(site!=null){
@@ -1222,6 +1121,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         private String groupVisibility;
         private String roleVisibility;
         private boolean useHTTPAuth;
+        private int timeout;
+        private int readTimeout;
+        private boolean appendChangeTimestamp;
+        private boolean disableChangelogAnnotations;
+        private String dateTimePattern;
+        private int threadExecutionNumber;
 
         public JiraSiteBuilder withMainURL(URL mainURL) {
             this.mainURL = mainURL;
@@ -1273,9 +1178,55 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return this;
         }
 
+        public JiraSiteBuilder withTimeout(int timeout) {
+            this.timeout = timeout;
+            return this;
+        }
+
+        public JiraSiteBuilder withReadTimeout(int readTimeout) {
+            this.readTimeout = readTimeout;
+            return this;
+        }
+
+        public JiraSiteBuilder withAppendChangeTimestamp(boolean appendChangeTimestamp) {
+            this.appendChangeTimestamp = appendChangeTimestamp;
+            return this;
+        }
+
+        public JiraSiteBuilder withDisableChangelogAnnotations(boolean disableChangelogAnnotations) {
+            this.disableChangelogAnnotations = disableChangelogAnnotations;
+            return this;
+        }
+
+        public JiraSiteBuilder withDateTimePattern(String dateTimePattern) {
+            this.dateTimePattern = dateTimePattern;
+            return this;
+        }
+
+        public JiraSiteBuilder withThreadExecutionNumber(int threadExecutionNumber){
+            this.threadExecutionNumber = threadExecutionNumber;
+            return this;
+        }
+
         public JiraSite build() {
-            return new JiraSite(mainURL, alternativeURL, credentialsId, supportsWikiStyleComment,
-                    recordScmChanges, userPattern, updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
+            JiraSite site = new JiraSite(mainURL.toExternalForm());
+            site.setAlternativeUrl(alternativeURL != null ? alternativeURL.toExternalForm() : null);
+            site.setCredentialsId(credentialsId);
+            site.setSupportsWikiStyleComment(supportsWikiStyleComment);
+            site.setRecordScmChanges(recordScmChanges);
+            site.setUserPattern(userPattern);
+            site.setUpdateJiraIssueForAllStatus(updateJiraIssueForAllStatus);
+            site.setGroupVisibility(groupVisibility);
+            site.setRoleVisibility(roleVisibility);
+            site.setUseHTTPAuth(useHTTPAuth);
+            site.setTimeout(timeout);
+            site.setReadTimeout(readTimeout);
+            site.setAppendChangeTimestamp(appendChangeTimestamp);
+            site.setDisableChangelogAnnotations(disableChangelogAnnotations);
+            site.setDateTimePattern(dateTimePattern);
+            site.setThreadExecutorNumber(threadExecutionNumber);
+            return site;
+
         }
     }
 

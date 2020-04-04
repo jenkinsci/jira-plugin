@@ -39,16 +39,6 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
         return sites.toArray(new JiraSite[0]);
     }
 
-    /**
-     * @deprecated use {@link #setSites(List)} instead
-     *
-     * @param site the Jira site
-     */
-    @Deprecated
-    public void setSites(JiraSite site) {
-        sites.add(site);
-    }
-
     @DataBoundSetter
     public void setSites(List<JiraSite> sites) {
         this.sites = sites;

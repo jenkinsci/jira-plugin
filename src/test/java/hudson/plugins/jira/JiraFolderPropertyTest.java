@@ -24,7 +24,6 @@ public class JiraFolderPropertyTest {
         list.add(new JiraSite("https://test.com"));
         JiraFolderProperty foo = new JiraFolderProperty();
         foo.setSites(list);
-        foo.setSites(new JiraSite("https://otherTest.com"));
         d.getProperties().add(foo);
         r.configRoundtrip(d);
         JiraFolderProperty prop = d.getProperties().get(JiraFolderProperty.class);

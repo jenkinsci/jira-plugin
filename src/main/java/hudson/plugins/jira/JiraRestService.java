@@ -94,11 +94,6 @@ public class JiraRestService {
     
     private final int timeout;
 
-    @Deprecated
-    public JiraRestService(URI uri, ExtendedJiraRestClient jiraRestClient, String username, String password) {
-    	this(uri, jiraRestClient, username, password, JiraSite.DEFAULT_TIMEOUT);
-    }
-
     public JiraRestService(URI uri, ExtendedJiraRestClient jiraRestClient, String username, String password, int timeout) {
         this.uri = uri;
         this.objectMapper = new ObjectMapper();
@@ -267,11 +262,6 @@ public class JiraRestService {
         }catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client release version error. cause: " + e.getMessage(), e);
         }
-    }
-
-    @Deprecated
-    public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
-        return createIssue(projectKey, description, assignee, components, summary, BUG_ISSUE_TYPE_ID, null);
     }
 
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
