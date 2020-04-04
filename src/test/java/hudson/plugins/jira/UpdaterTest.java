@@ -3,7 +3,6 @@ package hudson.plugins.jira;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.common.collect.Sets;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
@@ -32,8 +31,11 @@ import org.mockito.stubbing.Answer;
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -106,10 +108,10 @@ public class UpdaterTest {
             when(build1.getResult()).thenReturn(Result.FAILURE);
             doReturn(project).when(build1).getProject();
 
-            doReturn(new JiraCarryOverAction(Sets.newHashSet(new JiraIssue("FOOBAR-1", null))))
+            doReturn(new JiraCarryOverAction(new HashSet(Arrays.asList( new JiraIssue( "FOOBAR-1", null)))))
                     .when(build1).getAction(JiraCarryOverAction.class);
 
-            final Set<? extends Entry> entries = Sets.newHashSet(entry1);
+            final Set<? extends Entry> entries = new HashSet(Arrays.asList(entry1));
             when(changeLogSet.iterator()).thenAnswer(invocation -> entries.iterator());
         }
 
@@ -125,7 +127,7 @@ public class UpdaterTest {
             when(build2.getResult()).thenReturn(Result.SUCCESS);
             doReturn(project).when(build2).getProject();
 
-            final Set<? extends Entry> entries = Sets.newHashSet(entry2);
+            final Set<? extends Entry> entries = new HashSet(Arrays.asList(entry2));
             when(changeLogSet.iterator()).thenAnswer(invocation -> entries.iterator());
         }
 
@@ -139,7 +141,7 @@ public class UpdaterTest {
 
         this.updater = new Updater(build2.getProject().getScm());        
         
-        final Set<JiraIssue> ids = Sets.newHashSet(new JiraIssue("FOOBAR-1", null), new JiraIssue("FOOBAR-2", null));
+        final Set<JiraIssue> ids = new HashSet(Arrays.asList(new JiraIssue("FOOBAR-1", null), new JiraIssue("FOOBAR-2", null)));
         updater.submitComments(build2, System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(2, comments.size());
@@ -175,7 +177,7 @@ public class UpdaterTest {
         when(build.getChangeSet()).thenReturn(changeLogSet);
         when(build.getResult()).thenReturn(Result.SUCCESS);
 
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOOBAR-4711"));
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("Fixed FOOBAR-4711")));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
         List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
@@ -183,7 +185,7 @@ public class UpdaterTest {
         when(build.getChangeSets()).thenReturn(changeSets);
 
         // test:
-        Set<JiraIssue> ids = Sets.newHashSet(new JiraIssue("FOOBAR-4711", "Title"));
+        Set<JiraIssue> ids = new HashSet(Arrays.asList(new JiraIssue("FOOBAR-4711", "Title")));
         Updater updaterCurrent = new Updater(build.getParent().getScm());
         updaterCurrent.submitComments(build,
                 System.out, "http://jenkins", ids, session, false, false, "", "");
@@ -195,9 +197,9 @@ public class UpdaterTest {
 
         // must also work case-insensitively (JENKINS-4132)
         comments.clear();
-        entries = Sets.newHashSet(new MockEntry("Fixed Foobar-4711"));
+        entries = new HashSet(Arrays.asList(new MockEntry("Fixed Foobar-4711")));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
-        ids = Sets.newHashSet(new JiraIssue("FOOBAR-4711", "Title"));
+        ids = new HashSet(Arrays.asList(new JiraIssue("FOOBAR-4711", "Title")));
 
         updaterCurrent.submitComments(build,
                 System.out, "http://jenkins", ids, session, false, false, "", "");
@@ -232,7 +234,7 @@ public class UpdaterTest {
         final JiraIssue forbiddenIssue = new JiraIssue("LASSO-17", "Title");
 
         // assume that there is a following list of jira issues from scm commit messages out of hudson.plugins.jira.JiraCarryOverAction
-        Set<JiraIssue> issues = Sets.newHashSet(firstIssue, secondIssue, forbiddenIssue, thirdIssue);
+        Set<JiraIssue> issues = new HashSet(Arrays.asList(firstIssue, secondIssue, forbiddenIssue, thirdIssue));
 
         // mock Jira session:
         JiraSession session = mock(JiraSession.class);
@@ -264,7 +266,7 @@ public class UpdaterTest {
         );
 
         // expected issue list
-        final Set<JiraIssue> expectedIssuesToCarryOver = Sets.newLinkedHashSet();
+        final Set<JiraIssue> expectedIssuesToCarryOver = new LinkedHashSet();
         expectedIssuesToCarryOver.add(forbiddenIssue);
         Assert.assertThat(issues, is(expectedIssuesToCarryOver));
     }
@@ -368,6 +370,7 @@ public class UpdaterTest {
         JiraSite site = mock(JiraSite.class);
         when(site.isAppendChangeTimestamp()).thenReturn(true);
         when(site.getDateTimePattern()).thenReturn(null);
+        //when(site.getDateTimePattern()).thenReturn("d/M/yy hh:mm a");
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(2016, 0, 1, 0, 0, 0);
@@ -391,7 +394,8 @@ public class UpdaterTest {
         Updater updater = new Updater(null);
         JiraSite site = mock(JiraSite.class);
         when(site.isAppendChangeTimestamp()).thenReturn(true);
-        when(site.getDateTimePattern()).thenReturn("");
+        when(site.getDateTimePattern()).thenReturn(null);
+        //when(site.getDateTimePattern()).thenReturn("d/M/yy hh:mm a");
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(2016, 0, 1, 0, 0, 0);

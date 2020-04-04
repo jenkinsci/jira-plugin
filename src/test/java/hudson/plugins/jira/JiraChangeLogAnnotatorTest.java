@@ -1,6 +1,5 @@
 package hudson.plugins.jira;
 
-import com.google.common.collect.Sets;
 import hudson.MarkupText;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Run;
@@ -14,7 +13,9 @@ import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
@@ -33,7 +34,7 @@ public class JiraChangeLogAnnotatorTest {
     public void before() throws Exception {
         JiraSession session = mock(JiraSession.class);
         when(session.getProjectKeys()).thenReturn(
-                Sets.newHashSet("DUMMY", "JENKINS"));
+            new HashSet(Arrays.asList( "DUMMY", "JENKINS")));
 
         this.site = mock(JiraSite.class);
         when(site.getSession()).thenReturn(session);

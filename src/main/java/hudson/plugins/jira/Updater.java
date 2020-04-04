@@ -2,8 +2,6 @@ package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
 import hudson.Util;
 import hudson.model.Hudson;
 import hudson.model.Result;
@@ -27,6 +25,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -152,7 +151,7 @@ class Updater {
             boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RestClientException {
 
         // copy to prevent ConcurrentModificationException
-        Set<JiraIssue> copy = ImmutableSet.copyOf(issues);
+        Set<JiraIssue> copy = new HashSet<>(issues);
 
         for (JiraIssue issue : copy) {
             logger.println(Messages.UpdatingIssue(issue.getKey()));
@@ -347,7 +346,7 @@ class Updater {
 
     protected void appendChangeTimestampToDescription(StringBuilder description, JiraSite site, long timestamp) {
         DateFormat df = null;
-        if (!Strings.isNullOrEmpty(site.getDateTimePattern())) {
+        if (!StringUtils.isBlank(site.getDateTimePattern())) {
             df = new SimpleDateFormat(site.getDateTimePattern());
         } else {
             // default format for current locale

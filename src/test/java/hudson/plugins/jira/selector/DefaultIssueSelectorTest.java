@@ -1,6 +1,5 @@
 package hudson.plugins.jira.selector;
 
-import com.google.common.collect.Sets;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.ParameterValue;
@@ -15,11 +14,14 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import static org.mockito.Mockito.mock;
@@ -61,7 +63,7 @@ public class DefaultIssueSelectorTest {
         
         when(site.getIssuePattern()).thenReturn(JiraSite.DEFAULT_ISSUE_PATTERN);
         
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed JI123-4711"),
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("Fixed JI123-4711"),
                 new MockEntry("Fixed foo_bar-4710"), new MockEntry("Fixed FoO_bAr-4711"),
                 new MockEntry("Fixed something.\nJFoO_bAr_MULTI-4718"), new MockEntry("TR-123: foo"),
                 new MockEntry("[ABC-42] hallo"), new MockEntry("#123: this one must not match"),
@@ -69,7 +71,7 @@ public class DefaultIssueSelectorTest {
                 new MockEntry("ABC-: \n\nABC-127:\nthis one should match"),
                 new MockEntry("ABC-: \n\nABC-128:\nthis one should match"),
                 new MockEntry("ABC-: \n\nXYZ-10:\nXYZ-20 this one too"), new MockEntry("Fixed DOT-4."),
-                new MockEntry("Fixed DOT-5. Did it right this time"));
+                new MockEntry("Fixed DOT-5. Did it right this time")));
 
         when(build.getChangeSet()).thenReturn(changeLogSet);
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
@@ -78,8 +80,8 @@ public class DefaultIssueSelectorTest {
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
-        Set<String> expected = Sets.newHashSet("JI123-4711", "FOO_BAR-4710", "FOO_BAR-4711", "JFOO_BAR_MULTI-4718",
-                "TR-123", "ABC-42", "ABC-127", "ABC-128", "XYZ-10", "XYZ-20", "DOT-4", "DOT-5");
+        Set<String> expected = new HashSet(Arrays.asList("JI123-4711", "FOO_BAR-4710", "FOO_BAR-4711", "JFOO_BAR_MULTI-4718",
+                                            "TR-123", "ABC-42", "ABC-127", "ABC-128", "XYZ-10", "XYZ-20", "DOT-4", "DOT-5"));
 
         Set<String> result = new DefaultIssueSelector().findIssueIds(build, site, listener);
 
@@ -126,7 +128,7 @@ public class DefaultIssueSelectorTest {
         parameters.add(parameterTwo);
         ids = new DefaultIssueSelector().findIssueIds(build, site, listener);
         Assert.assertEquals(2, ids.size());
-        Set<String> expected = Sets.newTreeSet(Sets.newHashSet("JIRA-123", "JIRA-321"));
+        Set<String> expected = new TreeSet( Arrays.asList( "JIRA-123", "JIRA-321"));
         Assert.assertEquals(expected, ids);
     }
 
@@ -137,7 +139,7 @@ public class DefaultIssueSelectorTest {
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
 
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed FOO_BAR-4711"));
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("Fixed FOO_BAR-4711")));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
         Set<String> ids = new LinkedHashSet<>();
@@ -153,9 +155,9 @@ public class DefaultIssueSelectorTest {
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
 
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]  [FOOBAR-21] "),
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("Fixed toto [FOOBAR-4711]  [FOOBAR-21] "),
                 new MockEntry("[TEST-9] with [dede]"),
-                new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
+                new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3")));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
         List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
@@ -178,9 +180,9 @@ public class DefaultIssueSelectorTest {
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
 
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("Fixed toto [FOOBAR-4711]"),
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("Fixed toto [FOOBAR-4711]"),
                 new MockEntry("[TEST-9] with [dede]"),
-                new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3"));
+                new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3")));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
         List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
@@ -207,7 +209,7 @@ public class DefaultIssueSelectorTest {
 
         // commit messages like the one from the Maven release plugin must not
         // match
-        Set<? extends Entry> entries = Sets.newHashSet(new MockEntry("prepare release project-4.7.1"));
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("prepare release project-4.7.1")));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
         Set<String> ids = new LinkedHashSet<>();

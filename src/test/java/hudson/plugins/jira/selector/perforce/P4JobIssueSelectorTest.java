@@ -1,18 +1,18 @@
 package hudson.plugins.jira.selector.perforce;
 
-import com.google.common.collect.Sets;
 import com.perforce.p4java.impl.generic.core.Fix;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.plugins.jira.JiraSite;
 import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.Entry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -40,7 +40,7 @@ public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
         when(listener.getLogger()).thenReturn(System.out);
         when(build.getChangeSet()).thenReturn(changeLogSet);
 
-        ArrayList<P4ChangeEntry> entries = new ArrayList<P4ChangeEntry>();
+        ArrayList<P4ChangeEntry> entries = new ArrayList<>();
 
         P4ChangeEntry entry1 = new P4ChangeEntry(perforceChangeLogSet);
         entry1.getJobs().add(fixIW1231);
@@ -55,7 +55,7 @@ public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
-        Set<String> expected = Sets.newHashSet(jobIdEC3453, jobIdIW1231);
+        Set<String> expected = new HashSet<>(Arrays.asList( jobIdEC3453, jobIdIW1231));
 
         P4JobIssueSelector selector = new P4JobIssueSelector();
         Set<String> result = selector.findIssueIds(build, jiraSite, listener);

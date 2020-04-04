@@ -1,7 +1,6 @@
 package hudson.plugins.jira.selector;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.common.collect.Sets;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Run;
@@ -12,6 +11,8 @@ import hudson.plugins.jira.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -52,7 +53,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
             }
 
             // deduplication
-            return Sets.newHashSet(issueKeys);
+            return new HashSet(Arrays.asList(issueKeys));
         } catch (TimeoutException e) {
             throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
         }

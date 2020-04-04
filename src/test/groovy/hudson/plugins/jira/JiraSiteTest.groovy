@@ -9,6 +9,7 @@ import hudson.util.DescribableList
 import jenkins.model.Jenkins
 import org.powermock.api.mockito.PowerMockito
 import org.junit.runner.RunWith
+import org.powermock.core.classloader.annotations.PowerMockIgnore
 import org.powermock.core.classloader.annotations.PrepareForTest
 import org.powermock.modules.junit4.PowerMockRunner
 import org.powermock.modules.junit4.PowerMockRunnerDelegate
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.*
 @Unroll
 @RunWith(PowerMockRunner.class)
 @PowerMockRunnerDelegate(Sputnik.class)
+@PowerMockIgnore("jdk.internal.reflect.*")
 @PrepareForTest([JiraGlobalConfiguration.class])
 class JiraSiteTest extends Specification {
 
