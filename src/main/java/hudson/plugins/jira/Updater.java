@@ -22,7 +22,9 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.text.DateFormat;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -350,7 +352,7 @@ class Updater {
             df = new SimpleDateFormat(site.getDateTimePattern());
         } else {
             // default format for current locale
-            df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());
+            df = new SimpleDateFormat("d/M/yy hh:mm a", Locale.getDefault());
         }
         Date changeDate = new Date(timestamp);
         String dateTimeString = df.format(changeDate);

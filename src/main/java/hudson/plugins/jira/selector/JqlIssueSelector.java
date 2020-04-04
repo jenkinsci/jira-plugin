@@ -53,7 +53,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
             }
 
             // deduplication
-            return new HashSet(Arrays.asList(issueKeys));
+            return new HashSet(issueKeys);
         } catch (TimeoutException e) {
             throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
         }
