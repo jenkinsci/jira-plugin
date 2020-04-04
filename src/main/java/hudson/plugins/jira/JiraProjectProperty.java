@@ -81,5 +81,39 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         public String getDisplayName() {
             return Messages.JiraProjectProperty_DisplayName();
         }
+
+        /**
+         * @deprecated use {@link JiraGlobalConfiguration#setSites(List)} instead
+         *
+         * @param site the Jira site
+         */
+        @Deprecated
+        public void setSites(JiraSite site) {
+            JiraGlobalConfiguration.get().getSites().add(site);
+        }
+
+        /**
+         * @deprecated use {@link JiraGlobalConfiguration#getSites()} instead
+         *
+         * @return array of sites
+         */
+        @Deprecated
+        public JiraSite[] getSites() {
+            return JiraGlobalConfiguration.get().getSites().toArray(new JiraSite[0]);
+        }
+
+        @SuppressWarnings("unused") // Used by stapler
+        public ListBoxModel doFillSiteNameItems(@AncestorInPath AbstractFolder<?> folder) {
+            ListBoxModel items = new ListBoxModel();
+            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
+                items.add(site.getName());
+            }
+            if (folder != null) {
+                List<JiraSite> sitesFromFolder = JiraFolderProperty.getSitesFromFolders(folder);
+                sitesFromFolder.stream().map(JiraSite::getName).forEach(items::add);
+            }
+            return items;
+        }
+
     }
 }
