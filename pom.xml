@@ -16,7 +16,7 @@
   <url>https://github.com/jenkinsci/jira-plugin</url>
 
   <properties>
-    <revision>3.0.16</revision>
+    <revision>4.0.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
