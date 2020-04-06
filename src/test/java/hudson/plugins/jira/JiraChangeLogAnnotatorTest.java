@@ -9,7 +9,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
 import java.net.URL;
@@ -18,7 +17,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
-
+import org.mockito.internal.util.reflection.Whitebox;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -54,7 +53,7 @@ public class JiraChangeLogAnnotatorTest {
 
         // create inner objects
         Whitebox.setInternalState(site, "projectUpdateLock", new ReentrantLock());
-        Whitebox.setInternalState(site, "issueCache", (Object)Whitebox.invokeMethod(JiraSite.class, "makeIssueCache"));
+        Whitebox.setInternalState(site, "issueCache", JiraSite.makeIssueCache());
     }
 
     @Test

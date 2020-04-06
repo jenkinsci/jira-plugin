@@ -487,7 +487,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return jiraSite;
     }
 
-    private static Cache<String, Optional<Issue>> makeIssueCache() {
+    protected static Cache<String, Optional<Issue>> makeIssueCache() {
         return CacheBuilder.newBuilder().concurrencyLevel(2).expireAfterAccess(2, TimeUnit.MINUTES).build();
     }
 
