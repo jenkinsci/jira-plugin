@@ -63,7 +63,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
             if (jiraFolderProperty != null && jiraFolderProperty.getSites().length != 0) {
                 result.addAll(Arrays.asList(jiraFolderProperty.getSites()));
             }
-            itemGroup = folder.getParent() instanceof ItemGroup? folder.getParent() : null;
+            itemGroup = folder.getParent();
         }
         return result;
     }

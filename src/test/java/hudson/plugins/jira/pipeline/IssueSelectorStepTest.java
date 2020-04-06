@@ -83,7 +83,6 @@ public class IssueSelectorStepTest {
         stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
         JiraSite site = mock(JiraSite.class);
 
-        //when(stepExecution.getOptionalJiraSite()).thenReturn( Optional.of( site ) );
         doReturn(Optional.of(site)).when(stepExecution).getOptionalJiraSite();
 
         stepExecution.run();

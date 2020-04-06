@@ -34,22 +34,22 @@ public class JiraTester {
         final String issueId = "TESTPROJECT-425";
         final Integer actionId = 21;
 
-        final Issue issue = restService.getIssue( issueId);
+        final Issue issue = restService.getIssue(issueId);
         System.out.println("issue:" + issue);
 
 
-        final List<Transition> availableActions = restService.getAvailableActions( issueId);
+        final List<Transition> availableActions = restService.getAvailableActions(issueId);
         for (Transition action : availableActions) {
             System.out.println("Action:" + action);
         }
 
-        for ( IssueType issueType : restService.getIssueTypes()) {
+        for (IssueType issueType : restService.getIssueTypes()) {
             System.out.println(" issue type: " + issueType);
         }
 
 //        restService.addVersion("TESTPROJECT", "0.0.2");
 
-        final List<Component> components = restService.getComponents( projectKey);
+        final List<Component> components = restService.getComponents(projectKey);
         for (Component component : components) {
             System.out.println("component: " + component);
         }
@@ -73,7 +73,7 @@ public class JiraTester {
             System.out.println("status:" + status);
         }
 
-        final User user = restService.getUser( "TESTUSER");
+        final User user = restService.getUser("TESTUSER");
         System.out.println("user: " + user);
 
         final List<ExtendedVersion> versions = restService.getVersions(projectKey);

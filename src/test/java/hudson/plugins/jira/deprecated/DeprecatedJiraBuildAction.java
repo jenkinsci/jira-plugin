@@ -26,7 +26,7 @@ public class DeprecatedJiraBuildAction implements Action {
     public DeprecatedJiraBuildAction(AbstractBuild<?, ?> owner, Collection<JiraIssue> issues) {
         this.owner = owner;
         this.issues = issues.toArray(new JiraIssue[issues.size()]);
-        Arrays.sort( this.issues);
+        Arrays.sort(this.issues);
     }
 
     public String getIconFileName() {
@@ -53,7 +53,7 @@ public class DeprecatedJiraBuildAction implements Action {
         return null;
     }
 
-    public void addIssues( Set<JiraIssue> issuesToBeSaved) {
+    public void addIssues(Set<JiraIssue> issuesToBeSaved) {
         SortedSet<JiraIssue> allIssues = new TreeSet<>();
         allIssues.addAll(issuesToBeSaved);
         allIssues.addAll(Arrays.asList(this.issues));
