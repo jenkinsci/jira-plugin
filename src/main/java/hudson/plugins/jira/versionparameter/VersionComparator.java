@@ -39,7 +39,7 @@ public class VersionComparator implements Comparator<Version> {
      * return this
      * 2.3.4
      */
-    private String getNumberVersion(String firstV) {
+    protected String getNumberVersion(String firstV) {
         String res = firstV;
         if (!firstV.matches("[0-9.]+") && firstV.contains("-")) {
             res = firstV.split("-")[1];
