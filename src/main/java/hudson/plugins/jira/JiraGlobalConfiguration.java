@@ -13,7 +13,7 @@ public class JiraGlobalConfiguration extends GlobalConfiguration {
 
     @Nonnull
     public static JiraGlobalConfiguration get() {
-        return (JiraGlobalConfiguration) Jenkins.getInstance().getDescriptorOrDie(JiraGlobalConfiguration.class);
+        return (JiraGlobalConfiguration) Jenkins.get().getDescriptorOrDie(JiraGlobalConfiguration.class);
     }
 
     public List<JiraSite> sites = new PersistedList<>(this);

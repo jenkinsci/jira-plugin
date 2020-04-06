@@ -24,6 +24,7 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
@@ -857,7 +858,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         // none is explicitly configured. try the default ---
         // if only one is configured, that must be it.
         List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
-        if (sites.size() == 1) {
+        if (sites != null && sites.size() == 1) {
             return sites.get(0);
         }
 
