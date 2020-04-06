@@ -23,11 +23,11 @@ import org.jvnet.hudson.test.MockFolder;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Iterator;
 
-import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by warden on 14.09.15.
