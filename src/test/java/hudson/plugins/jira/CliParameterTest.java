@@ -52,4 +52,10 @@ public class CliParameterTest {
         CLICommandInvoker.Result result = invoker.invokeWithArgs(project.getName(), "-p", "jiraversion=1.0");
         assertThat(result, succeeded());
     }
+
+    @Test
+    public void failing() {
+        assertTrue( false );
+    }
+
 }
