@@ -20,7 +20,6 @@
     <changelist>-SNAPSHOT</changelist>
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
-    <powermock.version>1.6.1</powermock.version>
     <jira-rest-client.version>5.2.1</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
     <workflow.version>2.0</workflow.version>
