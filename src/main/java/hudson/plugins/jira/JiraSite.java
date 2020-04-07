@@ -68,7 +68,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -486,7 +485,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return jiraSite;
     }
 
-    private static Cache<String, Optional<Issue>> makeIssueCache() {
+    protected static Cache<String, Optional<Issue>> makeIssueCache() {
         return CacheBuilder.newBuilder().concurrencyLevel(2).expireAfterAccess(2, TimeUnit.MINUTES).build();
     }
 
@@ -857,7 +856,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         // none is explicitly configured. try the default ---
         // if only one is configured, that must be it.
         List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
-        if (sites.size() == 1) {
+        if (sites != null && sites.size() == 1) {
             return sites.get(0);
         }
 

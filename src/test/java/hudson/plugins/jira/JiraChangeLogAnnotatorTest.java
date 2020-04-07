@@ -1,6 +1,5 @@
 package hudson.plugins.jira;
 
-import com.google.common.collect.Sets;
 import hudson.MarkupText;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Run;
@@ -10,17 +9,24 @@ import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
-import org.powermock.reflect.Whitebox;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
+import org.mockito.internal.util.reflection.Whitebox;
 
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -33,7 +39,7 @@ public class JiraChangeLogAnnotatorTest {
     public void before() throws Exception {
         JiraSession session = mock(JiraSession.class);
         when(session.getProjectKeys()).thenReturn(
-                Sets.newHashSet("DUMMY", "JENKINS"));
+            new HashSet(Arrays.asList( "DUMMY", "JENKINS")));
 
         this.site = mock(JiraSite.class);
         when(site.getSession()).thenReturn(session);
@@ -47,7 +53,7 @@ public class JiraChangeLogAnnotatorTest {
 
         // create inner objects
         Whitebox.setInternalState(site, "projectUpdateLock", new ReentrantLock());
-        Whitebox.setInternalState(site, "issueCache", (Object)Whitebox.invokeMethod(JiraSite.class, "makeIssueCache"));
+        Whitebox.setInternalState(site, "issueCache", JiraSite.makeIssueCache());
     }
 
     @Test

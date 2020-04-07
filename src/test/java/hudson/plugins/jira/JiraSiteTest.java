@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
@@ -8,8 +9,12 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.ItemGroup;
+import hudson.model.Job;
+import hudson.util.DescribableList;
 import hudson.util.Secret;
 import hudson.util.XStream2;
+import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -20,11 +25,21 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Collections;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.empty;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-public class JiraSite2Test {
+public class JiraSiteTest
+{
 
     private static final String ANY_USER = "Kohsuke";
     private static final String ANY_PASSWORD = "Kawaguchi";
@@ -259,4 +274,111 @@ public class JiraSite2Test {
         assertEquals(credentials.getUsername(), CredentialsHelper.lookupSystemCredentials(cred, null).getUsername());
         assertEquals(credentials.getPassword(), CredentialsHelper.lookupSystemCredentials(cred, null).getPassword());
     }
+
+    @Test
+    @WithoutJenkins
+    public void siteAsProjectProperty() throws Exception {
+        JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());
+        Job<?, ?> job = mock( Job.class);
+        JiraProjectProperty jpp = mock(JiraProjectProperty.class);
+        when( job.getProperty(JiraProjectProperty.class)).thenReturn( jpp );
+        when( jpp.getSite() ).thenReturn( jiraSite );
+
+        assertEquals( jiraSite.getUrl(), JiraSite.get( job ).getUrl() );
+    }
+
+    @Test
+    public void projectPropertySiteAndParentBothNull() {
+        JiraGlobalConfiguration jiraGlobalConfiguration = mock(JiraGlobalConfiguration.class);
+        Job<?, ?> job = mock( Job.class);
+        JiraProjectProperty jpp = mock(JiraProjectProperty.class);
+
+        when( job.getProperty(JiraProjectProperty.class)).thenReturn( jpp );
+        when( jpp.getSite() ).thenReturn( null );
+        when( job.getParent()).thenReturn( null );
+        when( jiraGlobalConfiguration.getSites() ).thenReturn( Collections.emptyList() );
+
+        assertNull( JiraSite.get( job ) );
+    }
+
+    @Test
+    public void noProjectPropertyParentNotFolderAndNotItem() {
+        JiraGlobalConfiguration.get().setSites( null );
+        Job<?, ?> job = mock( Job.class);
+        ItemGroup nonFolderParent = mock( ItemGroup.class );
+
+        when( job.getProperty(JiraProjectProperty.class)).thenReturn( null );
+        when( job.getParent()).thenReturn( nonFolderParent );
+
+        assertNull( JiraSite.get( job ) );
+    }
+
+    @Test
+    public void noProjectPropertyUpFoldersWithNoProperty() {
+        JiraGlobalConfiguration jiraGlobalConfiguration = mock(JiraGlobalConfiguration.class);
+        Job<?, ?> job = mock( Job.class);
+        ItemGroup nonFolderParent = mock( ItemGroup.class );
+        AbstractFolder folder1 = mock( AbstractFolder.class );
+        DescribableList folder1Properties = mock( DescribableList.class );
+        AbstractFolder folder2 = mock( AbstractFolder.class );
+        DescribableList folder2Properties = mock( DescribableList.class );
+
+        when( job.getProperty(JiraProjectProperty.class)).thenReturn( null );
+        when( job.getParent()).thenReturn( folder1 );
+        when( folder1.getProperties() ).thenReturn( folder1Properties );
+        when( folder1Properties.get( JiraFolderProperty.class ) ).thenReturn( null );
+        when( folder1.getParent() ).thenReturn( folder2 );
+        when( folder2.getProperties() ).thenReturn( folder2Properties );
+        when( folder2Properties.get( JiraFolderProperty.class ) ).thenReturn( null );
+        when( folder2.getParent() ).thenReturn( nonFolderParent );
+        when( jiraGlobalConfiguration.getSites() ).thenReturn( Collections.emptyList() );
+
+        assertNull( JiraSite.get( job ) );
+    }
+
+
+    @Test
+    public void noProjectPropertyFindFolderPropertyWithNullZeroLengthAndValidSites()  throws Exception {
+        JiraSite jiraSite1 = new JiraSite(new URL("https://example1.org/").toExternalForm());
+        JiraSite jiraSite2 = new JiraSite(new URL("https://example2.org/").toExternalForm());
+
+        Job<?, ?> job = mock( Job.class);
+
+        AbstractFolder folder1 = mock( AbstractFolder.class );
+        DescribableList folder1Properties = mock( DescribableList.class );
+        AbstractFolder folder2 = mock( AbstractFolder.class );
+        DescribableList folder2Properties = mock( DescribableList.class );
+        AbstractFolder folder3 = mock( AbstractFolder.class );
+        DescribableList folder3Properties = mock( DescribableList.class );
+        JiraFolderProperty jfp = mock(JiraFolderProperty.class);
+
+        when( job.getProperty(JiraProjectProperty.class)).thenReturn( null );
+        when( job.getParent()).thenReturn( folder1 );
+        when( folder1.getProperties() ).thenReturn( folder1Properties );
+        when( folder1Properties.get( JiraFolderProperty.class ) ).thenReturn( jfp );
+        when( folder1.getParent() ).thenReturn( folder2 );
+        when( folder2.getProperties() ).thenReturn( folder2Properties );
+        when( folder2Properties.get( JiraFolderProperty.class ) ).thenReturn( jfp );
+        when( folder3.getParent() ).thenReturn( folder3 );
+        when( folder3.getProperties() ).thenReturn( folder3Properties );
+        when( folder3Properties.get( JiraFolderProperty.class ) ).thenReturn( jfp );
+        when( folder3.getParent() ).thenReturn( Jenkins.get() );
+        when( jfp.getSites() ).thenReturn( new JiraSite[]{jiraSite2,jiraSite1} );
+
+        assertEquals( jiraSite2.getUrl(), JiraSite.get( job ).getUrl() );
+    }
+
+    @Test
+    public void siteConfiguredGlobally() throws Exception {
+        JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());
+        JiraGlobalConfiguration.get().setSites( Collections.singletonList( jiraSite ) );
+        Job<?, ?> job = mock( Job.class);
+        ItemGroup nonFolderParent = mock( ItemGroup.class );
+
+        when( job.getProperty(JiraProjectProperty.class)).thenReturn( null );
+        when( job.getParent() ).thenReturn( nonFolderParent );
+
+        assertEquals( jiraSite.getUrl(), JiraSite.get(job).getUrl() );
+    }
+
 }

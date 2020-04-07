@@ -2,11 +2,10 @@ package hudson.plugins.jira;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import com.google.common.collect.Lists;
 
 import hudson.Extension;
 import hudson.FilePath;
@@ -50,7 +49,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         if(labels != null)
             this.labels = labels;
         else
-            this.labels = Lists.newArrayList();
+            this.labels = new ArrayList();
     }
 
     @Override

@@ -11,8 +11,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.junit.Assert.*;
-import static hudson.cli.CLICommandInvoker.Matcher.*;
+import static org.junit.Assert.assertThat;
+import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
 
 
 public class CliParameterTest {

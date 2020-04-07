@@ -20,7 +20,6 @@
     <changelist>-SNAPSHOT</changelist>
     <java.level>8</java.level>
     <mockito.version>1.10.19</mockito.version>
-    <powermock.version>1.6.3</powermock.version>
     <jira-rest-client.version>5.2.1</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
     <workflow.version>2.0</workflow.version>
@@ -33,30 +32,10 @@
     <findbugs.failOnError>false</findbugs.failOnError>
 
     <!-- tests -->
-    <groovy.version>2.4.5</groovy.version>
+    <groovy.version>2.4.15</groovy.version>
     <surefire.version>2.20</surefire.version>
     <configuration-as-code.version>1.36</configuration-as-code.version>
   </properties>
-
-  <profiles>
-    <profile>
-      <id>doclint-java8-disable</id>
-      <activation>
-        <jdk>[1.8,)</jdk>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <configuration>
-              <additionalparam>-Xdoclint:none</additionalparam>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
   <scm>
     <connection>scm:git:git://github.com/jenkinsci/jira-plugin.git</connection>
@@ -112,41 +91,22 @@
   </reporting>
 
   <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <doclint>none</doclint>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
     <plugins>
       <plugin>
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
         <version>4.3.0</version>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.gmaven</groupId>
-        <artifactId>gmaven-plugin</artifactId>
-        <configuration>
-          <source>1.${java.level}</source>
-          <providerSelection>1.8</providerSelection>
-        </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.codehaus.gmaven.runtime</groupId>
-            <artifactId>gmaven-runtime-1.8</artifactId>
-            <version>1.5</version>
-          </dependency>
-          <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>${groovy.version}</version>
-          </dependency>
-        </dependencies>
-        <executions>
-          <execution>
-            <goals>
-              <goal>generateStubs</goal>
-              <goal>compile</goal>
-              <goal>generateTestStubs</goal>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
       </plugin>
       <!-- spotbugs is defined in parent plugin-pom but overriding some things here -->
       <plugin>
@@ -171,7 +131,7 @@
            </configuration>
          </execution>
        </executions>
-     </plugin>
+      </plugin>
     </plugins>
   </build>
 
@@ -332,44 +292,14 @@
     </dependency>
     <dependency>
       <groupId>org.hamcrest</groupId>
-      <artifactId>hamcrest-all</artifactId>
-      <version>1.3</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>cglib</groupId>
-      <artifactId>cglib-nodep</artifactId>
-      <version>2.2</version>
+      <artifactId>hamcrest-core</artifactId>
+      <version>2.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
       <version>${mockito.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <version>${powermock.version}</version>
-      <scope>test</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>junit</groupId>
-          <artifactId>junit</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito</artifactId>
-      <version>${powermock.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.spockframework</groupId>
-      <artifactId>spock-core</artifactId>
-      <version>1.1-groovy-2.4</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -409,7 +339,7 @@
       <dependency>
         <groupId>org.codehaus.groovy</groupId>
         <artifactId>groovy-all</artifactId>
-        <version>2.4.12</version>
+        <version>${groovy.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>

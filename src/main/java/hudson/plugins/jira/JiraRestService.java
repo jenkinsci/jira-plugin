@@ -15,7 +15,6 @@
  */
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
@@ -39,8 +38,6 @@ import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Iterators;
-import com.google.common.collect.Lists;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.extension.ExtendedVersionInput;
@@ -56,7 +53,6 @@ import org.joda.time.format.DateTimeFormatter;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -69,7 +65,6 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
@@ -170,7 +165,8 @@ public class JiraRestService {
 
     public List<IssueType> getIssueTypes() {
         try {
-            return Lists.newArrayList(jiraRestClient.getMetadataClient().getIssueTypes().get(timeout, TimeUnit.SECONDS));
+            return StreamSupport.stream(jiraRestClient.getMetadataClient().getIssueTypes().get( timeout, TimeUnit.SECONDS ).spliterator(), false ).
+                collect( Collectors.toList() );
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get issue types error. cause: " + e.getMessage(), e);
             return Collections.emptyList();
@@ -179,7 +175,11 @@ public class JiraRestService {
 
     public List<Priority> getPriorities() {
         try {
-            return Lists.newArrayList(jiraRestClient.getMetadataClient().getPriorities().get(timeout, TimeUnit.SECONDS));
+            return StreamSupport.stream(jiraRestClient.getMetadataClient().
+                                            getPriorities().get(timeout, TimeUnit.SECONDS).
+                                            spliterator(),
+                                        false).
+                collect( Collectors.toList() );
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get priorities error. cause: " + e.getMessage(), e);
             return Collections.emptyList();
@@ -205,7 +205,8 @@ public class JiraRestService {
             final SearchResult searchResult = jiraRestClient.getSearchClient()
                                                             .searchJql(jqlSearch, maxResults, 0, null)
                                                             .get(timeout, TimeUnit.SECONDS);
-            return Lists.newArrayList(searchResult.getIssues());
+            return StreamSupport.stream(searchResult.getIssues().spliterator(), false).
+                collect( Collectors.toList() );
         } catch(TimeoutException e) {
             LOGGER.log(WARNING, "Jira REST client timeout from jql search error. cause: " + e.getMessage(), e);
             throw e;
@@ -293,8 +294,9 @@ public class JiraRestService {
             // See upstream fix for setAssigneeName:
             //    https://bitbucket.org/atlassian/jira-rest-java-client/pull-requests/104/change-field-name-from-name-to-id-for/diff 
             builder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", assignee)));
-	}
-        if (Iterators.size(components.iterator()) > 0){
+	    }
+
+        if (StreamSupport.stream( components.spliterator(), false ).count() > 0){
             builder.setComponentsNames(components);
         }
 
@@ -378,7 +380,8 @@ public class JiraRestService {
             final Iterable<Transition> transitions = jiraRestClient.getIssueClient()
                                                                    .getTransitions(issue)
                                                                    .get(timeout, TimeUnit.SECONDS);
-            return Lists.newArrayList(transitions);
+            return StreamSupport.stream(transitions.spliterator(), false).
+                collect( Collectors.toList() );
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get available actions error. cause: " + e.getMessage(), e);
             return Collections.emptyList();
@@ -389,7 +392,8 @@ public class JiraRestService {
         try {
             final Iterable<Status> statuses = jiraRestClient.getMetadataClient().getStatuses()
                                                             .get(timeout, TimeUnit.SECONDS);
-            return Lists.newArrayList(statuses);
+            return StreamSupport.stream(statuses.spliterator(), false).
+                collect( Collectors.toList());
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get statuses error. cause: " + e.getMessage(), e);
             return Collections.emptyList();

@@ -1,4 +1,10 @@
-import com.atlassian.jira.rest.client.api.domain.*;
+
+import com.atlassian.jira.rest.client.api.domain.Component;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Status;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.atlassian.jira.rest.client.api.domain.User;
 import hudson.plugins.jira.JiraRestService;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;

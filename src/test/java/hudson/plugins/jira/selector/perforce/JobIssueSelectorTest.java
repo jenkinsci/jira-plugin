@@ -1,7 +1,5 @@
 package hudson.plugins.jira.selector.perforce;
 
-
-import com.google.common.collect.Sets;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.ParameterValue;
@@ -14,9 +12,11 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -61,7 +61,7 @@ public abstract class JobIssueSelectorTest {
         parameters.add(parameterTwo);
         ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
         Assert.assertEquals(2, ids.size());
-        Set<String> expected = Sets.newTreeSet(Sets.newHashSet("JIRA-123", "JIRA-321"));
+        Set<String> expected = new TreeSet(Arrays.asList("JIRA-123", "JIRA-321"));
         Assert.assertEquals(expected, ids);
     }
     @Test
@@ -89,7 +89,7 @@ public abstract class JobIssueSelectorTest {
 
         Set<String> ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
         Assert.assertEquals(1, ids.size());
-        Set<String> expected = Sets.newTreeSet(Sets.newHashSet("GC-131"));
+        Set<String> expected = new TreeSet<>(Collections.singletonList("GC-131"));
         Assert.assertEquals(expected, ids);
     }
 }

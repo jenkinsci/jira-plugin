@@ -2,10 +2,9 @@ package hudson.plugins.jira;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.google.common.collect.Maps;
 
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -79,7 +78,7 @@ public class RunScmChangeExtractor {
             }
         }
         // jenkins workflow plugin etc.
-        return Maps.newHashMap();
+        return new HashMap();
     }
 
 }
