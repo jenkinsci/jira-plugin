@@ -991,8 +991,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return "Jira Site";
         }
 
-        private JiraSession session;
-
         @SuppressWarnings("unused") // used by stapler
         public FormValidation doCheckUrl(@QueryParameter String value)
             throws IOException, ServletException {
@@ -1083,7 +1081,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
             site.setThreadExecutorNumber(threadExecutorNumber);
 
-            session = null;
+            JiraSession session = null;
             try {
                 session = site.getSession();
                 session.getMyPermissions();
@@ -1091,9 +1089,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             } catch (RuntimeException e) {
                 LOGGER.log(Level.WARNING, "Failed to login to Jira at " + url, e);
             } finally {
-                if(site!=null){
-                    site.destroy();
-                }
+                site.destroy();
             }
 
             return FormValidation.error("Failed to login to Jira");
