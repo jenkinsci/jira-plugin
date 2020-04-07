@@ -348,11 +348,11 @@ class Updater {
 
     protected void appendChangeTimestampToDescription(StringBuilder description, JiraSite site, long timestamp) {
         DateFormat df = null;
-        if (StringUtils.isNotBlank(site.getDateTimePattern())) {
-            df = new SimpleDateFormat(site.getDateTimePattern());
-        } else {
+        if (StringUtils.isBlank(site.getDateTimePattern())) {
             // default format for current locale
             df = new SimpleDateFormat("d/M/yy hh:mm a", Locale.getDefault());
+        } else {
+            df = new SimpleDateFormat(site.getDateTimePattern());
         }
         Date changeDate = new Date(timestamp);
         String dateTimeString = df.format(changeDate);
