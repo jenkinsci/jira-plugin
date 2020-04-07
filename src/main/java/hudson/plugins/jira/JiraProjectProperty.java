@@ -3,18 +3,16 @@ package hudson.plugins.jira;
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import hudson.Extension;
 import hudson.Util;
-import hudson.init.InitMilestone;
-import hudson.init.Initializer;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
 import hudson.util.ListBoxModel;
-import java.util.List;
-import java.util.stream.Stream;
-import javax.annotation.Nullable;
-import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+
+import javax.annotation.Nullable;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Associates {@link Job} with {@link JiraSite}.
