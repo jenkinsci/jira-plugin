@@ -1,5 +1,5 @@
 language: java
-dist: xenial
+dist: bionic 
 sudo: false
 
 # required for SonarCloud
@@ -7,7 +7,6 @@ git:
   depth: false
 
 jdk:
-  - openjdk8
   - openjdk11
 
 # TravisCI build is running only for coveralls.io/Coverage
