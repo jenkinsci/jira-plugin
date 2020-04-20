@@ -8,9 +8,12 @@ import com.google.common.util.concurrent.SettableFuture;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.nio.client.HttpAsyncClient;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.protocol.HttpContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
@@ -19,11 +22,13 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHttpAsyncClient
 {
-    private final HttpAsyncClient client;
+    private final Logger log = LoggerFactory.getLogger( this.getClass() );
+
+    private final CloseableHttpAsyncClient client;
     private final ThreadLocalContextManager<C> threadLocalContextManager;
     private final Executor executor;
 
-    SettableFuturePromiseHttpPromiseAsyncClient(HttpAsyncClient client, ThreadLocalContextManager<C> threadLocalContextManager, Executor executor)
+    SettableFuturePromiseHttpPromiseAsyncClient(CloseableHttpAsyncClient client, ThreadLocalContextManager<C> threadLocalContextManager, Executor executor)
     {
         this.client = checkNotNull(client);
         this.threadLocalContextManager = checkNotNull(threadLocalContextManager);
@@ -35,18 +40,22 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
     {
     	// TODO after migrating from atlassian-util-concurrent 3.0.0 to 4.0.0 the SettableFuture.create() maybe obsolete ?
         final SettableFuture<HttpResponse> future = SettableFuture.create();
-        Future<org.apache.http.HttpResponse> clientFuture = client.execute(request, context, new ThreadLocalContextAwareFutureCallback<C, HttpResponse>(threadLocalContextManager)
+        Future<org.apache.http.HttpResponse> clientFuture = client.execute(request, context, new ThreadLocalContextAwareFutureCallback<C>(threadLocalContextManager)
         {
             @Override
             void doCompleted(final HttpResponse httpResponse)
             {
                 executor.execute( () -> future.set(httpResponse));
+                log.trace( "Closing in doCompleted()" );
+                closeClient();
             }
 
             @Override
             void doFailed(final Exception ex)
             {
                 executor.execute(() -> future.setException(ex));
+                log.trace( "Closing in doFailed()" );
+                closeClient();
             }
 
             @Override
@@ -54,9 +63,19 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
             {
                 final TimeoutException timeoutException = new TimeoutException();
                 executor.execute(() -> future.setException(timeoutException));
+                log.trace( "Closing in doCancelled()" );
+                closeClient();
             }
         });
         return Promises.forFuture(clientFuture,executor);
+    }
+
+    private void closeClient() {
+        try {
+            client.close();
+        } catch ( IOException e ) {
+            log.error( "Close failed" , e );
+        }
     }
 
     @VisibleForTesting
@@ -77,7 +96,7 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
         }
     }
 
-    private static abstract class ThreadLocalContextAwareFutureCallback<C, HttpResponse> implements FutureCallback<HttpResponse>
+    private static abstract class ThreadLocalContextAwareFutureCallback<C> implements FutureCallback<HttpResponse>
     {
         private final ThreadLocalContextManager<C> threadLocalContextManager;
         private final C threadLocalContext;
