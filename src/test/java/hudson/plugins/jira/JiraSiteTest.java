@@ -381,4 +381,12 @@ public class JiraSiteTest
         assertEquals( jiraSite.getUrl(), JiraSite.get(job).getUrl() );
     }
 
+    @Test
+    public void getIssueWithoutSession() throws Exception {
+        JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());        
+        //Verify that no session will be created
+        assertNull(jiraSite.getSession());
+        assertNotNull(jiraSite.getIssue("JIRA-1234"));
+    }
+
 }
