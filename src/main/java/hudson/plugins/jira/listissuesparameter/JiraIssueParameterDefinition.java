@@ -26,7 +26,7 @@ import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import net.sf.json.JSONObject;
 
-import org.codehaus.plexus.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.Stapler;
