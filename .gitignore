@@ -1,6 +1,7 @@
 .classpath
 .project
 .settings
+.factorypath
 build
 target
 bin

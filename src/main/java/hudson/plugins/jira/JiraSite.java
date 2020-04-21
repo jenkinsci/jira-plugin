@@ -515,6 +515,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     private JiraSession createSession() {
         if (StringUtils.isEmpty(credentialsId)) {
+            LOGGER.warning("Jira session could not be created. No credentials supplied.");
             return null;    // remote access not supported
         }
 
@@ -872,7 +873,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             Optional<Issue> issue = issueCache.get(id, () -> {
                 JiraSession session = getSession();
                 if (session == null) {
-                    return null;
+                    return Optional.absent();
                 }
                 return Optional.fromNullable(session.getIssue(id));
             });
