@@ -388,7 +388,7 @@ public class JiraSiteTest
         JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());        
         //Verify that no session will be created
         assertNull(jiraSite.getSession());
-        JiraIssue issue = jiraSite.getIssue("JIRA-1234");
+        JiraIssue issue = jiraSite.getIssue("JIRA-1235");
         assertNull(issue);
     }
 
