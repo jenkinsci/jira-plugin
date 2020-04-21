@@ -11,6 +11,7 @@ import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
+import hudson.plugins.jira.model.JiraIssue;
 import hudson.util.DescribableList;
 import hudson.util.Secret;
 import hudson.util.XStream2;
@@ -382,11 +383,13 @@ public class JiraSiteTest
     }
 
     @Test
+    @WithoutJenkins
     public void getIssueWithoutSession() throws Exception {
         JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());        
         //Verify that no session will be created
         assertNull(jiraSite.getSession());
-        assertNotNull(jiraSite.getIssue("JIRA-1234"));
+        JiraIssue issue = jiraSite.getIssue("JIRA-1234");
+        assertNull(issue);
     }
 
 }
