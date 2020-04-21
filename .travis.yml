@@ -4,6 +4,9 @@ language: java
 dist: bionic
 sudo: false
 
+# Build only PRs and master branch
+if: type = pull_request OR branch = master
+
 # required for SonarCloud
 git:
   depth: false
