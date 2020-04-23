@@ -11,6 +11,7 @@ import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
+import hudson.plugins.jira.model.JiraIssue;
 import hudson.util.DescribableList;
 import hudson.util.Secret;
 import hudson.util.XStream2;
@@ -379,6 +380,16 @@ public class JiraSiteTest
         when( job.getParent() ).thenReturn( nonFolderParent );
 
         assertEquals( jiraSite.getUrl(), JiraSite.get(job).getUrl() );
+    }
+
+    @Test
+    @WithoutJenkins
+    public void getIssueWithoutSession() throws Exception {
+        JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());        
+        //Verify that no session will be created
+        assertNull(jiraSite.getSession());
+        JiraIssue issue = jiraSite.getIssue("JIRA-1235");
+        assertNull(issue);
     }
 
 }
