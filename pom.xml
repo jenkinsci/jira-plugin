@@ -32,9 +32,7 @@
     <spotbugs.failOnError>false</spotbugs.failOnError>
 
     <!-- tests -->
-    <groovy.version>2.4.15</groovy.version>
-    <surefire.version>2.20</surefire.version>
-    <configuration-as-code.version>1.36</configuration-as-code.version>
+    <test.configuration-as-code.version>1.36</test.configuration-as-code.version>
   </properties>
 
   <scm>
@@ -292,7 +290,7 @@
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
-      <version>${configuration-as-code.version}</version>
+      <version>${test.configuration-as-code.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -329,11 +327,6 @@
         <artifactId>jenkins-test-harness</artifactId>
         <version>2.63</version>
         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.groovy</groupId>
-        <artifactId>groovy-all</artifactId>
-        <version>${groovy.version}</version>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
