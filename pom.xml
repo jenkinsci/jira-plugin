@@ -319,13 +319,6 @@
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.codehaus.groovy</groupId>
-      <artifactId>groovy-all</artifactId>
-      <version>${test.groovy.version}</version>
-      <scope>test</scope>
-    </dependency>
-
   </dependencies>
 
   <dependencyManagement>
