@@ -32,9 +32,9 @@
     <findbugs.failOnError>false</findbugs.failOnError>
 
     <!-- tests -->
-    <groovy.version>2.4.19</groovy.version>
-    <surefire.version>2.20</surefire.version>
-    <configuration-as-code.version>1.36</configuration-as-code.version>
+    <test.groovy.version>2.4.19</test.groovy.version>
+    <test.surefire.version>2.20</test.surefire.version>
+    <test.configuration-as-code.version>1.36</test.configuration-as-code.version>
   </properties>
 
   <scm>
@@ -287,7 +287,7 @@
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
-      <version>${configuration-as-code.version}</version>
+      <version>${test.configuration-as-code.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -327,6 +327,12 @@
       <version>1.20</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.codehaus.groovy</groupId>
+      <artifactId>groovy-all</artifactId>
+      <version>${test.groovy.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
@@ -335,11 +341,6 @@
         <groupId>org.jenkins-ci.main</groupId>
         <artifactId>jenkins-test-harness</artifactId>
         <version>2.56</version>
-      </dependency>
-      <dependency>
-        <groupId>org.codehaus.groovy</groupId>
-        <artifactId>groovy-all</artifactId>
-        <version>${groovy.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
