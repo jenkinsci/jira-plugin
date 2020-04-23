@@ -105,6 +105,17 @@
         <groupId>org.eluder.coveralls</groupId>
         <artifactId>coveralls-maven-plugin</artifactId>
         <version>4.3.0</version>
+        <!-- Explicit dependency on jaxb-api to avoid problems with
+          JDK9 and later, until a new release is made:
+          See also https://github.com/trautonen/coveralls-maven-plugin/issues/112
+        -->
+        <dependencies>
+          <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+          </dependency>
+        </dependencies>
       </plugin>
       <!-- spotbugs is defined in parent plugin-pom but overriding some things here -->
       <plugin>
