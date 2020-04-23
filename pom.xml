@@ -33,7 +33,6 @@
 
     <!-- tests -->
     <test.groovy.version>2.4.19</test.groovy.version>
-    <test.surefire.version>2.20</test.surefire.version>
     <test.configuration-as-code.version>1.36</test.configuration-as-code.version>
   </properties>
 
@@ -337,7 +336,6 @@
         <version>2.63</version>
         <scope>test</scope>
       </dependency>
-
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
