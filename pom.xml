@@ -32,7 +32,6 @@
     <spotbugs.failOnError>false</spotbugs.failOnError>
 
     <!-- tests -->
-    <test.groovy.version>2.4.19</test.groovy.version>
     <test.configuration-as-code.version>1.36</test.configuration-as-code.version>
   </properties>
 
