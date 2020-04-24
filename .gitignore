@@ -5,8 +5,13 @@
 build
 target
 bin
+
+# ignore all Idea files except for common codestyle settings
 *.iml
-.idea/
+.idea/*
+!.idea/checkstyle-idea.xml
+!.idea/codeStyles/
+
 work
 atlassian-ide-plugin.xml
 .work/
