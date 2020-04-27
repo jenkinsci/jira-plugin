@@ -849,6 +849,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         Pattern result = getUserPattern();
         return result == null ? DEFAULT_ISSUE_PATTERN : result;
     }
+    
+    /**
+     * 
+     */
+    @Deprecated	
+    public Set<String> getProjectKeys() {
+        return getProjectKeys(null);	    
+    }	    
+		    
 
     /**
      * Gets the list of project IDs in this Jira.
