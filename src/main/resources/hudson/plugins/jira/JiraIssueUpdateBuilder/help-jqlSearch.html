@@ -1,12 +1,16 @@
 <div>
   Issues which match this JQL Query will be progressed using the specified workflow action.
-  <p />
+  <p/>
   This can contain <strong>$PARAM</strong> values which will be replaced by the build parameters.
 
   <p>
     Example:
-    <blockquote><pre>project = JENKINS and fixVersion = "$RELEASE_VERSION" and status not in (Resolved, Closed)</pre></blockquote>
-    or (e.g., combined with a Jira Issue Parameter, selecting one issue from a JQL result set):
-    <blockquote><pre>issue = $ISSUE_ID</pre></blockquote>
+  <blockquote>
+    <pre>project = JENKINS and fixVersion = "$RELEASE_VERSION" and status not in (Resolved, Closed)</pre>
+  </blockquote>
+  or (e.g., combined with a Jira Issue Parameter, selecting one issue from a JQL result set):
+  <blockquote>
+    <pre>issue = $ISSUE_ID</pre>
+  </blockquote>
   </p>
 </div>

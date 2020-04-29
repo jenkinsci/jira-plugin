@@ -24,41 +24,43 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
 
 public class JiraIssueParameterValue extends ParameterValue {
-    private static final long serialVersionUID = -1078274709338167211L;
 
-    private String value;
+  private static final long serialVersionUID = -1078274709338167211L;
 
-    @DataBoundConstructor
-    public JiraIssueParameterValue(final String name, final String value) {
-        super(name);
-        this.value = value;
-    }
+  private String value;
 
-    @Override
-    public void buildEnvironment(final Run<?, ?> run, final EnvVars env) {
-        env.put(getName(), getValue().toString());
-    }
+  @DataBoundConstructor
+  public JiraIssueParameterValue(final String name, final String value) {
+    super(name);
+    this.value = value;
+  }
 
-    @Override
-    public VariableResolver<String> createVariableResolver(final AbstractBuild<?, ?> build) {
-        return new VariableResolver<String>() {
-            public String resolve(final String name) {
-                return JiraIssueParameterValue.this.name.equals(name) ? getValue().toString() : null;
-            }
-        };
-    }
+  @Override
+  public void buildEnvironment(final Run<?, ?> run, final EnvVars env) {
+    env.put(getName(), getValue().toString());
+  }
 
-    public void setValue(final String value) {
-        this.value = value;
-    }
+  @Override
+  public VariableResolver<String> createVariableResolver(final AbstractBuild<?, ?> build) {
+    return new VariableResolver<String>() {
+      public String resolve(final String name) {
+        return JiraIssueParameterValue.this.name.equals(name) ? getValue().toString()
+            : null;
+      }
+    };
+  }
 
-    @Exported
-    public Object getValue() {
-        return value;
-    }
+  @Exported
+  public Object getValue() {
+    return value;
+  }
 
-    @Override
-    public String toString() {
-        return "(JiraIssueParameterValue) " + getName() + "='" + value + "'";
-    }
+  public void setValue(final String value) {
+    this.value = value;
+  }
+
+  @Override
+  public String toString() {
+    return "(JiraIssueParameterValue) " + getName() + "='" + value + "'";
+  }
 }

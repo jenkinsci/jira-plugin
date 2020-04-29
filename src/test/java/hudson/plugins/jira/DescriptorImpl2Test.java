@@ -21,52 +21,49 @@ import static org.mockito.Mockito.when;
  */
 public class DescriptorImpl2Test {
 
-    JiraSite.DescriptorImpl descriptor = spy(new JiraSite.DescriptorImpl());
+  @Rule
+  public final ExpectedException exception = ExpectedException.none();
+  @Rule
+  public JenkinsRule r = new JenkinsRule();
+  JiraSite.DescriptorImpl descriptor = spy(new JiraSite.DescriptorImpl());
+  JiraSiteBuilder builder = spy(new JiraSiteBuilder());
+  JiraSite jiraSite = mock(JiraSite.class);
+  JiraSession jiraSession = mock(JiraSession.class);
 
-    JiraSiteBuilder builder = spy(new JiraSiteBuilder());
+  @Before
+  public void prepareMocks() {
+    when(descriptor.getJiraSiteBuilder()).thenReturn(builder);
+    when(builder.build()).thenReturn(jiraSite);
+    when(jiraSite.getSession()).thenReturn(jiraSession);
+  }
 
-    JiraSite jiraSite = mock(JiraSite.class);
+  @Test
+  public void validateConnectionError() throws Exception {
+    when(jiraSession.getMyPermissions()).thenThrow(RestClientException.class);
+    FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
+        null, false, null,
+        JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT,
+        JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+        r.createFreeStyleProject());
 
-    JiraSession jiraSession = mock(JiraSession.class);
+    verify(descriptor).getJiraSiteBuilder();
+    verify(builder).build();
+    verify(jiraSite).getSession();
+    assertEquals(FormValidation.Kind.ERROR, validation.kind);
+  }
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+  @Test
+  public void validateConnectionOK() throws Exception {
+    when(jiraSession.getMyPermissions()).thenReturn(mock(Permissions.class));
+    FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
+        null, false, null,
+        JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT,
+        JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+        r.createFreeStyleProject());
 
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
-
-    @Before
-    public void prepareMocks() {
-        when(descriptor.getJiraSiteBuilder()).thenReturn(builder);
-        when(builder.build()).thenReturn(jiraSite);
-        when(jiraSite.getSession()).thenReturn(jiraSession);
-    }
-
-    @Test
-    public void validateConnectionError() throws Exception {
-        when(jiraSession.getMyPermissions()).thenThrow(RestClientException.class);
-        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
-                                                          null, false, null,
-                                                          JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-                                                          r.createFreeStyleProject());
-
-        verify(descriptor).getJiraSiteBuilder();
-        verify(builder).build();
-        verify(jiraSite).getSession();
-        assertEquals(FormValidation.Kind.ERROR, validation.kind);
-    }
-
-    @Test
-    public void validateConnectionOK() throws Exception {
-        when(jiraSession.getMyPermissions()).thenReturn(mock(Permissions.class));
-        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
-                                                          null, false, null,
-                                                          JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-                                                          r.createFreeStyleProject());
-
-        verify(descriptor).getJiraSiteBuilder();
-        verify(builder).build();
-        verify(jiraSite).getSession();
-        assertEquals(FormValidation.Kind.OK, validation.kind);
-    }
+    verify(descriptor).getJiraSiteBuilder();
+    verify(builder).build();
+    verify(jiraSite).getSession();
+    assertEquals(FormValidation.Kind.OK, validation.kind);
+  }
 }

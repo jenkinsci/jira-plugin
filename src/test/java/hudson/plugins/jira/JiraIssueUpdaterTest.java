@@ -4,62 +4,61 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.plugins.jira.selector.DefaultIssueSelector;
-
+import hudson.scm.ChangeLogParser;
+import hudson.scm.SCM;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import org.junit.Test;
+
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-import hudson.scm.ChangeLogParser;
-import hudson.scm.SCM;
-import org.junit.Test;
-
 public class JiraIssueUpdaterTest {
 
-    @Test
-    public void issueSelectorDefaultsToDefault() {
-        final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, null);
-        assertThat(updater.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
+  @Test
+  public void issueSelectorDefaultsToDefault() {
+    final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, null);
+    assertThat(updater.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
+  }
+
+  @Test
+  public void setIssueSelectorPersists() {
+    class TestSelector extends AbstractIssueSelector {
+
+      @Override
+      public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
+        throw new UnsupportedOperationException("Not supported yet.");
+      }
+
     }
 
-    @Test
-    public void setIssueSelectorPersists() {
-        class TestSelector extends AbstractIssueSelector {
+    final JiraIssueUpdater updater = new JiraIssueUpdater(new TestSelector(), null, null);
+    assertThat(updater.getIssueSelector(), instanceOf(TestSelector.class));
+  }
 
-            @Override
-            public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+  @Test
+  public void setScmPersists() {
+    class TestSCM extends SCM {
 
-        }
+      @Override
+      public ChangeLogParser createChangeLogParser() {
+        throw new UnsupportedOperationException("Not supported yet.");
+      }
 
-        final JiraIssueUpdater updater = new JiraIssueUpdater(new TestSelector(), null, null);
-        assertThat(updater.getIssueSelector(), instanceOf(TestSelector.class));
     }
 
-    @Test
-    public void setScmPersists() {
-        class TestSCM extends SCM {
+    final JiraIssueUpdater updater = new JiraIssueUpdater(null, new TestSCM(), null);
+    assertThat(updater.getScm(), instanceOf(TestSCM.class));
+  }
 
-            @Override
-            public ChangeLogParser createChangeLogParser() {
-                throw new UnsupportedOperationException("Not supported yet.");
-            }
+  @Test
+  public void setLabelsPersists() {
+    List<String> testLabels = Arrays.asList("testLabel1", "testLabel2");
 
-        }
-
-        final JiraIssueUpdater updater = new JiraIssueUpdater(null, new TestSCM(), null);
-        assertThat(updater.getScm(), instanceOf(TestSCM.class));
-    }
-
-    @Test
-    public void setLabelsPersists() {
-        List<String> testLabels = Arrays.asList("testLabel1", "testLabel2");
-
-        final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, testLabels);
-        assertThat(updater.getLabels(), is(testLabels));
-    }
+    final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, testLabels);
+    assertThat(updater.getLabels(), is(testLabels));
+  }
 
 }

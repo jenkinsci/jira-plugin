@@ -7,6 +7,10 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
+import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Optional;
+import java.util.Set;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -15,11 +19,6 @@ import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-
-import java.io.PrintStream;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -33,61 +32,59 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class IssueSelectorStepTest {
 
-    @Inject
-    private IssueSelectorStep.DescriptorImpl descriptor;
+  @ClassRule
+  public static JenkinsRule jenkinsRule = new JenkinsRule();
+  @Inject
+  private IssueSelectorStep.DescriptorImpl descriptor;
+  @Mock
+  private AbstractIssueSelector issueSelector;
+  @Mock
+  private TaskListener listener;
+  @Mock
+  private PrintStream logger;
+  @Mock
+  private Run run;
+  @Mock
+  private StepContext stepContext;
+  private IssueSelectorStep.IssueSelectorStepExecution stepExecution;
+  private IssueSelectorStep subject;
 
-    @Mock
-    private AbstractIssueSelector issueSelector;
-    @Mock
-    private TaskListener listener;
-    @Mock
-    private PrintStream logger;
-    @Mock
-    private Run run;
-    @Mock
-    private StepContext stepContext;
+  @Before
+  public void setUp() throws Exception {
+    jenkinsRule.getInstance().getInjector().injectMembers(this);
 
-    private IssueSelectorStep.IssueSelectorStepExecution stepExecution;
-    private IssueSelectorStep subject;
+    when(listener.getLogger()).thenReturn(logger);
+    when(stepContext.get(Node.class)).thenReturn(jenkinsRule.getInstance());
+    when(stepContext.get(Run.class)).thenReturn(run);
+    when(stepContext.get(TaskListener.class)).thenReturn(listener);
 
-    @ClassRule
-    public static JenkinsRule jenkinsRule = new JenkinsRule();
+    subject = (IssueSelectorStep) descriptor.newInstance(new HashMap<>());
+    subject.setIssueSelector(issueSelector);
+  }
 
+  @Test
+  public void runWithNullSite() throws Exception {
+    stepExecution = spy(
+        (IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
+    doReturn(Optional.empty()).when(stepExecution).getOptionalJiraSite();
 
-    @Before
-    public void setUp() throws Exception {
-        jenkinsRule.getInstance().getInjector().injectMembers(this);
+    Set<String> ids = stepExecution.run();
 
-        when(listener.getLogger()).thenReturn(logger);
-        when(stepContext.get(Node.class)).thenReturn(jenkinsRule.getInstance());
-        when(stepContext.get(Run.class)).thenReturn(run);
-        when(stepContext.get(TaskListener.class)).thenReturn(listener);
+    verify(run, times(1)).setResult(Result.FAILURE);
+    assertThat(ids, hasSize(0));
+  }
 
-        subject = (IssueSelectorStep) descriptor.newInstance(new HashMap<>());
-        subject.setIssueSelector(issueSelector);
-    }
+  @Test
+  public void run() throws Exception {
+    stepExecution = spy(
+        (IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
+    JiraSite site = mock(JiraSite.class);
 
-    @Test
-    public void runWithNullSite() throws Exception {
-        stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
-        doReturn(Optional.empty()).when(stepExecution).getOptionalJiraSite();
+    doReturn(Optional.of(site)).when(stepExecution).getOptionalJiraSite();
 
-        Set<String> ids = stepExecution.run();
+    stepExecution.run();
 
-        verify(run, times(1)).setResult(Result.FAILURE);
-        assertThat(ids, hasSize(0));
-    }
-
-    @Test
-    public void run() throws Exception {
-        stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
-        JiraSite site = mock(JiraSite.class);
-
-        doReturn(Optional.of(site)).when(stepExecution).getOptionalJiraSite();
-
-        stepExecution.run();
-
-        verify(run, times(0)).setResult(Result.FAILURE);
-        verify(issueSelector).findIssueIds(run, site, listener);
-    }
+    verify(run, times(0)).setResult(Result.FAILURE);
+    verify(issueSelector).findIssueIds(run, site, listener);
+  }
 }

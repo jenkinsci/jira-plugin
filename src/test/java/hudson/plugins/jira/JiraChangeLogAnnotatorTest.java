@@ -4,12 +4,6 @@ import hudson.MarkupText;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
-import org.junit.Before;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
-import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -17,7 +11,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
+import org.junit.Before;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.mockito.Mockito;
 import org.mockito.internal.util.reflection.Whitebox;
+import org.mockito.stubbing.Answer;
 
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
@@ -32,234 +31,237 @@ import static org.mockito.Mockito.when;
  * @author Kohsuke Kawaguchi
  */
 public class JiraChangeLogAnnotatorTest {
-    private static final String TITLE = "title with $sign to confuse TextMarkup.replace";
-    private JiraSite site;
 
-    @Before
-    public void before() throws Exception {
-        JiraSession session = mock(JiraSession.class);
-        when(session.getProjectKeys()).thenReturn(
-            new HashSet(Arrays.asList( "DUMMY", "JENKINS")));
+  private static final String TITLE = "title with $sign to confuse TextMarkup.replace";
+  private JiraSite site;
 
-        this.site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
-        when(site.getUrl(Mockito.anyString())).thenAnswer(
-                (Answer<URL>) invocation -> {
-                    String id = invocation.getArguments()[0].toString();
-                    return new URL("http://dummy/" + id);
-                });
-        when(site.getProjectKeys()).thenCallRealMethod();
-        when(site.getIssuePattern()).thenCallRealMethod();
+  @Before
+  public void before() throws Exception {
+    JiraSession session = mock(JiraSession.class);
+    when(session.getProjectKeys()).thenReturn(
+        new HashSet(Arrays.asList("DUMMY", "JENKINS")));
 
-        // create inner objects
-        Whitebox.setInternalState(site, "projectUpdateLock", new ReentrantLock());
-        Whitebox.setInternalState(site, "issueCache", JiraSite.makeIssueCache());
-    }
+    this.site = mock(JiraSite.class);
+    when(site.getSession()).thenReturn(session);
+    when(site.getUrl(Mockito.anyString())).thenAnswer(
+        (Answer<URL>) invocation -> {
+          String id = invocation.getArguments()[0].toString();
+          return new URL("http://dummy/" + id);
+        });
+    when(site.getProjectKeys()).thenCallRealMethod();
+    when(site.getIssuePattern()).thenCallRealMethod();
 
-    @Test
-    public void annotate() {
-        Run run = mock(Run.class);
+    // create inner objects
+    Whitebox.setInternalState(site, "projectUpdateLock", new ReentrantLock());
+    Whitebox.setInternalState(site, "issueCache", JiraSite.makeIssueCache());
+  }
 
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+  @Test
+  public void annotate() {
+    Run run = mock(Run.class);
 
-        MarkupText text = new MarkupText("marking up DUMMY-1.");
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+    when(run.getAction(JiraBuildAction.class)).thenReturn(
+        new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 
-        annotator.annotate(run, null, text);
+    MarkupText text = new MarkupText("marking up DUMMY-1.");
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
-        // make sure '$' didn't confuse the JiraChangeLogAnnotator
-        assertThat(text.toString(false), containsString(TITLE));
-        assertThat(text.toString(false), containsString("href"));
-    }
+    annotator.annotate(run, null, text);
 
-    @Test
-    public void annotateDisabledOnSiteLevel() {
-        Run run = mock(Run.class);
+    // make sure '$' didn't confuse the JiraChangeLogAnnotator
+    assertThat(text.toString(false), containsString(TITLE));
+    assertThat(text.toString(false), containsString("href"));
+  }
 
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
-        MarkupText text = new MarkupText("marking up DUMMY-1.");
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
-        doReturn(true).when(site).getDisableChangelogAnnotations();
+  @Test
+  public void annotateDisabledOnSiteLevel() {
+    Run run = mock(Run.class);
 
-        assertThat(text.toString(false), not(containsString("href")));
-    }
+    when(run.getAction(JiraBuildAction.class)).thenReturn(
+        new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+    MarkupText text = new MarkupText("marking up DUMMY-1.");
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+    doReturn(true).when(site).getDisableChangelogAnnotations();
 
-    @Test
-    public void annotateWf() {
-        Run run = mock(Run.class);
+    assertThat(text.toString(false), not(containsString("href")));
+  }
 
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+  @Test
+  public void annotateWf() {
+    Run run = mock(Run.class);
 
-        MarkupText text = new MarkupText("marking up DUMMY-1.");
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+    when(run.getAction(JiraBuildAction.class)).thenReturn(
+        new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 
-        annotator.annotate(run, null, text);
+    MarkupText text = new MarkupText("marking up DUMMY-1.");
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
-        // make sure '$' didn't confuse the JiraChangeLogAnnotator
-        assertThat(text.toString(false), containsString(TITLE));
-    }
+    annotator.annotate(run, null, text);
 
-    /**
-     * Jenkins' MarkupText#findTokens() doesn't work in our case if
-     * the whole pattern matches the following word boundary character
-     * (but not matching group 1).
-     * Regression test for this.
-     */
-    @Test
-    public void wordBoundaryProblem() {
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+    // make sure '$' didn't confuse the JiraChangeLogAnnotator
+    assertThat(text.toString(false), containsString(TITLE));
+  }
 
-        Run run = mock(Run.class);
+  /**
+   * Jenkins' MarkupText#findTokens() doesn't work in our case if the whole pattern matches the
+   * following word boundary character (but not matching group 1). Regression test for this.
+   */
+  @Test
+  public void wordBoundaryProblem() {
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
-        // old changelog annotator used MarkupText#findTokens
-        // That broke because of the space after the issue id.
-        MarkupText text = new MarkupText("DUMMY-4071 Text ");
-        annotator.annotate(run, null, text);
-        assertThat(text.toString(false), is("<a href='http://dummy/DUMMY-4071'>DUMMY-4071</a> Text "));
+    Run run = mock(Run.class);
 
-        text = new MarkupText("DUMMY-1,comment");
-        annotator.annotate(run, null, text);
-        assertThat(text.toString(false), is("<a href='http://dummy/DUMMY-1'>DUMMY-1</a>,comment"));
+    // old changelog annotator used MarkupText#findTokens
+    // That broke because of the space after the issue id.
+    MarkupText text = new MarkupText("DUMMY-4071 Text ");
+    annotator.annotate(run, null, text);
+    assertThat(text.toString(false),
+        is("<a href='http://dummy/DUMMY-4071'>DUMMY-4071</a> Text "));
 
-        text = new MarkupText("DUMMY-1.comment");
-        annotator.annotate(run, null, text);
-        assertThat(text.toString(false), is("<a href='http://dummy/DUMMY-1'>DUMMY-1</a>.comment"));
+    text = new MarkupText("DUMMY-1,comment");
+    annotator.annotate(run, null, text);
+    assertThat(text.toString(false), is("<a href='http://dummy/DUMMY-1'>DUMMY-1</a>,comment"));
 
-        text = new MarkupText("DUMMY-1!comment");
-        annotator.annotate(run, null, text);
-        assertThat(text.toString(false), is("<a href='http://dummy/DUMMY-1'>DUMMY-1</a>!comment"));
+    text = new MarkupText("DUMMY-1.comment");
+    annotator.annotate(run, null, text);
+    assertThat(text.toString(false), is("<a href='http://dummy/DUMMY-1'>DUMMY-1</a>.comment"));
 
-        text = new MarkupText("DUMMY-1\tcomment");
-        annotator.annotate(run, null, text);
-        assertThat(text.toString(false), is("<a href='http://dummy/DUMMY-1'>DUMMY-1</a>\tcomment"));
-    }
+    text = new MarkupText("DUMMY-1!comment");
+    annotator.annotate(run, null, text);
+    assertThat(text.toString(false), is("<a href='http://dummy/DUMMY-1'>DUMMY-1</a>!comment"));
 
-    @Test
-    public void matchMultipleIssueIds() {
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+    text = new MarkupText("DUMMY-1\tcomment");
+    annotator.annotate(run, null, text);
+    assertThat(text.toString(false), is("<a href='http://dummy/DUMMY-1'>DUMMY-1</a>\tcomment"));
+  }
 
-        Run run = mock(Run.class);
+  @Test
+  public void matchMultipleIssueIds() {
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
-        MarkupText text = new MarkupText("DUMMY-1 Text DUMMY-2,DUMMY-3 DUMMY-4!");
-        annotator.annotate(run, null, text);
+    Run run = mock(Run.class);
 
-        assertThat(text.toString(false), is(
-                "<a href='http://dummy/DUMMY-1'>DUMMY-1</a> Text " +
-                "<a href='http://dummy/DUMMY-2'>DUMMY-2</a>," +
-                "<a href='http://dummy/DUMMY-3'>DUMMY-3</a> " +
-                "<a href='http://dummy/DUMMY-4'>DUMMY-4</a>!")
-        );
-    }
+    MarkupText text = new MarkupText("DUMMY-1 Text DUMMY-2,DUMMY-3 DUMMY-4!");
+    annotator.annotate(run, null, text);
 
-    @Test
-    public void hasProjectForIssueIsCaseInsensitive() {
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        assertThat(annotator.hasProjectForIssue("JENKINS-123", site), is(true));
-        assertThat(annotator.hasProjectForIssue("jenKiNs-123", site), is(true));
-        assertThat(annotator.hasProjectForIssue("dummy-4711", site), is(true));
-    }
+    assertThat(text.toString(false), is(
+        "<a href='http://dummy/DUMMY-1'>DUMMY-1</a> Text " +
+            "<a href='http://dummy/DUMMY-2'>DUMMY-2</a>," +
+            "<a href='http://dummy/DUMMY-3'>DUMMY-3</a> " +
+            "<a href='http://dummy/DUMMY-4'>DUMMY-4</a>!")
+    );
+  }
 
-    @Test
-    @Issue("4132")
-    public void caseInsensitiveAnnotate() {
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+  @Test
+  public void hasProjectForIssueIsCaseInsensitive() {
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    assertThat(annotator.hasProjectForIssue("JENKINS-123", site), is(true));
+    assertThat(annotator.hasProjectForIssue("jenKiNs-123", site), is(true));
+    assertThat(annotator.hasProjectForIssue("dummy-4711", site), is(true));
+  }
 
-        MarkupText text = new MarkupText("fixed DUMMY-42");
-        annotator.annotate(mock(FreeStyleBuild.class), null, text);
+  @Test
+  @Issue("4132")
+  public void caseInsensitiveAnnotate() {
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
-        assertThat(text.toString(false), is("fixed <a href='http://dummy/DUMMY-42'>DUMMY-42</a>"));
-    }
+    MarkupText text = new MarkupText("fixed DUMMY-42");
+    annotator.annotate(mock(FreeStyleBuild.class), null, text);
 
-    /**
-     * Tests that missing issues - i.e. issues not saved to build -
-     * are fetched from remote.
-     */
-    @Test
-    @Issue("5252")
-    public void getIssueDetailsForMissingIssues() throws IOException {
-        Run run = mock(Run.class);
+    assertThat(text.toString(false), is("fixed <a href='http://dummy/DUMMY-42'>DUMMY-42</a>"));
+  }
 
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+  /**
+   * Tests that missing issues - i.e. issues not saved to build - are fetched from remote.
+   */
+  @Test
+  @Issue("5252")
+  public void getIssueDetailsForMissingIssues() throws IOException {
+    Run run = mock(Run.class);
 
-        JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
-        when(site.getIssue(Mockito.anyString())).thenReturn(issue);
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
-        MarkupText text = new MarkupText("fixed DUMMY-42");
-        annotator.annotate(run, null, text);
-        assertThat(text.toString(false), containsString(TITLE));
-    }
+    JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
+    when(site.getIssue(Mockito.anyString())).thenReturn(issue);
 
-    /**
-     * Tests that no exception is thrown if user issue pattern is invalid (contains no groups)
-     */
-    @Test
-    public void invalidUserPattern() {
-        when(site.getIssuePattern()).thenReturn(Pattern.compile("[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"));
+    MarkupText text = new MarkupText("fixed DUMMY-42");
+    annotator.annotate(run, null, text);
+    assertThat(text.toString(false), containsString(TITLE));
+  }
 
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+  /**
+   * Tests that no exception is thrown if user issue pattern is invalid (contains no groups)
+   */
+  @Test
+  public void invalidUserPattern() {
+    when(site.getIssuePattern())
+        .thenReturn(Pattern.compile("[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"));
 
-        MarkupText text = new MarkupText("fixed DUMMY-42");
-        assertThat(text.toString(false), not(containsString(TITLE)));
-    }
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
-    /**
-     * Tests that only the 1st matching group is hyperlinked and not the whole pattern.
-     * Previous implementation did so.
-     */
-    @Test
-    public void matchOnlyMatchGroup1() throws IOException {
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
-        when(site.getIssuePattern()).thenReturn(Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)abc"));
+    MarkupText text = new MarkupText("fixed DUMMY-42");
+    assertThat(text.toString(false), not(containsString(TITLE)));
+  }
 
-        MarkupText text = new MarkupText("fixed DUMMY-42abc");
-        annotator.annotate(mock(Run.class), null, text);
+  /**
+   * Tests that only the 1st matching group is hyperlinked and not the whole pattern. Previous
+   * implementation did so.
+   */
+  @Test
+  public void matchOnlyMatchGroup1() throws IOException {
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+    when(site.getIssuePattern())
+        .thenReturn(Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)abc"));
 
-        assertThat(text.toString(false), is("fixed <a href='http://dummy/DUMMY-42'>DUMMY-42</a>abc"));
+    MarkupText text = new MarkupText("fixed DUMMY-42abc");
+    annotator.annotate(mock(Run.class), null, text);
 
-        // check again when issue != null:
-        JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
-        when(site.getIssue(Mockito.anyString())).thenReturn(issue);
-        text = new MarkupText("fixed DUMMY-42abc");
-        annotator.annotate(mock(Run.class), null, text);
-        assertThat(
-                text.toString(false),
-                is("fixed <a href='http://dummy/DUMMY-42' tooltip='title with $sign to confuse TextMarkup.replace'>DUMMY-42</a>abc")
-        );
-    }
+    assertThat(text.toString(false),
+        is("fixed <a href='http://dummy/DUMMY-42'>DUMMY-42</a>abc"));
 
-    /**
-     * Tests that setting the "alternative Url" property actually
-     * changes the link also.
-     *
-     * @throws Exception
-     */
-    @Test
-    public void alternativeURLAnnotate() throws Exception {
-        when(site.getAlternativeUrl(Mockito.anyString())).thenAnswer(
-                (Answer<URL>) invocation -> {
-                    String id = invocation.getArguments()[0].toString();
-                    return new URL("http://altdummy/" + id);
-                });
+    // check again when issue != null:
+    JiraIssue issue = new JiraIssue("DUMMY-42", TITLE);
+    when(site.getIssue(Mockito.anyString())).thenReturn(issue);
+    text = new MarkupText("fixed DUMMY-42abc");
+    annotator.annotate(mock(Run.class), null, text);
+    assertThat(
+        text.toString(false),
+        is("fixed <a href='http://dummy/DUMMY-42' tooltip='title with $sign to confuse TextMarkup.replace'>DUMMY-42</a>abc")
+    );
+  }
 
-        Run run = mock(Run.class);
+  /**
+   * Tests that setting the "alternative Url" property actually changes the link also.
+   */
+  @Test
+  public void alternativeURLAnnotate() throws Exception {
+    when(site.getAlternativeUrl(Mockito.anyString())).thenAnswer(
+        (Answer<URL>) invocation -> {
+          String id = invocation.getArguments()[0].toString();
+          return new URL("http://altdummy/" + id);
+        });
 
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
-        MarkupText text = new MarkupText("marking up DUMMY-1.");
-        JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
+    Run run = mock(Run.class);
 
-        annotator.annotate(run, null, text);
+    when(run.getAction(JiraBuildAction.class)).thenReturn(
+        new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+    MarkupText text = new MarkupText("marking up DUMMY-1.");
+    JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+    doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
-        assertThat(text.toString(false), containsString("<a href='http://altdummy/DUMMY-1'"));
-    }
+    annotator.annotate(run, null, text);
+
+    assertThat(text.toString(false), containsString("<a href='http://altdummy/DUMMY-1'"));
+  }
 
 }

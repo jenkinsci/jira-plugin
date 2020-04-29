@@ -1,4 +1,3 @@
-
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
@@ -9,7 +8,6 @@ import hudson.plugins.jira.JiraRestService;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
-
 import java.net.URI;
 import java.net.URL;
 import java.util.List;
@@ -22,64 +20,67 @@ import static hudson.plugins.jira.JiraSite.ExtendedAsynchronousJiraRestClientFac
  * @author Kohsuke Kawaguchi
  */
 public class JiraTester {
-    public static void main(String[] args) throws Exception {
 
-        final URI uri = new URL(JiraConfig.getUrl()).toURI();
-        final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
-                .createWithBasicHttpAuthentication(uri, JiraConfig.getUsername(), JiraConfig.getPassword());
+  public static void main(String[] args) throws Exception {
 
-        final JiraRestService restService = new JiraRestService(uri, jiraRestClient, JiraConfig.getUsername(), JiraConfig.getPassword(), JiraSite.DEFAULT_TIMEOUT);
+    final URI uri = new URL(JiraConfig.getUrl()).toURI();
+    final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
+        .createWithBasicHttpAuthentication(uri, JiraConfig.getUsername(),
+            JiraConfig.getPassword());
 
-        final String projectKey = "TESTPROJECT";
-        final String issueId = "TESTPROJECT-425";
-        final Integer actionId = 21;
+    final JiraRestService restService = new JiraRestService(uri, jiraRestClient,
+        JiraConfig.getUsername(), JiraConfig.getPassword(), JiraSite.DEFAULT_TIMEOUT);
 
-        final Issue issue = restService.getIssue(issueId);
-        System.out.println("issue:" + issue);
+    final String projectKey = "TESTPROJECT";
+    final String issueId = "TESTPROJECT-425";
+    final Integer actionId = 21;
 
+    final Issue issue = restService.getIssue(issueId);
+    System.out.println("issue:" + issue);
 
-        final List<Transition> availableActions = restService.getAvailableActions(issueId);
-        for (Transition action : availableActions) {
-            System.out.println("Action:" + action);
-        }
+    final List<Transition> availableActions = restService.getAvailableActions(issueId);
+    for (Transition action : availableActions) {
+      System.out.println("Action:" + action);
+    }
 
-        for (IssueType issueType : restService.getIssueTypes()) {
-            System.out.println(" issue type: " + issueType);
-        }
+    for (IssueType issueType : restService.getIssueTypes()) {
+      System.out.println(" issue type: " + issueType);
+    }
 
 //        restService.addVersion("TESTPROJECT", "0.0.2");
 
-        final List<Component> components = restService.getComponents(projectKey);
-        for (Component component : components) {
-            System.out.println("component: " + component);
-        }
+    final List<Component> components = restService.getComponents(projectKey);
+    for (Component component : components) {
+      System.out.println("component: " + component);
+    }
 
 //        BasicComponent backendComponent = null;
 //        final Iterable<BasicComponent> components1 = Lists.newArrayList(backendComponent);
 //        restService.createIssue("TESTPROJECT", "This is a test issue created using Jira jenkins plugin. Please ignore it.", "TESTUSER", components1, "test issue from Jira jenkins plugin");
 
-        final List<Issue> searchResults = restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", 3);
-        for (Issue searchResult : searchResults) {
-            System.out.println("JQL search result: " + searchResult);
-        }
+    final List<Issue> searchResults = restService
+        .getIssuesFromJqlSearch("project = \"TESTPROJECT\"", 3);
+    for (Issue searchResult : searchResults) {
+      System.out.println("JQL search result: " + searchResult);
+    }
 
-        final List<String> projectsKeys = restService.getProjectsKeys();
-        for (String projectsKey : projectsKeys) {
-            System.out.println("project key: " + projectsKey);
-        }
+    final List<String> projectsKeys = restService.getProjectsKeys();
+    for (String projectsKey : projectsKeys) {
+      System.out.println("project key: " + projectsKey);
+    }
 
-        final List<Status> statuses = restService.getStatuses();
-        for (Status status : statuses) {
-            System.out.println("status:" + status);
-        }
+    final List<Status> statuses = restService.getStatuses();
+    for (Status status : statuses) {
+      System.out.println("status:" + status);
+    }
 
-        final User user = restService.getUser("TESTUSER");
-        System.out.println("user: " + user);
+    final User user = restService.getUser("TESTUSER");
+    System.out.println("user: " + user);
 
-        final List<ExtendedVersion> versions = restService.getVersions(projectKey);
-        for (ExtendedVersion version : versions) {
-            System.out.println("version: "  + version);
-        }
+    final List<ExtendedVersion> versions = restService.getVersions(projectKey);
+    for (ExtendedVersion version : versions) {
+      System.out.println("version: " + version);
+    }
 
 //        Version releaseVersion = new Version(version.getSelf(), version.getId(), version.getName(),
 //                version.getDescription(), version.isArchived(), true, new DateTime());
@@ -92,30 +93,31 @@ public class JiraTester {
 //        final Issue updatedIssue = restService.progressWorkflowAction(issueId, actionId);
 //        System.out.println("Updated issue:" + updatedIssue);
 
-
-
-        for(int i=0;i<10;i++){
-            callUniq( restService );
-        }
-
-        for(int i=0;i<10;i++){
-            callDuplicate( restService );
-        }
-
+    for (int i = 0; i < 10; i++) {
+      callUniq(restService);
     }
 
-    private static void callUniq(final JiraRestService restService) throws Exception {
-        long start = System.currentTimeMillis();
-        List<Issue> issues = restService.getIssuesFromJqlSearch( "key in ('JENKINS-53320','JENKINS-51057')", Integer.MAX_VALUE );
-        long end = System.currentTimeMillis();
-        System.out.println( "time uniq " + (end -start) );
+    for (int i = 0; i < 10; i++) {
+      callDuplicate(restService);
     }
 
-    private static void callDuplicate(final JiraRestService restService) throws Exception {
-        long start = System.currentTimeMillis();
-        List<Issue> issues = restService.getIssuesFromJqlSearch( "key in ('JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057')", Integer.MAX_VALUE );
-        long end = System.currentTimeMillis();
-        System.out.println( "time duplicate " + (end -start) );
-    }
+  }
+
+  private static void callUniq(final JiraRestService restService) throws Exception {
+    long start = System.currentTimeMillis();
+    List<Issue> issues = restService
+        .getIssuesFromJqlSearch("key in ('JENKINS-53320','JENKINS-51057')", Integer.MAX_VALUE);
+    long end = System.currentTimeMillis();
+    System.out.println("time uniq " + (end - start));
+  }
+
+  private static void callDuplicate(final JiraRestService restService) throws Exception {
+    long start = System.currentTimeMillis();
+    List<Issue> issues = restService.getIssuesFromJqlSearch(
+        "key in ('JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057')",
+        Integer.MAX_VALUE);
+    long end = System.currentTimeMillis();
+    System.out.println("time duplicate " + (end - start));
+  }
 
 }

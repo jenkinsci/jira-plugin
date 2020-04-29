@@ -5,5 +5,5 @@ import io.atlassian.util.concurrent.Promise;
 
 public interface ExtendedMyPermissionsRestClient {
 
-    Promise<Permissions> getMyPermissions();
+  Promise<Permissions> getMyPermissions();
 }

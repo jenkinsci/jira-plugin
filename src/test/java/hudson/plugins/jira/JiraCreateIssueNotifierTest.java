@@ -11,17 +11,16 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Result;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.mockito.Mockito;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -34,177 +33,187 @@ import static org.mockito.Mockito.when;
 
 public class JiraCreateIssueNotifierTest {
 
-    private static final String JIRA_PROJECT = "PROJECT";
-    private static final String COMPONENT = "some, componentA";
-    private static final String ASSIGNEE = "user.name";
-    private static final String DESCRIPTION = "Some description";
+  private static final String JIRA_PROJECT = "PROJECT";
+  private static final String COMPONENT = "some, componentA";
+  private static final String ASSIGNEE = "user.name";
+  private static final String DESCRIPTION = "Some description";
+  @Rule
+  public TemporaryFolder temporaryFolder = new TemporaryFolder();
+  List<Component> jiraComponents = new ArrayList<>();
+  Launcher launcher = mock(Launcher.class);
+  BuildListener buildListener = mock(BuildListener.class);
+  PrintStream logger = mock(PrintStream.class);
+  JiraSite site = mock(JiraSite.class);
+  JiraSession session = mock(JiraSession.class);
+  EnvVars env;
+  AbstractProject project = mock(AbstractProject.class);
+  AbstractBuild previousBuild = mock(FreeStyleBuild.class);
+  AbstractBuild currentBuild = mock(FreeStyleBuild.class);
+  File temporaryDirectory;
 
-    List<Component> jiraComponents = new ArrayList<>();
+  @Before
+  public void createCommonMocks() throws IOException, InterruptedException {
+    env = new EnvVars();
+    env.put("BUILD_NUMBER", "10");
+    env.put("BUILD_URL", "/some/url/to/job");
+    env.put("JOB_NAME", "Some job");
 
-    Launcher launcher = mock(Launcher.class);
-    BuildListener buildListener = mock(BuildListener.class);
-    PrintStream logger = mock(PrintStream.class);
-    JiraSite site = mock(JiraSite.class);
-    JiraSession session = mock(JiraSession.class);
-    EnvVars env;
+    jiraComponents.add(new Component(null, null, "componentA", null, null));
 
-    AbstractProject project = mock(AbstractProject.class);
-    AbstractBuild previousBuild = mock(FreeStyleBuild.class);
-    AbstractBuild currentBuild = mock(FreeStyleBuild.class);
-    File temporaryDirectory;
+    when(site.getSession()).thenReturn(session);
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    doReturn(env).when(currentBuild).getEnvironment(Mockito.any());
 
-    @Before
-    public void createCommonMocks() throws IOException, InterruptedException {
-        env = new EnvVars();
-        env.put("BUILD_NUMBER", "10");
-        env.put("BUILD_URL", "/some/url/to/job");
-        env.put("JOB_NAME", "Some job");
+    temporaryDirectory = temporaryFolder.newFolder();
 
-        jiraComponents.add(new Component(null, null, "componentA", null, null));
+    when(project.getBuildDir()).thenReturn(temporaryDirectory);
+    when(currentBuild.getProject()).thenReturn(project);
+    when(currentBuild.getEnvironment(buildListener)).thenReturn(env);
+    when(currentBuild.getPreviousCompletedBuild()).thenReturn(previousBuild);
+    when(buildListener.getLogger()).thenReturn(logger);
 
-        when(site.getSession()).thenReturn(session);
+    when(session.getComponents(Mockito.anyString())).thenReturn(jiraComponents);
+  }
 
-        doReturn(env).when(currentBuild).getEnvironment(Mockito.any());
+  @Test
+  public void performSuccessFailure() throws Exception {
 
-        temporaryDirectory = temporaryFolder.newFolder();
+    when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
+    when(currentBuild.getResult()).thenReturn(Result.FAILURE);
 
-        when(project.getBuildDir()).thenReturn(temporaryDirectory);
-        when(currentBuild.getProject()).thenReturn(project);
-        when(currentBuild.getEnvironment(buildListener)).thenReturn(env);
-        when(currentBuild.getPreviousCompletedBuild()).thenReturn(previousBuild);
-        when(buildListener.getLogger()).thenReturn(logger);
+    JiraCreateIssueNotifier notifier = spy(
+        new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
+    doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
-        when(session.getComponents(Mockito.anyString())).thenReturn(jiraComponents);
-    }
+    Issue issue = mock(Issue.class);
+    when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+        Mockito.anyList(), Mockito.anyString(),
+        Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
 
-    @Test
-    public void performSuccessFailure() throws Exception {
+    assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+  }
 
-        when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
-        when(currentBuild.getResult()).thenReturn(Result.FAILURE);
+  @Test
+  public void performFailureFailure() throws Exception {
+    JiraCreateIssueNotifier notifier = spy(
+        new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT));
+    doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
-        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
+    Issue issue = mock(Issue.class);
 
-        Issue issue = mock(Issue.class);
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
+    Status status = new Status(null, null, "1", "Open", null, null);
+    when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+        Mockito.anyList(), Mockito.anyString(),
+        Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
+    when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
+    when(issue.getStatus()).thenReturn(status);
 
-        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
-    }
+    assertEquals(0, temporaryDirectory.list().length);
 
-    @Test
-    public void performFailureFailure() throws Exception {
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT));
-        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
+    when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
+    when(currentBuild.getResult()).thenReturn(Result.FAILURE);
+    assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        Issue issue = mock(Issue.class);
+    assertEquals(1, temporaryDirectory.list().length);
 
-        Status status =  new Status(null, null, "1", "Open", null, null);
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
-        when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
-        when(issue.getStatus()).thenReturn(status);
+    when(previousBuild.getResult()).thenReturn(Result.FAILURE);
+    when(currentBuild.getResult()).thenReturn(Result.FAILURE);
+    assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        assertEquals(0, temporaryDirectory.list().length);
+    assertEquals(1, temporaryDirectory.list().length);
 
-        when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
-        when(currentBuild.getResult()).thenReturn(Result.FAILURE);
-        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+    when(issue.getStatus()).thenReturn(
+        new Status(null, null, "6", JiraCreateIssueNotifier.finishedStatuses.Closed.toString(),
+            null, null));
+    assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        assertEquals(1, temporaryDirectory.list().length);
+    assertEquals(1, temporaryDirectory.list().length);
+  }
 
-        when(previousBuild.getResult()).thenReturn(Result.FAILURE);
-        when(currentBuild.getResult()).thenReturn(Result.FAILURE);
-        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+  @Test
+  public void performFailureSuccessIssueOpen() throws Exception {
+    Long typeId = 1L;
+    Long priorityId = 0L;
+    Integer actionIdOnSuccess = 5;
 
-        assertEquals(1, temporaryDirectory.list().length);
+    JiraCreateIssueNotifier notifier = spy(
+        new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", typeId, priorityId,
+            actionIdOnSuccess));
 
-        when(issue.getStatus()).thenReturn(new Status(null, null, "6", JiraCreateIssueNotifier.finishedStatuses.Closed.toString(), null, null));
-        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+    assertEquals(typeId, notifier.getTypeId());
+    assertEquals(priorityId, notifier.getPriorityId());
+    assertEquals(actionIdOnSuccess, notifier.getActionIdOnSuccess());
 
-        assertEquals(1, temporaryDirectory.list().length);
-    }
+    doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
-    @Test
-    public void performFailureSuccessIssueOpen() throws Exception {
-        Long typeId = 1L;
-        Long priorityId = 0L;
-        Integer actionIdOnSuccess = 5;
+    Issue issue = mock(Issue.class);
+    Status status = new Status(null, null, "1", "Open", null, null);
+    when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+        Mockito.anyList(), Mockito.anyString(),
+        Mockito.eq(typeId), Mockito.isNull(Long.class))).thenReturn(issue);
+    when(issue.getStatus()).thenReturn(status);
+    when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", typeId, priorityId, actionIdOnSuccess));
+    assertEquals(0, temporaryDirectory.list().length);
 
-        assertEquals(typeId, notifier.getTypeId());
-        assertEquals(priorityId, notifier.getPriorityId());
-        assertEquals(actionIdOnSuccess, notifier.getActionIdOnSuccess());
+    when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
+    when(currentBuild.getResult()).thenReturn(Result.FAILURE);
+    assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
+    assertEquals(1, temporaryDirectory.list().length);
 
-        Issue issue = mock(Issue.class);
-        Status status =  new Status(null, null, "1", "Open", null, null);
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.eq(typeId), Mockito.isNull(Long.class))).thenReturn(issue);
-        when(issue.getStatus()).thenReturn(status);
-        when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
+    when(previousBuild.getResult()).thenReturn(Result.FAILURE);
+    when(currentBuild.getResult()).thenReturn(Result.SUCCESS);
+    assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
+    verify(session).progressWorkflowAction("null", actionIdOnSuccess);
 
-        assertEquals(0, temporaryDirectory.list().length);
+    assertEquals(1, temporaryDirectory.list().length);
+  }
 
-        when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
-        when(currentBuild.getResult()).thenReturn(Result.FAILURE);
-        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+  @Test
+  public void performFailureSuccessIssueClosedWithComponents() throws Exception {
+    JiraCreateIssueNotifier notifier = spy(
+        new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
+    doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
-        assertEquals(1, temporaryDirectory.list().length);
+    Issue issue = mock(Issue.class);
+    Status status = new Status(null, null,
+        JiraCreateIssueNotifier.finishedStatuses.Closed.toString(), null, null, null);
 
-        when(previousBuild.getResult()).thenReturn(Result.FAILURE);
-        when(currentBuild.getResult()).thenReturn(Result.SUCCESS);
-        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+    when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+        Mockito.anyList(), Mockito.anyString(),
+        Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
+    when(issue.getStatus()).thenReturn(status);
+    when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 
-        verify(session).progressWorkflowAction("null", actionIdOnSuccess);
+    assertEquals(0, temporaryDirectory.list().length);
 
-        assertEquals(1, temporaryDirectory.list().length);
-    }
+    when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
+    when(currentBuild.getResult()).thenReturn(Result.FAILURE);
+    assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-    @Test
-    public void performFailureSuccessIssueClosedWithComponents() throws Exception {
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
-        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
+    assertEquals(1, temporaryDirectory.list().length);
 
-        Issue issue = mock(Issue.class);
-        Status status = new Status(null, null, JiraCreateIssueNotifier.finishedStatuses.Closed.toString() , null, null, null);
+    when(previousBuild.getResult()).thenReturn(Result.FAILURE);
+    when(currentBuild.getResult()).thenReturn(Result.SUCCESS);
+    assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
-                Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
-        when(issue.getStatus()).thenReturn(status);
-        when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
+    // file should be deleted
+    assertEquals(0, temporaryDirectory.list().length);
+  }
 
-        assertEquals(0, temporaryDirectory.list().length);
-
-        when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
-        when(currentBuild.getResult()).thenReturn(Result.FAILURE);
-        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
-
-        assertEquals(1, temporaryDirectory.list().length);
-
-        when(previousBuild.getResult()).thenReturn(Result.FAILURE);
-        when(currentBuild.getResult()).thenReturn(Result.SUCCESS);
-        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
-
-        // file should be deleted
-        assertEquals(0, temporaryDirectory.list().length);
-    }
-
-    @Test
-    public void isDone() {
-        assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Closed", null, null, null)));
-        assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Done", null, null, null)));
-        assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Resolved", null, null, null)));
-        assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Abandoned", null, null,
-          new StatusCategory(null, "Done", null, "done", null))));
-        assertFalse(JiraCreateIssueNotifier.isDone(new Status(null, null, "Abandoned", null, null,
-          new StatusCategory(null, "ToDo", null, "todo", null))));
-    }
+  @Test
+  public void isDone() {
+    assertTrue(
+        JiraCreateIssueNotifier.isDone(new Status(null, null, "Closed", null, null, null)));
+    assertTrue(
+        JiraCreateIssueNotifier.isDone(new Status(null, null, "Done", null, null, null)));
+    assertTrue(
+        JiraCreateIssueNotifier.isDone(new Status(null, null, "Resolved", null, null, null)));
+    assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Abandoned", null, null,
+        new StatusCategory(null, "Done", null, "done", null))));
+    assertFalse(JiraCreateIssueNotifier.isDone(new Status(null, null, "Abandoned", null, null,
+        new StatusCategory(null, "ToDo", null, "todo", null))));
+  }
 }

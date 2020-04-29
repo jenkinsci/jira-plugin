@@ -8,62 +8,63 @@ import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import static hudson.Util.fixNull;
 
 public class JqlIssueSelector extends AbstractIssueSelector {
 
-    private String jql;
+  private String jql;
 
-    @DataBoundConstructor
-    public JqlIssueSelector(String jql) {
-        super();
-        this.jql = jql;
-    }
+  @DataBoundConstructor
+  public JqlIssueSelector(String jql) {
+    super();
+    this.jql = jql;
+  }
 
-    public void setJql(String jql){
-        this.jql = jql;
-    }
+  public String getJql() {
+    return jql;
+  }
 
-    public String getJql() {
-        return jql;
+  public void setJql(String jql) {
+    this.jql = jql;
+  }
+
+  @Override
+  public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
+    try {
+      JiraSession session = site.getSession();
+      if (session == null) {
+        throw new IllegalStateException(
+            "Remote access for Jira isn't configured in Jenkins");
+      }
+
+      List<Issue> issues = session.getIssuesFromJqlSearch(jql);
+
+      List<String> issueKeys = new ArrayList<>();
+
+      for (Issue issue : fixNull(issues)) {
+        issueKeys.add(issue.getKey());
+      }
+
+      // deduplication
+      return new HashSet(issueKeys);
+    } catch (TimeoutException e) {
+      throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
     }
+  }
+
+  @Extension
+  public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
 
     @Override
-    public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
-        try {
-            JiraSession session = site.getSession();
-            if (session == null)
-                throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
-
-            List<Issue> issues = session.getIssuesFromJqlSearch(jql);
-
-            List<String> issueKeys = new ArrayList<>();
-
-            for (Issue issue : fixNull(issues)) {
-                issueKeys.add(issue.getKey());
-            }
-
-            // deduplication
-            return new HashSet(issueKeys);
-        } catch (TimeoutException e) {
-            throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
-        }
+    public String getDisplayName() {
+      return Messages.IssueSelector_JqlIssueSelector_DisplayName();
     }
-
-    @Extension
-    public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
-        @Override
-        public String getDisplayName() {
-            return Messages.IssueSelector_JqlIssueSelector_DisplayName();
-        }
-    }
+  }
 }

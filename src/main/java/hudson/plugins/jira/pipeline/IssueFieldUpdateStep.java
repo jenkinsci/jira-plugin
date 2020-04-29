@@ -17,161 +17,163 @@ import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
-import jenkins.tasks.SimpleBuildStep;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-
-import javax.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import javax.servlet.ServletException;
+import jenkins.tasks.SimpleBuildStep;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Issue custom fields updater
- * 
+ *
  * @author Dmitry Frolov tekillaz.dev@gmail.com
- * 
  */
 public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
-    private AbstractIssueSelector issueSelector;
+  public String fieldId;
+  public String fieldValue;
+  private AbstractIssueSelector issueSelector;
 
-    public AbstractIssueSelector getIssueSelector() {
-        return this.issueSelector;
+  @DataBoundConstructor
+  public IssueFieldUpdateStep(AbstractIssueSelector issueSelector, String fieldId,
+      String fieldValue) {
+    this.issueSelector = issueSelector;
+    this.fieldId = fieldId;
+    this.fieldValue = fieldValue;
+  }
+
+  public AbstractIssueSelector getIssueSelector() {
+    return this.issueSelector;
+  }
+
+  @DataBoundSetter
+  public void setIssueSelector(AbstractIssueSelector issueSelector) {
+    this.issueSelector = issueSelector;
+  }
+
+  public String getFieldId() {
+    return this.fieldId;
+  }
+
+  @DataBoundSetter
+  public void setFieldId(String fieldId) {
+    this.fieldId = fieldId;
+  }
+
+  public String getFieldValue() {
+    return this.fieldValue;
+  }
+
+  @DataBoundSetter
+  public void setFieldValue(String fieldValue) {
+    this.fieldValue = fieldValue;
+  }
+
+  public String prepareFieldId(String fieldId) {
+    String prepared = fieldId;
+    if (!prepared.startsWith("customfield_")) {
+      prepared = "customfield_" + prepared;
+    }
+    return prepared;
+  }
+
+  @Override
+  public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
+      throws IOException {
+    PrintStream logger = listener.getLogger();
+
+    AbstractIssueSelector selector = issueSelector;
+    if (selector == null) {
+      logger.println("[Jira][IssueFieldUpdateStep] No issue selector found!");
+      throw new IOException("[Jira][IssueFieldUpdateStep] No issue selector found!");
     }
 
-    @DataBoundSetter
-    public void setIssueSelector(AbstractIssueSelector issueSelector) {
-        this.issueSelector = issueSelector;
+    JiraSite site = JiraSite.get(run.getParent());
+    if (site == null) {
+      logger.println(Messages.NoJiraSite());
+      run.setResult(Result.FAILURE);
+      return;
     }
 
-    public String fieldId;
-
-    public String getFieldId() {
-        return this.fieldId;
+    JiraSession session = site.getSession();
+    if (session == null) {
+      logger.println(Messages.NoRemoteAccess());
+      run.setResult(Result.FAILURE);
+      return;
     }
 
-    @DataBoundSetter
-    public void setFieldId(String fieldId) {
-        this.fieldId = fieldId;
+    Set<String> issues = selector.findIssueIds(run, site, listener);
+    if (issues.isEmpty()) {
+      logger.println("[Jira][IssueFieldUpdateStep] Issue list is empty!");
+      return;
     }
 
-    public String fieldValue;
+    List<JiraIssueField> fields = new ArrayList();
+    fields.add(new JiraIssueField(prepareFieldId(fieldId), fieldValue));
 
-    public String getFieldValue() {
-        return this.fieldValue;
+    for (String issue : issues) {
+      submitFields(session, issue, fields, logger);
     }
+  }
 
-    @DataBoundSetter
-    public void setFieldValue(String fieldValue) {
-        this.fieldValue = fieldValue;
+  public void submitFields(JiraSession session, String issueId, List<JiraIssueField> fields,
+      PrintStream logger) {
+    try {
+      session.addFields(issueId, fields);
+    } catch (RestClientException e) {
+
+      if (e.getStatusCode().or(0).equals(404)) {
+        logger.println(issueId + " - Jira issue not found");
+      }
+
+      if (e.getStatusCode().or(0).equals(403)) {
+        logger.println(issueId
+            + " - Jenkins Jira user does not have permissions to comment on this issue");
+      }
+
+      if (e.getStatusCode().or(0).equals(401)) {
+        logger.println(
+            issueId + " - Jenkins Jira authentication problem");
+      }
+
+      logger.println(Messages.FailedToUpdateIssue(issueId));
+      logger.println(e.getLocalizedMessage());
     }
+  }
 
-    @DataBoundConstructor
-    public IssueFieldUpdateStep(AbstractIssueSelector issueSelector, String fieldId, String fieldValue) {
-        this.issueSelector = issueSelector;
-        this.fieldId = fieldId;
-        this.fieldValue = fieldValue;
-    }
+  @Override
+  public DescriptorImpl getDescriptor() {
+    return (DescriptorImpl) super.getDescriptor();
+  }
 
-    public String prepareFieldId(String fieldId) {
-        String prepared = fieldId;
-        if (!prepared.startsWith("customfield_"))
-            prepared = "customfield_" + prepared;
-        return prepared;
+  @Extension
+  public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+    public FormValidation doCheckField_id(@QueryParameter String value)
+        throws IOException, ServletException {
+      if (Util.fixNull(value).trim().length() == 0) {
+        return FormValidation.warning(Messages.JiraIssueFieldUpdater_NoIssueFieldID());
+      }
+      if (!value.matches("\\d+")) {
+        return FormValidation.error(Messages.JiraIssueFieldUpdater_NotAtIssueFieldID());
+      }
+      return FormValidation.ok();
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-            throws IOException {
-        PrintStream logger = listener.getLogger();
-
-        AbstractIssueSelector selector = issueSelector;
-        if (selector == null) {
-            logger.println("[Jira][IssueFieldUpdateStep] No issue selector found!");
-            throw new IOException("[Jira][IssueFieldUpdateStep] No issue selector found!");
-        }
-
-        JiraSite site = JiraSite.get(run.getParent());
-        if (site == null) {
-            logger.println(Messages.NoJiraSite());
-            run.setResult(Result.FAILURE);
-            return;
-        }
-
-        JiraSession session = site.getSession();
-        if (session == null) {
-            logger.println(Messages.NoRemoteAccess());
-            run.setResult(Result.FAILURE);
-            return;
-        }
-
-        Set<String> issues = selector.findIssueIds(run, site, listener);
-        if (issues.isEmpty()) {
-            logger.println("[Jira][IssueFieldUpdateStep] Issue list is empty!");
-            return;
-        }
-
-        List<JiraIssueField> fields = new ArrayList();
-        fields.add(new JiraIssueField(prepareFieldId(fieldId), fieldValue));
-
-        for (String issue : issues) {
-            submitFields(session, issue, fields, logger);
-        }
-    }
-
-    public void submitFields(JiraSession session, String issueId, List<JiraIssueField> fields, PrintStream logger) {
-        try {
-            session.addFields(issueId, fields);
-        } catch (RestClientException e) {
-
-            if (e.getStatusCode().or(0).equals(404)) {
-                logger.println(issueId + " - Jira issue not found");
-            }
-
-            if (e.getStatusCode().or(0).equals(403)) {
-                logger.println(issueId
-                        + " - Jenkins Jira user does not have permissions to comment on this issue");
-            }
-
-            if (e.getStatusCode().or(0).equals(401)) {
-                logger.println(
-                        issueId + " - Jenkins Jira authentication problem");
-            }
-
-            logger.println(Messages.FailedToUpdateIssue(issueId));
-            logger.println(e.getLocalizedMessage());
-        }
+    public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+      return true;
     }
 
     @Override
-    public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl) super.getDescriptor();
+    public String getDisplayName() {
+      return Messages.JiraIssueFieldUpdater_DisplayName();
     }
-
-    @Extension
-    public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
-
-        public FormValidation doCheckField_id(@QueryParameter String value) throws IOException, ServletException {
-            if (Util.fixNull(value).trim().length() == 0)
-                return FormValidation.warning(Messages.JiraIssueFieldUpdater_NoIssueFieldID());
-            if (!value.matches("\\d+"))
-                return FormValidation.error(Messages.JiraIssueFieldUpdater_NotAtIssueFieldID());
-            return FormValidation.ok();
-        }
-
-        @Override
-        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            return true;
-        }
-
-        @Override
-        public String getDisplayName() {
-            return Messages.JiraIssueFieldUpdater_DisplayName();
-        }
-    }
+  }
 
 }

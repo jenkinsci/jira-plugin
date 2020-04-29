@@ -15,31 +15,31 @@ import static org.junit.Assert.assertThat;
 
 public class JiraGlobalConfigurationSaveTest {
 
-    @Rule
-    public final RestartableJenkinsRule r = new RestartableJenkinsRule();
+  @Rule
+  public final RestartableJenkinsRule r = new RestartableJenkinsRule();
 
-    @Test
-    @Issue("JENKINS-57899")
-    public void jiraSitesListSaved() throws Exception {
-        String jiraUrl = "https://issues.jenkins.io/";
-        r.then(r -> {
-            JiraGlobalConfiguration jiraGlobalConfiguration = JiraGlobalConfiguration.get();
-            jiraGlobalConfiguration.setSites(Collections.singletonList(new JiraSite(jiraUrl)));
-            List<JiraSite> sites = jiraGlobalConfiguration.getSites();
-            assertThat(sites, is(hasSize(1)));
-            JiraSite jiraSite = sites.get(0);
-            URL url = jiraSite.getUrl();
-            assertThat(url, is(notNullValue()));
-            assertThat(url.toString(), is(jiraUrl));
-        });
-        r.then(r -> {
-            JiraGlobalConfiguration jiraGlobalConfiguration = JiraGlobalConfiguration.get();
-            List<JiraSite> sites = jiraGlobalConfiguration.getSites();
-            assertThat(sites, is(hasSize(1)));
-            JiraSite jiraSite = sites.get(0);
-            URL url = jiraSite.getUrl();
-            assertThat(url, is(notNullValue()));
-            assertThat(url.toString(), is(jiraUrl));
-        });
-    }
+  @Test
+  @Issue("JENKINS-57899")
+  public void jiraSitesListSaved() throws Exception {
+    String jiraUrl = "https://issues.jenkins.io/";
+    r.then(r -> {
+      JiraGlobalConfiguration jiraGlobalConfiguration = JiraGlobalConfiguration.get();
+      jiraGlobalConfiguration.setSites(Collections.singletonList(new JiraSite(jiraUrl)));
+      List<JiraSite> sites = jiraGlobalConfiguration.getSites();
+      assertThat(sites, is(hasSize(1)));
+      JiraSite jiraSite = sites.get(0);
+      URL url = jiraSite.getUrl();
+      assertThat(url, is(notNullValue()));
+      assertThat(url.toString(), is(jiraUrl));
+    });
+    r.then(r -> {
+      JiraGlobalConfiguration jiraGlobalConfiguration = JiraGlobalConfiguration.get();
+      List<JiraSite> sites = jiraGlobalConfiguration.getSites();
+      assertThat(sites, is(hasSize(1)));
+      JiraSite jiraSite = sites.get(0);
+      URL url = jiraSite.getUrl();
+      assertThat(url, is(notNullValue()));
+      assertThat(url.toString(), is(jiraUrl));
+    });
+  }
 }

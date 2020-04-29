@@ -20,70 +20,67 @@ import static org.mockito.Mockito.when;
 @RunWith(MockitoJUnitRunner.class)
 public class JiraJobActionTest {
 
-    @Mock
-    JiraSite site;
+  final JiraIssue issue = new JiraIssue("EXAMPLE-123", "I like cake");
+  @Mock
+  JiraSite site;
+  @Mock
+  Job job;
+  @Mock
+  MultiBranchProject mbp;
 
-    @Mock
-    Job job;
+  @Test
+  public void detectBranchNameIssue() throws Exception {
+    when(job.getName()).thenReturn("EXAMPLE-123");
+    ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
+    JiraJobAction.setAction(job, site);
+    verify(job).addAction(captor.capture());
 
-    @Mock
-    MultiBranchProject mbp;
+    JiraJobAction action = captor.getValue();
+    assertNotNull(action.getIssue());
 
-    final JiraIssue issue = new JiraIssue("EXAMPLE-123", "I like cake");
+    assertEquals("EXAMPLE-123", action.getIssue().getKey());
+    assertEquals("I like cake", action.getIssue().getSummary());
+  }
 
-    @Test
-    public void detectBranchNameIssue() throws Exception {
-        when(job.getName()).thenReturn("EXAMPLE-123");
-        ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
-        JiraJobAction.setAction(job, site);
-        verify(job).addAction(captor.capture());
+  @Test
+  public void detectBranchNameIssueWithEncodedJobName() throws Exception {
+    when(job.getName()).thenReturn("feature%2FEXAMPLE-123");
+    ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
+    JiraJobAction.setAction(job, site);
+    verify(job).addAction(captor.capture());
 
-        JiraJobAction action = captor.getValue();
-        assertNotNull(action.getIssue());
+    JiraJobAction action = captor.getValue();
+    assertNotNull(action.getIssue());
 
-        assertEquals("EXAMPLE-123", action.getIssue().getKey());
-        assertEquals("I like cake", action.getIssue().getSummary());
-    }
+    assertEquals("EXAMPLE-123", action.getIssue().getKey());
+    assertEquals("I like cake", action.getIssue().getSummary());
+  }
 
-    @Test
-    public void detectBranchNameIssueWithEncodedJobName() throws Exception {
-        when(job.getName()).thenReturn("feature%2FEXAMPLE-123");
-        ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
-        JiraJobAction.setAction(job, site);
-        verify(job).addAction(captor.capture());
+  @Test
+  public void detectBranchNameIssueJustIssueKey() throws Exception {
+    when(job.getName()).thenReturn("EXAMPLE-123");
+    ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
+    JiraJobAction.setAction(job, site);
+    verify(job).addAction(captor.capture());
 
-        JiraJobAction action = captor.getValue();
-        assertNotNull(action.getIssue());
+    JiraJobAction action = captor.getValue();
+    assertNotNull(action.getIssue());
 
-        assertEquals("EXAMPLE-123", action.getIssue().getKey());
-        assertEquals("I like cake", action.getIssue().getSummary());
-    }
+    assertEquals("EXAMPLE-123", action.getIssue().getKey());
+    assertEquals("I like cake", action.getIssue().getSummary());
+  }
 
-    @Test
-    public void detectBranchNameIssueJustIssueKey() throws Exception {
-        when(job.getName()).thenReturn("EXAMPLE-123");
-        ArgumentCaptor<JiraJobAction> captor = ArgumentCaptor.forClass(JiraJobAction.class);
-        JiraJobAction.setAction(job, site);
-        verify(job).addAction(captor.capture());
+  @Test
+  public void detectBranchNameIssueNoIssueKey() throws Exception {
+    when(job.getName()).thenReturn("NOTHING INTERESTING");
+    JiraJobAction.setAction(job, site);
+    verify(job, never()).addAction(anyObject());
+  }
 
-        JiraJobAction action = captor.getValue();
-        assertNotNull(action.getIssue());
-
-        assertEquals("EXAMPLE-123", action.getIssue().getKey());
-        assertEquals("I like cake", action.getIssue().getSummary());
-    }
-
-    @Test
-    public void detectBranchNameIssueNoIssueKey() throws Exception {
-        when(job.getName()).thenReturn("NOTHING INTERESTING");
-        JiraJobAction.setAction(job, site);
-        verify(job, never()).addAction(anyObject());
-    }
-
-    @Before
-    public void setup() throws Exception {
-        when(job.getParent()).thenReturn(mbp);
-        when(site.getIssuePattern()).thenReturn(JiraSite.DEFAULT_ISSUE_PATTERN);
-        when(site.getIssue("EXAMPLE-123")).thenReturn(issue);
-    }
+  @Before
+  public void setup() throws Exception {
+    when(job.getParent()).thenReturn(mbp);
+    when(site.getIssuePattern()).thenReturn(JiraSite.DEFAULT_ISSUE_PATTERN);
+    when(site.getIssue("EXAMPLE-123")).thenReturn(issue);
+  }
 }

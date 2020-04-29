@@ -21,33 +21,33 @@ import static org.junit.Assert.assertThat;
 
 public class ConfigAsCodeTest {
 
-    @Rule
-    public JenkinsRule r = new JenkinsConfiguredWithCodeRule();
+  @Rule
+  public JenkinsRule r = new JenkinsConfiguredWithCodeRule();
 
-    @Test
-    @ConfiguredWithCode("multiple-sites.yml")
-    public void shouldSupportConfigurationAsCode() throws Exception {
-        List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
-        assertThat(sites, hasSize(2));
-        Assert.assertEquals("https://issues.jenkins-ci.org/", Objects
-            .requireNonNull(sites.get(0).getUrl()).toExternalForm());
-        Assert.assertEquals("https://jira.com/", Objects
-            .requireNonNull(sites.get(1).getUrl()).toExternalForm());
+  @Test
+  @ConfiguredWithCode("multiple-sites.yml")
+  public void shouldSupportConfigurationAsCode() throws Exception {
+    List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
+    assertThat(sites, hasSize(2));
+    Assert.assertEquals("https://issues.jenkins-ci.org/", Objects
+        .requireNonNull(sites.get(0).getUrl()).toExternalForm());
+    Assert.assertEquals("https://jira.com/", Objects
+        .requireNonNull(sites.get(1).getUrl()).toExternalForm());
 
-    }
+  }
 
-    @Test
-    @ConfiguredWithCode("single-site.yml")
-    public void shouldExportConfigurationAsCode() throws Exception {
-        ConfiguratorRegistry registry = ConfiguratorRegistry.get();
-        ConfigurationContext context = new ConfigurationContext(registry);
-        final Configurator c = context.lookupOrFail(JiraGlobalConfiguration.class);
-        final CNode node = c.describe(JiraGlobalConfiguration.get(), context);
-        assertNotNull(node);
-        final Mapping mapping = node.asMapping();
-        Mapping sites = mapping.get("sites").asSequence().get(0).asMapping();
+  @Test
+  @ConfiguredWithCode("single-site.yml")
+  public void shouldExportConfigurationAsCode() throws Exception {
+    ConfiguratorRegistry registry = ConfiguratorRegistry.get();
+    ConfigurationContext context = new ConfigurationContext(registry);
+    final Configurator c = context.lookupOrFail(JiraGlobalConfiguration.class);
+    final CNode node = c.describe(JiraGlobalConfiguration.get(), context);
+    assertNotNull(node);
+    final Mapping mapping = node.asMapping();
+    Mapping sites = mapping.get("sites").asSequence().get(0).asMapping();
 
-        assertThat(sites.getScalarValue("url"), is("https://jira.com/"));
-    }
+    assertThat(sites.getScalarValue("url"), is("https://jira.com/"));
+  }
 
 }

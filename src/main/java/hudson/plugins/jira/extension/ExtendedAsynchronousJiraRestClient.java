@@ -2,28 +2,30 @@ package hudson.plugins.jira.extension;
 
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
-
-import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import javax.ws.rs.core.UriBuilder;
 
-public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClient implements ExtendedJiraRestClient {
-    private final ExtendedVersionRestClient extendedVersionRestClient;
-    private final ExtendedMyPermissionsRestClient extendedMyPermissionsRestClient;
+public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClient implements
+    ExtendedJiraRestClient {
 
-    public ExtendedAsynchronousJiraRestClient(URI serverUri, DisposableHttpClient httpClient) {
-        super(serverUri, httpClient);
-        final URI baseUri = UriBuilder.fromUri(serverUri).path("/rest/api/latest").build();
-        extendedVersionRestClient = new ExtendedAsynchronousVersionRestClient(baseUri, httpClient);
-        extendedMyPermissionsRestClient = new ExtendedAsynchronousMyPermissionsRestClient(baseUri, httpClient);
-    }
+  private final ExtendedVersionRestClient extendedVersionRestClient;
+  private final ExtendedMyPermissionsRestClient extendedMyPermissionsRestClient;
 
-    @Override
-    public ExtendedVersionRestClient getExtendedVersionRestClient() {
-        return extendedVersionRestClient;
-    }
+  public ExtendedAsynchronousJiraRestClient(URI serverUri, DisposableHttpClient httpClient) {
+    super(serverUri, httpClient);
+    final URI baseUri = UriBuilder.fromUri(serverUri).path("/rest/api/latest").build();
+    extendedVersionRestClient = new ExtendedAsynchronousVersionRestClient(baseUri, httpClient);
+    extendedMyPermissionsRestClient = new ExtendedAsynchronousMyPermissionsRestClient(baseUri,
+        httpClient);
+  }
 
-    @Override
-    public ExtendedMyPermissionsRestClient getExtendedMyPermissionsRestClient() {
-        return extendedMyPermissionsRestClient;
-    }
+  @Override
+  public ExtendedVersionRestClient getExtendedVersionRestClient() {
+    return extendedVersionRestClient;
+  }
+
+  @Override
+  public ExtendedMyPermissionsRestClient getExtendedMyPermissionsRestClient() {
+    return extendedMyPermissionsRestClient;
+  }
 }

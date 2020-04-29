@@ -19,86 +19,88 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleBuildStep {
 
-    private String jiraProjectKey;
-    private String jiraRelease;
-    private String jiraDescription;
+  @Extension
+  public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
+  private String jiraProjectKey;
+  private String jiraRelease;
+  private String jiraDescription;
 
-    @Extension
-    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
+  @Deprecated
+  public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease) {
+    this.jiraRelease = jiraRelease;
+    this.jiraProjectKey = jiraProjectKey;
+  }
 
-    @Deprecated
-    public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease) {
-        this.jiraRelease = jiraRelease;
-        this.jiraProjectKey = jiraProjectKey;
-    }
+  @DataBoundConstructor
+  public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease,
+      String jiraDescription) {
+    this.jiraRelease = jiraRelease;
+    this.jiraProjectKey = jiraProjectKey;
+    this.jiraDescription = jiraDescription;
+  }
 
-    @DataBoundConstructor
-    public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease, String jiraDescription) {
-        this.jiraRelease = jiraRelease;
-        this.jiraProjectKey = jiraProjectKey;
-        this.jiraDescription = jiraDescription;
-    }
+  public String getJiraRelease() {
+    return jiraRelease;
+  }
 
-    public String getJiraRelease() {
-        return jiraRelease;
-    }
+  public void setJiraRelease(String jiraRelease) {
+    this.jiraRelease = jiraRelease;
+  }
 
-    public void setJiraRelease(String jiraRelease) {
-        this.jiraRelease = jiraRelease;
-    }
+  public String getJiraProjectKey() {
+    return jiraProjectKey;
+  }
 
-    public String getJiraProjectKey() {
-        return jiraProjectKey;
-    }
+  public void setJiraProjectKey(String jiraProjectKey) {
+    this.jiraProjectKey = jiraProjectKey;
+  }
 
-    public void setJiraProjectKey(String jiraProjectKey) {
-        this.jiraProjectKey = jiraProjectKey;
-    }
+  public String getJiraDescription() {
+    return jiraDescription;
+  }
 
-    public String getJiraDescription() {
-        return jiraDescription;
-    }
+  public void setJiraDescription(String jiraDescription) {
+    this.jiraDescription = jiraDescription;
+  }
 
-    public void setJiraDescription(String jiraDescription) {
-        this.jiraDescription = jiraDescription;
+  @Override
+  public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher,
+      TaskListener listener) {
+    new VersionReleaser()
+        .perform(run.getParent(), jiraProjectKey, jiraRelease, jiraDescription, run, listener);
+  }
+
+  @Override
+  public Descriptor<Builder> getDescriptor() {
+    return DESCRIPTOR;
+  }
+
+  public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+    private DescriptorImpl() {
+      super(JiraReleaseVersionUpdaterBuilder.class);
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) {
-        new VersionReleaser().perform(run.getParent(), jiraProjectKey, jiraRelease, jiraDescription, run, listener);
+    public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+      return true;
     }
 
     @Override
-    public Descriptor<Builder> getDescriptor() {
-        return DESCRIPTOR;
+    public String getDisplayName() {
+      // Placed in the build settings section
+      return Messages.JiraReleaseVersionBuilder_DisplayName();
     }
 
-    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-
-        private DescriptorImpl() {
-            super(JiraReleaseVersionUpdaterBuilder.class);
-        }
-
-        @Override
-        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            return true;
-        }
-
-        @Override
-        public String getDisplayName() {
-            // Placed in the build settings section
-            return Messages.JiraReleaseVersionBuilder_DisplayName();
-        }
-
-        @Override
-        public String getHelpFile() {
-            return "/plugin/jira/help.html";
-        }
-
-        @Override
-        public JiraReleaseVersionUpdaterBuilder newInstance(StaplerRequest req, JSONObject formData)
-                throws FormException {
-            return req.bindJSON(JiraReleaseVersionUpdaterBuilder.class, formData);
-        }
+    @Override
+    public String getHelpFile() {
+      return "/plugin/jira/help.html";
     }
+
+    @Override
+    public JiraReleaseVersionUpdaterBuilder newInstance(StaplerRequest req, JSONObject formData)
+        throws FormException {
+      return req.bindJSON(JiraReleaseVersionUpdaterBuilder.class, formData);
+    }
+  }
 }

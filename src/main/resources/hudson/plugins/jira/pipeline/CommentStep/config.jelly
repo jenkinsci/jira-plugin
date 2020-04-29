@@ -6,5 +6,5 @@
     </f:entry>
     <f:entry field="body" title="Comment body">
         <f:textbox />
-    </f:entry>    
+    </f:entry>
 </j:jelly>

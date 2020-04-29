@@ -11,24 +11,25 @@ import org.kohsuke.stapler.DataBoundSetter;
 @Extension
 public class JiraGlobalConfiguration extends GlobalConfiguration {
 
-    @Nonnull
-    public static JiraGlobalConfiguration get() {
-        return (JiraGlobalConfiguration) Jenkins.get().getDescriptorOrDie(JiraGlobalConfiguration.class);
-    }
+  public List<JiraSite> sites = new PersistedList<>(this);
 
-    public List<JiraSite> sites = new PersistedList<>(this);
+  public JiraGlobalConfiguration() {
+    load();
+  }
 
-    public JiraGlobalConfiguration() {
-        load();
-    }
+  @Nonnull
+  public static JiraGlobalConfiguration get() {
+    return (JiraGlobalConfiguration) Jenkins.get()
+        .getDescriptorOrDie(JiraGlobalConfiguration.class);
+  }
 
-    public List<JiraSite> getSites() {
-        return sites;
-    }
+  public List<JiraSite> getSites() {
+    return sites;
+  }
 
-    @DataBoundSetter
-    public void setSites(List<JiraSite> sites) {
-        this.sites = sites;
-        save();
-    }
+  @DataBoundSetter
+  public void setSites(List<JiraSite> sites) {
+    this.sites = sites;
+    save();
+  }
 }
