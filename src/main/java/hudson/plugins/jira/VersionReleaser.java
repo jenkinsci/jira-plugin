@@ -6,12 +6,11 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.extension.ExtendedVersion;
-import org.apache.commons.lang3.StringUtils;
-import org.joda.time.DateTime;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 
 /**
  * used by JiraReleaseVersionUpdaterBuilder to mark a version as released
