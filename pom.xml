@@ -66,28 +66,6 @@
     </developer>
   </developers>
 
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>2.9</version>
-        <configuration>
-          <dependencyLocationsEnabled>false</dependencyLocationsEnabled>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>com.github.danielflower.mavenplugins</groupId>
-        <artifactId>gitlog-maven-plugin</artifactId>
-        <version>1.13.3</version>
-        <configuration>
-          <dateFormat>-</dateFormat>
-          <generateMarkdownChangeLog>true</generateMarkdownChangeLog>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
-
   <build>
     <pluginManagement>
       <plugins>
