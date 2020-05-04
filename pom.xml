@@ -32,7 +32,7 @@
     <spotbugs.failOnError>false</spotbugs.failOnError>
 
     <!-- tests -->
-    <test.configuration-as-code.version>1.36</test.configuration-as-code.version>
+    <test.configuration-as-code.version>1.39</test.configuration-as-code.version>
   </properties>
 
   <scm>
