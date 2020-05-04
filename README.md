@@ -19,7 +19,7 @@ This plugin integrates with Jenkins the [Atlassian Jira Software](http://www.atl
 #### Usage with Jira Cloud
 
 With Atlassian Jira Cloud, it's not possible to create a user without an
-email, so you need to create API token that will be used as a _service user_ 
+email, so you need to create API token that will be used as a _service user_
 by Jenkins to execute API calls to Jira Cloud - follow [Atlassian API tokens documentation](https://confluence.atlassian.com/cloud/api-tokens-938839638.html)
 
 Then create a global Jenkins credential:
@@ -185,33 +185,38 @@ References:
 
 ### Contributing to the Plugin
 
-See [examples](examples/) directory for some useful scripts like:
-
-* [docker_build.sh](examples/docker_build.sh) for building using Docker maven image
-* [docker-compose.yaml](examples/docker-compose.yaml) for running a complete development
-
 New feature proposals and bug fix proposals should be submitted as [GitHub pull requests](https://help.github.com/articles/creating-a-pull-request).
-
-There are two active branches:
-
-* master - bugfixes and development of new features - major x.Y versions are released from this branch
-* hotfix - bugfix branch - selected commits are cherry picked from master branch - patch x.y.Z are released from this branch
 
 Fork the repository on GitHub, prepare your change on your forked copy, and submit a pull request (see [here](https://github.com/jenkinsci/jira-plugin/pulls) for open pull requests).
 
-Your pull request will be evaluated by the [Travis CI Job](https://travis-ci.org/jenkinsci/jira-plugin)  and you should receive e-mail with the results of the evaluation.
-
-If you are adding new features please make sure that they support Jenkins Pipeline Plugin.
-See [here](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for some information.
-
-Before submitting your change make sure that:
-* you added tests - the coverage will be checked after submitting PRs
-* the code formatting follows the plugin standard (i.e. how most of the source code is formatted)
-* imports are organised - please do not use wildcard imports
-* you use findbugs to see if you haven't introduced any new warnings.
+Before submitting your change please note that:
+* tests should be added for any changed code - the coverage is automatically checked after submitting the Pull Request
+* the code formatting should follow the defined standard - see [Code Style](#code-style)
+* you use findbugs to see if you haven't introduced any new warnings
+* when adding new features please make sure that they support Jenkins Pipeline Plugin - see [COMPATIBILITY.md](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for more information
 
 There have been many developers involved in the git plugin and there are many, many users who depend on the git-plugin.  
+
 Tests help us assure that we're delivering a reliable plugin, and that we've communicated our intent to other developers in a way that they can detect when they run tests.
+
+#### Code Style
+
+We try to improve the code quality by conforming to
+[Google Java styleguide](https://google.github.io/styleguide/javaguide.html), that is defined in 
+[google_checks.xml](https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml).
+If you are using an IDE, like IntelliJ IDEA, please:
+
+- install [Google Java Format plugin](https://plugins.jetbrains.com/plugin/8527-google-java-format)
+
+or 
+
+- install the [Checkstyle plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea)
+- go to **Preferences > Editor > Code Style > Java**, select **Scheme** to *Project*
+- click the Cog icon and import Checkstyle configuration from [google_checks.xml](https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml)
+
+Currently the formatting is not automatically checked during the build. However, in the effort to 
+improve the quality of the code,  maintainers might ask for proper formatting during the review 
+process, so it is better to have it in place sooner than later.
 
 #### Building plugin with Docker
 
