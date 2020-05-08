@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
@@ -21,6 +22,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -36,8 +38,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class JiraSiteTest
 {
@@ -343,7 +344,7 @@ public class JiraSiteTest
         JiraSite jiraSite1 = new JiraSite(new URL("https://example1.org/").toExternalForm());
         JiraSite jiraSite2 = new JiraSite(new URL("https://example2.org/").toExternalForm());
 
-        Job<?, ?> job = mock( Job.class);
+        Job<?, ?> job = mock(Job.class);
 
         AbstractFolder folder1 = mock( AbstractFolder.class );
         DescribableList folder1Properties = mock( DescribableList.class );
@@ -353,18 +354,18 @@ public class JiraSiteTest
         DescribableList folder3Properties = mock( DescribableList.class );
         JiraFolderProperty jfp = mock(JiraFolderProperty.class);
 
-        when( job.getProperty(JiraProjectProperty.class)).thenReturn( null );
-        when( job.getParent()).thenReturn( folder1 );
-        when( folder1.getProperties() ).thenReturn( folder1Properties );
-        when( folder1Properties.get( JiraFolderProperty.class ) ).thenReturn( jfp );
-        when( folder1.getParent() ).thenReturn( folder2 );
-        when( folder2.getProperties() ).thenReturn( folder2Properties );
-        when( folder2Properties.get( JiraFolderProperty.class ) ).thenReturn( jfp );
-        when( folder3.getParent() ).thenReturn( folder3 );
-        when( folder3.getProperties() ).thenReturn( folder3Properties );
-        when( folder3Properties.get( JiraFolderProperty.class ) ).thenReturn( jfp );
-        when( folder3.getParent() ).thenReturn( Jenkins.get() );
-        when( jfp.getSites() ).thenReturn( new JiraSite[]{jiraSite2,jiraSite1} );
+        doReturn(null).when(job).getProperty(JiraProjectProperty.class);
+        doReturn(folder1).when(job).getParent();
+        doReturn(folder1Properties).when(folder1).getProperties();
+        doReturn(jfp).when(folder1Properties).get(JiraProjectProperty.class);
+        doReturn(folder2).when(folder1).getParent();
+        doReturn(folder2Properties).when(folder2).getProperties();
+        doReturn(jfp).when(folder2Properties).get(JiraFolderProperty.class);
+        doReturn(folder3).when(folder3).getParent();
+        doReturn(folder3Properties).when(folder3).getProperties();
+        doReturn(jfp).when(folder2Properties).get(JiraFolderProperty.class);
+        doReturn(Jenkins.get()).when(folder3).getParent();
+        doReturn(new JiraSite[]{jiraSite2,jiraSite1}).when(jfp).getSites();
 
         assertEquals( jiraSite2.getUrl(), JiraSite.get( job ).getUrl() );
     }

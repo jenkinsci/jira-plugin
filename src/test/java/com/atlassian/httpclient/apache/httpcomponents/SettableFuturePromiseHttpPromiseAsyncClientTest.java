@@ -59,7 +59,7 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
             @Override
             public Future<HttpResponse> answer(InvocationOnMock invocation) throws Throwable
             {
-                invocation.getArgumentAt(2, FutureCallback.class).completed(response);
+                invocation.getArgument(2, FutureCallback.class).completed(response);
                 return mock(Future.class);
             }
         });
@@ -77,7 +77,7 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
             @Override
             public Future<HttpResponse> answer(InvocationOnMock invocation) throws Throwable
             {
-                invocation.getArgumentAt(2, FutureCallback.class).failed(null);
+                invocation.getArgument(2, FutureCallback.class).failed(null);
                 return mock(Future.class);
             }
         });
@@ -95,7 +95,7 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
             @Override
             public Future<HttpResponse> answer(InvocationOnMock invocation) throws Throwable
             {
-                invocation.getArgumentAt(2, FutureCallback.class).cancelled();
+                invocation.getArgument(2, FutureCallback.class).cancelled();
                 return mock(Future.class);
             }
         });

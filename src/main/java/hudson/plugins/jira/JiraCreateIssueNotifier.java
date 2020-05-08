@@ -311,7 +311,7 @@ public class JiraCreateIssueNotifier extends Notifier {
          // olamy really weird to write an empty file especially with null
         // but backward compat and unit tests assert that.....
         // can't believe such stuff has been merged......
-        try(BufferedWriter bw =Files.newBufferedWriter( Paths.get( filename ) )) {
+        try(BufferedWriter bw =Files.newBufferedWriter(Paths.get(filename))) {
             bw.write(issue.getKey()==null?"null":issue.getKey());
         }
     }

@@ -64,8 +64,8 @@ public class CommentStepTest {
         final List<Object> assertCalledParams = new ArrayList<>();
 
         Mockito.doAnswer( invocation -> {
-                String issueId = invocation.getArgumentAt(0, String.class);
-                String comment = invocation.getArgumentAt(1, String.class);
+                String issueId = invocation.getArgument(0, String.class);
+                String comment = invocation.getArgument(1, String.class);
                 System.out.println("issueId: " + issueId);
                 System.out.println("comment: " + comment);
                 assertThat(issueId, equalTo(issueKey));
