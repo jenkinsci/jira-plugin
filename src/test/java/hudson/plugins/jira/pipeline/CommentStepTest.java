@@ -85,7 +85,7 @@ public class CommentStepTest {
         when(jiraProjectProperty.getSite()).thenReturn(site);
         when(mockJob.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
 
-        Map<String, Object> r = new HashMap<String, Object>();
+        Map<String, Object> r = new HashMap<>();
         r.put("issueKey", issueKey);
         r.put("body", body);
         CommentStep step = (CommentStep) descriptor.newInstance(r);

@@ -7,7 +7,6 @@ import com.atlassian.jira.rest.client.api.domain.Status;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;

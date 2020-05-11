@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
 import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import io.atlassian.util.concurrent.Promise;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import org.junit.Before;
@@ -12,9 +13,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.doReturn;
 
 public class JiraRestServiceTest {
 
@@ -23,18 +28,19 @@ public class JiraRestServiceTest {
     private final String PASSWORD = "password";
     private ExtendedJiraRestClient client;
     private SearchRestClient searchRestClient;
-    private Promise searchResult;
+    private Promise promise;
+    private SearchResult searchResult;
 
     @Before
     public void createMocks() throws InterruptedException, ExecutionException, TimeoutException {
         client = mock(ExtendedJiraRestClient.class);
         searchRestClient = mock(SearchRestClient.class);
-        searchResult = mock(Promise.class);
+        promise = mock(Promise.class);
+        searchResult = mock(SearchResult.class);
 
-        when(client.getSearchClient()).thenReturn(searchRestClient);
-        when(searchRestClient.searchJql(Mockito.anyString(), Mockito.anyInt(), Mockito.anyInt(), Mockito.anySetOf(String.class)))
-            .thenReturn(searchResult);
-        when(searchResult.get(Mockito.anyInt(), Mockito.any())).thenReturn(searchResult);
+        doReturn(searchRestClient).when(client).getSearchClient();
+        doReturn(promise).when(searchRestClient).searchJql(any(), any(), anyInt(), any());
+        doReturn(searchResult).when(promise).get(anyLong(), any());
     }
 
     @Test
@@ -50,8 +56,7 @@ public class JiraRestServiceTest {
     @Test(expected = TimeoutException.class)
     public void getIssuesFromJqlSearchTimeout() throws TimeoutException, InterruptedException, ExecutionException {
         JiraRestService service = spy(new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT));
-        when(searchResult.get(Mockito.anyInt(), Mockito.any()))
-            .thenThrow(new TimeoutException());
+        doThrow(new TimeoutException()).when(promise).get(Mockito.anyLong(), Mockito.any());
         service.getIssuesFromJqlSearch("*", null);
     }
 }
