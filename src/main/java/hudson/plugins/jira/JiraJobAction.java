@@ -16,6 +16,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.logging.Level;
@@ -31,7 +32,7 @@ import java.util.regex.Pattern;
  * e.g. "JENKINS-1234" and "feature/JENKINS-1234" will have this action with the issue JENKINS-1234 referenced
  */
 @ExportedBean
-public class JiraJobAction implements Action {
+public class JiraJobAction implements Action, Serializable {
 
     private static final Logger LOGGER = Logger.getLogger(JiraJobAction.class.getName());
 
@@ -70,7 +71,7 @@ public class JiraJobAction implements Action {
      * @param site to fetch issue data
      * @throws IOException if something goes wrong fetching the Jira issue
      */
-    public static void setAction(@Nonnull Job<?, ?> job, @Nonnull JiraSite site) throws IOException {
+    public static void setAction(@Nonnull Job job, @Nonnull JiraSite site) throws IOException {
         // If there is already a action set then skip
         if (job.getAction(JiraJobAction.class) != null) {
             return;

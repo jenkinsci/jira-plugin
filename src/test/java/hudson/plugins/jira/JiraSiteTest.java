@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
-import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty;
+import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -10,7 +11,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import hudson.model.ItemGroup;
+import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.util.DescribableList;
@@ -22,7 +23,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
-import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -30,14 +30,8 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.empty;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 public class JiraSiteTest
@@ -304,70 +298,49 @@ public class JiraSiteTest
     }
 
     @Test
-    public void noProjectPropertyParentNotFolderAndNotItem() {
+    public void noProjectProperty() throws Exception {
         JiraGlobalConfiguration.get().setSites( null );
-        Job<?, ?> job = mock( Job.class);
-        ItemGroup nonFolderParent = mock( ItemGroup.class );
-
-        when( job.getProperty(JiraProjectProperty.class)).thenReturn( null );
-        when( job.getParent()).thenReturn( nonFolderParent );
-
+        Job<?, ?> job = j.jenkins.createProject(FreeStyleProject.class, "foo");
         assertNull( JiraSite.get( job ) );
     }
 
     @Test
-    public void noProjectPropertyUpFoldersWithNoProperty() {
+    public void noProjectPropertyUpFoldersWithNoProperty() throws Exception {
         JiraGlobalConfiguration jiraGlobalConfiguration = mock(JiraGlobalConfiguration.class);
-        Job<?, ?> job = mock( Job.class);
-        ItemGroup nonFolderParent = mock( ItemGroup.class );
-        AbstractFolder folder1 = mock( AbstractFolder.class );
-        DescribableList folder1Properties = mock( DescribableList.class );
-        AbstractFolder folder2 = mock( AbstractFolder.class );
-        DescribableList folder2Properties = mock( DescribableList.class );
 
-        when( job.getProperty(JiraProjectProperty.class)).thenReturn( null );
-        when( job.getParent()).thenReturn( folder1 );
-        when( folder1.getProperties() ).thenReturn( folder1Properties );
-        when( folder1Properties.get( JiraFolderProperty.class ) ).thenReturn( null );
-        when( folder1.getParent() ).thenReturn( folder2 );
-        when( folder2.getProperties() ).thenReturn( folder2Properties );
-        when( folder2Properties.get( JiraFolderProperty.class ) ).thenReturn( null );
-        when( folder2.getParent() ).thenReturn( nonFolderParent );
-        when( jiraGlobalConfiguration.getSites() ).thenReturn( Collections.emptyList() );
+        Folder folder2 = spy(createFolder(null));
+        Folder folder1 = spy(createFolder(folder2));
+        Job<?, ?> job = folder1.createProject(FreeStyleProject.class, "foo");
+
+        DescribableList<AbstractFolderProperty<?>, AbstractFolderPropertyDescriptor> folder1Properties = spy(new DescribableList(Jenkins.get()));
+        DescribableList<AbstractFolderProperty<?>, AbstractFolderPropertyDescriptor> folder2Properties = spy(new DescribableList(Jenkins.get()));
+
+        doReturn(folder1Properties).when(folder1).getProperties();
+        doReturn(folder2Properties).when(folder2).getProperties();
+        doReturn(Collections.emptyList()).when(jiraGlobalConfiguration).getSites();
 
         assertNull( JiraSite.get( job ) );
     }
-
 
     @Test
     public void noProjectPropertyFindFolderPropertyWithNullZeroLengthAndValidSites()  throws Exception {
         JiraSite jiraSite1 = new JiraSite(new URL("https://example1.org/").toExternalForm());
         JiraSite jiraSite2 = new JiraSite(new URL("https://example2.org/").toExternalForm());
 
-        Job<?, ?> job = mock(Job.class);
+        Folder folder1 = spy(createFolder(null));
+        Job job = folder1.createProject(FreeStyleProject.class, "foo");
+        DescribableList<AbstractFolderProperty<?>, AbstractFolderPropertyDescriptor> folder1Properties = new DescribableList(Jenkins.get());
 
-        AbstractFolder folder1 = mock( AbstractFolder.class );
-        DescribableList folder1Properties = mock( DescribableList.class );
-        AbstractFolder folder2 = mock( AbstractFolder.class );
-        DescribableList folder2Properties = mock( DescribableList.class );
-        AbstractFolder folder3 = mock( AbstractFolder.class );
-        DescribableList folder3Properties = mock( DescribableList.class );
-        JiraFolderProperty jfp = mock(JiraFolderProperty.class);
+        Folder folder2 = spy(createFolder(folder1));
+        DescribableList<AbstractFolderProperty<?>, AbstractFolderPropertyDescriptor>  folder2Properties = new DescribableList(Jenkins.get());
+        JiraFolderProperty jfp = new JiraFolderProperty();
+        jfp.setSites(Arrays.asList( jiraSite2,jiraSite1 ));
+        folder1Properties.add(jfp);
+        folder1.addProperty(folder1Properties.get(JiraFolderProperty.class));
+        folder2Properties.add(jfp);
+        folder2.addProperty(folder2Properties.get(JiraFolderProperty.class));
 
-        doReturn(null).when(job).getProperty(JiraProjectProperty.class);
-        doReturn(folder1).when(job).getParent();
-        doReturn(folder1Properties).when(folder1).getProperties();
-        doReturn(jfp).when(folder1Properties).get(JiraProjectProperty.class);
-        doReturn(folder2).when(folder1).getParent();
-        doReturn(folder2Properties).when(folder2).getProperties();
-        doReturn(jfp).when(folder2Properties).get(JiraFolderProperty.class);
-        doReturn(folder3).when(folder3).getParent();
-        doReturn(folder3Properties).when(folder3).getProperties();
-        doReturn(jfp).when(folder2Properties).get(JiraFolderProperty.class);
-        doReturn(Jenkins.get()).when(folder3).getParent();
-        doReturn(new JiraSite[]{jiraSite2,jiraSite1}).when(jfp).getSites();
-
-        assertEquals( jiraSite2.getUrl(), JiraSite.get( job ).getUrl() );
+        assertEquals(jiraSite2.getUrl(), JiraSite.get(job).getUrl());
     }
 
     @Test
@@ -375,10 +348,7 @@ public class JiraSiteTest
         JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());
         JiraGlobalConfiguration.get().setSites( Collections.singletonList( jiraSite ) );
         Job<?, ?> job = mock( Job.class);
-        ItemGroup nonFolderParent = mock( ItemGroup.class );
-
-        when( job.getProperty(JiraProjectProperty.class)).thenReturn( null );
-        when( job.getParent() ).thenReturn( nonFolderParent );
+        doReturn(null).when(job).getProperty(JiraProjectProperty.class);
 
         assertEquals( jiraSite.getUrl(), JiraSite.get(job).getUrl() );
     }
@@ -391,6 +361,11 @@ public class JiraSiteTest
         assertNull(jiraSite.getSession());
         JiraIssue issue = jiraSite.getIssue("JIRA-1235");
         assertNull(issue);
+    }
+
+    private Folder createFolder(Folder folder) throws IOException {
+        return folder == null ? j.jenkins.createProject(Folder.class, "folder" + j.jenkins.getItems().size()):
+            folder.createProject(Folder.class, "folder" + j.jenkins.getItems().size());
     }
 
 }
