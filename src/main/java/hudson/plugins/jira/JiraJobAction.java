@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * e.g. "JENKINS-1234" and "feature/JENKINS-1234" will have this action with the issue JENKINS-1234 referenced
  */
 @ExportedBean
-public class JiraJobAction implements Action, Serializable {
+public class JiraJobAction implements Action {
 
     private static final Logger LOGGER = Logger.getLogger(JiraJobAction.class.getName());
 
