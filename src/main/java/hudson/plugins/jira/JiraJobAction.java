@@ -16,7 +16,6 @@ import org.kohsuke.stapler.export.ExportedBean;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.logging.Level;
