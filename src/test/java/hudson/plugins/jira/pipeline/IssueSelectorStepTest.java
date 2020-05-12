@@ -5,6 +5,7 @@ import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraGlobalConfiguration;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -17,18 +18,18 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.mock;
 
 @RunWith(MockitoJUnitRunner.class)
 public class IssueSelectorStepTest {
@@ -70,8 +71,9 @@ public class IssueSelectorStepTest {
     @Test
     public void runWithNullSite() throws Exception {
         stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
-        doReturn(Optional.empty()).when(stepExecution).getOptionalJiraSite();
+        //doReturn(Optional.empty()).when(stepExecution).getOptionalJiraSite();
 
+        doCallRealMethod().when(run).getParent();
         Set<String> ids = stepExecution.run();
 
         verify(run, times(1)).setResult(Result.FAILURE);
@@ -80,10 +82,11 @@ public class IssueSelectorStepTest {
 
     @Test
     public void run() throws Exception {
-        stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
         JiraSite site = mock(JiraSite.class);
-
-        doReturn(Optional.of(site)).when(stepExecution).getOptionalJiraSite();
+        JiraGlobalConfiguration jiraGlobalConfiguration = JiraGlobalConfiguration.get();
+        jiraGlobalConfiguration.setSites(Collections.singletonList(site));
+        stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
+        doCallRealMethod().when(run).getParent();
 
         stepExecution.run();
 

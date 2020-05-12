@@ -115,9 +115,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <systemPropertyVariables>
-            <hudson.remoting.ClassFilter>hudson.plugins.jira.JiraFolderProperty,hudson.plugins.jira.JiraSite,hudson.plugins.jira.JiraJobAction</hudson.remoting.ClassFilter>
-          </systemPropertyVariables>
+          <!-- not reuse because Mockito record stuff statically and some are changing between tests so it suc... -->
+          <reuseForks>false</reuseForks>
+          <!-- to run some tests within your IDE you will need this -->
+<!--          <systemPropertyVariables>-->
+<!--            <hudson.remoting.ClassFilter>hudson.plugins.jira.JiraFolderProperty,hudson.plugins.jira.JiraSite,hudson.plugins.jira.JiraJobAction</hudson.remoting.ClassFilter>-->
+<!--          </systemPropertyVariables>-->
         </configuration>
       </plugin>
     </plugins>
