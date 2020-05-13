@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 import hudson.scm.ChangeLogParser;
 import hudson.scm.SCM;

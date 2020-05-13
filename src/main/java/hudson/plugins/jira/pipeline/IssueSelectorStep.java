@@ -83,17 +83,13 @@ public class IssueSelectorStep extends AbstractStepImpl {
 
         @Override
         protected Set<String> run() {
-            return getOptionalJiraSite()
+            return Optional.ofNullable(JiraSite.get(run.getParent()))
                 .map(site -> step.getIssueSelector().findIssueIds(run, site, listener))
                 .orElseGet(() -> {
                     listener.getLogger().println(Messages.NoJiraSite());
                     run.setResult(Result.FAILURE);
                     return new HashSet<>();
                 });
-        }
-
-        Optional<JiraSite> getOptionalJiraSite() {
-            return Optional.ofNullable(JiraSite.get(run.getParent()));
         }
     }
 

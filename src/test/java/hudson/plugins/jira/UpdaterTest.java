@@ -29,8 +29,6 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -44,13 +42,14 @@ import java.util.Set;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Test case for the Jira {@link Updater}.
@@ -146,8 +145,8 @@ public class UpdaterTest {
         updater.submitComments(build2, System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(2, comments.size());
-        Assert.assertThat(comments.get(0).getBody(), Matchers.containsString(entry1.getMsg()));
-        Assert.assertThat(comments.get(1).getBody(), Matchers.containsString(entry2.getMsg()));
+        assertThat(comments.get(0).getBody(), Matchers.containsString(entry1.getMsg()));
+        assertThat(comments.get(1).getBody(), Matchers.containsString(entry2.getMsg()));
     }
 
     /**
@@ -269,7 +268,7 @@ public class UpdaterTest {
         // expected issue list
         final Set<JiraIssue> expectedIssuesToCarryOver = new LinkedHashSet();
         expectedIssuesToCarryOver.add(forbiddenIssue);
-        Assert.assertThat(issues, is(expectedIssuesToCarryOver));
+        assertThat(issues, is(expectedIssuesToCarryOver));
     }
     
     @Rule
@@ -318,7 +317,7 @@ public class UpdaterTest {
         when(site.getDateTimePattern()).thenReturn("yyyy-MM-dd HH:mm:ss");
         updater.appendChangeTimestampToDescription(description, site, calendar.getTimeInMillis());
         System.out.println(description.toString());
-        Assert.assertThat(description.toString(), equalTo("2016-01-01 00:00:00"));
+        assertThat(description.toString(), equalTo("2016-01-01 00:00:00"));
     }
 
     /**
@@ -351,9 +350,9 @@ public class UpdaterTest {
 
         String description = updater.createScmChangeEntryDescription(r, entry, false, false);
         System.out.println(description);
-        Assert.assertThat(description, containsString("2016-01-01 00:00:00"));
-        Assert.assertThat(description, containsString("jenkins-user"));
-        Assert.assertThat(description, containsString("dsgsvds2re3dsv"));
+        assertThat(description, containsString("2016-01-01 00:00:00"));
+        assertThat(description, containsString("jenkins-user"));
+        assertThat(description, containsString("dsgsvds2re3dsv"));
     }
 
     /**
@@ -378,7 +377,7 @@ public class UpdaterTest {
         
         StringBuilder builder = new StringBuilder();
         updater.appendChangeTimestampToDescription(builder, site, calendar.getTimeInMillis());
-        Assert.assertThat(builder.toString(), equalTo("1/1/16 12:00 AM"));        
+        assertThat(builder.toString(), equalTo("1/1/16 12:00 AM"));        
     }
     
     /**
@@ -403,7 +402,7 @@ public class UpdaterTest {
         
         StringBuilder builder = new StringBuilder();
         updater.appendChangeTimestampToDescription(builder, site, calendar.getTimeInMillis());
-        Assert.assertThat(builder.toString(), equalTo("1/1/16 12:00 AM"));        
+        assertThat(builder.toString(), equalTo("1/1/16 12:00 AM"));        
     }
 
     /**
@@ -455,7 +454,7 @@ public class UpdaterTest {
 
         String description = updater.createScmChangeEntryDescription(r, entry, true, true);
         System.out.println(description);
-        Assert.assertThat(description,
+        assertThat(description,
                 equalTo(" (jenkins-user: rev dsgsvds2re3dsv)\n" + "* (add) hudson/plugins/jira/File1\n" + "* \n"
                         + "* (delete) hudson/plugins/jira/File2\n" + "* (edit) hudson/plugins/jira/File3\n"));
     }

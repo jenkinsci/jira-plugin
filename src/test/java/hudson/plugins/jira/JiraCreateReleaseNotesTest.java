@@ -16,7 +16,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
+
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -33,7 +34,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith( MockitoJUnitRunner.class)
 public class JiraCreateReleaseNotesTest {
 
     private static final String JIRA_RELEASE = Long.toString(System.currentTimeMillis());
@@ -63,7 +64,6 @@ public class JiraCreateReleaseNotesTest {
         when(build.getProject()).thenReturn(project);
         when(build.getEnvironment(buildListener)).thenReturn(env);
         when(buildListener.fatalError(Mockito.anyString(), Mockito.anyVararg())).thenReturn(printWriter);
-        when(build.getResult()).thenCallRealMethod();
 
         when(env.expand(Mockito.anyString())).thenAnswer(invocationOnMock -> {
                 Object[] args = invocationOnMock.getArguments();
@@ -98,7 +98,6 @@ public class JiraCreateReleaseNotesTest {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
-        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.anyObject());
         jcrn.setUp(build, launcher, buildListener);
         verify(site).getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JIRA_OTHER_FILTER);
         //assert that build not fail

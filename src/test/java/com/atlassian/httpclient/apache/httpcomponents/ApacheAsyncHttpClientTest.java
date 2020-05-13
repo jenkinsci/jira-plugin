@@ -134,7 +134,7 @@ public class ApacheAsyncHttpClientTest
         ProxyTestHandler testHandler = new ProxyTestHandler();
         prepare( testHandler );
 
-        Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
+        Jenkins.get().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
 
         ApacheAsyncHttpClient httpClient =
             new ApacheAsyncHttpClient( null, buildApplicationProperties(),

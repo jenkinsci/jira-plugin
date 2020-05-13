@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>3.43</version>
+    <version>4.1</version>
     <relativePath />
   </parent>
 
@@ -19,20 +19,12 @@
     <revision>3.0.16</revision>
     <changelist>-SNAPSHOT</changelist>
     <java.level>8</java.level>
-    <mockito.version>1.10.19</mockito.version>
     <jira-rest-client.version>5.2.1</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
-    <workflow.version>2.0</workflow.version>
-    <slf4jVersion>1.7.26</slf4jVersion>
-
     <!-- jenkins -->
     <jenkins.version>2.176.4</jenkins.version>
-
     <!-- security -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
-
-    <!-- tests -->
-    <test.configuration-as-code.version>1.36</test.configuration-as-code.version>
   </properties>
 
   <scm>
@@ -119,6 +111,18 @@
          </execution>
        </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- not reuse because Mockito record stuff statically and some are changing between tests so it suc... -->
+          <reuseForks>false</reuseForks>
+          <!-- to run some tests within your IDE you will need this -->
+<!--          <systemPropertyVariables>-->
+<!--            <hudson.remoting.ClassFilter>hudson.plugins.jira.JiraFolderProperty,hudson.plugins.jira.JiraSite,hudson.plugins.jira.JiraJobAction</hudson.remoting.ClassFilter>-->
+<!--          </systemPropertyVariables>-->
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -194,7 +198,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
-      <version>4.5.10-1.0</version>
     </dependency>
 
     <dependency>
@@ -210,16 +213,13 @@
     </dependency>
 
     <!-- Jenkins plugin dependencies -->
-
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
-      <version>1.14</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>mailer</artifactId>
-      <version>1.20</version>
     </dependency>
 
     <dependency>
@@ -231,7 +231,6 @@
     <dependency>
       <artifactId>workflow-step-api</artifactId>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <version>${workflow.version}</version>
       <optional>true</optional>
     </dependency>
     <dependency>
@@ -242,7 +241,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-job</artifactId>
-      <version>${workflow.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -257,49 +255,32 @@
       </exclusions>
     </dependency>
 
-    <!-- Upper bound dependencies -->
-
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>structs</artifactId>
-      <version>1.7</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>credentials</artifactId>
-      <version>2.2.1</version>
-    </dependency>
-
     <!-- test dependencies -->
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
-      <version>${test.configuration-as-code.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
-      <version>${mockito.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.github.mifmif</groupId>
-      <artifactId>generex</artifactId>
-      <version>1.0.2</version>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-scm-step</artifactId>
-      <version>${workflow.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-step-api</artifactId>
-      <version>${workflow.version}</version>
       <classifier>tests</classifier>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins.workflow</groupId>
+      <artifactId>workflow-multibranch</artifactId>
+      <version>2.10</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -307,15 +288,11 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
-        <groupId>org.apache.commons</groupId>
-        <artifactId>commons-lang3</artifactId>
-        <version>3.9</version>
-      </dependency>
-      <dependency>
-        <groupId>org.jenkins-ci.main</groupId>
-        <artifactId>jenkins-test-harness</artifactId>
-        <version>2.63</version>
-        <scope>test</scope>
+        <groupId>io.jenkins.tools.bom</groupId>
+        <artifactId>bom-2.176.x</artifactId>
+        <version>9</version>
+        <scope>import</scope>
+        <type>pom</type>
       </dependency>
       <dependency>
         <groupId>junit</groupId>

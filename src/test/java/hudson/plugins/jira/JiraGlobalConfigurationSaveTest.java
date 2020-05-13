@@ -11,7 +11,7 @@ import org.jvnet.hudson.test.RestartableJenkinsRule;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class JiraGlobalConfigurationSaveTest {
 

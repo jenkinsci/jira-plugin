@@ -13,18 +13,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -82,7 +82,6 @@ public class VersionCreatorTest {
     @Test
     public void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
-        when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
         versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
@@ -94,7 +93,6 @@ public class VersionCreatorTest {
     @Test
     public void expandsEnvParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
-        when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
         versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);

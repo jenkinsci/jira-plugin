@@ -5,9 +5,8 @@ import com.atlassian.jira.rest.client.api.domain.Transition;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Matchers;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -19,17 +18,19 @@ import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNull;
-import static org.mockito.Mockito.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
-
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.never;
 
 /**
  * User: lanwen
@@ -68,7 +69,7 @@ public class ChangingWorkflowTest {
 
     @Test
     public void getActionIdReturnsNullWhenServiceReturnsNull() throws Exception {
-        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(null);
+        doReturn(null).when(restService).getAvailableActions(ISSUE_JQL);
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), nullValue());
     }
 
@@ -78,10 +79,10 @@ public class ChangingWorkflowTest {
         Transition action1 = mock(Transition.class);
         Transition action2 = mock(Transition.class);
 
-        when(action1.getName()).thenReturn(null);
-        when(action2.getName()).thenReturn("name");
+        doReturn(null).when(action1).getName();
+        doReturn("name").when(action2).getName();
 
-        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn( Arrays.asList(action1, action2));
+        doReturn(Arrays.asList(action1, action2)).when(restService).getAvailableActions(ISSUE_JQL);
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), nullValue());
 
         verify(action1, times(1)).getName();
@@ -112,46 +113,40 @@ public class ChangingWorkflowTest {
 
     @Test
     public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
-        when(site.getSession()).thenReturn(mockSession);
-        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
-        when(mockSession.getActionIdForIssue(anyString(),
-                eq(NON_EMPTY_WORKFLOW_LOWERCASE))).thenReturn(Integer.valueOf(randomNumeric(5)));
-        when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
-                .thenCallRealMethod();
+        doReturn(mockSession).when(site).getSession();
+        doReturn(Arrays.asList(mock(Issue.class))).when(mockSession).getIssuesFromJqlSearch(anyString());
+        doReturn(Integer.valueOf(randomNumeric(5)))
+            .when(mockSession)
+            .getActionIdForIssue(any(),eq(NON_EMPTY_WORKFLOW_LOWERCASE));
+        doCallRealMethod().when(site)
+            .progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class));
 
         site.progressMatchingIssues(ISSUE_JQL,
                 NON_EMPTY_WORKFLOW_LOWERCASE, NON_EMPTY_COMMENT, mock(PrintStream.class));
 
-        verify(mockSession, times(1)).addComment(anyString(), eq(NON_EMPTY_COMMENT),
-                isNull(String.class), isNull(String.class));
-        verify(mockSession, times(1)).progressWorkflowAction(anyString(), anyInt());
+        verify(mockSession, times(1)).addComment(any(), eq(NON_EMPTY_COMMENT),
+                isNull(), isNull());
+        verify(mockSession, times(1)).progressWorkflowAction(any(), anyInt());
     }
 
 
     @Test
     public void addCommentsOnNullWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
-        when(site.getSession()).thenReturn(mockSession);
-        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
-        when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
-                .thenCallRealMethod();
+        doReturn(mockSession).when(site).getSession();
+        doReturn(Arrays.asList(mock(Issue.class))).when(mockSession).getIssuesFromJqlSearch(anyString());
+        doCallRealMethod().when(site).progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class));
 
-        site.progressMatchingIssues(ISSUE_JQL, null, NON_EMPTY_COMMENT, mock(PrintStream.class));
+        site.progressMatchingIssues(ISSUE_JQL, "", NON_EMPTY_COMMENT, mock(PrintStream.class));
 
-        verify(mockSession, times(1)).addComment(anyString(), eq(NON_EMPTY_COMMENT),
-                isNull(String.class), isNull(String.class));
+        verify(mockSession, times(1)).addComment(any(), eq(NON_EMPTY_COMMENT),
+                isNull(), isNull());
     }
 
 
     @Test
     public void dontAddCommentsOnNullWorkflowAndNullComment() throws IOException, TimeoutException {
-        when(site.getSession()).thenReturn(mockSession);
-        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
-        when(site.progressMatchingIssues(anyString(), anyString(), anyString(), Matchers.any(PrintStream.class)))
-                .thenCallRealMethod();
-
         site.progressMatchingIssues(ISSUE_JQL, null, null, mock(PrintStream.class));
-
-        verify(mockSession, never()).addComment(anyString(), anyString(), isNull(String.class), isNull(String.class));
+        verify(mockSession, never()).addComment(anyString(), anyString(), isNull(), isNull());
     }
 
 

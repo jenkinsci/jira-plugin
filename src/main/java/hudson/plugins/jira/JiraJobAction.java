@@ -70,7 +70,7 @@ public class JiraJobAction implements Action {
      * @param site to fetch issue data
      * @throws IOException if something goes wrong fetching the Jira issue
      */
-    public static void setAction(@Nonnull Job<?, ?> job, @Nonnull JiraSite site) throws IOException {
+    public static void setAction(@Nonnull Job job, @Nonnull JiraSite site) throws IOException {
         // If there is already a action set then skip
         if (job.getAction(JiraJobAction.class) != null) {
             return;

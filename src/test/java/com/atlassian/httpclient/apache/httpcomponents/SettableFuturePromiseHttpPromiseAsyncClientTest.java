@@ -11,13 +11,12 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.protocol.HttpContext;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
@@ -26,7 +25,7 @@ import java.io.IOException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
-@RunWith(MockitoJUnitRunner.class)
+@RunWith( MockitoJUnitRunner.class)
 public class SettableFuturePromiseHttpPromiseAsyncClientTest
 {
 
@@ -59,7 +58,7 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
             @Override
             public Future<HttpResponse> answer(InvocationOnMock invocation) throws Throwable
             {
-                invocation.getArgumentAt(2, FutureCallback.class).completed(response);
+                invocation.getArgument(2, FutureCallback.class).completed(response);
                 return mock(Future.class);
             }
         });
@@ -77,7 +76,7 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
             @Override
             public Future<HttpResponse> answer(InvocationOnMock invocation) throws Throwable
             {
-                invocation.getArgumentAt(2, FutureCallback.class).failed(null);
+                invocation.getArgument(2, FutureCallback.class).failed(null);
                 return mock(Future.class);
             }
         });
@@ -95,7 +94,7 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
             @Override
             public Future<HttpResponse> answer(InvocationOnMock invocation) throws Throwable
             {
-                invocation.getArgumentAt(2, FutureCallback.class).cancelled();
+                invocation.getArgument(2, FutureCallback.class).cancelled();
                 return mock(Future.class);
             }
         });

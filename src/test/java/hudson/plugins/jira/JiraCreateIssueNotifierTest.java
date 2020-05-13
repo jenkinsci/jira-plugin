@@ -7,9 +7,9 @@ import com.atlassian.jira.rest.client.api.domain.Status;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,7 +48,7 @@ public class JiraCreateIssueNotifierTest {
     JiraSession session = mock(JiraSession.class);
     EnvVars env;
 
-    AbstractProject project = mock(AbstractProject.class);
+    FreeStyleProject project = mock(FreeStyleProject.class);
     AbstractBuild previousBuild = mock(FreeStyleBuild.class);
     AbstractBuild currentBuild = mock(FreeStyleBuild.class);
     File temporaryDirectory;
@@ -86,11 +86,11 @@ public class JiraCreateIssueNotifierTest {
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
 
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", 1L, 1L, 1));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
+        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyIterable(), Mockito.anyString(),
                 Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
 
         assertTrue(notifier.perform(currentBuild, launcher, buildListener));
@@ -98,13 +98,13 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     public void performFailureFailure() throws Exception {
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT, 1L, 1L, 1));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
 
         Status status =  new Status(null, null, "1", "Open", null, null);
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
+        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyIterable(), Mockito.anyString(),
                 Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
@@ -145,7 +145,7 @@ public class JiraCreateIssueNotifierTest {
 
         Issue issue = mock(Issue.class);
         Status status =  new Status(null, null, "1", "Open", null, null);
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
+        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyIterable(), Mockito.anyString(),
                 Mockito.eq(typeId), Mockito.isNull(Long.class))).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
@@ -170,13 +170,13 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     public void performFailureSuccessIssueClosedWithComponents() throws Exception {
-        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", ""));
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", 1L, 1L, 1));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
         Issue issue = mock(Issue.class);
         Status status = new Status(null, null, JiraCreateIssueNotifier.finishedStatuses.Closed.toString() , null, null, null);
 
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyList(), Mockito.anyString(),
+        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyIterable(), Mockito.anyString(),
                 Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);

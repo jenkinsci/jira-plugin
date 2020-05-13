@@ -206,7 +206,7 @@ public class JiraRestService {
                                                             .searchJql(jqlSearch, maxResults, 0, null)
                                                             .get(timeout, TimeUnit.SECONDS);
             return StreamSupport.stream(searchResult.getIssues().spliterator(), false).
-                collect( Collectors.toList() );
+                collect(Collectors.toList());
         } catch(TimeoutException e) {
             LOGGER.log(WARNING, "Jira REST client timeout from jql search error. cause: " + e.getMessage(), e);
             throw e;

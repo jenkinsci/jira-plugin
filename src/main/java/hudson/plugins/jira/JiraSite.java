@@ -838,20 +838,25 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *         if no such was found.
      */
     public static JiraSite get(Job<?, ?> p) {
-        JiraProjectProperty jpp = p.getProperty(JiraProjectProperty.class);
-        if (jpp != null) {
-            // Looks in global configuration for the site configured
-            JiraSite site = jpp.getSite();
-            if (site != null) {
-                return site;
+        if(p != null) {
+            JiraProjectProperty jpp = p.getProperty(JiraProjectProperty.class);
+            if (jpp != null) {
+                // Looks in global configuration for the site configured
+                JiraSite site = jpp.getSite();
+                if (site != null) {
+                    return site;
+                }
             }
         }
 
-        // Check up the folder chain if a site is defined there
-        // This only supports one site per folder
-        List<JiraSite> sitesFromFolders = JiraFolderProperty.getSitesFromFolders(p.getParent());
-        if (sitesFromFolders.size() > 0) {
-            return sitesFromFolders.get(0);
+        if(p != null) {
+            // Check up the folder chain if a site is defined there
+            // This only supports one site per folder
+            List<JiraSite> sitesFromFolders = JiraFolderProperty.getSitesFromFolders( p.getParent() );
+            if ( sitesFromFolders.size() > 0 )
+            {
+                return sitesFromFolders.get( 0 );
+            }
         }
 
         // none is explicitly configured. try the default ---
