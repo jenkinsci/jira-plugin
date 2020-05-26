@@ -24,6 +24,7 @@ public class VersionComparatorTest
                 "PDFREPORT-2.3", //
                 "1.12.2.3.4", //
                 "1.3.4", //
+                "PDFREPORT-", //
                 "1.1.1.2", //
                 "VER 1.0", //
                 "1.1.1.1" };
@@ -37,7 +38,8 @@ public class VersionComparatorTest
                 "1.3.4", //
                 "1.1.1.2", //
                 "1.1.1.1", //
-                "VER 1.0" };
+                "VER 1.0", //
+                "PDFREPORT-" };
 
         List<String> result =
             Arrays.asList(input).stream().
@@ -67,6 +69,8 @@ public class VersionComparatorTest
         assertEquals(-1, compare( "PDFREPORT-2.3.4", "1.2.3"));
         assertEquals(1, compare( "PDFREPORT-2.3.4", "4.5.6"));
         assertEquals(-1, compare( "PDFREPORT-2.3.4", "x"));
+        assertEquals(0, compare( "PDFREPORT2-", "PDFREPORT2-"));
+        assertEquals(1, compare( "PDFREPORT-", "PDFREPORT2-"));
 
     }
 
