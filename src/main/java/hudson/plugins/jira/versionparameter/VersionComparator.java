@@ -41,7 +41,7 @@ public class VersionComparator implements Comparator<Version> {
      */
     protected String getNumberVersion(String firstV) {
         String res = firstV;
-        if (!firstV.matches("[0-9.]+") && firstV.contains("-")) {
+        if (firstV.contains("-")) {
             String[] splittedVersion = firstV.split("-");
             if(splittedVersion.length > 1) {
                 res = splittedVersion[1];
