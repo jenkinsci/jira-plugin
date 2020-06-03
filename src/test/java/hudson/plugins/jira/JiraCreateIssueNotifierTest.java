@@ -26,6 +26,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -38,6 +39,7 @@ public class JiraCreateIssueNotifierTest {
     private static final String COMPONENT = "some, componentA";
     private static final String ASSIGNEE = "user.name";
     private static final String DESCRIPTION = "Some description";
+    private static final String DESCRIPTION_PARAM = "${DESCRIPTION}";
 
     List<Component> jiraComponents = new ArrayList<>();
 
@@ -62,6 +64,7 @@ public class JiraCreateIssueNotifierTest {
         env.put("BUILD_NUMBER", "10");
         env.put("BUILD_URL", "/some/url/to/job");
         env.put("JOB_NAME", "Some job");
+        env.put("DESCRIPTION", DESCRIPTION);
 
         jiraComponents.add(new Component(null, null, "componentA", null, null));
 
@@ -97,6 +100,21 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
+    public void performSuccessFailureWithEnv() throws Exception {
+        when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
+        when(currentBuild.getResult()).thenReturn(Result.FAILURE);
+
+        JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION_PARAM, "", "", 1L, 1L, 1));
+        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
+
+        Issue issue = mock(Issue.class);
+        when(session.createIssue(Mockito.anyString(), contains(DESCRIPTION), Mockito.anyString(), Mockito.anyIterable(), Mockito.anyString(),
+        Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
+
+        assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+      }
+
+    @Test
     public void performFailureFailure() throws Exception {
         JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT, 1L, 1L, 1));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
@@ -104,7 +122,7 @@ public class JiraCreateIssueNotifierTest {
         Issue issue = mock(Issue.class);
 
         Status status =  new Status(null, null, "1", "Open", null, null);
-        when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyIterable(), Mockito.anyString(),
+        when(session.createIssue(Mockito.anyString(), contains(DESCRIPTION), Mockito.anyString(), Mockito.anyIterable(), Mockito.anyString(),
                 Mockito.anyLong(), Mockito.anyLong())).thenReturn(issue);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
