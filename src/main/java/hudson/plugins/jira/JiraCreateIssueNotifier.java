@@ -185,7 +185,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         String summary = String.format("Build %s failed", buildName);
         String description = String.format(
                 "%s\n\nThe build %s has failed.\nFirst failed run: %s",
-                (this.testDescription.equals("")) ? "No description is provided" : this.testDescription,
+                (this.testDescription.equals("")) ? "No description is provided" : vars.expand(this.testDescription),
                 buildName,
                 getBuildDetailsString(vars)
         );
