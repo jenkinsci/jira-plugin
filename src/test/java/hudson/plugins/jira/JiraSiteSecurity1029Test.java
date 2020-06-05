@@ -190,7 +190,7 @@ public class JiraSiteSecurity1029Test {
         { // as an user with folder access, I can access
             Folder folder = j.jenkins.createProject(Folder.class, "folder" + j.jenkins.getItems().size());
 
-            CredentialsStore folderStore = getFolderStore(folder);
+            CredentialsStore folderStore = JiraFolderPropertyTest.getFolderStore(folder);
             folderStore.addCredentials( Domain.global(), cred3);
 
             JenkinsRule.WebClient wc = j.createWebClient();
@@ -215,18 +215,6 @@ public class JiraSiteSecurity1029Test {
         }
     }
 
-    private CredentialsStore getFolderStore( Folder f) {
-        Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
-        CredentialsStore folderStore = null;
-        for (CredentialsStore s : stores) {
-            if (s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f) {
-                folderStore = s;
-                break;
-            }
-        }
-        return folderStore;
-    }
-    
     public void setupServer() throws Exception {
         server = new Server();
         ServerConnector connector = new ServerConnector(server);

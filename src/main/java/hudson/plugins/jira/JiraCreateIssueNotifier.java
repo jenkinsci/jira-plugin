@@ -475,7 +475,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             List<JiraSite> sites = parent instanceof Folder ? JiraFolderProperty.getSitesFromFolders( parent ) :
                 JiraGlobalConfiguration.get().getSites();
             for (JiraSite site : sites) {
-                JiraSession session = site.getSession(item);
+                JiraSession session = parent instanceof Folder ? site.getSession(item) : site.getSession();
                 if (session != null) {
                     for (Priority priority : session.getPriorities()) {
                         items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));

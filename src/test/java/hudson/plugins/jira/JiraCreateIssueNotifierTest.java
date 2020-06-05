@@ -5,6 +5,11 @@ import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.cloudbees.hudson.plugins.folder.Folder;
+import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
+import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.cloudbees.plugins.credentials.domains.Domain;
+import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -24,6 +29,7 @@ import org.mockito.Mockito;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -247,20 +253,46 @@ public class JiraCreateIssueNotifierTest {
     @Test
     public void doFillPriorityIdItems() throws Exception {
 
-        JiraGlobalConfiguration.get().setSites( Collections.singletonList( new JiraSite( "https://pacifile-ale.com.au" ) ) );
+        String credId_1 = "cred-1-id";
+        String credId_2 = "cred-2-id";
+
+        String pwd1 = "pwd1";
+        String pwd2 = "pwd2";
+
+        UsernamePasswordCredentialsImpl cred1 =
+            new UsernamePasswordCredentialsImpl( CredentialsScope.GLOBAL, credId_1, null, "user1", pwd1);
+        UsernamePasswordCredentialsImpl cred2 =
+            new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, credId_2, null, "user2", pwd2);
+
+        SystemCredentialsProvider systemProvider = SystemCredentialsProvider.getInstance();
+        systemProvider.getCredentials().add(cred1);
+        systemProvider.save();
+
+        JiraGlobalConfiguration.get().setSites( Collections.singletonList(new JiraSite.JiraSiteBuilder()
+                                                                              .withMainURL(new URL( "https://pacific-ale.com.au"))
+                                                                              .withCredentialsId(credId_1)
+                                                                              .build()));
 
         { // test at project level
             FreeStyleProject p = j.jenkins.createProject( FreeStyleProject.class, "p" + j.jenkins.getItems().size());
             ListBoxModel options = JiraCreateIssueNotifier.DESCRIPTOR.doFillPriorityIdItems( p );
             assertNotNull( options );
+            // we can't really test
             assertEquals(1, options.size());
         }
 
         { // test at folder level
             Folder folder = j.jenkins.createProject( Folder.class, "folder" + j.jenkins.getItems().size());
 
+            CredentialsStore folderStore = JiraFolderPropertyTest.getFolderStore( folder);
+            folderStore.addCredentials( Domain.global(), cred2);
+
             JiraFolderProperty foo = new JiraFolderProperty();
-            foo.setSites(Collections.singletonList(new JiraSite("https://pale-ale.com.au")));
+
+            foo.setSites(Collections.singletonList(new JiraSite.JiraSiteBuilder()
+                                                       .withMainURL(new URL( "https://pale-ale.com.au"))
+                                                       .withCredentialsId(credId_2)
+                                                       .build()));
             folder.getProperties().add(foo);
 
             ListBoxModel options = JiraCreateIssueNotifier.DESCRIPTOR.doFillPriorityIdItems( folder );
