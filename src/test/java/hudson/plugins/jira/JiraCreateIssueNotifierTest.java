@@ -4,6 +4,7 @@ import com.atlassian.jira.rest.client.api.StatusCategory;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Status;
+import com.cloudbees.hudson.plugins.folder.Folder;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -11,20 +12,25 @@ import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.util.ListBoxModel;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
 import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.contains;
 import static org.mockito.Mockito.doReturn;
@@ -58,6 +64,10 @@ public class JiraCreateIssueNotifierTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
+    {j.timeout = 0;}
+
     @Before
     public void createCommonMocks() throws IOException, InterruptedException {
         env = new EnvVars();
@@ -86,6 +96,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
+    @WithoutJenkins
     public void performSuccessFailure() throws Exception {
 
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
@@ -102,6 +113,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
+    @WithoutJenkins
     public void performSuccessFailureWithEnv() throws Exception {
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
@@ -117,6 +129,7 @@ public class JiraCreateIssueNotifierTest {
       }
 
     @Test
+    @WithoutJenkins
     public void performFailureFailure() throws Exception {
         JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT, 1L, 1L, 1));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
@@ -150,6 +163,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
+    @WithoutJenkins
     public void performFailureSuccessIssueOpen() throws Exception {
         Long typeId = 1L;
         Long priorityId = 0L;
@@ -189,6 +203,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
+    @WithoutJenkins
     public void performFailureSuccessIssueClosedWithComponents() throws Exception {
         JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", 1L, 1L, 1));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
@@ -218,6 +233,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
+    @WithoutJenkins
     public void isDone() {
         assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Closed", null, null, null)));
         assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Done", null, null, null)));
@@ -226,5 +242,30 @@ public class JiraCreateIssueNotifierTest {
           new StatusCategory(null, "Done", null, "done", null))));
         assertFalse(JiraCreateIssueNotifier.isDone(new Status(null, null, "Abandoned", null, null,
           new StatusCategory(null, "ToDo", null, "todo", null))));
+    }
+
+    @Test
+    public void doFillPriorityIdItems() throws Exception {
+
+        JiraGlobalConfiguration.get().setSites( Collections.singletonList( new JiraSite( "https://pacifile-ale.com.au" ) ) );
+
+        { // test at project level
+            FreeStyleProject p = j.jenkins.createProject( FreeStyleProject.class, "p" + j.jenkins.getItems().size());
+            ListBoxModel options = JiraCreateIssueNotifier.DESCRIPTOR.doFillPriorityIdItems( p );
+            assertNotNull( options );
+            assertEquals(1, options.size());
+        }
+
+        { // test at folder level
+            Folder folder = j.jenkins.createProject( Folder.class, "folder" + j.jenkins.getItems().size());
+
+            JiraFolderProperty foo = new JiraFolderProperty();
+            foo.setSites(Collections.singletonList(new JiraSite("https://pale-ale.com.au")));
+            folder.getProperties().add(foo);
+
+            ListBoxModel options = JiraCreateIssueNotifier.DESCRIPTOR.doFillPriorityIdItems( folder );
+            assertNotNull( options );
+            assertEquals(1, options.size());
+        }
     }
 }
