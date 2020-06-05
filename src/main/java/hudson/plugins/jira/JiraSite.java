@@ -569,19 +569,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return null;    // remote access not supported
         }
 
-        ItemGroup itemGroup;
-        if (item != null){
-            itemGroup = item.getParent();
-        } else {
-            LOGGER.log(Level.FINE, "Unknown context of the Run, using Jenkins.get()");
-            itemGroup = Jenkins.get();
-        }
-
         List<DomainRequirement> req = URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build();
 
+        if (item != null) {
+            return CredentialsMatchers.firstOrNull(
+                CredentialsProvider.lookupCredentials(
+                    StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, req
+                ),
+                CredentialsMatchers.withId(credentialsId)
+            );
+        }
         return CredentialsMatchers.firstOrNull(
             CredentialsProvider.lookupCredentials(
-                    StandardUsernamePasswordCredentials.class, itemGroup, ACL.SYSTEM, req
+                StandardUsernamePasswordCredentials.class, Jenkins.get(), ACL.SYSTEM, req
             ),
             CredentialsMatchers.withId(credentialsId)
         );

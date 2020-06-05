@@ -1,8 +1,12 @@
 package hudson.plugins.jira;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
+import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
+import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
+import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.Page;
@@ -69,18 +73,22 @@ public class JiraSiteSecurity1029Test {
         
         String credId_1 = "cred-1-id";
         String credId_2 = "cred-2-id";
+        String credId_3 = "cred-3-id";
         
         String pwd1 = "pwd1";
         String pwd2 = "pwd2";
+        String pwd3 = "pwd3";
         
         UsernamePasswordCredentialsImpl cred1 = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, credId_1, null, "user1", pwd1);
         UsernamePasswordCredentialsImpl cred2 = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, credId_2, null, "user2", pwd2);
+        UsernamePasswordCredentialsImpl cred3 = new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, credId_3, null, "user3", pwd3);
         
         SystemCredentialsProvider systemProvider = SystemCredentialsProvider.getInstance();
         systemProvider.getCredentials().add(cred1);
         systemProvider.getCredentials().add(cred2);
         systemProvider.save();
-        
+
+
         User admin = User.getById(ADMIN, true);
         admin.addProperty( new ApiTokenProperty() );
         admin.getProperty( ApiTokenProperty.class ).changeApiToken();
@@ -178,6 +186,45 @@ public class JiraSiteSecurity1029Test {
             assertThat(page.getWebResponse().getStatusCode(), equalTo(200));
             assertThat(servlet.getPasswordAndReset(), equalTo(pwd2));
         }
+
+        { // as an user with folder access, I can access
+            Folder folder = j.jenkins.createProject(Folder.class, "folder" + j.jenkins.getItems().size());
+
+            CredentialsStore folderStore = getFolderStore(folder);
+            folderStore.addCredentials( Domain.global(), cred3);
+
+            JenkinsRule.WebClient wc = j.createWebClient();
+            wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
+            wc.withBasicApiToken(userFolderConfigure);
+
+            String jiraSiteValidateUrl = j.jenkins.getRootUrl() + folder.getUrl()
+                + "descriptorByName/" + JiraSite.class.getName() + "/validate";
+
+            WebRequest request = new WebRequest(new URL(jiraSiteValidateUrl), HttpMethod.POST);
+            request.setRequestParameters(Arrays.asList(
+                new NameValuePair( "threadExecutorNumber", "1" ),
+                new NameValuePair("url", serverUri.toString()),
+                new NameValuePair("credentialsId", credId_3),
+                new NameValuePair("useHTTPAuth", "true")
+            ));
+
+            Page page = wc.getPage(request);
+            // to avoid trouble, we always validate when the user has the good permission
+            assertThat(page.getWebResponse().getStatusCode(), equalTo(200));
+            assertThat(servlet.getPasswordAndReset(), equalTo(pwd3));
+        }
+    }
+
+    private CredentialsStore getFolderStore( Folder f) {
+        Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
+        CredentialsStore folderStore = null;
+        for (CredentialsStore s : stores) {
+            if (s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f) {
+                folderStore = s;
+                break;
+            }
+        }
+        return folderStore;
     }
     
     public void setupServer() throws Exception {
