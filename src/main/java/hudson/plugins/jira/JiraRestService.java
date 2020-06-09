@@ -57,6 +57,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -287,13 +288,15 @@ public class JiraRestService {
         }
 
         if (StringUtils.isNotBlank(assignee)) {
-            //builder.setAssigneeName(assignee);
+            final Map<String, Object> valuesMap = new HashMap<>(2);
+            valuesMap.put("name", assignee); // server
+            valuesMap.put("accountId", assignee); // cloud
             // Need to use "accountId" as specified here:
             //    https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/
             //
             // See upstream fix for setAssigneeName:
             //    https://bitbucket.org/atlassian/jira-rest-java-client/pull-requests/104/change-field-name-from-name-to-id-for/diff 
-            builder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, ComplexIssueInputFieldValue.with("accountId", assignee)));
+            builder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, new ComplexIssueInputFieldValue(valuesMap)));
 	    }
 
         if (StreamSupport.stream( components.spliterator(), false ).count() > 0){
