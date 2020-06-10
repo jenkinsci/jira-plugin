@@ -28,7 +28,6 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
-import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
@@ -541,7 +540,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return null;    // remote access not supported
         }
 
-        final URI uri;
+        URI uri;
         try {
             uri = url.toURI();
         } catch (URISyntaxException e) {
@@ -550,14 +549,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
         LOGGER.fine("creating Jira Session: " + uri);
 
-        final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
+        ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
             .create(uri, new BasicHttpAuthenticationHandler(
                         credentials.getUsername(), credentials.getPassword().getPlainText()
                     ),
                     getHttpClientOptions()
             );
         return new JiraSession(this, new JiraRestService(uri, jiraRestClient, credentials.getUsername(),
-                credentials.getPassword().getPlainText(), readTimeout));
+                                                         credentials.getPassword().getPlainText(), readTimeout));
     }
 
     /**
@@ -1216,7 +1215,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
             credentialsId = Util.fixEmpty(credentialsId);
-            JiraSite site = getJiraSiteBuilder()
+            JiraSite site = getBuilder()
                     .withMainURL(mainURL)
                     .withAlternativeURL(alternativeURL)
                     .withCredentialsId(credentialsId)
@@ -1270,12 +1269,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return CredentialsHelper.doCheckFillCredentialsId(item, value, url);
         }
 
-        JiraSiteBuilder getJiraSiteBuilder() {
-            return new JiraSiteBuilder();
+        Builder getBuilder() {
+            return new Builder();
         }
     }
 
-    static class JiraSiteBuilder {
+    static class Builder {
         private URL mainURL;
         private URL alternativeURL;
         private String credentialsId;
@@ -1287,52 +1286,52 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         private String roleVisibility;
         private boolean useHTTPAuth;
 
-        public JiraSiteBuilder withMainURL(URL mainURL) {
+        public Builder withMainURL( URL mainURL) {
             this.mainURL = mainURL;
             return this;
         }
 
-        public JiraSiteBuilder withAlternativeURL(URL alternativeURL) {
+        public Builder withAlternativeURL( URL alternativeURL) {
             this.alternativeURL = alternativeURL;
             return this;
         }
 
-        public JiraSiteBuilder withCredentialsId(String credentialsId) {
+        public Builder withCredentialsId( String credentialsId) {
             this.credentialsId = credentialsId;
             return this;
         }
 
-        public JiraSiteBuilder withSupportsWikiStyleComment(boolean supportsWikiStyleComment) {
+        public Builder withSupportsWikiStyleComment( boolean supportsWikiStyleComment) {
             this.supportsWikiStyleComment = supportsWikiStyleComment;
             return this;
         }
 
-        public JiraSiteBuilder withRecordScmChanges(boolean recordScmChanges) {
+        public Builder withRecordScmChanges( boolean recordScmChanges) {
             this.recordScmChanges = recordScmChanges;
             return this;
         }
 
-        public JiraSiteBuilder withUserPattern(String userPattern) {
+        public Builder withUserPattern( String userPattern) {
             this.userPattern = userPattern;
             return this;
         }
 
-        public JiraSiteBuilder withUpdateJiraIssueForAllStatus(boolean updateJiraIssueForAllStatus) {
+        public Builder withUpdateJiraIssueForAllStatus( boolean updateJiraIssueForAllStatus) {
             this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
             return this;
         }
 
-        public JiraSiteBuilder withGroupVisibility(String groupVisibility) {
+        public Builder withGroupVisibility( String groupVisibility) {
             this.groupVisibility = groupVisibility;
             return this;
         }
 
-        public JiraSiteBuilder withRoleVisibility(String roleVisibility) {
+        public Builder withRoleVisibility( String roleVisibility) {
             this.roleVisibility = roleVisibility;
             return this;
         }
 
-        public JiraSiteBuilder withUseHTTPAuth(boolean useHTTPAuth) {
+        public Builder withUseHTTPAuth( boolean useHTTPAuth) {
             this.useHTTPAuth = useHTTPAuth;
             return this;
         }

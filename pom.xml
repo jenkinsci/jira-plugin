@@ -115,12 +115,11 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
-          <!-- not reuse because Mockito record stuff statically and some are changing between tests so it suc... -->
           <reuseForks>false</reuseForks>
-          <!-- to run some tests within your IDE you will need this -->
-<!--          <systemPropertyVariables>-->
-<!--            <hudson.remoting.ClassFilter>hudson.plugins.jira.JiraFolderProperty,hudson.plugins.jira.JiraSite,hudson.plugins.jira.JiraJobAction</hudson.remoting.ClassFilter>-->
-<!--          </systemPropertyVariables>-->
+          <!-- fix issues in test when trying to serialize some mocks and to run some tests within your IDE you will need this -->
+          <systemPropertyVariables>
+            <hudson.remoting.ClassFilter>hudson.plugins.jira.JiraFolderProperty,hudson.plugins.jira.JiraSite,hudson.plugins.jira.JiraJobAction,com.atlassian.jira.rest.client.api.domain.IssueType</hudson.remoting.ClassFilter>
+          </systemPropertyVariables>
         </configuration>
       </plugin>
     </plugins>

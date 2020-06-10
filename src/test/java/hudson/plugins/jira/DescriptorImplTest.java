@@ -58,7 +58,7 @@ public class DescriptorImplTest {
     JiraSession session = mock(JiraSession.class);
 
     JiraSite.DescriptorImpl descriptor = spy(new JiraSite.DescriptorImpl());
-    JiraSite.JiraSiteBuilder builder = spy(new JiraSite.JiraSiteBuilder());
+    JiraSite.Builder builder = spy( new JiraSite.Builder());
 
     @Test
     public void doFillCredentialsIdItems() throws IOException {
@@ -128,7 +128,7 @@ public class DescriptorImplTest {
 
         builder.withMainURL(new URL("http://test.com"));
 
-        when(descriptor.getJiraSiteBuilder()).thenReturn(builder);
+        when(descriptor.getBuilder()).thenReturn(builder);
         when(builder.build()).thenReturn(site);
         when(build.getParent()).thenReturn(project);
         when(site.getSession(project)).thenReturn(session);
@@ -172,7 +172,7 @@ public class DescriptorImplTest {
     public void validateFormConnectionOK() throws Exception {
         builder.withMainURL(new URL("http://test.com"));
 
-        when(descriptor.getJiraSiteBuilder()).thenReturn(builder);
+        when(descriptor.getBuilder()).thenReturn(builder);
         when(builder.build()).thenReturn(site);
         when(site.getSession(project)).thenReturn(session);
         when(session.getMyPermissions()).thenReturn(mock(Permissions.class));

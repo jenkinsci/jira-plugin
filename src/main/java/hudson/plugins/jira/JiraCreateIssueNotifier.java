@@ -469,13 +469,32 @@ public class JiraCreateIssueNotifier extends Notifier {
             return FormValidation.ok();
         }
 
+        protected List<JiraSite> getJiraSites(Item item){
+            ItemGroup itemGroup = map(item);
+            List<JiraSite> sites = (itemGroup instanceof Folder) ?
+                JiraFolderProperty.getSitesFromFolders(itemGroup) : JiraGlobalConfiguration.get().getSites();
+            return sites;
+        }
+
+        // yes this class hierarchy is a real big mess...
+        protected ItemGroup map(Item item){
+            ItemGroup parent = null;
+            if (item != null){
+                parent = item instanceof Folder? (Folder) item : item.getParent();
+            }
+            return parent;
+        }
+
+        private JiraSession getSession(JiraSite jiraSite, Item item){
+            ItemGroup itemGroup = map(item);
+            return itemGroup instanceof Folder? jiraSite.getSession((Folder)itemGroup):jiraSite.getSession(item);
+        }
+
         public ListBoxModel doFillPriorityIdItems(@AncestorInPath final Item item) {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
-            ItemGroup parent = item == null ? null : item.getParent();
-            List<JiraSite> sites = parent instanceof Folder ? JiraFolderProperty.getSitesFromFolders( parent ) :
-                JiraGlobalConfiguration.get().getSites();
+            List<JiraSite> sites = getJiraSites(item);
             for (JiraSite site : sites) {
-                JiraSession session = parent instanceof Folder ? site.getSession(item) : site.getSession();
+                JiraSession session = getSession(site, item);
                 if (session != null) {
                     for (Priority priority : session.getPriorities()) {
                         items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
@@ -485,10 +504,11 @@ public class JiraCreateIssueNotifier extends Notifier {
             return items;
         }
 
-        public ListBoxModel doFillTypeIdItems() {
+        public ListBoxModel doFillTypeIdItems(@AncestorInPath final Item item) {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
-            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-                JiraSession session = site.getSession(null);
+            List<JiraSite> sites = getJiraSites(item);
+            for (JiraSite site : sites) {
+                JiraSession session = getSession(site, item);
                 if (session != null) {
                     for (IssueType type : session.getIssueTypes()) {
                         items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));
