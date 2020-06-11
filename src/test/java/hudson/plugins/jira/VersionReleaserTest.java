@@ -89,8 +89,10 @@ public class VersionReleaserTest {
     public void callsJiraWithSpecifiedParameters() {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
+        when(site.getSession(any())).thenReturn(session);
 
         versionReleaser.perform(project, JIRA_PRJ, JIRA_VER, JIRA_DES, build, listener);
+        
         verify(session).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue().getName(), is(JIRA_VER));
@@ -101,8 +103,10 @@ public class VersionReleaserTest {
     public void expandsEnvParameters() {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
+        when(site.getSession(any())).thenReturn(session);
 
         versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, JIRA_DES_PARAM, build, listener);
+
         verify(session).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue().getName(), is(JIRA_VER));
