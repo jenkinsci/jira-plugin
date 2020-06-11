@@ -1,8 +1,10 @@
 package hudson.plugins.jira;
 
 import hudson.Extension;
+import hudson.model.Job;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
+import org.kohsuke.stapler.Stapler;
 
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -25,13 +27,15 @@ public class JiraMailAddressResolver extends MailAddressResolver {
 
     @Override
     public String findMailAddressFor(User u) {
-        if (disabled)
+        if (disabled) {
             return null;
-
+        }
         String username = u.getId();
 
-        for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-            JiraSession session = site.getSession(null);
+        Job<?, ?> job = Stapler.getCurrentRequest().findAncestorObject( Job.class);
+
+        for (JiraSite site : JiraSite.getJiraSites(job)) {
+            JiraSession session = site.getSession(job);
             if (session == null) {
                 continue;
             }

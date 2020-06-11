@@ -13,6 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.internal.util.reflection.FieldSetter;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
@@ -65,7 +66,7 @@ public class VersionReleaserTest {
     private ExtendedVersion existingVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, false, ANY_DATE, ANY_DATE);
 
     @Before
-    public void createMocks() throws IOException, InterruptedException {
+    public void createMocks() throws Exception {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
@@ -80,7 +81,7 @@ public class VersionReleaserTest {
                 return expanded;
         });
         when(listener.getLogger()).thenReturn(logger);
-        when(site.getSession()).thenReturn(session);
+        FieldSetter.setField( site, JiraSite.class.getDeclaredField( "jiraSession"), session);
         doReturn(site).when(versionReleaser).getSiteForProject(any());
     }
 

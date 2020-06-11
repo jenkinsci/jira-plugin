@@ -14,6 +14,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import org.mockito.internal.util.reflection.FieldSetter;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
@@ -63,7 +64,7 @@ public class VersionCreatorTest {
     private ExtendedVersion existingVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, false, ANY_DATE, ANY_DATE);
 
     @Before
-    public void createMocks() {
+    public void createMocks() throws Exception {
         when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
             String expanded = (String) args[0];
@@ -75,13 +76,14 @@ public class VersionCreatorTest {
                 return expanded;
         });
         when(listener.getLogger()).thenReturn(logger);
-        when(site.getSession()).thenReturn(session);
+        FieldSetter.setField( site, JiraSite.class.getDeclaredField( "jiraSession"), session);
         doReturn(site).when(versionCreator).getSiteForProject(any());
     }
 
     @Test
     public void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
+        when(site.getSession( any() )).thenReturn(session);
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
         versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
@@ -93,6 +95,7 @@ public class VersionCreatorTest {
     @Test
     public void expandsEnvParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
+        when(site.getSession(any())).thenReturn(session);
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
 
         versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
