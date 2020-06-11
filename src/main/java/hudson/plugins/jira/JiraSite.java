@@ -888,11 +888,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public JiraIssue getIssue(final String id) throws IOException {
         try {
             Optional<Issue> issue = issueCache.get(id, () -> {
-                JiraSession session = getSession(null);
-                if (session == null) {
+                if (this.jiraSession == null) {
                     return Optional.absent();
                 }
-                return Optional.fromNullable(session.getIssue(id));
+                return Optional.fromNullable(this.jiraSession.getIssue(id));
             });
 
             if (!issue.isPresent()) {
