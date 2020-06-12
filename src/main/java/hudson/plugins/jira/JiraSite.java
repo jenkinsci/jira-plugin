@@ -1297,13 +1297,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return parent;
     }
 
+    /**
+     * Creates automatically jiraSession for each jiraSite found
+     * @param item
+     * @return
+     */
     public static List<JiraSite> getJiraSites(Item item){
         ItemGroup itemGroup = JiraSite.map(item);
         List<JiraSite> sites = (itemGroup instanceof Folder) ?
             getSitesFromFolders(itemGroup) : JiraGlobalConfiguration.get().getSites();
+        sites.stream().forEach( jiraSite -> jiraSite.getSession( item ) );
         return sites;
     }
 
+    /**
+     * Creates automatically jiraSession for each jiraSite found
+     * @param itemGroup
+     * @return
+     */
     public static List<JiraSite> getSitesFromFolders(ItemGroup itemGroup) {
         List<JiraSite> result = new ArrayList<>();
         while (itemGroup instanceof AbstractFolder<?> ) {
@@ -1323,8 +1334,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
 
     /**
-     * Gets the effective {@link JiraSite} associated with the given project.
-     *
+     * Gets the effective {@link JiraSite} associated with the given project
+     * and creates automatically jiraSession for each jiraSite found
      * @return <code>null</code> if no such was found.
      */
     @Nullable
