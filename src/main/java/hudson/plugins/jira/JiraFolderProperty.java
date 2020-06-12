@@ -57,6 +57,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
     /**
      * @deprecated use {@link JiraSite#getSitesFromFolders(ItemGroup)}
      */
+    @Deprecated
     public static List<JiraSite> getSitesFromFolders(ItemGroup itemGroup) {
         return JiraSite.getSitesFromFolders(itemGroup);
     }

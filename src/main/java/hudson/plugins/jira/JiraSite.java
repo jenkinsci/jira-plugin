@@ -85,6 +85,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
+ * <b>You must get instance of this only by using the static {@link #get} or {@link #getSitesFromFolders(ItemGroup)} methods</b>
+ * <b>The constructors are only used by Jenkins</b>
  * <p>
  * Represents an external Jira installation and configuration
  * needed to access this Jira.
@@ -856,6 +858,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * This information could be bit old, or it can be null.
      */
     public Set<String> getProjectKeys(Item item) {
+        // FIXME it means projects list will be never updated until Jenkins is restarted...
         if (projects == null) {
             try {
                 if (projectUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
@@ -873,12 +876,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
         }
         // fall back to empty if failed to talk to the server
-        Set<String> p = projects;
-        if (p == null) {
+        if (projects == null) {
             return Collections.emptySet();
         }
 
-        return p;
+        return projects;
     }
 
     /**
@@ -915,16 +917,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Returns all versions for the given project key.
-     *
+     * @deprecated use {@link JiraSession#getVersions(String)}
      * @param projectKey Project Key
      * @return A set of JiraVersions
      */
+    @Deprecated
     public Set<ExtendedVersion> getVersions(String projectKey) {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return Collections.emptySet();
         }
-
         return new HashSet<>(this.jiraSession.getVersions(projectKey));
     }
 
@@ -1317,7 +1319,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             JiraFolderProperty jiraFolderProperty = folder.getProperties()
                 .get(JiraFolderProperty.class);
             if (jiraFolderProperty != null && jiraFolderProperty.getSites().length != 0) {
-                result.addAll( Arrays.asList( jiraFolderProperty.getSites()));
+                List<JiraSite> sites = Arrays.asList( jiraFolderProperty.getSites());
+                // setup session for each so it's ready to use
+                sites.forEach(jiraSite -> jiraSite.getSession(folder));
+                result.addAll(sites);
             }
             itemGroup = folder.getParent();
         }
@@ -1330,6 +1335,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return <code>null</code> if no such was found.
      */
+    @Nullable
     public static JiraSite get(Job<?, ?> p) {
         JiraSite found = null;
         if(p != null) {

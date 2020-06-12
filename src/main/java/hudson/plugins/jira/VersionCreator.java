@@ -36,7 +36,7 @@ class VersionCreator {
 
 			String finalRealVersion = realVersion;
 			JiraSite site = getSiteForProject(project);
-			Optional<ExtendedVersion> sameNamedVersion = site.getVersions(realProjectKey).stream()
+			Optional<ExtendedVersion> sameNamedVersion = site.getSession(project).getVersions(realProjectKey).stream()
 					.filter(version -> version.getName().equals(finalRealVersion) && version.isReleased()).findFirst();
 
 			if (sameNamedVersion.isPresent()) {

@@ -1,7 +1,7 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,7 +15,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
@@ -53,14 +52,10 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
     @Test
     public void ensureCloseHttpclientOnCompletion() throws IOException
     {
-        when(client.execute(eq(request), eq(context), any())).then(new Answer<Future<HttpResponse>>()
-        {
-            @Override
-            public Future<HttpResponse> answer(InvocationOnMock invocation) throws Throwable
-            {
+        when(client.execute(eq(request), eq(context), any()))
+            .then( (Answer<Future<HttpResponse>>) invocation -> {
                 invocation.getArgument(2, FutureCallback.class).completed(response);
                 return mock(Future.class);
-            }
         });
 
         asyncClient.execute(request, context);
@@ -71,15 +66,11 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
     @Test
     public void ensureCloseHttpclientOnFailure() throws IOException
     {
-        when(client.execute(eq(request), eq(context), any())).then(new Answer<Future<HttpResponse>>()
-        {
-            @Override
-            public Future<HttpResponse> answer(InvocationOnMock invocation) throws Throwable
-            {
+        when(client.execute(eq(request), eq(context), any()))
+            .then( (Answer<Future<HttpResponse>>) invocation -> {
                 invocation.getArgument(2, FutureCallback.class).failed(null);
                 return mock(Future.class);
-            }
-        });
+        } );
 
         asyncClient.execute(request, context);
 
@@ -89,15 +80,11 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
     @Test
     public void ensureCloseHttpclientOnCancellation() throws IOException
     {
-        when(client.execute(eq(request), eq(context), any())).then(new Answer<Future<HttpResponse>>()
-        {
-            @Override
-            public Future<HttpResponse> answer(InvocationOnMock invocation) throws Throwable
-            {
+        when(client.execute(eq(request), eq(context), any()))
+            .then( (Answer<Future<HttpResponse>>) invocation -> {
                 invocation.getArgument(2, FutureCallback.class).cancelled();
                 return mock(Future.class);
-            }
-        });
+        } );
 
         asyncClient.execute(request, context);
 
