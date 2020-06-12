@@ -12,7 +12,6 @@ git:
   depth: false
 
 jdk:
-  - openjdk8
   - openjdk11
 
 install: skip       # skip install phase as no deps are required
