@@ -70,9 +70,9 @@ public class JiraSiteTest
                 null, false, null,
                 null, true);
         site.setTimeout(1);
-        JiraSession session = site.getSession();
+        JiraSession session = site.getSession(null);
         assertNotNull(session);
-        assertEquals(session, site.getSession());
+        assertEquals(session, site.getSession(null));
     }
 
     @Test
@@ -83,8 +83,8 @@ public class JiraSiteTest
                 null, false, null,
                 null, true);
         site.setTimeout(1);
-        JiraSession session = site.getSession();
-        assertEquals(session, site.getSession());
+        JiraSession session = site.getSession(null);
+        assertEquals(session, site.getSession(null));
         assertNull(session);
     }
 
@@ -367,7 +367,7 @@ public class JiraSiteTest
     public void getIssueWithoutSession() throws Exception {
         JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());        
         //Verify that no session will be created
-        assertNull(jiraSite.getSession());
+        assertNull(jiraSite.getSession(null));
         JiraIssue issue = jiraSite.getIssue("JIRA-1235");
         assertNull(issue);
     }

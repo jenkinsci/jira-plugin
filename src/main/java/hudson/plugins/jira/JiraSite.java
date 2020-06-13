@@ -14,7 +14,13 @@ import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.UrlMode;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
+import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import com.cloudbees.hudson.plugins.folder.Folder;
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.DomainRequirement;
+import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
@@ -24,16 +30,17 @@ import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssue;
+import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -52,6 +59,8 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -76,6 +85,8 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
 /**
+ * <b>You must get instance of this only by using the static {@link #get} or {@link #getSitesFromFolders(ItemGroup)} methods</b>
+ * <b>The constructors are only used by Jenkins</b>
  * <p>
  * Represents an external Jira installation and configuration
  * needed to access this Jira.
@@ -495,15 +506,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * Gets a remote access session to this Jira site.
+     * Gets a remote access session to this Jira site (job-aware)
      * Creates one if none exists already.
      *
      * @return null if remote access is not supported.
      */
     @Nullable
-    public JiraSession getSession() {
+    public JiraSession getSession(Item item) {
         if (jiraSession == null) {
-            jiraSession = createSession();
+            jiraSession = createSession(item);
         }
         return jiraSession;
     }
@@ -513,13 +524,18 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return null if remote access is not supported.
      */
-    private JiraSession createSession() {
-        if (StringUtils.isEmpty(credentialsId)) {
-            LOGGER.warning("Jira session could not be created. No credentials supplied.");
+    private JiraSession createSession(Item item) {
+
+        ItemGroup itemGroup = map(item);
+        item = itemGroup instanceof Folder? ((Folder)itemGroup):item;
+
+        StandardUsernamePasswordCredentials credentials = resolveCredentials(item);
+
+        if (credentials == null) {
             return null;    // remote access not supported
         }
 
-        final URI uri;
+        URI uri;
         try {
             uri = url.toURI();
         } catch (URISyntaxException e) {
@@ -527,13 +543,43 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             throw new RuntimeException("failed to create JiraSession due to convert URI error");
         }
         LOGGER.fine("creating Jira Session: " + uri);
-        StandardUsernamePasswordCredentials credentials = CredentialsHelper.lookupSystemCredentials(credentialsId, url);
-        String userName = credentials.getUsername();
-        Secret password = credentials.getPassword();
 
-        final ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
-            .create(uri, new BasicHttpAuthenticationHandler( userName, password.getPlainText()),getHttpClientOptions());
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, userName, password.getPlainText(), readTimeout));
+        ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
+            .create(uri, new BasicHttpAuthenticationHandler(
+                        credentials.getUsername(), credentials.getPassword().getPlainText()
+                    ),
+                    getHttpClientOptions()
+            );
+        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, credentials.getUsername(),
+                                                         credentials.getPassword().getPlainText(), readTimeout));
+    }
+
+    /**
+     * This method only supports credential matching by credentialsId.
+     * Older methods are not and will not be supported as the credentials should have been migrated already.
+     */
+    private StandardUsernamePasswordCredentials resolveCredentials(Item item) {
+        if (credentialsId == null) {
+            return null;    // remote access not supported
+        }
+
+        List<DomainRequirement> req = URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build();
+
+        if (item != null) {
+            return CredentialsMatchers.firstOrNull(
+                CredentialsProvider.lookupCredentials(
+                    StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, req
+                ),
+                CredentialsMatchers.withId(credentialsId)
+            );
+        }
+        return CredentialsMatchers.firstOrNull(
+            CredentialsProvider.lookupCredentials(
+                StandardUsernamePasswordCredentials.class, Jenkins.get(), ACL.SYSTEM, req
+            ),
+            CredentialsMatchers.withId(credentialsId)
+        );
+
     }
 
     private HttpClientOptions getHttpClientOptions() {
@@ -546,27 +592,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     private ExecutorService getExecutorService() {
-        if (executorService==null)
-        {
-            synchronized ( JiraSite.class )
-            {
+        if (executorService == null) {
+            synchronized (JiraSite.class) {
                 int nThreads = threadExecutorNumber;
-                if ( nThreads < 1 )
-                {
-                    LOGGER.warning( "nThreads " + nThreads + " cannot be lower than 1 so use default " + DEFAULT_THREAD_EXECUTOR_NUMBER );
+                if (nThreads < 1) {
+                    LOGGER.warning("nThreads " + nThreads + " cannot be lower than 1 so use default " + DEFAULT_THREAD_EXECUTOR_NUMBER);
                     nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
                 }
-                executorService = Executors.newFixedThreadPool( nThreads, //
-                                                                new ThreadFactory() {
-                                                                    final AtomicInteger threadNumber = new AtomicInteger( 0 );
-                                                                    @Override
-                                                                    public Thread newThread( Runnable r )
-                                                                    {
-                                                                        return new Thread( r,
-                                                                                           "jira-plugin-http-request-" + threadNumber.getAndIncrement()
-                                                                                               + "-thread" );
-                                                                    }
-                                                                } );
+                executorService = Executors.newFixedThreadPool(nThreads, //
+                    new ThreadFactory() {
+                        final AtomicInteger threadNumber = new AtomicInteger(0);
+
+                        @Override
+                        public Thread newThread(Runnable r) {
+                            return new Thread(r,
+                                "jira-plugin-http-request-" + threadNumber.getAndIncrement()
+                                    + "-thread");
+                        }
+                    });
             }
         }
         return executorService;
@@ -620,22 +663,22 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private static DisposableHttpClient createClient(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
 
         final DefaultHttpClientFactory
-            defaultHttpClientFactory = new DefaultHttpClientFactory( new NoOpEventPublisher(),
-                                                                     new RestClientApplicationProperties( serverUri),
-                                                                     new ThreadLocalContextManager() {
-                                                                         @Override
-                                                                         public Object getThreadLocalContext() {
-                                                                             return null;
-                                                                         }
+            defaultHttpClientFactory = new DefaultHttpClientFactory(new NoOpEventPublisher(),
+            new RestClientApplicationProperties(serverUri),
+            new ThreadLocalContextManager() {
+                @Override
+                public Object getThreadLocalContext() {
+                    return null;
+                }
 
-                                                                         @Override
-                                                                         public void setThreadLocalContext(Object context) {
-                                                                         }
+                @Override
+                public void setThreadLocalContext(Object context) {
+                }
 
-                                                                         @Override
-                                                                         public void clearThreadLocalContext() {
-                                                                         }
-                                                                     });
+                @Override
+                public void clearThreadLocalContext() {
+                }
+            });
 
         final HttpClient httpClient = defaultHttpClientFactory.create(options);
 
@@ -800,17 +843,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         Pattern result = getUserPattern();
         return result == null ? DEFAULT_ISSUE_PATTERN : result;
     }
+    
 
     /**
      * Gets the list of project IDs in this Jira.
      * This information could be bit old, or it can be null.
      */
-    public Set<String> getProjectKeys() {
+    public Set<String> getProjectKeys(Item item) {
+        // FIXME it means projects list will be never updated until Jenkins is restarted...
         if (projects == null) {
             try {
                 if (projectUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
                     try {
-                        JiraSession session = getSession();
+                        JiraSession session = getSession(item);
                         if (session != null) {
                             projects = Collections.unmodifiableSet(session.getProjectKeys());
                         }
@@ -823,50 +868,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
         }
         // fall back to empty if failed to talk to the server
-        Set<String> p = projects;
-        if (p == null) {
+        if (projects == null) {
             return Collections.emptySet();
         }
 
-        return p;
-    }
-
-    /**
-     * Gets the effective {@link JiraSite} associated with the given project.
-     *
-     * @return null
-     *         if no such was found.
-     */
-    public static JiraSite get(Job<?, ?> p) {
-        if(p != null) {
-            JiraProjectProperty jpp = p.getProperty(JiraProjectProperty.class);
-            if (jpp != null) {
-                // Looks in global configuration for the site configured
-                JiraSite site = jpp.getSite();
-                if (site != null) {
-                    return site;
-                }
-            }
-        }
-
-        if(p != null) {
-            // Check up the folder chain if a site is defined there
-            // This only supports one site per folder
-            List<JiraSite> sitesFromFolders = JiraFolderProperty.getSitesFromFolders( p.getParent() );
-            if ( sitesFromFolders.size() > 0 )
-            {
-                return sitesFromFolders.get( 0 );
-            }
-        }
-
-        // none is explicitly configured. try the default ---
-        // if only one is configured, that must be it.
-        List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
-        if (sites != null && sites.size() == 1) {
-            return sites.get(0);
-        }
-
-        return null;
+        return projects;
     }
 
     /**
@@ -876,11 +882,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public JiraIssue getIssue(final String id) throws IOException {
         try {
             Optional<Issue> issue = issueCache.get(id, () -> {
-                JiraSession session = getSession();
-                if (session == null) {
+                if (this.jiraSession == null) {
                     return Optional.absent();
                 }
-                return Optional.fromNullable(session.getIssue(id));
+                return Optional.fromNullable(this.jiraSession.getIssue(id));
             });
 
             if (!issue.isPresent()) {
@@ -904,18 +909,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Returns all versions for the given project key.
-     *
+     * @deprecated use {@link JiraSession#getVersions(String)}
      * @param projectKey Project Key
      * @return A set of JiraVersions
      */
+    @Deprecated
     public Set<ExtendedVersion> getVersions(String projectKey) {
-        JiraSession session = getSession();
-        if (session == null) {
+        if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return Collections.emptySet();
         }
-
-        return new HashSet<>(session.getVersions(projectKey));
+        return new HashSet<>(this.jiraSession.getVersions(projectKey));
     }
 
     /**
@@ -928,13 +932,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException if too long
      */
     public String getReleaseNotesForFixVersion(String projectKey, String versionName, String filter) throws TimeoutException {
-        JiraSession session = getSession();
-        if (session == null) {
+        if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return "";
         }
 
-        List<Issue> issues = session.getIssuesWithFixVersion(projectKey, versionName, filter);
+        List<Issue> issues = this.jiraSession.getIssuesWithFixVersion(projectKey, versionName, filter);
 
         if (issues.isEmpty()) {
             return "";
@@ -980,13 +983,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException if too long
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
-        JiraSession session = getSession();
-        if (session == null) {
+        if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
         }
-
-        session.replaceFixVersion(projectKey, fromVersion, toVersion, query);
+        this.jiraSession.replaceFixVersion(projectKey, fromVersion, toVersion, query);
     }
 
     /**
@@ -998,13 +999,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException if too long
      */
     public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException {
-        JiraSession session = getSession();
-        if (session == null) {
+        if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
         }
-
-        session.migrateIssuesToFixVersion(projectKey, versionName, query);
+        this.jiraSession.migrateIssuesToFixVersion(projectKey, versionName, query);
     }
 
     /**
@@ -1016,13 +1015,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException if too long
      */
     public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
-        JiraSession session = getSession();
-        if (session == null) {
+        if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
         }
-
-        session.addFixVersion(projectKey, versionName, query);
+        this.jiraSession.addFixVersion(projectKey, versionName, query);
     }
 
     /**
@@ -1036,16 +1033,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException TimeoutException if too long
      */
     public boolean progressMatchingIssues(String jqlSearch, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
-        JiraSession session = getSession();
 
-        if (session == null) {
+        if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             console.println(Messages.FailedToConnect());
             return false;
         }
 
         boolean success = true;
-        List<Issue> issues = session.getIssuesFromJqlSearch(jqlSearch);
+        List<Issue> issues = this.jiraSession.getIssuesFromJqlSearch(jqlSearch);
 
         if (isEmpty(workflowActionName)) {
             console.println("[Jira] No workflow action was specified, " +
@@ -1056,7 +1052,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             String issueKey = issue.getKey();
 
             if (isNotEmpty(comment)) {
-                session.addComment(issueKey, comment, null, null);
+                this.jiraSession.addComment(issueKey, comment, null, null);
             }
 
 
@@ -1064,7 +1060,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 continue;
             }
 
-            Integer actionId = session.getActionIdForIssue(issueKey, workflowActionName);
+            Integer actionId = this.jiraSession.getActionIdForIssue(issueKey, workflowActionName);
 
             if (actionId == null) {
                 LOGGER.fine(String.format("Invalid workflow action %s for issue %s; issue status = %s",
@@ -1074,7 +1070,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 continue;
             }
 
-            String newStatus = session.progressWorkflowAction(issueKey, actionId);
+            String newStatus = this.jiraSession.progressWorkflowAction(issueKey, actionId);
 
             console.println(String.format("[Jira] Issue %s transitioned to \"%s\" due to action \"%s\".",
                     issueKey, newStatus, workflowActionName));
@@ -1158,7 +1154,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
 
             credentialsId = Util.fixEmpty(credentialsId);
-            JiraSite site = getJiraSiteBuilder()
+            JiraSite site = getBuilder()
                     .withMainURL(mainURL)
                     .withAlternativeURL(alternativeURL)
                     .withCredentialsId(credentialsId)
@@ -1182,7 +1178,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setThreadExecutorNumber(threadExecutorNumber);
             JiraSession session = null;
             try {
-                session = site.getSession();
+                session = site.getSession(item);
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
@@ -1212,12 +1208,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return CredentialsHelper.doCheckFillCredentialsId(item, value, url);
         }
 
-        JiraSiteBuilder getJiraSiteBuilder() {
-            return new JiraSiteBuilder();
+        Builder getBuilder() {
+            return new Builder();
         }
     }
 
-    static class JiraSiteBuilder {
+    static class Builder {
         private URL mainURL;
         private URL alternativeURL;
         private String credentialsId;
@@ -1229,52 +1225,52 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         private String roleVisibility;
         private boolean useHTTPAuth;
 
-        public JiraSiteBuilder withMainURL(URL mainURL) {
+        public Builder withMainURL( URL mainURL) {
             this.mainURL = mainURL;
             return this;
         }
 
-        public JiraSiteBuilder withAlternativeURL(URL alternativeURL) {
+        public Builder withAlternativeURL( URL alternativeURL) {
             this.alternativeURL = alternativeURL;
             return this;
         }
 
-        public JiraSiteBuilder withCredentialsId(String credentialsId) {
+        public Builder withCredentialsId( String credentialsId) {
             this.credentialsId = credentialsId;
             return this;
         }
 
-        public JiraSiteBuilder withSupportsWikiStyleComment(boolean supportsWikiStyleComment) {
+        public Builder withSupportsWikiStyleComment( boolean supportsWikiStyleComment) {
             this.supportsWikiStyleComment = supportsWikiStyleComment;
             return this;
         }
 
-        public JiraSiteBuilder withRecordScmChanges(boolean recordScmChanges) {
+        public Builder withRecordScmChanges( boolean recordScmChanges) {
             this.recordScmChanges = recordScmChanges;
             return this;
         }
 
-        public JiraSiteBuilder withUserPattern(String userPattern) {
+        public Builder withUserPattern( String userPattern) {
             this.userPattern = userPattern;
             return this;
         }
 
-        public JiraSiteBuilder withUpdateJiraIssueForAllStatus(boolean updateJiraIssueForAllStatus) {
+        public Builder withUpdateJiraIssueForAllStatus( boolean updateJiraIssueForAllStatus) {
             this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
             return this;
         }
 
-        public JiraSiteBuilder withGroupVisibility(String groupVisibility) {
+        public Builder withGroupVisibility( String groupVisibility) {
             this.groupVisibility = groupVisibility;
             return this;
         }
 
-        public JiraSiteBuilder withRoleVisibility(String roleVisibility) {
+        public Builder withRoleVisibility( String roleVisibility) {
             this.roleVisibility = roleVisibility;
             return this;
         }
 
-        public JiraSiteBuilder withUseHTTPAuth(boolean useHTTPAuth) {
+        public Builder withUseHTTPAuth( boolean useHTTPAuth) {
             this.useHTTPAuth = useHTTPAuth;
             return this;
         }
@@ -1283,6 +1279,102 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return new JiraSite(mainURL, alternativeURL, credentialsId, supportsWikiStyleComment,
                     recordScmChanges, userPattern, updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth);
         }
+    }
+
+    // helper methods
+    // yes this class hierarchy can be a real big mess...
+
+    /**
+     *
+     * @param item the Jenkins {@link Item} can be a {@link Job} or {@link Folder}
+     * @return the parent as {@link ItemGroup} which can be {@link Jenkins} or {@link Folder}
+     */
+    public static ItemGroup map(Item item){
+        ItemGroup parent = null;
+        if (item != null){
+            parent = item instanceof Folder ? (Folder) item : item.getParent();
+        }
+        return parent;
+    }
+
+    /**
+     * Creates automatically jiraSession for each jiraSite found
+     * @param item
+     * @return
+     */
+    public static List<JiraSite> getJiraSites(Item item){
+        ItemGroup itemGroup = JiraSite.map(item);
+        List<JiraSite> sites = (itemGroup instanceof Folder) ?
+            getSitesFromFolders(itemGroup) : JiraGlobalConfiguration.get().getSites();
+        sites.stream().forEach( jiraSite -> jiraSite.getSession( item ) );
+        return sites;
+    }
+
+    /**
+     * Creates automatically jiraSession for each jiraSite found
+     * @param itemGroup
+     * @return
+     */
+    public static List<JiraSite> getSitesFromFolders(ItemGroup itemGroup) {
+        List<JiraSite> result = new ArrayList<>();
+        while (itemGroup instanceof AbstractFolder<?> ) {
+            AbstractFolder<?> folder = (AbstractFolder<?>) itemGroup;
+            JiraFolderProperty jiraFolderProperty = folder.getProperties()
+                .get(JiraFolderProperty.class);
+            if (jiraFolderProperty != null && jiraFolderProperty.getSites().length != 0) {
+                List<JiraSite> sites = Arrays.asList( jiraFolderProperty.getSites());
+                // setup session for each so it's ready to use
+                sites.forEach(jiraSite -> jiraSite.getSession(folder));
+                result.addAll(sites);
+            }
+            itemGroup = folder.getParent();
+        }
+        return result;
+    }
+
+
+    /**
+     * Gets the effective {@link JiraSite} associated with the given project
+     * and creates automatically jiraSession for each jiraSite found
+     * @return <code>null</code> if no such was found.
+     */
+    @Nullable
+    public static JiraSite get(Job<?, ?> p) {
+        JiraSite found = null;
+        if(p != null) {
+            JiraProjectProperty jpp = p.getProperty(JiraProjectProperty.class);
+            if (jpp != null) {
+                // Looks in global configuration for the site configured
+                JiraSite site = jpp.getSite();
+                if (site != null) {
+                    found = site;
+                }
+            }
+        }
+
+        if(found == null && p != null) {
+            // Check up the folder chain if a site is defined there
+            // This only supports one site per folder
+            List<JiraSite> sitesFromFolders = getSitesFromFolders( p.getParent() );
+            if ( sitesFromFolders.size() > 0 )
+            {
+                found = sitesFromFolders.get( 0 );
+            }
+        }
+        if (found == null) {
+            // none is explicitly configured. try the default ---
+            // if only one is configured, that must be it.
+            List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
+            if ( sites != null && sites.size() == 1 )
+            {
+                found = sites.get( 0 );
+            }
+        }
+        if ( found != null){
+            //we create the session here
+            found.getSession(p);
+        }
+        return found;
     }
 
 }

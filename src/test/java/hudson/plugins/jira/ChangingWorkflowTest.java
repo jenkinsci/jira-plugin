@@ -6,6 +6,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.internal.util.reflection.FieldSetter;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.io.IOException;
@@ -112,14 +113,14 @@ public class ChangingWorkflowTest {
 
 
     @Test
-    public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
-        doReturn(mockSession).when(site).getSession();
-        doReturn(Arrays.asList(mock(Issue.class))).when(mockSession).getIssuesFromJqlSearch(anyString());
-        doReturn(Integer.valueOf(randomNumeric(5)))
-            .when(mockSession)
-            .getActionIdForIssue(any(),eq(NON_EMPTY_WORKFLOW_LOWERCASE));
-        doCallRealMethod().when(site)
-            .progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class));
+    public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws Exception {
+        FieldSetter.setField(site, JiraSite.class.getDeclaredField("jiraSession"), mockSession);
+        when(mockSession.getIssuesFromJqlSearch(anyString()))
+            .thenReturn(Arrays.asList(mock(Issue.class)));
+        when(mockSession.getActionIdForIssue(any(),eq(NON_EMPTY_WORKFLOW_LOWERCASE)))
+             .thenReturn(Integer.valueOf(randomNumeric(5)));
+        when(site.progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class)))
+             .thenCallRealMethod();
 
         site.progressMatchingIssues(ISSUE_JQL,
                 NON_EMPTY_WORKFLOW_LOWERCASE, NON_EMPTY_COMMENT, mock(PrintStream.class));
@@ -131,10 +132,12 @@ public class ChangingWorkflowTest {
 
 
     @Test
-    public void addCommentsOnNullWorkflowAndNonEmptyComment() throws IOException, TimeoutException {
-        doReturn(mockSession).when(site).getSession();
-        doReturn(Arrays.asList(mock(Issue.class))).when(mockSession).getIssuesFromJqlSearch(anyString());
-        doCallRealMethod().when(site).progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class));
+    public void addCommentsOnNullWorkflowAndNonEmptyComment() throws Exception {
+        FieldSetter.setField(site, JiraSite.class.getDeclaredField("jiraSession"), mockSession);
+        when(mockSession.getIssuesFromJqlSearch(anyString()))
+            .thenReturn(Arrays.asList(mock(Issue.class)));
+        when(site.progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class)))
+            .thenCallRealMethod();
 
         site.progressMatchingIssues(ISSUE_JQL, "", NON_EMPTY_COMMENT, mock(PrintStream.class));
 

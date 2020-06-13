@@ -34,21 +34,23 @@ import static org.mockito.Mockito.when;
 public class JiraChangeLogAnnotatorTest {
     private static final String TITLE = "title with $sign to confuse TextMarkup.replace";
     private JiraSite site;
+    private Run run;
 
     @Before
     public void before() throws Exception {
         JiraSession session = mock(JiraSession.class);
-        when(session.getProjectKeys()).thenReturn(
-            new HashSet(Arrays.asList( "DUMMY", "JENKINS")));
-
         this.site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
+        this.run = mock(Run.class);
+
+        when(session.getProjectKeys()).thenReturn(new HashSet(Arrays.asList( "DUMMY", "JENKINS")));
+        when(site.getSession(run.getParent())).thenReturn(session);
+
         when(site.getUrl(Mockito.anyString())).thenAnswer(
                 (Answer<URL>) invocation -> {
                     String id = invocation.getArguments()[0].toString();
                     return new URL("http://dummy/" + id);
                 });
-        when(site.getProjectKeys()).thenCallRealMethod();
+        when(site.getProjectKeys(run.getParent())).thenCallRealMethod();
         when(site.getIssuePattern()).thenCallRealMethod();
 
         // create inner objects
@@ -159,9 +161,10 @@ public class JiraChangeLogAnnotatorTest {
     @Test
     public void hasProjectForIssueIsCaseInsensitive() {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
-        assertThat(annotator.hasProjectForIssue("JENKINS-123", site), is(true));
-        assertThat(annotator.hasProjectForIssue("jenKiNs-123", site), is(true));
-        assertThat(annotator.hasProjectForIssue("dummy-4711", site), is(true));
+
+        assertThat(annotator.hasProjectForIssue("JENKINS-123", site, run), is(true));
+        assertThat(annotator.hasProjectForIssue("jenKiNs-123", site, run), is(true));
+        assertThat(annotator.hasProjectForIssue("dummy-4711", site, run), is(true));
     }
 
     @Test

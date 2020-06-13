@@ -36,14 +36,14 @@ class VersionCreator {
 
 			String finalRealVersion = realVersion;
 			JiraSite site = getSiteForProject(project);
-			Optional<ExtendedVersion> sameNamedVersion = site.getVersions(realProjectKey).stream()
+			Optional<ExtendedVersion> sameNamedVersion = site.getSession(project).getVersions(realProjectKey).stream()
 					.filter(version -> version.getName().equals(finalRealVersion) && version.isReleased()).findFirst();
 
 			if (sameNamedVersion.isPresent()) {
 				listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
 			} else {
 				listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
-				addVersion(realVersion, realProjectKey, site.getSession());
+				addVersion(realVersion, realProjectKey, site.getSession(project));
 			}
 
 		} catch (Exception e) {
