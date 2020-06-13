@@ -181,9 +181,11 @@ Before submitting your change please note that:
 
 #### Testing your changes
 
-There have been many developers involved in the git plugin and there are many, many users who depend on the git-plugin.   Tests help us assure that we're delivering a reliable plugin, and that we've communicated our intent to other developers in a way that they can detect when they run tests.
+There have been many developers involved in the development of this plugin and there are many downstream users who depend on it. 
+Tests help us assure that we're delivering a reliable plugin and that we've communicated our intent to other developers in a way that they can detect when they run tests.
 
-Each change should be covered by appropriate unit tests. In case it is not testable via a unit test, it should be tested against a real Jira instance - possibly both Jira Server and Jira Cloud.
+Each change should be covered by appropriate unit tests. 
+In case it is not testable via a unit test, it should be tested against a real Jira instance - possibly both Jira Server and Jira Cloud.
 
 There is a [Jira Cloud test instance](https://jenkins-jira-plugin.atlassian.net/) that we are using for testing the plugin releases - let us know in the Pull Request in case you need access for testing.
 
