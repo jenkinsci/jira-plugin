@@ -16,7 +16,7 @@
   <url>https://github.com/jenkinsci/jira-plugin</url>
 
   <properties>
-    <revision>3.1.1</revision>
+    <revision>3.1.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <java.level>8</java.level>
     <jira-rest-client.version>5.2.1</jira-rest-client.version>
