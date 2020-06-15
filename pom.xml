@@ -23,7 +23,7 @@
     <fugue.version>3.0.0</fugue.version>
     <!-- jenkins -->
     <jenkins.version>2.176.4</jenkins.version>
-    <!-- security -->
+    <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
   </properties>
 
