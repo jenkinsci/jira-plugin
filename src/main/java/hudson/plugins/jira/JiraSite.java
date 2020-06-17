@@ -506,6 +506,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
+     * @deprecated should not be used
+     */
+    @Deprecated
+    public JiraSession getSession() {
+        return getSession(null);
+    }
+
+    /**
      * Gets a remote access session to this Jira site (job-aware)
      * Creates one if none exists already.
      *
