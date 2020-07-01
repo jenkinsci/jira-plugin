@@ -102,7 +102,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
-        JiraSession session = site.getSession();
+        JiraSession session = site.getSession(run.getParent());
         if (session == null) {
             logger.println(Messages.NoRemoteAccess());
             run.setResult(Result.FAILURE);

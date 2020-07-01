@@ -7,6 +7,10 @@ import com.cloudbees.hudson.plugins.folder.Folder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsProvider;
+import com.cloudbees.plugins.credentials.CredentialsStore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -31,5 +35,19 @@ public class JiraFolderPropertyTest {
         assertNotNull(prop);
         List<JiraSite> actual = Arrays.asList(prop.getSites());
         r.assertEqualDataBoundBeans(list, actual);
+    }
+
+
+
+    public static CredentialsStore getFolderStore( Folder f) {
+        Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores( f);
+        CredentialsStore folderStore = null;
+        for (CredentialsStore s : stores) {
+            if (s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f) {
+                folderStore = s;
+                break;
+            }
+        }
+        return folderStore;
     }
 }

@@ -14,7 +14,8 @@ Jenkins Jira Plugin
 
 #### About the plugin
 
-This plugin integrates with Jenkins the [Atlassian Jira Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions).
+This plugin integrates with Jenkins the [Atlassian Jira Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions). For bug reports, see [bugs](https://issues.jenkins-ci.org/issues/?filter=14761) or [all open issues](https://issues.jenkins-ci.org/issues/?filter=14956). For documentation, see [official plugin site](https://plugins.jenkins.io/jira).
+
 
 #### Usage with Jira Cloud
 
@@ -141,21 +142,6 @@ execute its actions. You can do that via Jira Permission Helper tool.
 -   Check also the Marvelution [Jenkins Integration for Jira](https://www.marvelution.com/products/jenkins-integration-for-jira/) which provides a two-way solution (Jenkins-\>Jira and Jira-\>Jenkins)
 -   For Jira Workflow (Pipeline) plugin compatibility see [COMPATIBILITY.md](COMPATIBILITY.md)
 
-#### Releases
-
-See [CHANGELOG.md](CHANGELOG.md)
-
-Reported Issues:
-* Next Release:
-[[ToDo]](https://issues.jenkins-ci.org/issues/?filter=14997)
-[[Done]](https://issues.jenkins-ci.org/issues/?filter=14998)
-* Bugs: [[All]](https://issues.jenkins-ci.org/issues/?filter=14761) [[Confirmed]](https://issues.jenkins-ci.org/issues/?filter=14996)
-* Other: [[All Non-Bugs]](https://issues.jenkins-ci.org/issues/?filter=14762)
-[[All Unresolved]](https://issues.jenkins-ci.org/issues/?filter=14956)
-* Categorized:
-[[by Votes]](https://issues.jenkins-ci.org/issues/?filter=15156)
-[[by Priority]](https://issues.jenkins-ci.org/issues/?filter=15157)
-
 ### Common issues
 
 #### Jenkins<>Jira SSL connectivity problems
@@ -185,9 +171,7 @@ References:
 
 ### Contributing to the Plugin
 
-New feature proposals and bug fix proposals should be submitted as [GitHub pull requests](https://help.github.com/articles/creating-a-pull-request).
-
-Fork the repository on GitHub, prepare your change on your forked copy, and submit a pull request (see [here](https://github.com/jenkinsci/jira-plugin/pulls) for open pull requests).
+New feature proposals and bug fix proposals should be submitted as [Pull Requests](https://help.github.com/articles/creating-a-pull-request).
 
 Before submitting your change please note that:
 * tests should be added for any changed code - the coverage is automatically checked after submitting the Pull Request
@@ -195,34 +179,42 @@ Before submitting your change please note that:
 * you use findbugs to see if you haven't introduced any new warnings
 * when adding new features please make sure that they support Jenkins Pipeline Plugin - see [COMPATIBILITY.md](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for more information
 
-There have been many developers involved in the git plugin and there are many, many users who depend on the git-plugin.  
+#### Testing your changes
 
-Tests help us assure that we're delivering a reliable plugin, and that we've communicated our intent to other developers in a way that they can detect when they run tests.
+There have been many developers involved in the development of this plugin and there are many downstream users who depend on it. 
+Tests help us assure that we're delivering a reliable plugin and that we've communicated our intent to other developers in a way that they can detect when they run tests.
+
+Each change should be covered by appropriate unit tests. 
+In case it is not testable via a unit test, it should be tested against a real Jira instance - possibly both Jira Server and Jira Cloud.
+
+There is a [Jira Cloud test instance](https://jenkins-jira-plugin.atlassian.net/) that we are using for testing the plugin releases - let us know in the Pull Request in case you need access for testing.
 
 #### Code Style
 
 We try to improve the code quality by conforming to
-[Google Java styleguide](https://google.github.io/styleguide/javaguide.html), that is defined in 
+[Google Java styleguide](https://google.github.io/styleguide/javaguide.html), that is defined in
 [google_checks.xml](https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml).
 If you are using an IDE, like IntelliJ IDEA, please:
 
 - install [Google Java Format plugin](https://plugins.jetbrains.com/plugin/8527-google-java-format)
 
-or 
+or
 
 - install the [Checkstyle plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea)
 - go to **Preferences > Editor > Code Style > Java**, select **Scheme** to *Project*
 - click the Cog icon and import Checkstyle configuration from [google_checks.xml](https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml)
 
-Currently the formatting is not automatically checked during the build. However, in the effort to 
-improve the quality of the code,  maintainers might ask for proper formatting during the review 
+Currently the formatting is not automatically checked during the build. However, in the effort to
+improve the quality of the code,  maintainers might ask for proper formatting during the review
 process, so it is better to have it in place sooner than later.
 
 #### Building plugin with Docker
 
 Build the plugin locally using Docker and Maven image version 3.3 & newest JDK 8:
 
-    docker run -it --rm -v "$PWD":/usr/src/mymaven -v "$HOME/.m2:/usr/src/mymaven/.m2" -w /usr/src/mymaven maven:3.3-jdk-8 mvn clean package
+```bash
+$ docker run -it --rm -v "$PWD":/usr/src/mymaven -v "$HOME/.m2:/usr/src/mymaven/.m2" -w /usr/src/mymaven maven:3.3-jdk-8 mvn clean package
+```
 
 #### Atlassian sources import
 
@@ -231,3 +223,11 @@ the sources from the artifact [com.atlassian.httpclient:atlassian-httpclient-plu
 has been imported in the project to have control over http(s) protocol transport layer.
 The downloaded sources didn't have any license headers but based on the [pom](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/atlassian-httpclient-plugin-0.23.0.pom)
 sources are Apache License (see pom in src/main/resources/atlassian-httpclient-plugin-0.23.0.pom)   
+
+
+### For maintainers
+
+#### Releasing the plugin
+
+- we use the [Release Drafter](https://github.com/toolmantim/release-drafter) extension to perform releases, make sure that the PRs are [properly labelled](https://github.com/jenkinsci/.github/blob/master/.github/release-drafter.yml)
+- there is a [Jira Cloud](https://jenkins-jira-plugin.atlassian.net/) test instance that the changes can be tested against, official maintainers are admins that can grant access for testing to PR submitters on a need-to-have basis

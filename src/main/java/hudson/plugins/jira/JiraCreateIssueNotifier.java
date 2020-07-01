@@ -5,6 +5,7 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Priority;
 import com.atlassian.jira.rest.client.api.domain.Status;
+import com.cloudbees.hudson.plugins.folder.Folder;
 import com.google.common.base.Splitter;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -12,6 +13,8 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -20,8 +23,10 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -34,6 +39,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
@@ -185,7 +191,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         String summary = String.format("Build %s failed", buildName);
         String description = String.format(
                 "%s\n\nThe build %s has failed.\nFirst failed run: %s",
-                (this.testDescription.equals("")) ? "No description is provided" : this.testDescription,
+                (this.testDescription.equals("")) ? "No description is provided" : vars.expand(this.testDescription),
                 buildName,
                 getBuildDetailsString(vars)
         );
@@ -282,7 +288,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             throw new IllegalStateException("Jira site needs to be configured in the project " + build.getFullDisplayName());
         }
 
-        JiraSession session = site.getSession();
+        JiraSession session = site.getSession(build.getProject());
         if (session == null) {
             throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
         }
@@ -463,10 +469,11 @@ public class JiraCreateIssueNotifier extends Notifier {
             return FormValidation.ok();
         }
 
-        public ListBoxModel doFillPriorityIdItems() {
+        public ListBoxModel doFillPriorityIdItems(@AncestorInPath final Item item) {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
-            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-                JiraSession session = site.getSession();
+            List<JiraSite> sites = JiraSite.getJiraSites(item);
+            for (JiraSite site : sites) {
+                JiraSession session = site.getSession(item);
                 if (session != null) {
                     for (Priority priority : session.getPriorities()) {
                         items.add("[" + site.getName() + "] " + priority.getName(), String.valueOf(priority.getId()));
@@ -476,10 +483,11 @@ public class JiraCreateIssueNotifier extends Notifier {
             return items;
         }
 
-        public ListBoxModel doFillTypeIdItems() {
+        public ListBoxModel doFillTypeIdItems(@AncestorInPath final Item item) {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
-            for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
-                JiraSession session = site.getSession();
+            List<JiraSite> sites = JiraSite.getJiraSites(item);
+            for (JiraSite site : sites) {
+                JiraSession session = site.getSession(item);
                 if (session != null) {
                     for (IssueType type : session.getIssueTypes()) {
                         items.add("[" + site.getName() + "] " + type.getName(), String.valueOf(type.getId()));

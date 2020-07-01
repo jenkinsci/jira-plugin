@@ -37,8 +37,8 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
     }
 
     @Override
-    public void annotate(Run<?, ?> build, Entry change, MarkupText text) {
-        JiraSite site = getSiteForProject(build.getParent());
+    public void annotate(Run<?, ?> run, Entry change, MarkupText text) {
+        JiraSite site = getSiteForProject(run.getParent());
         
         if (site == null) {
             LOGGER.fine("not configured with Jira site");
@@ -53,7 +53,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         LOGGER.log(Level.FINE, "Using site: {0}", site.getUrl());
 
         // if there's any recorded detail information, try to use that, too.
-        JiraBuildAction a = build.getAction(JiraBuildAction.class);
+        JiraBuildAction a = run.getAction(JiraBuildAction.class);
 
         Set<JiraIssue> issuesToBeSaved = new LinkedHashSet<>();
 
@@ -72,7 +72,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
                 String id = m.group(1);
 
-                if (StringUtils.isNotBlank(site.credentialsId) && !hasProjectForIssue(id, site)) {
+                if (StringUtils.isNotBlank(site.credentialsId) && !hasProjectForIssue(id, site, run)) {
                     LOGGER.log(Level.INFO, "No known Jira project corresponding to id: ''{0}''", id);
                     continue;
                 }
@@ -126,7 +126,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         }
 
         if (!issuesToBeSaved.isEmpty()) {
-            saveIssues(build, a, issuesToBeSaved);
+            saveIssues(run, a, issuesToBeSaved);
         }
     }
 
@@ -137,18 +137,17 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
      *
      * @param id String like MNG-1234
      */
-    protected boolean hasProjectForIssue(String id, JiraSite site) {
+    protected boolean hasProjectForIssue(String id, JiraSite site, Run run) {
         int idx = id.indexOf('-');
         if (idx == -1) {
             return false;
         }
 
-        Set<String> keys = site.getProjectKeys();
+        Set<String> keys = site.getProjectKeys(run.getParent());
         return keys.contains(id.substring(0, idx).toUpperCase());
     }
 
-    private void saveIssues(Run<?, ?> build, JiraBuildAction a,
-                            Set<JiraIssue> issuesToBeSaved) {
+    private void saveIssues(Run<?, ?> build, JiraBuildAction a, Set<JiraIssue> issuesToBeSaved) {
         if (a != null) {
             a.addIssues(issuesToBeSaved);
         } else {

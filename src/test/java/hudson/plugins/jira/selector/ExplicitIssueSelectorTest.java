@@ -20,12 +20,12 @@ public class ExplicitIssueSelectorTest {
 
     @Test
     public void returnsExplicitCollections() throws IOException {
-        JiraSession session = mock(JiraSession.class);
-        JiraSite site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
+//        JiraSession session = mock(JiraSession.class);
+//        JiraSite site = mock(JiraSite.class);
+//        when(site.getSession(null)).thenReturn(session);
 
-        ExplicitIssueSelector jqlUpdaterIssueSelector = new ExplicitIssueSelector( Collections.singletonList(TEST_KEY));
-        Set<String> foundIssueIds = jqlUpdaterIssueSelector.findIssueIds(null, site, null);
+        ExplicitIssueSelector jqlUpdaterIssueSelector = new ExplicitIssueSelector(Collections.singletonList(TEST_KEY));
+        Set<String> foundIssueIds = jqlUpdaterIssueSelector.findIssueIds(null, null, null);
         assertThat(foundIssueIds, hasSize(1));
         assertThat(foundIssueIds.iterator().next(), equalTo(TEST_KEY));
     }

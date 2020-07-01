@@ -48,7 +48,7 @@ public class ExplicitIssueSelector extends AbstractIssueSelector {
 
     @Override
     public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
-        return new HashSet( jiraIssueKeys);
+        return new HashSet(jiraIssueKeys);
     }
 
     @Extension
