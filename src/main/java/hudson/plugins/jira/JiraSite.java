@@ -21,6 +21,8 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.TaskListener;
+import hudson.model.Run;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.model.Item;
@@ -29,6 +31,7 @@ import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssue;
+import hudson.plugins.jira.selector.DefaultIssueSelector;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -52,13 +55,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -1039,7 +1036,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         JiraSession session = getSession();
 
         if (session == null) {
-            LOGGER.warning("Jira session could not be established");
+            LOGGER.warning("JIRA session could not be established");
             console.println(Messages.FailedToConnect());
             return false;
         }
@@ -1047,6 +1044,52 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         boolean success = true;
         List<Issue> issues = session.getIssuesFromJqlSearch(jqlSearch);
 
+        return progressSelectedIssues(workflowActionName, comment, console, session, success, issues);
+    }
+
+
+    /**
+     * Progresses all issues matching the JQL search, using the given workflow action. Optionally
+     * adds a comment to the issue(s) at the same time.
+     *
+     *
+     *
+     * @param listener
+     * @param run
+     * @param workflowActionName the workflowActionName
+     * @param comment the comment
+     * @param console the console
+     * @throws TimeoutException TimeoutException if too long
+     */
+    public boolean progressMatchingIssuesPostBuild(TaskListener listener, Run<?, ?> run, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
+        JiraSession session = getSession();
+        PrintStream logger = listener.getLogger();
+
+        if (session == null) {
+            LOGGER.warning("Jira session could not be established");
+            console.println(Messages.FailedToConnect());
+            return false;
+        }
+
+        boolean success = true;
+        JiraSite site = JiraSite.get(run.getParent());
+        Set<String> ids = new DefaultIssueSelector().findIssueIds(run, site, listener);
+        List<Issue> issues = new ArrayList<>();
+
+        for (String id : ids) {
+            Issue issue = session.getIssue(id);
+            if (issue == null) {
+                logger.println(id + " issue doesn't exist in JIRA");
+                continue;
+            }
+
+            issues.add(issue);
+        }
+
+        return progressSelectedIssues(workflowActionName, comment, console, session, success, issues);
+    }
+
+    private boolean progressSelectedIssues(String workflowActionName, String comment, PrintStream console, JiraSession session, boolean success, List<Issue> issues) {
         if (isEmpty(workflowActionName)) {
             console.println("[Jira] No workflow action was specified, " +
                     "thus no status update will be made for any of the matching issues.");
@@ -1054,11 +1097,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         for (Issue issue : issues) {
             String issueKey = issue.getKey();
-
-            if (isNotEmpty(comment)) {
-                session.addComment(issueKey, comment, null, null);
-            }
-
 
             if (isEmpty(workflowActionName)) {
                 continue;
@@ -1072,16 +1110,20 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 console.println(Messages.JiraIssueUpdateBuilder_UnknownWorkflowAction(issueKey, workflowActionName));
                 success = false;
                 continue;
+            } else {
+                console.println(String.format("[%s]: Found action id %s for workflow action '%s'", issueKey, actionId, workflowActionName));
             }
 
-            String newStatus = session.progressWorkflowAction(issueKey, actionId);
+            session.progressWorkflowAction(issueKey, actionId);
 
-            console.println(String.format("[Jira] Issue %s transitioned to \"%s\" due to action \"%s\".",
-                    issueKey, newStatus, workflowActionName));
+            if (isNotEmpty(comment)) {
+                session.addComment(issueKey, comment, null, null);
+            }
         }
 
         return success;
     }
+
 
     @Extension
     public static class DescriptorImpl extends Descriptor<JiraSite> {
