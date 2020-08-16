@@ -213,7 +213,7 @@ process, so it is better to have it in place sooner than later.
 Build the plugin locally using Docker and Maven image version 3.3 & newest JDK 8:
 
 ```bash
-$ docker run -it --rm -v "$PWD":/usr/src/mymaven -v "$HOME/.m2:/usr/src/mymaven/.m2" -w /usr/src/mymaven maven:3.3-jdk-8 mvn clean package
+$ docker run -it --rm -v "$PWD":/usr/src/mymaven -v "$HOME/.m2:/root/.m2" -w /usr/src/mymaven maven:3.3-jdk-8 mvn clean package
 ```
 
 #### Atlassian sources import
