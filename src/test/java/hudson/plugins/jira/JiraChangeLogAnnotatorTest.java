@@ -1,16 +1,18 @@
 package hudson.plugins.jira;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsNot.not;
+import static org.hamcrest.core.StringContains.containsString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
+
 import hudson.MarkupText;
 import hudson.model.FreeStyleBuild;
 import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
-import org.junit.Before;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
-import org.mockito.Mockito;
-import org.mockito.internal.util.reflection.FieldSetter;
-import org.mockito.stubbing.Answer;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -18,15 +20,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
-
-import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.core.StringContains.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import org.junit.Before;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
+import org.powermock.reflect.Whitebox;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -54,8 +53,8 @@ public class JiraChangeLogAnnotatorTest {
         when(site.getIssuePattern()).thenCallRealMethod();
 
         // create inner objects
-        FieldSetter.setField(site, JiraSite.class.getDeclaredField("projectUpdateLock"), new ReentrantLock());
-        FieldSetter.setField(site, JiraSite.class.getDeclaredField("issueCache"), JiraSite.makeIssueCache());
+        Whitebox.setInternalState(site,"projectUpdateLock", new ReentrantLock());
+        Whitebox.setInternalState(site,"issueCache", JiraSite.makeIssueCache());
     }
 
     @Test
