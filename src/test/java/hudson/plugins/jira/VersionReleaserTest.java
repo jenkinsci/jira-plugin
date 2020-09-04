@@ -1,10 +1,23 @@
 package hudson.plugins.jira;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.plugins.jira.extension.ExtendedVersion;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,24 +26,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.internal.util.reflection.FieldSetter;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.powermock.reflect.Whitebox;
 
 @RunWith(MockitoJUnitRunner.class)
 public class VersionReleaserTest {
@@ -67,6 +65,8 @@ public class VersionReleaserTest {
 
     @Before
     public void createMocks() throws Exception {
+        Whitebox.setInternalState(site,"jiraSession", session);
+
         when(build.getEnvironment(listener)).thenReturn(env);
         when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
@@ -81,7 +81,6 @@ public class VersionReleaserTest {
                 return expanded;
         });
         when(listener.getLogger()).thenReturn(logger);
-        FieldSetter.setField( site, JiraSite.class.getDeclaredField( "jiraSession"), session);
         doReturn(site).when(versionReleaser).getSiteForProject(any());
     }
 

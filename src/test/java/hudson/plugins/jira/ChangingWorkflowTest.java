@@ -1,20 +1,5 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.Transition;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.internal.util.reflection.FieldSetter;
-import org.mockito.junit.MockitoJUnitRunner;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.concurrent.TimeoutException;
-
 import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -22,23 +7,38 @@ import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.concurrent.TimeoutException;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+import org.powermock.reflect.Whitebox;
 
 /**
  * User: lanwen
  * Date: 10.09.13
  * Time: 0:57
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({ JiraSite.class })
 public class ChangingWorkflowTest {
 
     public static final String NON_EMPTY_COMMENT = "Non empty comment";
@@ -53,7 +53,6 @@ public class ChangingWorkflowTest {
 
     @Mock
     private JiraSession mockSession;
-
 
     private JiraSession spySession;
 
@@ -114,11 +113,14 @@ public class ChangingWorkflowTest {
 
     @Test
     public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws Exception {
-        FieldSetter.setField(site, JiraSite.class.getDeclaredField("jiraSession"), mockSession);
+        Whitebox.setInternalState(site,"jiraSession", mockSession);
+
         when(mockSession.getIssuesFromJqlSearch(anyString()))
             .thenReturn(Arrays.asList(mock(Issue.class)));
-        when(mockSession.getActionIdForIssue(any(),eq(NON_EMPTY_WORKFLOW_LOWERCASE)))
-             .thenReturn(Integer.valueOf(randomNumeric(5)));
+
+        doReturn(Integer.valueOf(randomNumeric(5))).when(spySession)
+            .getActionIdForIssue(anyString(), eq(NON_EMPTY_WORKFLOW_LOWERCASE));
+
         when(site.progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class)))
              .thenCallRealMethod();
 
@@ -133,7 +135,7 @@ public class ChangingWorkflowTest {
 
     @Test
     public void addCommentsOnNullWorkflowAndNonEmptyComment() throws Exception {
-        FieldSetter.setField(site, JiraSite.class.getDeclaredField("jiraSession"), mockSession);
+        Whitebox.setInternalState(site,"jiraSession", mockSession);
         when(mockSession.getIssuesFromJqlSearch(anyString()))
             .thenReturn(Arrays.asList(mock(Issue.class)));
         when(site.progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class)))

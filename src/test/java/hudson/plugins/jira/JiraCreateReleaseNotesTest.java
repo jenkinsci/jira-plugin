@@ -1,5 +1,13 @@
 package hudson.plugins.jira;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Status;
@@ -10,30 +18,20 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.internal.util.reflection.FieldSetter;
-import org.mockito.junit.MockitoJUnitRunner;
-
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import org.hamcrest.Matchers;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
+import org.powermock.reflect.Whitebox;
 
 @RunWith( MockitoJUnitRunner.class)
 public class JiraCreateReleaseNotesTest {
@@ -59,6 +57,8 @@ public class JiraCreateReleaseNotesTest {
     JiraSite site;
     @Mock
     private PrintWriter printWriter;
+    @Mock
+    JiraSession session;
 
     @Before
     public void createCommonMocks() throws IOException, InterruptedException {
@@ -76,6 +76,8 @@ public class JiraCreateReleaseNotesTest {
                 else
                     return expanded;
         });
+
+        Whitebox.setInternalState(site,"jiraSession", session);
 
     }
 
@@ -130,8 +132,6 @@ public class JiraCreateReleaseNotesTest {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
         when(site.getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER)).thenCallRealMethod();
-        JiraSession session = Mockito.mock(JiraSession.class);
-        FieldSetter.setField(site, JiraSite.class.getDeclaredField( "jiraSession"), session);
         Issue issue1 = Mockito.mock(Issue.class);
         IssueType issueType1 = Mockito.mock(IssueType.class);
         Status issueStatus = Mockito.mock(Status.class);
