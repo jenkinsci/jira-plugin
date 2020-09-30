@@ -10,6 +10,7 @@ import org.junit.Test;
 import hudson.model.FreeStyleBuild;
 import hudson.plugins.jira.deprecated.DeprecatedJiraBuildAction;
 import hudson.util.XStream2;
+import org.junit.Ignore;
 
 /**
  * Test if existing serialized JiraBuildAction information
@@ -19,6 +20,7 @@ import hudson.util.XStream2;
  */
 public class JiraBuildActionTest {
 
+    @Ignore("TODO do not use mock frameworks for this; use @LocalData")
     @Test
     public void binaryCompatibility() {
         XStream2 xStream2 = new XStream2();
