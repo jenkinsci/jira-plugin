@@ -5,8 +5,12 @@ updates:
     schedule:
       interval: "weekly"
     ignore:
+      # core is using lower Guava version, don't touch it unless you want things to blow up on client installations at runtime
       - dependency-name: "com.google.guava:guava"
+      # we don't want to automatically bump core
       - dependency-name: "org.jenkins-ci.main:jenkins-core"
+      # fugue comes from upstream Atlassian dependency
+      - dependency-name: "io.atlassian.fugue:fugue"
       
   - package-ecosystem: "github-actions"
     directory: "/"
