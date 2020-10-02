@@ -61,7 +61,7 @@ public class JiraChangeLogAnnotatorTest {
     public void annotate() {
         Run run = mock(Run.class);
 
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 
         MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
@@ -78,7 +78,7 @@ public class JiraChangeLogAnnotatorTest {
     public void annotateDisabledOnSiteLevel() {
         Run run = mock(Run.class);
 
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
         MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
@@ -91,7 +91,7 @@ public class JiraChangeLogAnnotatorTest {
     public void annotateWf() {
         Run run = mock(Run.class);
 
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 
         MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
@@ -254,7 +254,7 @@ public class JiraChangeLogAnnotatorTest {
 
         Run run = mock(Run.class);
 
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(run, Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
         MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());

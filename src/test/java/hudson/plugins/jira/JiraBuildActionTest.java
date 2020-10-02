@@ -6,7 +6,6 @@ import static org.junit.Assert.assertEquals;
 
 import hudson.model.Job;
 import hudson.model.Run;
-import hudson.plugins.jira.model.JiraIssue;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -14,7 +13,7 @@ import org.jvnet.hudson.test.recipes.LocalData;
 
 
 /**
- * Place needed resources in src/test/resources/compatibility
+ * Place needed resources in src/test/resources
  *
  */
 public class JiraBuildActionTest {
@@ -37,7 +36,7 @@ public class JiraBuildActionTest {
     assertEquals("job/project/2/", run.getUrl());
 
     JiraBuildAction jba = run.getAction(JiraBuildAction.class);
-    assertThat(jba.owner.getDisplayName(), is(run.getDisplayName()));
+    assertThat(jba.getOwner().getDisplayName(), is(run.getDisplayName()));
     assertThat(jba.getIssue("JIRA-123").getSummary(), is("Issue summary"));
   }
 
