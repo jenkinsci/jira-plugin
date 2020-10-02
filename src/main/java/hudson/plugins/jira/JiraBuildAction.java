@@ -18,7 +18,7 @@ import org.kohsuke.stapler.export.ExportedBean;
  * @author Kohsuke Kawaguchi
  */
 @ExportedBean
-public class JiraBuildAction implements Action, RunAction2 {
+public class JiraBuildAction implements RunAction2 {
 
   private final HashSet<JiraIssue> issues;
   private transient Run<?, ?> owner;
