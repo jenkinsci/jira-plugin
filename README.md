@@ -8,7 +8,6 @@ Jenkins Jira Plugin
 
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/jira.svg?color=blue)](https://stats.jenkins.io/pluginversions/jira.html)
 [![Coverage](https://coveralls.io/repos/jenkinsci/jira-plugin/badge.svg?branch=master&service=github)](https://coveralls.io/github/jenkinsci/jira-plugin?branch=master)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jenkins-jira-plugin&metric=alert_status)](https://sonarcloud.io/dashboard?id=jenkins-jira-plugin)
 [![Contributors](https://img.shields.io/github/contributors/jenkinsci/jira-plugin.svg)](https://github.com/jenkinsci/jira-plugin/graphs/contributors)
 
 
