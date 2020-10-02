@@ -24,7 +24,7 @@ public class JiraBuildAction implements RunAction2 {
   private transient Run<?, ?> owner;
 
   public JiraBuildAction(@Nonnull Set<JiraIssue> issues) {
-    this.issues = new HashSet(issues);
+    this.issues = new HashSet<>(issues);
   }
 
   @Override
