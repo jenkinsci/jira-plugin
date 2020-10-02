@@ -4,6 +4,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "com.google.guava:guava"
+      - dependency-name: "org.jenkins-ci.main:jenkins-core"
+      
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
