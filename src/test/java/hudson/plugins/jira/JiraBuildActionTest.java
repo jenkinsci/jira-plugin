@@ -1,40 +1,44 @@
 package hudson.plugins.jira;
 
-import static org.mockito.Mockito.mock;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
-
+import hudson.model.Job;
+import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
+import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.recipes.LocalData;
 
-import hudson.model.FreeStyleBuild;
-import hudson.plugins.jira.deprecated.DeprecatedJiraBuildAction;
-import hudson.util.XStream2;
-import org.junit.Ignore;
 
 /**
- * Test if existing serialized JiraBuildAction information
- * will be loaded after upgrading jira plugin version to with
- * new JiraBuildAction class version introduced in PR-72.
+ * Place needed resources in src/test/resources/compatibility
  *
  */
 public class JiraBuildActionTest {
 
-    @Ignore("TODO do not use mock frameworks for this; use @LocalData")
-    @Test
-    public void binaryCompatibility() {
-        XStream2 xStream2 = new XStream2();
+  @Rule
+  public JenkinsRule r = new JenkinsRule();
 
-        FreeStyleBuild b = mock(FreeStyleBuild.class);
-        DeprecatedJiraBuildAction deprecatedJiraBuildAction = new DeprecatedJiraBuildAction(b, new ArrayList<JiraIssue>());
 
-        String xml = xStream2.toXML(deprecatedJiraBuildAction);
-        System.out.println(xml);
-        xml = xml.replaceAll("hudson.plugins.jira.deprecated.DeprecatedJiraBuildAction", "hudson.plugins.jira.JiraBuildAction");
-        Object fromXML = xStream2.fromXML(xml);
-        System.out.println(fromXML.getClass().getName());
-        JiraBuildAction jiraBuildAction = (JiraBuildAction) fromXML;
-        System.out.println(jiraBuildAction.getDisplayName());
-    }
+  /**
+   * Test if existing serialized JiraBuildAction information will be loaded after upgrading jira
+   * plugin version to with new JiraBuildAction class version introduced in PR-72.
+   */
+  @Test
+  @LocalData
+  public void binaryCompatibility() {
+    assertEquals("Jenkins JiraBuildActionTest config", r.jenkins.getSystemMessage());
+
+    Job job = r.getInstance().getItemByFullName("/project", Job.class);
+    Run run = job.getBuildByNumber(2);
+    assertEquals("job/project/2/", run.getUrl());
+
+    JiraBuildAction jba = run.getAction(JiraBuildAction.class);
+    assertThat(jba.owner.getDisplayName(), is(run.getDisplayName()));
+    assertThat(jba.getIssue("JIRA-123").getSummary(), is("Issue summary"));
+  }
 
 }

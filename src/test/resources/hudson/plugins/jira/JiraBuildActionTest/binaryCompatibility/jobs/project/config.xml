@@ -1,0 +1,33 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.plugins.jira.JiraProjectProperty plugin="jira@3.0.16-SNAPSHOT">
+      <siteName>https://jira.atlassian.net/</siteName>
+    </hudson.plugins.jira.JiraProjectProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders/>
+  <publishers>
+    <hudson.plugins.jira.JiraIssueUpdater plugin="jira@3.0.16-SNAPSHOT">
+      <issueSelector class="hudson.plugins.jira.selector.ExplicitIssueSelector">
+        <jiraIssueKeys class="java.util.Arrays$ArrayList">
+          <a class="string-array">
+            <string>TEST-1</string>
+          </a>
+        </jiraIssueKeys>
+        <issueKeys>TEST-1</issueKeys>
+      </issueSelector>
+      <labels/>
+    </hudson.plugins.jira.JiraIssueUpdater>
+  </publishers>
+  <buildWrappers/>
+</project>

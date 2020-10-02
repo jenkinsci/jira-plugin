@@ -7,6 +7,7 @@ import java.util.Set;
 import hudson.model.Action;
 import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
+import jenkins.model.RunAction2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -18,11 +19,21 @@ import javax.annotation.Nonnull;
  * @author Kohsuke Kawaguchi
  */
 @ExportedBean
-public class JiraBuildAction implements Action {
+public class JiraBuildAction implements Action, RunAction2 {
 
-    public final Run<?, ?> owner;
+    public transient Run<?, ?> owner;
 
     private Set<JiraIssue> issues;
+
+    @Override
+    public void onAttached(Run<?, ?> r) {
+        this.owner = r;
+    }
+
+    @Override
+    public void onLoad(Run<?, ?> r) {
+        this.owner = r;
+    }
 
     public JiraBuildAction(@Nonnull Run<?, ?> owner, @Nonnull Set<JiraIssue> issues) {
         this.owner = owner;
@@ -70,4 +81,5 @@ public class JiraBuildAction implements Action {
     public void addIssues(Set<JiraIssue> issuesToBeSaved) {
         this.issues.addAll(issuesToBeSaved);
     }
+
 }
