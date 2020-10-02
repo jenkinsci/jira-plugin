@@ -19,13 +19,7 @@ install: skip       # skip install phase as no deps are required
 # enable-jacoco profile is coming from the parent pom:
 # https://github.com/jenkinsci/plugin-pom/blob/master/pom.xml
 script:
-  - mvn -Penable-jacoco -Dsonar.projectKey=jenkins-jira-plugin -Dsonar.coverage.jacoco.xmlReportPaths=/home/travis/build/jenkinsci/jira-plugin/target/site/jacoco/jacoco.xml clean verify coveralls:report sonar:sonar
-
-addons:
-  sonarcloud:
-    organization: "warden"
-    token:
-      secure: "b9yLgCY2fmS0Cm9BQy4cKj+xcnmz2ssVpXeiv9f2Y6Qr16EJRFYkOep8ya+T77/7iCmPrbaIklBslC9FFS0i1F0yVEjCRcaU09mXpV29fbjwX2nucM6Dv1ctActvUBFXqkC4+dS2Aetbb8BzB7CWJUj+tLHV5Woi71Jsgn+j6L4="
+  - mvn -Penable-jacoco clean verify coveralls:report
 
 before_cache:
   - rm -fr $HOME/.m2/repository/org/jenkins-ci/plugins/jira
@@ -33,7 +27,6 @@ before_cache:
 cache:
   directories:
     - "$HOME/.m2/repository"
-    - "$HOME/.sonar/cache"
 
 notifications:
   email: false
