@@ -55,7 +55,7 @@ jobs:
           java-version: ${{ matrix.java }}
 
       - name: Build with Maven
-        run: mvn verify -e -B -
+        run: mvn verify -e -B -V
         
       - name: Coveralls Parallel
         uses: coverallsapp/github-action@master
