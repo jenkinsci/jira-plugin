@@ -112,7 +112,7 @@ class Updater {
             boolean useWikiStyleComments = site.supportsWikiStyleComment;
 
             issues = getJiraIssues(ids, session, logger);
-            run.addAction(new JiraBuildAction(run, issues));
+            run.addAction(new JiraBuildAction(issues));
 
             if (doUpdate) {
                 submitComments(run, logger, rootUrl, issues,

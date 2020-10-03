@@ -151,7 +151,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
         if (a != null) {
             a.addIssues(issuesToBeSaved);
         } else {
-            JiraBuildAction action = new JiraBuildAction(build, issuesToBeSaved);
+            JiraBuildAction action = new JiraBuildAction(issuesToBeSaved);
             build.addAction(action);
         }
 
