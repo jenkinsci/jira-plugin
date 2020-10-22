@@ -207,9 +207,20 @@ Currently the formatting is not automatically checked during the build. However,
 improve the quality of the code,  maintainers might ask for proper formatting during the review
 process, so it is better to have it in place sooner than later.
 
-#### Building plugin with Docker
+#### Docker
 
-Build the plugin locally using Docker and Maven image version 3.3 & newest JDK 8:
+##### Start dockerized Jenkins (for testing)
+
+The command below will start a local Jenkins using the version specificied as first argument (or lts):
+
+```bash
+$ ./examples/start_docker.sh 2.249.2
+```
+
+##### Build the plugin in Docker environment
+
+The command below allows to build the plugin using maven docker image. This is useful to test building against different Maven/JDK versions.
+See also [SDKMan](https://sdkman.io/) for a different approach.
 
 ```bash
 $ docker run -it --rm -v "$PWD":/usr/src/mymaven -v "$HOME/.m2:/root/.m2" -w /usr/src/mymaven maven:3.3-jdk-8 mvn clean package
