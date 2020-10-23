@@ -11,7 +11,7 @@ Jenkins Jira Plugin
 [![Contributors](https://img.shields.io/github/contributors/jenkinsci/jira-plugin.svg)](https://github.com/jenkinsci/jira-plugin/graphs/contributors)
 
 
-#### About the plugin
+### About the plugin
 
 This plugin integrates with Jenkins the [Atlassian Jira Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions). For bug reports, see [bugs](https://issues.jenkins-ci.org/issues/?filter=14761) or [all open issues](https://issues.jenkins-ci.org/issues/?filter=14956). For documentation, see [official plugin site](https://plugins.jenkins.io/jira).
 
@@ -26,7 +26,7 @@ When creating a new issue, provide as much information as possible including:
 
 - Jenkins and plugin versions (Environment field)
 
-  You can obtain the list using using [Jenkins Script console](https://wiki.jenkins-ci.org/display/JENKINS/Jenkins+Script+Console at `http://<jenkins-ip:8080>/script`:
+  You can obtain the list using using [Jenkins Script console](https://wiki.jenkins-ci.org/display/JENKINS/Jenkins+Script+Console) at `http://<jenkins-ip:8080>/script`:
 
 ```groovy
 println("Jenkins:" + Jenkins.instance.getVersion())
@@ -36,6 +36,8 @@ Jenkins.instance.pluginManager.plugins.each{
     println ("${plugin.getDisplayName()} (${plugin.getShortName()}): ${plugin.getVersion()}")
 }
 ```
+
+### Configuring the plugin
 
 
 #### Usage with Jira Cloud
@@ -154,18 +156,18 @@ execute its actions. You can do that via Jira Permission Helper tool.
 
 #### System properties
 
-| Property Name                                                   | Functionality Change                                                                                  |
-|-----------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| **-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true** | Use to disable resolving user email from Jira usernames. Currently there is no option for this in UI. |
+| Property Name | Functionality Change |
+|---------------|----------------------|
+| `-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true` | Use to disable resolving user email from Jira usernames. Currently there is no option for this in UI. |
 
 #### Related Resources
 
 -   Check also the Marvelution [Jenkins Integration for Jira](https://www.marvelution.com/products/jenkins-integration-for-jira/) which provides a two-way solution (Jenkins-\>Jira and Jira-\>Jenkins)
 -   For Jira Workflow (Pipeline) plugin compatibility see [COMPATIBILITY.md](COMPATIBILITY.md)
 
-### Common issues
+#### Common issues
 
-#### Jenkins<>Jira SSL connectivity problems
+##### Jenkins<>Jira SSL connectivity problems
 
 If you encounter stacktraces like this:
 ```
@@ -173,9 +175,7 @@ Caused by: javax.net.ssl.SSLHandshakeException: sun.security.validator.Validator
 ```
 
 make sure the JRE/JDK that Jenkins master is running (or the Jenkins slaves are running) contain the valid CA chain certificates that Jira is running with.
-You can test it using this [SSLPoke.java class](https://gist.github.com/warden/e4ef13ea60f24d458405613be4ddbc51)
-
-like this:
+You can test it using this [SSLPoke.java class](https://gist.github.com/warden/e4ef13ea60f24d458405613be4ddbc51):
 ```
 $ wget -O SSLPoke.java https://gist.githubusercontent.com/warden/e4ef13ea60f24d458405613be4ddbc51/raw/7f258a30be4ddea7b67239b40ae305f6a2e98e0a/SSLPoke.java
 
@@ -257,7 +257,7 @@ The downloaded sources didn't have any license headers but based on the [pom](ht
 sources are Apache License (see pom in src/main/resources/atlassian-httpclient-plugin-0.23.0.pom)   
 
 
-### For maintainers
+### Maintainers Section
 
 #### Releasing the plugin
 
