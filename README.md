@@ -16,6 +16,28 @@ Jenkins Jira Plugin
 This plugin integrates with Jenkins the [Atlassian Jira Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions). For bug reports, see [bugs](https://issues.jenkins-ci.org/issues/?filter=14761) or [all open issues](https://issues.jenkins-ci.org/issues/?filter=14956). For documentation, see [official plugin site](https://plugins.jenkins.io/jira).
 
 
+#### Reporting Bugs
+
+Before reporting a new bug, check [currently open  issues in JIRA](https://issues.jenkins-ci.org/browse/JENKINS-64002?filter=14956).
+
+When creating a new issue, provide as much information as possible including:
+
+- steps to reproduce the issue and possible workarounds if known (Description field)
+
+- Jenkins and plugin versions (Environment field)
+
+  You can obtain the list using using [Jenkins Script console](https://wiki.jenkins-ci.org/display/JENKINS/Jenkins+Script+Console at `http://<jenkins-ip:8080>/script`:
+
+```groovy
+println("Jenkins:" + Jenkins.instance.getVersion())
+
+Jenkins.instance.pluginManager.plugins.each{
+  plugin ->
+    println ("${plugin.getDisplayName()} (${plugin.getShortName()}): ${plugin.getVersion()}")
+}
+```
+
+
 #### Usage with Jira Cloud
 
 With Atlassian Jira Cloud, it's not possible to create a user without an
@@ -180,10 +202,10 @@ Before submitting your change please note that:
 
 #### Testing your changes
 
-There have been many developers involved in the development of this plugin and there are many downstream users who depend on it. 
+There have been many developers involved in the development of this plugin and there are many downstream users who depend on it.
 Tests help us assure that we're delivering a reliable plugin and that we've communicated our intent to other developers in a way that they can detect when they run tests.
 
-Each change should be covered by appropriate unit tests. 
+Each change should be covered by appropriate unit tests.
 In case it is not testable via a unit test, it should be tested against a real Jira instance - possibly both Jira Server and Jira Cloud.
 
 There is a [Jira Cloud test instance](https://jenkins-jira-plugin.atlassian.net/) that we are using for testing the plugin releases - let us know in the Pull Request in case you need access for testing.
