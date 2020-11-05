@@ -63,7 +63,7 @@ jobs:
       image: jenkins/pct
       env:
         CHECKOUT_SRC: "https://github.com/${{ github.repository }}.git"
-        VERSION: "${{ github.head_ref }}"
+        VERSION: "${{ github.head_ref || 'master' }}"
       volumes:
         - /home/runner/work/__w/out:/pct/out
     steps:
