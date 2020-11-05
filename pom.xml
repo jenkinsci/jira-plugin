@@ -20,7 +20,7 @@
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/jira-plugin</gitHubRepo>
     <java.level>8</java.level>
-    <jira-rest-client.version>5.2.1</jira-rest-client.version>
+    <jira-rest-client.version>5.2.2</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
     <!-- jenkins -->
     <jenkins.version>2.222.4</jenkins.version>
