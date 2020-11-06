@@ -263,3 +263,4 @@ sources are Apache License (see pom in src/main/resources/atlassian-httpclient-p
 
 - we use the [Release Drafter](https://github.com/toolmantim/release-drafter) extension to perform releases, make sure that the PRs are [properly labelled](https://github.com/jenkinsci/.github/blob/master/.github/release-drafter.yml)
 - there is a [Jira Cloud](https://jenkins-jira-plugin.atlassian.net/) test instance that the changes can be tested against, official maintainers are admins that can grant access for testing to PR submitters on a need-to-have basis
+- make sure you have `~/.m2/settings.xml` configured - refer to [releasing Jenkins plugins](https://www.jenkins.io/doc/developer/publishing/releasing/)
