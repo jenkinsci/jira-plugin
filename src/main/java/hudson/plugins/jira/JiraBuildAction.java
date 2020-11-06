@@ -1,9 +1,7 @@
 package hudson.plugins.jira;
 
-import hudson.model.Action;
 import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
-import java.io.Serializable;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -25,6 +23,19 @@ public class JiraBuildAction implements RunAction2 {
 
   public JiraBuildAction(@Nonnull Set<JiraIssue> issues) {
     this.issues = new HashSet<>(issues);
+  }
+
+  // Leave it in place for binary compatibility.
+  /**
+   * @deprecated use {@link #JiraBuildAction(java.util.Set)} instead
+   *
+   * @param owner the owner of this action
+   * @param issues the Jira issues
+   */
+  @Deprecated
+  public JiraBuildAction(Run<?, ?> owner, @Nonnull Set<JiraIssue> issues) {
+    this(issues);
+    // the owner will be set by #onAttached(hudson.model.Run)
   }
 
   @Override
