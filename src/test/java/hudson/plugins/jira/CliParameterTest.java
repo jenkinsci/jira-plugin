@@ -9,6 +9,8 @@ import hudson.model.FreeStyleProject;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterDefinition;
 import hudson.plugins.jira.versionparameter.JiraVersionParameterDefinition;
+import java.io.IOException;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -17,10 +19,15 @@ public class CliParameterTest {
 
   @Rule public JenkinsRule jenkins = new JenkinsRule();
 
+  FreeStyleProject project;
+
+  @Before
+  public void setup() throws IOException {
+    project = jenkins.createFreeStyleProject();
+  }
+
   @Test
   public void jiraIssueParameterViaCli() throws Exception {
-    FreeStyleProject project = jenkins.createFreeStyleProject();
-
     project.addProperty(
         new ParametersDefinitionProperty(
             new JiraIssueParameterDefinition("jiraissue", "description", "filter")));
@@ -33,8 +40,6 @@ public class CliParameterTest {
 
   @Test
   public void jiraVersionParameterViaCli() throws Exception {
-    FreeStyleProject project = jenkins.createFreeStyleProject();
-
     project.addProperty(
         new ParametersDefinitionProperty(
             new JiraVersionParameterDefinition(
