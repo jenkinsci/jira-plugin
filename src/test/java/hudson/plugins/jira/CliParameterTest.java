@@ -8,7 +8,6 @@ import hudson.plugins.jira.listissuesparameter.JiraIssueParameterDefinition;
 import hudson.plugins.jira.versionparameter.JiraVersionParameterDefinition;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.JenkinsRule;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -19,9 +18,6 @@ public class CliParameterTest {
 
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
-
-    @Rule
-    public TemporaryFolder temporaryFolderRule = new TemporaryFolder();
 
     @Test
     public void jiraIssueParameterViaCli() throws Exception {
