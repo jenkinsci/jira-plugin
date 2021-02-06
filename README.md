@@ -24,9 +24,7 @@ When creating a new issue, provide as much information as possible including:
 
 - steps to reproduce the issue and possible workarounds if known (Description field)
 
-- Jenkins and plugin versions (Environment field)
-
-  You can obtain the list using using [Jenkins Script console](https://wiki.jenkins-ci.org/display/JENKINS/Jenkins+Script+Console) at `http://<jenkins-ip:8080>/script`:
+- Jenkins and plugin versions from [Jenkins Script console](https://wiki.jenkins-ci.org/display/JENKINS/Jenkins+Script+Console) at `http://<jenkins-ip:8080>/script`:
 
 ```groovy
 println("Jenkins:" + Jenkins.instance.getVersion())
@@ -36,6 +34,11 @@ Jenkins.instance.pluginManager.plugins.each{
     println ("${plugin.getDisplayName()} (${plugin.getShortName()}): ${plugin.getVersion()}")
 }
 ```
+
+#### Contribute or Sponsor!
+
+We all love Open Source, but... Open Source Software depends on contributions of fellow developers.
+Please contribute by [opening Pull Requests](CONTRIBUTING.md) or if you are not a developer, consider sponsoring one of the maintainers.
 
 ### Configuring the plugin
 
@@ -190,77 +193,3 @@ References:
 * [PKIX path building failed error message
 ](https://support.cloudbees.com/hc/en-us/articles/217078498-PKIX-path-building-failed-error-message)
 
-### Contributing to the Plugin
-
-New feature proposals and bug fix proposals should be submitted as [Pull Requests](https://help.github.com/articles/creating-a-pull-request).
-
-Before submitting your change please note that:
-* tests should be added for any changed code - the coverage is automatically checked after submitting the Pull Request
-* the code formatting should follow the defined standard - see [Code Style](#code-style)
-* you use findbugs to see if you haven't introduced any new warnings
-* when adding new features please make sure that they support Jenkins Pipeline Plugin - see [COMPATIBILITY.md](https://github.com/jenkinsci/pipeline-plugin/blob/master/COMPATIBILITY.md) for more information
-
-#### Testing your changes
-
-There have been many developers involved in the development of this plugin and there are many downstream users who depend on it.
-Tests help us assure that we're delivering a reliable plugin and that we've communicated our intent to other developers in a way that they can detect when they run tests.
-
-Each change should be covered by appropriate unit tests.
-In case it is not testable via a unit test, it should be tested against a real Jira instance - possibly both Jira Server and Jira Cloud.
-
-There is a [Jira Cloud test instance](https://jenkins-jira-plugin.atlassian.net/) that we are using for testing the plugin releases - let us know in the Pull Request in case you need access for testing.
-
-#### Code Style
-
-We try to improve the code quality by conforming to
-[Google Java styleguide](https://google.github.io/styleguide/javaguide.html), that is defined in
-[google_checks.xml](https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml).
-If you are using an IDE, like IntelliJ IDEA, please:
-
-- install [Google Java Format plugin](https://plugins.jetbrains.com/plugin/8527-google-java-format)
-
-or
-
-- install the [Checkstyle plugin](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea)
-- go to **Preferences > Editor > Code Style > Java**, select **Scheme** to *Project*
-- click the Cog icon and import Checkstyle configuration from [google_checks.xml](https://raw.githubusercontent.com/checkstyle/checkstyle/master/src/main/resources/google_checks.xml)
-
-Currently the formatting is not automatically checked during the build. However, in the effort to
-improve the quality of the code,  maintainers might ask for proper formatting during the review
-process, so it is better to have it in place sooner than later.
-
-#### Docker
-
-##### Start dockerized Jenkins (for testing)
-
-The command below will start a local Jenkins using the version specificied as first argument (or lts):
-
-```bash
-$ ./examples/start_docker.sh 2.249.2
-```
-
-##### Build the plugin in Docker environment
-
-The command below allows to build the plugin using maven docker image. This is useful to test building against different Maven/JDK versions.
-See also [SDKMan](https://sdkman.io/) for a different approach.
-
-```bash
-$ docker run -it --rm -v "$PWD":/usr/src/mymaven -v "$HOME/.m2:/root/.m2" -w /usr/src/mymaven maven:3.3-jdk-8 mvn clean package
-```
-
-#### Atlassian sources import
-
-To resolve some binary compatibility issues [JENKINS-48357](https://issues.jenkins-ci.org/browse/JENKINS-48357),
-the sources from the artifact [com.atlassian.httpclient:atlassian-httpclient-plugin:0.23](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/)
-has been imported in the project to have control over http(s) protocol transport layer.
-The downloaded sources didn't have any license headers but based on the [pom](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/atlassian-httpclient-plugin-0.23.0.pom)
-sources are Apache License (see pom in src/main/resources/atlassian-httpclient-plugin-0.23.0.pom)   
-
-
-### Maintainers Section
-
-#### Releasing the plugin
-
-- we use the [Release Drafter](https://github.com/toolmantim/release-drafter) extension to perform releases, make sure that the PRs are [properly labelled](https://github.com/jenkinsci/.github/blob/master/.github/release-drafter.yml)
-- there is a [Jira Cloud](https://jenkins-jira-plugin.atlassian.net/) test instance that the changes can be tested against, official maintainers are admins that can grant access for testing to PR submitters on a need-to-have basis
-- make sure you have `~/.m2/settings.xml` configured - refer to [releasing Jenkins plugins](https://www.jenkins.io/doc/developer/publishing/releasing/)
