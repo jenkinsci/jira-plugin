@@ -23,7 +23,7 @@
     <jira-rest-client.version>5.2.2</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
     <!-- jenkins -->
-    <jenkins.version>2.222.4</jenkins.version>
+    <jenkins.version>2.249.3</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
   </properties>
@@ -315,13 +315,19 @@
       <version>2.22</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations</artifactId>
+      <version>RELEASE</version>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.222.x</artifactId>
+        <artifactId>bom-2.249.x</artifactId>
         <version>23</version>
         <scope>import</scope>
         <type>pom</type>
