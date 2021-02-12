@@ -1,6 +1,7 @@
 package hudson.plugins.jira.pipeline;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -17,17 +18,17 @@ import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import javax.servlet.ServletException;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Issue custom fields updater
@@ -84,9 +85,11 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         return prepared;
     }
 
-    @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-            throws IOException {
+  @Override
+  public void perform(
+      Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener)
+      throws IOException {
+
         PrintStream logger = listener.getLogger();
 
         AbstractIssueSelector selector = issueSelector;
@@ -115,14 +118,45 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
-        List<JiraIssueField> fields = new ArrayList();
-        fields.add(new JiraIssueField(prepareFieldId(fieldId), fieldValue));
+        List<JiraIssueField> fields = Collections.singletonList(
+            new JiraIssueField(
+                prepareFieldId(getFieldId()),
+                getFieldValue()
+            )
+        );
+
+        fields = expandVariables(fields, env);
 
         for (String issue : issues) {
             submitFields(session, issue, fields, logger);
         }
+
     }
 
+    @Override
+    @Deprecated
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        this.perform(run, workspace, run.getEnvironment(listener), launcher, listener);
+    }
+
+    private List<JiraIssueField> expandVariables(List<JiraIssueField> fields, EnvVars envVars) {
+        List<JiraIssueField> expandedFields = new ArrayList<>();
+        for (JiraIssueField f : fields) {
+            JiraIssueField jiraIssueField = new JiraIssueField(
+                f.getId(),
+                envVars.expand(f.getValue().toString())
+            );
+            expandedFields.add(jiraIssueField);
+        }
+
+        return expandedFields;
+    }
+
+    /**
+     * @deprecated no reason for this to be exposed/public, use perform(...) instead
+     */
+    @Deprecated
     public void submitFields(JiraSession session, String issueId, List<JiraIssueField> fields, PrintStream logger) {
         try {
             session.addFields(issueId, fields);
