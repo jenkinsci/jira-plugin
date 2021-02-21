@@ -56,24 +56,3 @@ jobs:
 
       - name: Build with Maven
         run: mvn -e -B -V verify
-
-  pct:
-    runs-on: ubuntu-latest
-    container:
-      image: jenkins/pct
-      env:
-        CHECKOUT_SRC: "https://github.com/${{ github.repository }}.git"
-        VERSION: "${{ github.head_ref || 'master' }}"
-      volumes:
-        - /home/runner/work/__w/out:/pct/out
-    steps:
-      # gets the Jenkins version from master's branch pom.xml to test against
-      - name: Fetch Jenkins version
-        run: |
-          echo "JENKINS_VERSION=$(curl -s https://raw.githubusercontent.com/${{ github.repository }}/master/pom.xml | awk -F '[<>]' '/jenkins.version/{print $3}')" >> $GITHUB_ENV
-      - run: run-pct
-      - uses: actions/upload-artifact@v2
-        with:
-          name: pct-report
-          path: /home/runner/work/__w/out/pct-report.html
-          if-no-files-found: error
