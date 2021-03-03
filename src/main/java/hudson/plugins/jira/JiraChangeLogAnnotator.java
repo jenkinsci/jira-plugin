@@ -77,7 +77,7 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                     continue;
                 }
 
-                LOGGER.log(Level.INFO, "Annotating Jira id: ''{0}''", id);
+                LOGGER.log(Level.FINE, "Annotating Jira id: ''{0}''", id);
 
                 URL url, alternativeUrl;
                 try {
