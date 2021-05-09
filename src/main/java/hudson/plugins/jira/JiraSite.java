@@ -21,7 +21,6 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -804,7 +803,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     @Nullable
     public URL getUrl() {
-        return Objects.firstNonNull(this.url, this.alternativeUrl);
+        return this.url != null ? this.url : this.alternativeUrl;
     }
 
     /**
