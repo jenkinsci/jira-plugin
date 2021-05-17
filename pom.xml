@@ -257,7 +257,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>p4</artifactId>
-      <version>1.11.4</version>
+      <version>1.11.5</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
