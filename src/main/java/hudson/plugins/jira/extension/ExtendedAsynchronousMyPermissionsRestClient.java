@@ -24,7 +24,7 @@ public class ExtendedAsynchronousMyPermissionsRestClient extends AsynchronousMyP
 
     @Override
     public Promise<Permissions> getMyPermissions() {
-        final UriBuilder uriBuilder = UriBuilder.fromUri(baseUri).path(URI_PREFIX);
+        final UriBuilder uriBuilder = UriBuilderHelper.fromUri(baseUri).path(URI_PREFIX);
         uriBuilder.queryParam("permissions", "BROWSE_PROJECTS");
         return getAndParse(uriBuilder.build(), permissionsJsonParser);
     }

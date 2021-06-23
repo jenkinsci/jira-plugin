@@ -3,7 +3,6 @@ package hudson.plugins.jira.extension;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 
-import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 
 public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClient implements ExtendedJiraRestClient {
@@ -12,7 +11,7 @@ public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClie
 
     public ExtendedAsynchronousJiraRestClient(URI serverUri, DisposableHttpClient httpClient) {
         super(serverUri, httpClient);
-        final URI baseUri = UriBuilder.fromUri(serverUri).path("/rest/api/latest").build();
+        final URI baseUri = UriBuilderHelper.fromUri(serverUri).path("/rest/api/latest").build();
         extendedVersionRestClient = new ExtendedAsynchronousVersionRestClient(baseUri, httpClient);
         extendedMyPermissionsRestClient = new ExtendedAsynchronousMyPermissionsRestClient(baseUri, httpClient);
     }

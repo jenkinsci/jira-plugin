@@ -4,7 +4,6 @@ import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousVersionRestClient;
 import io.atlassian.util.concurrent.Promise;
 
-import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 
 public class ExtendedAsynchronousVersionRestClient extends AsynchronousVersionRestClient implements ExtendedVersionRestClient {
@@ -12,7 +11,7 @@ public class ExtendedAsynchronousVersionRestClient extends AsynchronousVersionRe
 
 	ExtendedAsynchronousVersionRestClient(URI baseUri, HttpClient client) {
         super(baseUri, client);
-        versionRootUri = UriBuilder.fromUri(baseUri).path("version").build();
+        versionRootUri = UriBuilderHelper.fromUri(baseUri).path("version").build();
     }
 
     @Override
