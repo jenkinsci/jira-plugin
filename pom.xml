@@ -23,7 +23,7 @@
     <jira-rest-client.version>5.2.2</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
     <!-- jenkins -->
-    <jenkins.version>2.249.3</jenkins.version>
+    <jenkins.version>2.277.1</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
   </properties>
