@@ -642,7 +642,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         public ExtendedJiraRestClient create(final URI serverUri, final AuthenticationHandler authenticationHandler, HttpClientOptions options) {
             final DisposableHttpClient httpClient = createClient(serverUri, authenticationHandler, options);
-            return new ExtendedAsynchronousJiraRestClient( serverUri, httpClient);
+            Thread t = Thread.currentThread();
+            ClassLoader orig = t.getContextClassLoader();
+            t.setContextClassLoader(JiraSite.class.getClassLoader());
+            try {
+                return new ExtendedAsynchronousJiraRestClient(serverUri, httpClient);
+            } finally {
+                t.setContextClassLoader(orig);
+            }
         }
 
         @Override
