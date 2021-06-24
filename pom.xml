@@ -23,7 +23,7 @@
     <jira-rest-client.version>5.2.2</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
     <!-- jenkins -->
-    <jenkins.version>2.249.3</jenkins.version>
+    <jenkins.version>2.277.1</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
   </properties>
@@ -248,7 +248,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>branch-api</artifactId>
-      <version>2.6.1</version>
+      <version>2.6.4</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
