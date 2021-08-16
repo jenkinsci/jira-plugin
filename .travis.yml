@@ -9,7 +9,7 @@ if: type = pull_request OR branch = master
 
 # required for SonarCloud
 git:
-  depth: false
+  depth: 3
 
 jdk:
   - openjdk11
