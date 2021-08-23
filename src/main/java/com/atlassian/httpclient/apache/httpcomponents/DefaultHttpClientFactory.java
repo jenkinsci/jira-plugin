@@ -6,14 +6,10 @@ import com.atlassian.httpclient.api.factory.HttpClientFactory;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
-import com.google.common.annotations.VisibleForTesting;
 import org.springframework.beans.factory.DisposableBean;
 
 import javax.annotation.Nonnull;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-
-import static com.google.common.base.Preconditions.checkNotNull;
+import java.util.Objects;
 
 public final class DefaultHttpClientFactory implements HttpClientFactory, DisposableBean
 {
@@ -25,9 +21,9 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
 
     public DefaultHttpClientFactory(EventPublisher eventPublisher, ApplicationProperties applicationProperties, ThreadLocalContextManager threadLocalContextManager)
     {
-        this.eventPublisher = checkNotNull(eventPublisher);
-        this.applicationProperties = checkNotNull(applicationProperties);
-        this.threadLocalContextManager = checkNotNull(threadLocalContextManager);
+        this.eventPublisher = Objects.requireNonNull(eventPublisher);
+        this.applicationProperties = Objects.requireNonNull(applicationProperties);
+        this.threadLocalContextManager = Objects.requireNonNull(threadLocalContextManager);
     }
 
     @Override
@@ -53,7 +49,7 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
 
     private HttpClient doCreate(HttpClientOptions options, ThreadLocalContextManager threadLocalContextManager)
     {
-        checkNotNull(options);
+        Objects.requireNonNull(options);
         // we create only one http client instance as we don't need more
 
         if(httpClient!=null) {

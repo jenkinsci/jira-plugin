@@ -15,10 +15,6 @@ import com.atlassian.httpclient.base.event.HttpRequestFailedEvent;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
 import io.atlassian.util.concurrent.ThreadFactories;
-import com.google.common.base.Function;
-import com.google.common.base.Supplier;
-import com.google.common.base.Suppliers;
-import com.google.common.base.Throwables;
 import hudson.ProxyConfiguration;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
@@ -44,7 +40,6 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpTrace;
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.SchemePortResolver;
 import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.conn.ssl.X509HostnameVerifier;
@@ -86,12 +81,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import static io.atlassian.util.concurrent.Promises.rejected;
-import static com.google.common.base.Preconditions.checkNotNull;
 import static java.lang.String.format;
 
 public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBean
@@ -99,7 +96,8 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static final Supplier<String> httpClientVersion =
-        Suppliers.memoize(() -> MavenUtils.getVersion("com.atlassian.httpclient", "atlassian-httpclient-api"));
+            () -> MavenUtils.getVersion("com.atlassian.httpclient", "atlassian-httpclient-api");
+
 
     private final Function<Object, Void> eventConsumer;
     private final Supplier<String> applicationName;
@@ -130,10 +128,10 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
             final ThreadLocalContextManager<C> threadLocalContextManager,
             final HttpClientOptions options)
     {
-        this.eventConsumer = checkNotNull(eventConsumer);
-        this.applicationName = checkNotNull(applicationName);
-        this.threadLocalContextManager = checkNotNull(threadLocalContextManager);
-        this.httpClientOptions = checkNotNull(options);
+        this.eventConsumer = Objects.requireNonNull(eventConsumer);
+        this.applicationName = Objects.requireNonNull(applicationName);
+        this.threadLocalContextManager = Objects.requireNonNull(threadLocalContextManager);
+        this.httpClientOptions = Objects.requireNonNull(options);
 
         try
         {
@@ -220,7 +218,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                 .setUserAgent(getUserAgent(options))
                 .setDefaultRequestConfig(requestConfig);
 
-        if(Jenkins.getInstance() != null) {
+        if(Jenkins.get() != null) {
             ProxyConfiguration proxyConfiguration = Jenkins.getInstance().proxy;
             if ( proxyConfiguration != null ) {
                 final HttpHost proxy = new HttpHost( proxyConfiguration.name, proxyConfiguration.port );
@@ -304,25 +302,25 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
             @Override
             public void verify(final String host, final SSLSocket ssl) throws IOException
             {
-                log.debug("Verification for certificates from {0} disabled", host);
+                log.debug("Verification for certificates from {} disabled", host);
             }
 
             @Override
             public void verify(final String host, final X509Certificate cert) throws SSLException
             {
-                log.debug("Verification for certificates from {0} disabled", host);
+                log.debug("Verification for certificates from {} disabled", host);
             }
 
             @Override
             public void verify(final String host, final String[] cns, final String[] subjectAlts) throws SSLException
             {
-                log.debug("Verification for certificates from {0} disabled", host);
+                log.debug("Verification for certificates from {} disabled", host);
             }
 
             @Override
             public boolean verify(final String host, final SSLSession sslSession)
             {
-                log.debug("Verification for certificates from {0} disabled", host);
+                log.debug("Verification for certificates from {} disabled", host);
                 return true;
             }
         };
@@ -407,7 +405,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
             throwable -> {
                         final long requestDuration = System.currentTimeMillis() - start;
                         publishEvent(request, requestDuration, throwable);
-                        throw Throwables.propagate(throwable);
+                        throw new RuntimeException(throwable);
                     },
             httpResponse -> {
                         final long requestDuration = System.currentTimeMillis() - start;
@@ -418,7 +416,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                         }
                         catch (IOException e)
                         {
-                            throw Throwables.propagate(e);
+                            throw new RuntimeException(e);
                         }
                 }
         ));
@@ -470,7 +468,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
             throw new RuntimeException( "Reactor " + httpClientOptions.getThreadPrefix() + "not set up correctly" , e );
         }
 
-        return new SettableFuturePromiseHttpPromiseAsyncClient<C>(nonCachingHttpClient, threadLocalContextManager, callbackExecutor);
+        return new SettableFuturePromiseHttpPromiseAsyncClient<>(nonCachingHttpClient, threadLocalContextManager, callbackExecutor);
     }
 
     private Response translate(HttpResponse httpResponse) throws IOException
@@ -542,7 +540,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
 
         public DefaultApplicationNameSupplier(ApplicationProperties applicationProperties)
         {
-            this.applicationProperties = checkNotNull(applicationProperties);
+            this.applicationProperties = Objects.requireNonNull(applicationProperties);
         }
 
         @Override

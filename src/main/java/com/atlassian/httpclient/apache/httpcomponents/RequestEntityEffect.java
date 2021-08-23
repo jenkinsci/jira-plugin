@@ -2,7 +2,7 @@ package com.atlassian.httpclient.apache.httpcomponents;
 
 import io.atlassian.fugue.Effect;
 import com.atlassian.httpclient.api.Request;
-import com.google.common.io.ByteStreams;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -52,7 +52,7 @@ public class RequestEntityEffect implements Effect<HttpRequestBase>
                 {
                     try
                     {
-                        bytes = ByteStreams.toByteArray(entityStream);
+                        bytes = IOUtils.toByteArray(entityStream);
                     }
                     catch (IOException e)
                     {

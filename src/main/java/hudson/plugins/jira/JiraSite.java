@@ -21,10 +21,8 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.DomainRequirement;
 import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
-import com.google.common.base.Objects;
-import com.google.common.base.Optional;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
@@ -67,8 +65,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -497,7 +495,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     protected static Cache<String, Optional<Issue>> makeIssueCache() {
-        return CacheBuilder.newBuilder().concurrencyLevel(2).expireAfterAccess(2, TimeUnit.MINUTES).build();
+        return Caffeine.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).build();
     }
 
 
@@ -811,7 +809,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     @Nullable
     public URL getUrl() {
-        return Objects.firstNonNull(this.url, this.alternativeUrl);
+        return this.url != null ? this.url : this.alternativeUrl;
     }
 
     /**
@@ -895,22 +893,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     @CheckForNull
     public JiraIssue getIssue(final String id) throws IOException {
-        try {
-            Optional<Issue> issue = issueCache.get(id, () -> {
-                if (this.jiraSession == null) {
-                    return Optional.absent();
-                }
-                return Optional.fromNullable(this.jiraSession.getIssue(id));
-            });
-
-            if (!issue.isPresent()) {
-                return null;
+        Optional<Issue> issue = issueCache.get(id, s -> {
+            if (this.jiraSession == null) {
+                return Optional.empty();
             }
+            return Optional.ofNullable(this.jiraSession.getIssue(id));
+        });
 
-            return new JiraIssue(issue.get());
-        } catch (ExecutionException e) {
-            throw new IOException(e);
+        if (!issue.isPresent()) {
+            return null;
         }
+        return new JiraIssue(issue.get());
     }
 
     @Deprecated

@@ -5,13 +5,13 @@ import com.atlassian.httpclient.api.EntityBuilder;
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.httpclient.api.Request;
 import com.atlassian.httpclient.api.ResponsePromise;
-import com.google.common.base.Preconditions;
 
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static com.atlassian.httpclient.api.Request.Method.DELETE;
 import static com.atlassian.httpclient.api.Request.Method.GET;
@@ -20,7 +20,6 @@ import static com.atlassian.httpclient.api.Request.Method.OPTIONS;
 import static com.atlassian.httpclient.api.Request.Method.POST;
 import static com.atlassian.httpclient.api.Request.Method.PUT;
 import static com.atlassian.httpclient.api.Request.Method.TRACE;
-import static com.google.common.base.Preconditions.checkNotNull;
 
 public class DefaultRequest extends DefaultMessage implements Request
 {
@@ -33,7 +32,7 @@ public class DefaultRequest extends DefaultMessage implements Request
     private DefaultRequest(URI uri, boolean cacheDisabled, Map<String, String> attributes,
             Headers headers, Method method, InputStream entityStream, Option<Long> contentLength)
     {
-        super(headers, entityStream, Option.<Long>none());
+        super(headers, entityStream, Option.none());
         this.uri = uri;
         this.cacheDisabled = cacheDisabled;
         this.attributes = attributes;
@@ -91,8 +90,8 @@ public class DefaultRequest extends DefaultMessage implements Request
     {
         super.validate();
 
-        checkNotNull(uri);
-        checkNotNull(method);
+        Objects.nonNull(uri);
+        Objects.nonNull(method);
 
         switch (method)
         {
@@ -235,7 +234,9 @@ public class DefaultRequest extends DefaultMessage implements Request
         @Override
         public DefaultRequestBuilder setContentLength(final long contentLength)
         {
-            Preconditions.checkArgument(contentLength >= 0, "Content length must be greater than or equal to 0");
+            if (contentLength < 0) {
+                throw new IllegalArgumentException("Content length must be greater than or equal to 0");
+            }
             this.contentLength = Option.some(contentLength);
             return this;
         }
@@ -292,7 +293,7 @@ public class DefaultRequest extends DefaultMessage implements Request
         @Override
         public ResponsePromise execute(Method method)
         {
-            checkNotNull(method, "HTTP method must not be null");
+            Objects.nonNull(method);
             setMethod(method);
             return httpClient.execute(build().validate());
         }
