@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
@@ -37,12 +38,14 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
     public Promise<HttpResponse> execute(HttpUriRequest request, HttpContext context)
     {
     	// TODO after migrating from atlassian-util-concurrent 3.0.0 to 4.0.0 the SettableFuture.create() maybe obsolete ?
+        CompletableFuture<HttpResponse> future = new CompletableFuture<>();
         Future<org.apache.http.HttpResponse> clientFuture = client.execute(request, context, new ThreadLocalContextAwareFutureCallback<C>(threadLocalContextManager)
         {
 
             @Override
             void doCompleted(final HttpResponse httpResponse)
             {
+                executor.execute(() -> future.complete(httpResponse));
                 log.trace( "Closing in doCompleted()" );
                 closeClient();
             }
@@ -50,7 +53,7 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
             @Override
             void doFailed(final Exception ex)
             {
-                executor.execute(() -> {throw new RuntimeException(ex);});
+                executor.execute(() -> future.completeExceptionally(ex));
                 log.trace( "Closing in doFailed()" );
                 closeClient();
             }
@@ -59,7 +62,7 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
             void doCancelled()
             {
                 final TimeoutException timeoutException = new TimeoutException();
-                executor.execute(() -> {throw new RuntimeException(timeoutException);});
+                executor.execute(() -> future.completeExceptionally(timeoutException));
                 log.trace( "Closing in doCancelled()" );
                 closeClient();
             }
