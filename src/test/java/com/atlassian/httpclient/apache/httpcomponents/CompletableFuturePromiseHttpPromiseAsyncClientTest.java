@@ -25,7 +25,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 @RunWith( MockitoJUnitRunner.class)
-public class SettableFuturePromiseHttpPromiseAsyncClientTest
+public class CompletableFuturePromiseHttpPromiseAsyncClientTest
 {
 
     @Mock
@@ -47,7 +47,7 @@ public class SettableFuturePromiseHttpPromiseAsyncClientTest
     private HttpContext context;
 
     @InjectMocks
-    private SettableFuturePromiseHttpPromiseAsyncClient<Object> asyncClient;
+    private CompletableFuturePromiseHttpPromiseAsyncClient<Object> asyncClient;
 
     @Test
     public void ensureCloseHttpclientOnCompletion() throws IOException

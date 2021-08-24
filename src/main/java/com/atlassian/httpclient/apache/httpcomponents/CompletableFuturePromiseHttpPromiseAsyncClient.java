@@ -19,7 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 
-final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHttpAsyncClient
+final class CompletableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHttpAsyncClient
 {
     private final Logger log = LoggerFactory.getLogger( this.getClass() );
 
@@ -27,7 +27,7 @@ final class SettableFuturePromiseHttpPromiseAsyncClient<C> implements PromiseHtt
     private final ThreadLocalContextManager<C> threadLocalContextManager;
     private final Executor executor;
 
-    SettableFuturePromiseHttpPromiseAsyncClient(CloseableHttpAsyncClient client, ThreadLocalContextManager<C> threadLocalContextManager, Executor executor)
+    CompletableFuturePromiseHttpPromiseAsyncClient(CloseableHttpAsyncClient client, ThreadLocalContextManager<C> threadLocalContextManager, Executor executor)
     {
         this.client = Objects.requireNonNull(client);
         this.threadLocalContextManager = Objects.requireNonNull(threadLocalContextManager);

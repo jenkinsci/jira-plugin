@@ -468,7 +468,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
             throw new RuntimeException( "Reactor " + httpClientOptions.getThreadPrefix() + "not set up correctly" , e );
         }
 
-        return new SettableFuturePromiseHttpPromiseAsyncClient<>(nonCachingHttpClient, threadLocalContextManager, callbackExecutor);
+        return new CompletableFuturePromiseHttpPromiseAsyncClient<>(nonCachingHttpClient, threadLocalContextManager, callbackExecutor);
     }
 
     private Response translate(HttpResponse httpResponse) throws IOException
