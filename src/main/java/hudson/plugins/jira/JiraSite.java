@@ -900,7 +900,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return Optional.ofNullable(this.jiraSession.getIssue(id));
         });
 
-        if (!issue.isPresent()) {
+        if (issue != null && issue.isPresent()) {
             return null;
         }
         return new JiraIssue(issue.get());
