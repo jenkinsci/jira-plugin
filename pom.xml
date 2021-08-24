@@ -143,7 +143,7 @@
     	<!-- Remove this dependency and the exclusion above when jenkins provides a up-to-date guava version (currently 11.0.1) -->
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>18.0</version>
+        <version>30.1.1-jre</version>
     </dependency>
     <dependency>
       <!-- TODO maybe these dependency needs to be changed/removed -->
