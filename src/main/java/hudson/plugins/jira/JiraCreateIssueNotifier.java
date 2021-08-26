@@ -6,7 +6,6 @@ import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Priority;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.cloudbees.hudson.plugins.folder.Folder;
-import com.google.common.base.Splitter;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -39,8 +38,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
 
@@ -195,7 +196,9 @@ public class JiraCreateIssueNotifier extends Notifier {
                 buildName,
                 getBuildDetailsString(vars)
         );
-        Iterable<String> components = Splitter.on(",").trimResults().omitEmptyStrings().split(component);
+        Iterable<String> components = Arrays.stream(component.split(","))
+                .filter(s -> !StringUtils.isEmpty(s)).map(s -> StringUtils.trim(s))
+                .collect(Collectors.toList());
 
         Long type = typeId;
         if (type == null || type == 0) { // zero is default / invalid selection

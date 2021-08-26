@@ -3,7 +3,7 @@ package hudson.plugins.jira.extension;
 import com.atlassian.jira.rest.client.api.domain.input.VersionInput;
 import java.util.Objects;
 
-import com.google.common.base.MoreObjects;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.joda.time.DateTime;
 
 import javax.annotation.Nullable;
@@ -18,9 +18,9 @@ public class ExtendedVersionInput extends VersionInput {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper( this)
-				.add("parent", super.toString())
-				.add("startDate", startDate)
+		return new ToStringBuilder(this)
+				.append("parent", super.toString())
+				.append("startDate", startDate)
 				.toString();
 	}
 

@@ -1,7 +1,6 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
 import com.atlassian.httpclient.api.Buildable;
-import com.google.common.base.Preconditions;
 import org.apache.http.protocol.HTTP;
 
 import java.nio.charset.Charset;
@@ -34,7 +33,7 @@ public class Headers
 
     public Map<String, String> getHeaders()
     {
-        Map<String, String> headers = new HashMap( this.headers);
+        Map<String, String> headers = new HashMap<>(this.headers);
         if (contentType != null)
         {
             headers.put(Names.CONTENT_TYPE, buildContentType());
@@ -68,7 +67,7 @@ public class Headers
 
     public static class Builder implements Buildable<Headers>
     {
-        private final Map<String, String> headers = new HashMap();
+        private final Map<String, String> headers = new HashMap<>();
         private String contentType;
         private String contentCharset;
 
@@ -97,7 +96,9 @@ public class Headers
 
         public Builder setContentLength(long contentLength)
         {
-            Preconditions.checkArgument(contentLength >= 0, "Content-Length must be greater than or equal to 0");
+            if(contentLength < 0) {
+                throw new IllegalArgumentException("Content-Length must be greater than or equal to 0");
+            }
             setHeader(Names.CONTENT_LENGTH, Long.toString(contentLength));
             return this;
         }
