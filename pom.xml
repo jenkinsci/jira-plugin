@@ -16,7 +16,7 @@
   <url>https://github.com/jenkinsci/jira-plugin</url>
 
   <properties>
-    <revision>3.7</revision>
+    <revision>3.6</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/jira-plugin</gitHubRepo>
     <java.level>8</java.level>
