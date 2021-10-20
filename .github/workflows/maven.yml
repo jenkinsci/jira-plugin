@@ -19,8 +19,6 @@ name: GitHub CI
 
 on:
   push:
-    branches:
-    - master
     branches-ignore:
       - dependabot/**
   pull_request:
