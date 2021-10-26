@@ -95,7 +95,7 @@ public class JiraRestService {
     private final String authHeader;
 
     private final String baseApiPath;
-
+    
     private final int timeout;
 
     @Deprecated
@@ -150,7 +150,7 @@ public class JiraRestService {
           LOGGER.log(WARNING, "Jira REST client add comment error. cause: " + e.getMessage(), e);
       }
     }
-
+  
     public Issue getIssue(String issueKey) {
         try {
             return jiraRestClient.getIssueClient().getIssue(issueKey).get(timeout, TimeUnit.SECONDS);
@@ -298,7 +298,7 @@ public class JiraRestService {
             //    https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/
             //
             // See upstream fix for setAssigneeName:
-            //    https://bitbucket.org/atlassian/jira-rest-java-client/pull-requests/104/change-field-name-from-name-to-id-for/diff
+            //    https://bitbucket.org/atlassian/jira-rest-java-client/pull-requests/104/change-field-name-from-name-to-id-for/diff 
             builder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, new ComplexIssueInputFieldValue(valuesMap)));
 	    }
 
@@ -331,7 +331,7 @@ public class JiraRestService {
             return null;
         }
     }
-
+ 
     public void updateIssue(String issueKey, List<Version> fixVersions) {
         final IssueInput issueInput = new IssueInputBuilder().setFixVersions(fixVersions)
                                                              .build();
@@ -341,7 +341,7 @@ public class JiraRestService {
             LOGGER.log(WARNING, "Jira REST client update issue error. cause: " + e.getMessage(), e);
         }
     }
-
+    
     public void setIssueLabels(String issueKey, List<String> labels) {
         final IssueInput issueInput = new IssueInputBuilder()
         		.setFieldValue(IssueFieldId.LABELS_FIELD.id, labels)
@@ -351,8 +351,8 @@ public class JiraRestService {
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client update labels error for issue "+issueKey, e);
         }
-    }
-
+    }    
+    
     public void setIssueFields(String issueKey, List<JiraIssueField> fields) {
         IssueInputBuilder builder = new IssueInputBuilder();
         for (JiraIssueField field : fields)
@@ -365,7 +365,7 @@ public class JiraRestService {
             LOGGER.log(WARNING, "Jira REST client update fields error for issue " + issueKey, e);
         }
     }
-
+    
     public Issue progressWorkflowAction(String issueKey, Integer actionId) {
         final TransitionInput transitionInput = new TransitionInput(actionId);
 
