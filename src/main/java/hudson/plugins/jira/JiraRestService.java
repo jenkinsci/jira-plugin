@@ -100,7 +100,7 @@ public class JiraRestService {
 
     @Deprecated
     public JiraRestService(URI uri, ExtendedJiraRestClient jiraRestClient, String username, String password) {
-        this(uri, jiraRestClient, username, password, JiraSite.DEFAULT_TIMEOUT);
+    	this(uri, jiraRestClient, username, password, JiraSite.DEFAULT_TIMEOUT);
     }
 
     public JiraRestService(URI uri, ExtendedJiraRestClient jiraRestClient, String username, String password, int timeout) {
@@ -131,9 +131,9 @@ public class JiraRestService {
     }
 
     public void addComment(String issueId, String commentBody,
-        String groupVisibility, String roleVisibility) {
+                                         String groupVisibility, String roleVisibility) {
         final URIBuilder builder = new URIBuilder(uri)
-            .setPath(String.format("%s/issue/%s/comment", baseApiPath, issueId));
+                .setPath(String.format("%s/issue/%s/comment", baseApiPath, issueId));
 
         final Comment comment;
         if (StringUtils.isNotBlank(groupVisibility)) {
@@ -144,11 +144,11 @@ public class JiraRestService {
             comment = Comment.valueOf(commentBody);
         }
 
-        try {
-            jiraRestClient.getIssueClient().addComment(builder.build(), comment).get(timeout, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            LOGGER.log(WARNING, "Jira REST client add comment error. cause: " + e.getMessage(), e);
-        }
+      try {
+          jiraRestClient.getIssueClient().addComment(builder.build(), comment).get(timeout, TimeUnit.SECONDS);
+      } catch (Exception e) {
+          LOGGER.log(WARNING, "Jira REST client add comment error. cause: " + e.getMessage(), e);
+      }
     }
 
     public Issue getIssue(String issueKey) {
@@ -156,9 +156,9 @@ public class JiraRestService {
             return jiraRestClient.getIssueClient().getIssue(issueKey).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             if (e.getCause() != null
-                && e.getCause() instanceof RestClientException
-                && ((RestClientException)e.getCause()).getStatusCode().isPresent()
-                && ((RestClientException)e.getCause()).getStatusCode().get() == 404) {
+                    && e.getCause() instanceof RestClientException
+                    && ((RestClientException)e.getCause()).getStatusCode().isPresent()
+                    && ((RestClientException)e.getCause()).getStatusCode().get() == 404) {
                 LOGGER.log(INFO, "Issue '" + issueKey + "' not found in Jira.");
             } else {
                 LOGGER.log(WARNING, "Jira REST client get issue error. cause: " + e.getMessage(), e);
@@ -180,9 +180,9 @@ public class JiraRestService {
     public List<Priority> getPriorities() {
         try {
             return StreamSupport.stream(jiraRestClient.getMetadataClient().
-                        getPriorities().get(timeout, TimeUnit.SECONDS).
-                        spliterator(),
-                    false).
+                                            getPriorities().get(timeout, TimeUnit.SECONDS).
+                                            spliterator(),
+                                        false).
                 collect( Collectors.toList() );
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get priorities error. cause: " + e.getMessage(), e);
@@ -207,8 +207,8 @@ public class JiraRestService {
     public List<Issue> getIssuesFromJqlSearch(String jqlSearch, Integer maxResults) throws TimeoutException {
         try {
             final SearchResult searchResult = jiraRestClient.getSearchClient()
-                .searchJql(jqlSearch, maxResults, 0, null)
-                .get(timeout, TimeUnit.SECONDS);
+                                                            .searchJql(jqlSearch, maxResults, 0, null)
+                                                            .get(timeout, TimeUnit.SECONDS);
             return StreamSupport.stream(searchResult.getIssues().spliterator(), false).
                 collect(Collectors.toList());
         } catch(TimeoutException e) {
@@ -222,7 +222,7 @@ public class JiraRestService {
 
     public List<ExtendedVersion> getVersions(String projectKey) {
         final URIBuilder builder = new URIBuilder(uri)
-            .setPath(String.format("%s/project/%s/versions", baseApiPath, projectKey));
+                .setPath(String.format("%s/project/%s/versions", baseApiPath, projectKey));
 
         List<Map<String, Object>> decoded = Collections.emptyList();
         try {
@@ -241,8 +241,8 @@ public class JiraRestService {
             final DateTime startDate = decodedVersion.containsKey("startDate") ? DATE_TIME_FORMATTER.parseDateTime((String) decodedVersion.get("startDate")) : null;
             final DateTime releaseDate = decodedVersion.containsKey("releaseDate") ? DATE_TIME_FORMATTER.parseDateTime((String) decodedVersion.get("releaseDate")) : null;
             return new ExtendedVersion(URI.create((String) decodedVersion.get("self")), Long.parseLong((String) decodedVersion.get("id")),
-                (String) decodedVersion.get("name"), (String) decodedVersion.get("description"), (Boolean) decodedVersion.get("archived"),
-                (Boolean) decodedVersion.get("released"), startDate, releaseDate);
+                                                (String) decodedVersion.get("name"), (String) decodedVersion.get("description"), (Boolean) decodedVersion.get("archived"),
+                                                (Boolean) decodedVersion.get("released"), startDate, releaseDate);
         }  ).collect( Collectors.toList() );
 
     }
@@ -252,7 +252,7 @@ public class JiraRestService {
         final ExtendedVersionInput versionInput = new ExtendedVersionInput(projectKey, versionName, null, DateTime.now(), null, false, false);
         try {
             return jiraRestClient.getExtendedVersionRestClient()
-                .createExtendedVersion(versionInput).get(timeout, TimeUnit.SECONDS);
+                          .createExtendedVersion(versionInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client add version error. cause: " + e.getMessage(), e);
             return null;
@@ -279,12 +279,12 @@ public class JiraRestService {
     }
 
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
-        @Nonnull Long issueTypeId, @Nullable Long priorityId) {
+                                  @Nonnull Long issueTypeId, @Nullable Long priorityId) {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
-            .setDescription(description)
-            .setIssueTypeId(issueTypeId)
-            .setSummary(summary);
+                .setDescription(description)
+                .setIssueTypeId(issueTypeId)
+                .setSummary(summary);
 
         if (priorityId != null) {
             builder.setPriorityId(priorityId);
@@ -300,7 +300,7 @@ public class JiraRestService {
             // See upstream fix for setAssigneeName:
             //    https://bitbucket.org/atlassian/jira-rest-java-client/pull-requests/104/change-field-name-from-name-to-id-for/diff
             builder.setFieldInput(new FieldInput(IssueFieldId.ASSIGNEE_FIELD, new ComplexIssueInputFieldValue(valuesMap)));
-        }
+	    }
 
         if (StreamSupport.stream( components.spliterator(), false ).count() > 0){
             builder.setComponentsNames(components);
@@ -321,9 +321,9 @@ public class JiraRestService {
             return jiraRestClient.getUserClient().getUser(username).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             if (e.getCause() != null
-                && e.getCause() instanceof RestClientException
-                && ((RestClientException)e.getCause()).getStatusCode().isPresent()
-                && ((RestClientException)e.getCause()).getStatusCode().get() == 404) {
+                    && e.getCause() instanceof RestClientException
+                    && ((RestClientException)e.getCause()).getStatusCode().isPresent()
+                    && ((RestClientException)e.getCause()).getStatusCode().get() == 404) {
                 LOGGER.log(INFO, "User '" + username + "' not found in Jira.");
             } else {
                 LOGGER.log(WARNING, "Jira REST client get user error. cause: " + e.getMessage(), e);
@@ -334,7 +334,7 @@ public class JiraRestService {
 
     public void updateIssue(String issueKey, List<Version> fixVersions) {
         final IssueInput issueInput = new IssueInputBuilder().setFixVersions(fixVersions)
-            .build();
+                                                             .build();
         try {
             jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -344,8 +344,8 @@ public class JiraRestService {
 
     public void setIssueLabels(String issueKey, List<String> labels) {
         final IssueInput issueInput = new IssueInputBuilder()
-            .setFieldValue(IssueFieldId.LABELS_FIELD.id, labels)
-            .build();
+        		.setFieldValue(IssueFieldId.LABELS_FIELD.id, labels)
+                .build();
         try {
             jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -384,8 +384,8 @@ public class JiraRestService {
 
         try {
             final Iterable<Transition> transitions = jiraRestClient.getIssueClient()
-                .getTransitions(issue)
-                .get(timeout, TimeUnit.SECONDS);
+                                                                   .getTransitions(issue)
+                                                                   .get(timeout, TimeUnit.SECONDS);
             return StreamSupport.stream(transitions.spliterator(), false).
                 collect( Collectors.toList() );
         } catch (Exception e) {
@@ -397,7 +397,7 @@ public class JiraRestService {
     public List<Status> getStatuses() {
         try {
             final Iterable<Status> statuses = jiraRestClient.getMetadataClient().getStatuses()
-                .get(timeout, TimeUnit.SECONDS);
+                                                            .get(timeout, TimeUnit.SECONDS);
             return StreamSupport.stream(statuses.spliterator(), false).
                 collect( Collectors.toList());
         } catch (Exception e) {
@@ -414,7 +414,7 @@ public class JiraRestService {
             final Content content = buildGetRequest(builder.build()).execute().returnContent();
             final List<Map<String, Object>> decoded = objectMapper.readValue(content.asString(),
                 new TypeReference<List<Map<String, Object>>>() {
-                });
+            });
 
             final List<Component> components = new ArrayList<>();
             for (final Map<String, Object> decodeComponent : decoded) {
@@ -455,9 +455,9 @@ public class JiraRestService {
             .addHeader("Content-Type", "application/json");
     }
 
-    protected int timeoutInMilliseconds() {
-        return (int) TimeUnit.SECONDS.toMillis(timeout);
-    }
+	protected int timeoutInMilliseconds() {
+		return (int) TimeUnit.SECONDS.toMillis(timeout);
+	}
 
     public String getBaseApiPath() {
         return baseApiPath;
