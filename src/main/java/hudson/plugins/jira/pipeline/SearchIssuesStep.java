@@ -1,7 +1,6 @@
 package hudson.plugins.jira.pipeline;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.inject.Inject;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.Run;
@@ -9,22 +8,26 @@ import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Simple search issues step
  *
  * @author jan zajic
  */
-public class SearchIssuesStep extends AbstractStepImpl {
+public class SearchIssuesStep extends Step {
 
     public final String jql;
 
@@ -37,11 +40,19 @@ public class SearchIssuesStep extends AbstractStepImpl {
         return jql;
     }
 
-    @Extension(optional = true)
-    public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
+    @Override
+    public StepExecution start(StepContext context) throws Exception {
+        return new SearchStepExecution(this, context);
+    }
 
-        public DescriptorImpl() {
-            super(SearchStepExecution.class);
+    @Extension(optional = true)
+    public static final class DescriptorImpl extends StepDescriptor {
+
+        @Override
+        public Set<? extends Class<?>> getRequiredContext() {
+            Set<Class<?>> context = new HashSet<>();
+            Collections.addAll(context, Run.class, TaskListener.class);
+            return Collections.unmodifiableSet(context);
         }
 
         @Override
@@ -58,25 +69,23 @@ public class SearchIssuesStep extends AbstractStepImpl {
     /**
      * @author jan zajic
      */
-    public static class SearchStepExecution extends AbstractSynchronousNonBlockingStepExecution<List<String>> {
+    public static class SearchStepExecution extends SynchronousNonBlockingStepExecution<List<String>> {
 
         private static final long serialVersionUID = 1L;
 
-        @Inject
-        private transient SearchIssuesStep step;
+        private final transient SearchIssuesStep step;
 
-        @StepContextParameter
-        private transient TaskListener listener;
-
-        @StepContextParameter
-        private transient Run run;
+        protected SearchStepExecution(SearchIssuesStep step, @Nonnull StepContext context) {
+            super(context);
+            this.step = step;
+        }
 
         @Override
         protected List<String> run() throws Exception {
-            JiraSite site = JiraSite.get(run.getParent());
-            JiraSession session = site.getSession(run.getParent());
+            JiraSite site = JiraSite.get(getContext().get(Run.class).getParent());
+            JiraSession session = site.getSession(getContext().get(Run.class).getParent());
             if (session == null) {
-                listener.getLogger().println(Messages.FailedToConnect());
+                getContext().get(TaskListener.class).getLogger().println(Messages.FailedToConnect());
                 throw new AbortException("Cannot open Jira session - error occurred");
             }
 
