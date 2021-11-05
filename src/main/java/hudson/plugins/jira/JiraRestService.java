@@ -38,12 +38,15 @@ import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hudson.ProxyConfiguration;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.extension.ExtendedVersionInput;
 import hudson.plugins.jira.model.JiraIssueField;
+import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpHost;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.utils.URIBuilder;
@@ -438,11 +441,18 @@ public class JiraRestService {
     }
 
     private Request buildGetRequest(URI uri) {
-        return Request.Get(uri)
-                .connectTimeout(timeoutInMilliseconds())
-                .socketTimeout(timeoutInMilliseconds())
-                .addHeader("Authorization", authHeader)
-                .addHeader("Content-Type", "application/json");
+        Request request = Request.Get(uri);
+        ProxyConfiguration proxyConfiguration = Jenkins.get().proxy;
+        if ( proxyConfiguration != null ) {
+            final HttpHost proxyHost = new HttpHost( proxyConfiguration.name, proxyConfiguration.port );
+            request.viaProxy(proxyHost);
+        }
+
+        return request
+            .connectTimeout(timeoutInMilliseconds())
+            .socketTimeout(timeoutInMilliseconds())
+            .addHeader("Authorization", authHeader)
+            .addHeader("Content-Type", "application/json");
     }
 
 	protected int timeoutInMilliseconds() {
