@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.25</version>
+    <version>4.30</version>
     <relativePath />
   </parent>
 
@@ -26,6 +26,8 @@
     <jenkins.version>2.277.4</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
+    <!-- PowerMock was removed from plugin-pom -->
+    <powermock.version>2.0.9</powermock.version>
   </properties>
 
   <scm>
@@ -297,11 +299,13 @@
       <groupId>org.powermock</groupId>
       <artifactId>powermock-module-junit4</artifactId>
       <scope>test</scope>
+      <version>${powermock.version}</version>
     </dependency>
     <dependency>
       <groupId>org.powermock</groupId>
       <artifactId>powermock-api-mockito2</artifactId>
       <scope>test</scope>
+      <version>${powermock.version}</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
