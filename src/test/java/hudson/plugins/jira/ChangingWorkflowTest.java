@@ -28,8 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.powermock.reflect.Whitebox;
 
 /**
@@ -37,8 +36,7 @@ import org.powermock.reflect.Whitebox;
  * Date: 10.09.13
  * Time: 0:57
  */
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ JiraSite.class })
+@RunWith(MockitoJUnitRunner.class)
 public class ChangingWorkflowTest {
 
     public static final String NON_EMPTY_COMMENT = "Non empty comment";
@@ -117,9 +115,6 @@ public class ChangingWorkflowTest {
 
         when(mockSession.getIssuesFromJqlSearch(anyString()))
             .thenReturn(Arrays.asList(mock(Issue.class)));
-
-        doReturn(Integer.valueOf(randomNumeric(5))).when(spySession)
-            .getActionIdForIssue(anyString(), eq(NON_EMPTY_WORKFLOW_LOWERCASE));
 
         when(site.progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class)))
              .thenCallRealMethod();
