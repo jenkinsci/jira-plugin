@@ -112,7 +112,7 @@ public class JiraCreateReleaseNotesTest {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes("",JIRA_RELEASE,JIRA_VARIABLE, JIRA_OTHER_FILTER));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
-        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.anyObject());
+        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.any());
         jcrn.setUp(build, launcher, buildListener);        
         assertThat(finishedListener.getResult(), Matchers.equalTo(Result.FAILURE));
     }
@@ -122,7 +122,7 @@ public class JiraCreateReleaseNotesTest {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,"",JIRA_VARIABLE, JIRA_OTHER_FILTER));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
-        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.anyObject());
+        Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.any());
         jcrn.setUp(build, launcher, buildListener);        
         assertThat(finishedListener.getResult(), Matchers.equalTo(Result.FAILURE));
     }

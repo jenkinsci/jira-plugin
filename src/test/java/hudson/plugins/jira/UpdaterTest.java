@@ -284,7 +284,7 @@ public class UpdaterTest {
     public void getChangesUsingReflectionForWorkflowJob() throws IOException {
         Jenkins jenkins = mock(Jenkins.class);
         
-        when(jenkins.getRootDirFor(Mockito.anyObject())).thenReturn(folder.getRoot());
+        when(jenkins.getRootDirFor(Mockito.any())).thenReturn(folder.getRoot());
         WorkflowJob workflowJob = new WorkflowJob(jenkins, "job");
         WorkflowRun workflowRun = new WorkflowRun(workflowJob);
         

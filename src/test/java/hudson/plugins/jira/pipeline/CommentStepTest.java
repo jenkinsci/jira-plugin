@@ -83,8 +83,8 @@ public class CommentStepTest {
                 assertThat(comment, equalTo(body));
                 assertCalledParams.addAll(Arrays.asList(invocation.getArguments()));
                 return null;
-        }).when(session).addComment(Mockito.anyObject(), Mockito.anyObject(),
-                Mockito.anyObject(), Mockito.anyObject());
+        }).when(session).addComment(Mockito.any(), Mockito.any(),
+                Mockito.any(), Mockito.any());
 
 
         Map<String, Object> r = new HashMap<>();

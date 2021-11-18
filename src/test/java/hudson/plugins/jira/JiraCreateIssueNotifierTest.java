@@ -192,7 +192,7 @@ public class JiraCreateIssueNotifierTest {
         Issue issue = mock(Issue.class);
         Status status =  new Status(null, null, "1", "Open", null, null);
         when(session.createIssue(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyIterable(), Mockito.anyString(),
-                Mockito.eq(typeId), Mockito.isNull(Long.class))).thenReturn(issue);
+                Mockito.eq(typeId), Mockito.isNull())).thenReturn(issue);
         when(issue.getStatus()).thenReturn(status);
         when(session.getIssueByKey(Mockito.anyString())).thenReturn(issue);
 

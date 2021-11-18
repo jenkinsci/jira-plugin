@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.30</version>
+    <version>4.31</version>
     <relativePath />
   </parent>
 
@@ -13,12 +13,12 @@
   <packaging>hpi</packaging>
   <name>Jenkins Jira plugin</name>
   <description>Integrates Jenkins to Jira</description>
-  <url>https://github.com/jenkinsci/jira-plugin</url>
+  <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
 
   <properties>
     <revision>3.7</revision>
     <changelist>-SNAPSHOT</changelist>
-    <gitHubRepo>jenkinsci/jira-plugin</gitHubRepo>
+    <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <java.level>8</java.level>
     <jira-rest-client.version>5.2.2</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
@@ -217,7 +217,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>caffeine-api</artifactId>
-      <version>2.9.2-29.v717aac953ff3</version>
     </dependency>
 
     <!-- Jenkins plugin dependencies -->
@@ -233,7 +232,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>jackson2-api</artifactId>
-      <version>2.12.4-1</version>
     </dependency>
 
     <dependency>
@@ -255,7 +253,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>branch-api</artifactId>
-      <version>2.7.0</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -321,7 +318,6 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-multibranch</artifactId>
-      <version>2.26</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -331,7 +327,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.277.x</artifactId>
-        <version>961.vf0c9f6f59827</version>
+        <version>984.vb5eaac999a7e</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -379,17 +375,6 @@
        <snapshots>
          <enabled>false</enabled>
        </snapshots>
-    </pluginRepository>
-    <pluginRepository>
-      <id>atlassian-public</id>
-      <url>https://packages.atlassian.com/mvn/maven-public/</url>
-      <releases>
-        <enabled>true</enabled>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <snapshots>
-        <checksumPolicy>warn</checksumPolicy>
-      </snapshots>
     </pluginRepository>
   </pluginRepositories>
 

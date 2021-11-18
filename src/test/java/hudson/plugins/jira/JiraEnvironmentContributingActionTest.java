@@ -3,7 +3,7 @@ package hudson.plugins.jira;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.mock;
