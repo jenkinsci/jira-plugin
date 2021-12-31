@@ -3,7 +3,7 @@ package hudson.plugins.jira.extension;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import org.joda.time.DateTime;
 
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.net.URI;
 
 public class ExtendedVersion extends Version {

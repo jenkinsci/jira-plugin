@@ -24,8 +24,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -254,42 +254,42 @@ public class ApacheAsyncHttpClientTest
                 return null;
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public String getBaseUrl( UrlMode urlMode )
             {
                 return null;
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public String getDisplayName()
             {
                 return "Foo";
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public String getPlatformId()
             {
                 return null;
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public String getVersion()
             {
                 return "1";
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public Date getBuildDate()
             {
                 return null;
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public String getBuildNumber()
             {

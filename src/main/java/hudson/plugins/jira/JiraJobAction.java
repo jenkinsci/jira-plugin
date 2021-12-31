@@ -13,8 +13,8 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -70,7 +70,7 @@ public class JiraJobAction implements Action {
      * @param site to fetch issue data
      * @throws IOException if something goes wrong fetching the Jira issue
      */
-    public static void setAction(@Nonnull Job job, @Nonnull JiraSite site) throws IOException {
+    public static void setAction(@NonNull Job job, @NonNull JiraSite site) throws IOException {
         // If there is already a action set then skip
         if (job.getAction(JiraJobAction.class) != null) {
             return;

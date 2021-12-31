@@ -3,7 +3,7 @@ package hudson.plugins.jira;
 import hudson.Extension;
 import hudson.util.PersistedList;
 import java.util.List;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -11,7 +11,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 @Extension
 public class JiraGlobalConfiguration extends GlobalConfiguration {
 
-    @Nonnull
+    @NonNull
     public static JiraGlobalConfiguration get() {
         return (JiraGlobalConfiguration) Jenkins.get().getDescriptorOrDie(JiraGlobalConfiguration.class);
     }

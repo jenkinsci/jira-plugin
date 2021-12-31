@@ -15,7 +15,7 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ public class SearchIssuesStep extends Step {
     public final String jql;
 
     @DataBoundConstructor
-    public SearchIssuesStep(@Nonnull String jql) {
+    public SearchIssuesStep(@NonNull String jql) {
         this.jql = jql;
     }
 
@@ -75,7 +75,7 @@ public class SearchIssuesStep extends Step {
 
         private final transient SearchIssuesStep step;
 
-        protected SearchStepExecution(SearchIssuesStep step, @Nonnull StepContext context) {
+        protected SearchStepExecution(SearchIssuesStep step, @NonNull StepContext context) {
             super(context);
             this.step = step;
         }

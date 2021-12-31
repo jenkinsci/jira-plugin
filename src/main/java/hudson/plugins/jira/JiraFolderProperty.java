@@ -8,7 +8,7 @@ import hudson.model.ItemGroup;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -68,7 +68,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
     @Extension
     public static class DescriptorImpl extends AbstractFolderPropertyDescriptor {
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return Messages.JiraFolderProperty_DisplayName();

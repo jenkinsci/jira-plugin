@@ -7,9 +7,9 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
@@ -58,7 +58,7 @@ public class CredentialsHelper {
 		);
 	}
 
-	protected static StandardUsernamePasswordCredentials migrateCredentials(@Nonnull String username, String password, @CheckForNull URL url) {
+	protected static StandardUsernamePasswordCredentials migrateCredentials(@NonNull String username, String password, @CheckForNull URL url) {
 		List<StandardUsernamePasswordCredentials> credentials = CredentialsMatchers.filter(
 				CredentialsProvider.lookupCredentials(
 						StandardUsernamePasswordCredentials.class,

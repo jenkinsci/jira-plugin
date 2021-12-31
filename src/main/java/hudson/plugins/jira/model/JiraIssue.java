@@ -5,7 +5,7 @@ import hudson.plugins.jira.JiraSite;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * One Jira issue.
@@ -47,7 +47,7 @@ public final class JiraIssue implements Comparable<JiraIssue> {
         this(issue.getKey(), issue.getSummary());
     }
 
-    public int compareTo(@Nonnull JiraIssue that) {
+    public int compareTo(@NonNull JiraIssue that) {
         return this.id.compareTo(that.id);
     }
 

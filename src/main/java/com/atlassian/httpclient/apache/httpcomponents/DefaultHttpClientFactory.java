@@ -8,7 +8,7 @@ import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
 import org.springframework.beans.factory.DisposableBean;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
 
 public final class DefaultHttpClientFactory implements HttpClientFactory, DisposableBean
@@ -39,7 +39,7 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     }
 
     @Override
-    public void dispose(@Nonnull final HttpClient httpClient) throws Exception
+    public void dispose(@NonNull final HttpClient httpClient) throws Exception
     {
         if (httpClient instanceof ApacheAsyncHttpClient)
         {

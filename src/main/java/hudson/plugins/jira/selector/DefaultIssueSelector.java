@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -42,8 +42,8 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
      * See {@link #addIssuesRecursive(Run, JiraSite, TaskListener, Set)}
      */
     @Override
-    public Set<String> findIssueIds(@Nonnull final Run<?, ?> run, @Nonnull final JiraSite site,
-            @Nonnull final TaskListener listener) {
+    public Set<String> findIssueIds(@NonNull final Run<?, ?> run, @NonNull final JiraSite site,
+            @NonNull final TaskListener listener) {
         HashSet<String> issuesIds = new LinkedHashSet<>();
         addIssuesRecursive(run, site, listener, issuesIds);
         return issuesIds;

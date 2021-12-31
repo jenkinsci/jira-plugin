@@ -5,7 +5,7 @@ import hudson.plugins.jira.model.JiraIssue;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.RunAction2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
@@ -21,7 +21,7 @@ public class JiraBuildAction implements RunAction2 {
   private final HashSet<JiraIssue> issues;
   private transient Run<?, ?> owner;
 
-  public JiraBuildAction(@Nonnull Set<JiraIssue> issues) {
+  public JiraBuildAction(@NonNull Set<JiraIssue> issues) {
     this.issues = new HashSet<>(issues);
   }
 
@@ -33,7 +33,7 @@ public class JiraBuildAction implements RunAction2 {
    * @param issues the Jira issues
    */
   @Deprecated
-  public JiraBuildAction(Run<?, ?> owner, @Nonnull Set<JiraIssue> issues) {
+  public JiraBuildAction(Run<?, ?> owner, @NonNull Set<JiraIssue> issues) {
     this(issues);
     // the owner will be set by #onAttached(hudson.model.Run)
   }

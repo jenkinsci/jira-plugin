@@ -54,8 +54,8 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -279,7 +279,7 @@ public class JiraRestService {
     }
 
     public BasicIssue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary,
-                                  @Nonnull Long issueTypeId, @Nullable Long priorityId) {
+                                  @NonNull Long issueTypeId, @Nullable Long priorityId) {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)

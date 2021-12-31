@@ -13,8 +13,8 @@ import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssueField;
 import org.apache.commons.lang.StringUtils;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -408,7 +408,7 @@ public class JiraSession {
         return createIssue(projectKey, description, assignee, components, summary, null, null);
     }
 
-    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, @Nonnull Long issueTypeId, @Nullable Long priorityId) {
+    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, @NonNull Long issueTypeId, @Nullable Long priorityId) {
         final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
         return service.getIssue(basicIssue.getKey());
     }
