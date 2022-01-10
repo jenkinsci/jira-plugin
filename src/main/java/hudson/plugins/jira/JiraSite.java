@@ -538,6 +538,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         StandardUsernamePasswordCredentials credentials = resolveCredentials(item);
 
         if (credentials == null) {
+            LOGGER.fine("no Jira credentials available for " + item);
             return null;    // remote access not supported
         }
 
@@ -566,18 +567,22 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     private StandardUsernamePasswordCredentials resolveCredentials(Item item) {
         if (credentialsId == null) {
+            LOGGER.fine("credentialsId is null");
             return null;    // remote access not supported
         }
 
         List<DomainRequirement> req = URIRequirementBuilder.fromUri(url != null ? url.toExternalForm() : null).build();
 
         if (item != null) {
-            return CredentialsMatchers.firstOrNull(
+            StandardUsernamePasswordCredentials creds = CredentialsMatchers.firstOrNull(
                 CredentialsProvider.lookupCredentials(
                     StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, req
                 ),
                 CredentialsMatchers.withId(credentialsId)
             );
+            if (creds != null) {
+                return creds;
+            }
         }
         return CredentialsMatchers.firstOrNull(
             CredentialsProvider.lookupCredentials(
