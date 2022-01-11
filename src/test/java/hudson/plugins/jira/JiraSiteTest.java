@@ -21,6 +21,7 @@ import jenkins.model.Jenkins;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
 
@@ -71,6 +72,20 @@ public class JiraSiteTest
                 null, true);
         site.setTimeout(1);
         JiraSession session = site.getSession(null);
+        assertNotNull(session);
+        assertEquals(session, site.getSession(null));
+    }
+
+    @Test
+    @Issue("JENKINS-64083")
+    public void createSessionWithGlobalCredentials() {
+        JiraSite site = new JiraSite(validPrimaryUrl, null,
+                new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, null, null, ANY_USER, ANY_PASSWORD),
+                false, false,
+                null, false, null,
+                null, true);
+        site.setTimeout(1);
+        JiraSession session = site.getSession(mock(Job.class));
         assertNotNull(session);
         assertEquals(session, site.getSession(null));
     }
