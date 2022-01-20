@@ -6,7 +6,7 @@ import java.util.Objects;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.joda.time.DateTime;
 
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 public class ExtendedVersionInput extends VersionInput {
 	private final DateTime startDate;

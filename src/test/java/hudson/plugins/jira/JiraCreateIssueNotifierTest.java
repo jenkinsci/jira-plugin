@@ -33,7 +33,7 @@ import org.jvnet.hudson.test.WithoutJenkins;
 import org.mockito.Mockito;
 import org.mockito.mock.SerializableMode;
 
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;

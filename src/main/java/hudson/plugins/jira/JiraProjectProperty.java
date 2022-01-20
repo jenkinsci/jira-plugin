@@ -11,7 +11,7 @@ import hudson.model.JobPropertyDescriptor;
 import hudson.util.ListBoxModel;
 import java.util.List;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;

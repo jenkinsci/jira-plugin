@@ -45,9 +45,9 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import javax.annotation.PreDestroy;
 import javax.servlet.ServletException;
 import java.io.File;
@@ -758,37 +758,37 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         /**
          * We'll always have an absolute URL as a client.
          */
-        @Nonnull
+        @NonNull
         @Override
         public String getBaseUrl( UrlMode urlMode) {
             return baseUrl;
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public String getDisplayName() {
             return "Atlassian Jira Rest Java Client";
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public String getPlatformId() {
             return ApplicationProperties.PLATFORM_JIRA;
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public String getVersion() {
             return "";
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public Date getBuildDate() {
             throw new UnsupportedOperationException();
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public String getBuildNumber() {
             return String.valueOf(0);

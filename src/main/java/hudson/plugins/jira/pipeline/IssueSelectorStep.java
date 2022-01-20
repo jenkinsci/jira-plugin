@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import hudson.model.Descriptor;
 import hudson.model.Result;
@@ -84,7 +84,7 @@ public class IssueSelectorStep extends Step {
 
         private final transient IssueSelectorStep step;
 
-        protected IssueSelectorStepExecution(IssueSelectorStep step, @Nonnull StepContext context) {
+        protected IssueSelectorStepExecution(IssueSelectorStep step, @NonNull StepContext context) {
             super(context);
             this.step = step;
         }

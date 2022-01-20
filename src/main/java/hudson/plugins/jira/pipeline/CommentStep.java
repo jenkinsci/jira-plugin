@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Simple add comment step.
@@ -31,7 +31,7 @@ public class CommentStep extends Step {
     public final String body;
 
     @DataBoundConstructor
-    public CommentStep(@Nonnull String issueKey, @Nonnull String body) {
+    public CommentStep(@NonNull String issueKey, @NonNull String body) {
         this.issueKey = issueKey;
         this.body = body;
     }
@@ -79,7 +79,7 @@ public class CommentStep extends Step {
 
         private final transient CommentStep step;
 
-        protected CommentStepExecution(CommentStep step, @Nonnull StepContext context) {
+        protected CommentStepExecution(CommentStep step, @NonNull StepContext context) {
             super(context);
             this.step = step;
         }

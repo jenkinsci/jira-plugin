@@ -2,7 +2,7 @@ package hudson.plugins.jira.selector;
 
 import java.util.Set;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
@@ -28,6 +28,6 @@ public abstract class AbstractIssueSelector extends AbstractDescribableImpl<Abst
      * @param listener Current's run listener.
      * @return Set of ids of issues which should be updated.
      */
-    public abstract Set<String> findIssueIds(@Nonnull Run<?, ?> run, @Nonnull JiraSite site, @Nonnull TaskListener listener);
+    public abstract Set<String> findIssueIds(@NonNull Run<?, ?> run, @NonNull JiraSite site, @NonNull TaskListener listener);
 
 }
