@@ -23,7 +23,7 @@
     <jira-rest-client.version>5.2.4</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
     <!-- jenkins -->
-    <jenkins.version>2.277.4</jenkins.version>
+    <jenkins.version>2.320</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
   </properties>
@@ -137,12 +137,6 @@
           <artifactId>guava</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-    	<!-- Remove this dependency and the exclusion above when jenkins provides a up-to-date guava version (currently 11.0.1) -->
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>30.1.1-jre</version>
     </dependency>
     <dependency>
       <!-- TODO maybe these dependency needs to be changed/removed -->
