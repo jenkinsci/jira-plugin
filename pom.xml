@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.31</version>
+    <version>4.33</version>
     <relativePath />
   </parent>
 
@@ -21,9 +21,9 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <java.level>8</java.level>
     <jira-rest-client.version>5.2.2</jira-rest-client.version>
-    <fugue.version>3.0.0</fugue.version>
+    <fugue.version>4.7.2</fugue.version>
     <!-- jenkins -->
-    <jenkins.version>2.277.4</jenkins.version>
+    <jenkins.version>2.324</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
   </properties>
@@ -133,32 +133,16 @@
       <version>${jira-rest-client.version}</version>
       <exclusions>
         <exclusion>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
+          <groupId>com.google.errorprone</groupId>
+          <artifactId>error_prone_annotations</artifactId>
         </exclusion>
       </exclusions>
-    </dependency>
-    <dependency>
-    	<!-- Remove this dependency and the exclusion above when jenkins provides a up-to-date guava version (currently 11.0.1) -->
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>30.1.1-jre</version>
-    </dependency>
-    <dependency>
-      <!-- TODO maybe these dependency needs to be changed/removed -->
-      <groupId>io.atlassian.util.concurrent</groupId>
-      <artifactId>atlassian-util-concurrent</artifactId>
-      <version>4.0.1</version>
     </dependency>
     <dependency>
       <groupId>com.atlassian.jira</groupId>
       <artifactId>jira-rest-java-client-core</artifactId>
       <version>${jira-rest-client.version}</version>
       <exclusions>
-        <exclusion>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-        </exclusion>
         <exclusion>
           <groupId>org.springframework</groupId>
           <artifactId>spring-beans</artifactId>
@@ -178,6 +162,40 @@
         <exclusion>
           <groupId>com.atlassian.httpclient</groupId>
           <artifactId>atlassian-httpclient-library</artifactId>
+        </exclusion>
+        <!--
+          Work around this:
+
+          Require upper bound dependencies error for com.atlassian.plugins:atlassian-plugins-core:4.0.0-m025 [provided] paths to dependency are:
+          +-org.jenkins-ci.plugins:jira:3.7-SNAPSHOT
+            +-com.atlassian.jira:jira-rest-java-client-core:5.2.2
+              +-com.atlassian.sal:sal-api:3.0.7
+                +-com.atlassian.plugins:atlassian-plugins-webfragment:4.0.0 [provided]
+                  +-com.atlassian.plugins:atlassian-plugins-core:4.0.0-m025 [provided]
+          and
+          +-org.jenkins-ci.plugins:jira:3.7-SNAPSHOT
+            +-com.atlassian.jira:jira-rest-java-client-core:5.2.2
+              +-com.atlassian.event:atlassian-event:3.0.0
+                +-com.atlassian.plugins:atlassian-plugins-osgi:4.0.0-m029 [provided]
+                  +-com.atlassian.plugins:atlassian-plugins-core:4.0.0-m029 [provided]
+          and
+          +-org.jenkins-ci.plugins:jira:3.7-SNAPSHOT
+            +-com.atlassian.jira:jira-rest-java-client-core:5.2.2
+              +-com.atlassian.event:atlassian-event:3.0.0
+                +-com.atlassian.plugins:atlassian-plugins-osgi:4.0.0-m029 [provided]
+                  +-com.atlassian.plugins:atlassian-plugins-osgi-spring-extender:4.0.0-m029 [provided]
+                    +-com.atlassian.plugins:atlassian-plugins-core:4.0.0-m029 [provided]
+          and
+          +-org.jenkins-ci.plugins:jira:3.7-SNAPSHOT
+            +-com.atlassian.jira:jira-rest-java-client-core:5.2.2
+              +-com.atlassian.event:atlassian-event:3.0.0
+                +-com.atlassian.plugins:atlassian-plugins-osgi:4.0.0-m029 [provided]
+                  +-com.atlassian.plugins:atlassian-plugins-osgi-bridge:4.0.0-m029 [provided]
+                    +-com.atlassian.plugins:atlassian-plugins-core:4.0.0-m029 [provided]
+        -->
+        <exclusion>
+          <groupId>com.atlassian.plugins</groupId>
+          <artifactId>atlassian-plugins-core</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.codehaus.jackson</groupId>
@@ -246,13 +264,6 @@
     <dependency>
       <artifactId>workflow-step-api</artifactId>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
-      <optional>true</optional>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jenkins-ci.plugins</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -271,10 +282,6 @@
         <exclusion>
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-compress</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jenkins-ci.plugins</groupId>
-          <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -324,8 +331,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.277.x</artifactId>
-        <version>984.vb5eaac999a7e</version>
+        <artifactId>bom-weekly</artifactId>
+        <version>1142.v043a_03ff60a_7</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
