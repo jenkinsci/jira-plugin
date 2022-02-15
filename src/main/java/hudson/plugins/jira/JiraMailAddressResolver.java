@@ -4,8 +4,10 @@ import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
+import jenkins.model.Jenkins;
 import org.kohsuke.stapler.Stapler;
 
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -32,9 +34,17 @@ public class JiraMailAddressResolver extends MailAddressResolver {
         }
         String username = u.getId();
 
-        Job<?, ?> job = Stapler.getCurrentRequest().findAncestorObject( Job.class);
+        Job<?, ?> job = null;
+        try {
+            job = Stapler.getCurrentRequest().findAncestorObject(Job.class);
+        } catch (NullPointerException e) {
+            // sadly but outside of a context job this throw an exception
+            LOGGER.fine("NPE trying to find the Job of the current request");
+        }
 
-        for (JiraSite site : JiraSite.getJiraSites(job)) {
+        List<JiraSite> sites = job == null ? JiraGlobalConfiguration.get().getSites() : JiraSite.getJiraSites(job);
+
+        for (JiraSite site : sites) {
             JiraSession session = site.getSession(job);
             if (session == null) {
                 continue;
