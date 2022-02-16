@@ -5,7 +5,9 @@ import hudson.model.Job;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
 import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
@@ -32,9 +34,16 @@ public class JiraMailAddressResolver extends MailAddressResolver {
         }
         String username = u.getId();
 
-        Job<?, ?> job = Stapler.getCurrentRequest().findAncestorObject( Job.class);
+        Job<?, ?> job = null;
 
-        for (JiraSite site : JiraSite.getJiraSites(job)) {
+        StaplerRequest req = Stapler.getCurrentRequest();
+        if(req != null) {
+            job = req.findAncestorObject(Job.class);
+        }
+
+        List<JiraSite> sites = job == null ? JiraGlobalConfiguration.get().getSites() : JiraSite.getJiraSites(job);
+
+        for (JiraSite site : sites) {
             JiraSession session = site.getSession(job);
             if (session == null) {
                 continue;
