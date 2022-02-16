@@ -48,6 +48,8 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+
+import javax.annotation.Nonnull;
 import javax.annotation.PreDestroy;
 import javax.servlet.ServletException;
 import java.io.File;
@@ -57,6 +59,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -802,6 +805,24 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         @Override
         public String getPropertyValue(final String s) {
             throw new UnsupportedOperationException("Not implemented");
+        }
+
+        @Nonnull
+        @Override
+        public String getApplicationFileEncoding() {
+            return System.getProperty("file.encoding");
+        }
+
+        @Nonnull
+        @Override
+        public Optional<Path> getLocalHomeDirectory() {
+            return Optional.empty();
+        }
+
+        @Nonnull
+        @Override
+        public Optional<Path> getSharedHomeDirectory() {
+            return Optional.empty();
         }
     }
 
