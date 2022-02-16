@@ -26,13 +26,17 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+
+import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Date;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class ApacheAsyncHttpClientTest
@@ -307,6 +311,24 @@ public class ApacheAsyncHttpClientTest
             public String getPropertyValue( String s )
             {
                 return null;
+            }
+
+            @Nonnull
+            @Override
+            public String getApplicationFileEncoding() {
+                return System.getProperty("file.encoding");
+            }
+
+            @Nonnull
+            @Override
+            public Optional<Path> getLocalHomeDirectory() {
+                return Optional.empty();
+            }
+
+            @Nonnull
+            @Override
+            public Optional<Path> getSharedHomeDirectory() {
+                return Optional.empty();
             }
         };
         return applicationProperties;
