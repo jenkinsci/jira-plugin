@@ -4,8 +4,8 @@ import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
-import jenkins.model.Jenkins;
 import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.util.List;
 import java.util.logging.Logger;
@@ -35,11 +35,10 @@ public class JiraMailAddressResolver extends MailAddressResolver {
         String username = u.getId();
 
         Job<?, ?> job = null;
-        try {
-            job = Stapler.getCurrentRequest().findAncestorObject(Job.class);
-        } catch (NullPointerException e) {
-            // sadly but outside of a context job this throw an exception
-            LOGGER.fine("NPE trying to find the Job of the current request");
+
+        StaplerRequest req = Stapler.getCurrentRequest();
+        if(req != null) {
+            job = req.findAncestorObject(Job.class);
         }
 
         List<JiraSite> sites = job == null ? JiraGlobalConfiguration.get().getSites() : JiraSite.getJiraSites(job);

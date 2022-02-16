@@ -38,7 +38,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * @author schristou88
  */
-public class MailResolverTest extends JenkinsRule {
+public class MailResolverDisabledTest extends JenkinsRule {
     @Rule
     public JenkinsRule r = new JenkinsRule();
 
