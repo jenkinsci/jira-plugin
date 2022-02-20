@@ -11,6 +11,6 @@ node("docker-highmem") {
         sh "git clone https://github.com/jenkinsci/jira-plugin.git jira"
         stash 'localPlugins'
     }
-    runPCT()
+    runPCT(metadataFile: "jira/essentials.yml")
 }
 
