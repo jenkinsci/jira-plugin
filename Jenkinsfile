@@ -5,5 +5,12 @@ buildPlugin(useAci: true, configurations: [
         [ platform: "linux", jdk: "11" ]
 ])
 
-infra.checkoutSCM()
-runPCT(metadataFile: './essentials.yml')
+node("docker-highmem") {
+    deleteDir()
+    dir("localPlugins") {
+        sh "git clone https://github.com/jenkinsci/jira-plugin.git jira"
+        stash 'localPlugins'
+    }
+    runPCT()
+}
+
