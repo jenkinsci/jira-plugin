@@ -10,6 +10,9 @@ node("docker-highmem") {
     dir("localPlugins") {
         sh "git clone https://github.com/jenkinsci/jira-plugin.git jira"
         stash 'localPlugins'
+        sh "ls -lrt"
+        sh "ls -lrt localPlugins"
+        sh "ls -lrt localPlugins/jira"
         stash name: 'essentials.yml', includes: 'jira/essentials.yml'
     }
 
