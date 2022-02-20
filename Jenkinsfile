@@ -5,4 +5,4 @@ buildPlugin(useAci: true, configurations: [
         [ platform: "linux", jdk: "11" ]
 ])
 
-runPCT()
+runPCT(metadataFile: './essentials.yml')
