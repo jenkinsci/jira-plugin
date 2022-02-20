@@ -5,4 +5,5 @@ buildPlugin(useAci: true, configurations: [
         [ platform: "linux", jdk: "11" ]
 ])
 
+infra.checkoutSCM()
 runPCT(metadataFile: './essentials.yml')
