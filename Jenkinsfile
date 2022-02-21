@@ -5,7 +5,7 @@ buildPlugin(useAci: true, configurations: [
         [ platform: "linux", jdk: "11" ]
 ])
 
-echo "${BRANCH_IS_PRIMARY}"
+echo "BRANCH_IS_PRIMARY: ${BRANCH_IS_PRIMARY}"
 if (${BRANCH_IS_PRIMARY}) {
     node("docker-highmem") {
         deleteDir()
