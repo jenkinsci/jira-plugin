@@ -5,8 +5,8 @@ buildPlugin(useAci: true, configurations: [
         [ platform: "linux", jdk: "11" ]
 ])
 
-echo "${env.BRANCH_IS_PRIMARY}"
-if (${env.BRANCH_IS_PRIMARY}) {
+echo "${BRANCH_IS_PRIMARY}"
+if (${BRANCH_IS_PRIMARY}) {
     node("docker-highmem") {
         deleteDir()
         dir("localPlugins") {
