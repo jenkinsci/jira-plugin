@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.31</version>
+    <version>4.37</version>
     <relativePath />
   </parent>
 
@@ -21,9 +21,9 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <java.level>8</java.level>
     <jira-rest-client.version>5.2.4</jira-rest-client.version>
-    <fugue.version>3.0.0</fugue.version>
+    <fugue.version>4.7.2</fugue.version>
     <!-- jenkins -->
-    <jenkins.version>2.320</jenkins.version>
+    <jenkins.version>2.332.1</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
   </properties>
@@ -92,9 +92,6 @@
       <plugin>
        <groupId>com.github.spotbugs</groupId>
        <artifactId>spotbugs-maven-plugin</artifactId>
-       <!-- <configuration>
-         <failOnError>${spotbugs.failOnError}</failOnError>
-       </configuration> -->
        <executions>
          <execution>
            <id>spotbugs</id>
@@ -318,8 +315,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.277.x</artifactId>
-        <version>984.vb5eaac999a7e</version>
+        <artifactId>bom-2.332.x</artifactId>
+        <version>1198.v387c834fca_1a_</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -327,6 +324,11 @@
         <groupId>org.json</groupId>
         <artifactId>json</artifactId>
         <version>20211205</version>
+      </dependency>
+      <dependency>
+        <groupId>com.atlassian.plugins</groupId>
+        <artifactId>atlassian-plugins-core</artifactId>
+        <version>4.0.0-m029</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
