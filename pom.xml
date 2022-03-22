@@ -330,6 +330,21 @@
         <artifactId>atlassian-plugins-core</artifactId>
         <version>4.0.0-m029</version>
       </dependency>
+      <dependency>
+        <groupId>jakarta.activation</groupId>
+        <artifactId>jakarta.activation-api</artifactId>
+        <version>1.2.2</version>
+      </dependency>
+      <dependency>
+        <groupId>com.atlassian.plugins</groupId>
+        <artifactId>atlassian-plugins-core</artifactId>
+        <version>5.3.12</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jcl</artifactId>
+        <version>5.1.20.RELEASE</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
