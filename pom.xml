@@ -326,11 +326,6 @@
         <version>20211205</version>
       </dependency>
       <dependency>
-        <groupId>com.atlassian.plugins</groupId>
-        <artifactId>atlassian-plugins-core</artifactId>
-        <version>4.0.0-m029</version>
-      </dependency>
-      <dependency>
         <groupId>jakarta.activation</groupId>
         <artifactId>jakarta.activation-api</artifactId>
         <version>1.2.2</version>
