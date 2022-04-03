@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>jira</artifactId>
-  <version>3.6</version>
+  <version>3.6.1-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Jenkins Jira plugin</name>
   <description>Integrates Jenkins to Jira</description>
