@@ -244,8 +244,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>jersey2-api</artifactId>
-      <!-- TODO remove the explicit version number once this has made it into the plugin BOM -->
-      <version>2.35-7</version> <!-- TODO https://github.com/jenkinsci/bom/pull/1022 -->
     </dependency>
 
     <dependency>
@@ -340,7 +338,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-2.332.x</artifactId>
-        <version>1280.vd669827e38cd</version> <!-- TODO https://github.com/jenkinsci/bom/pull/1022 -->
+        <version>1289.v5c4b_1c43511b_</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
