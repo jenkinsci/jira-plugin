@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.39</version>
+    <version>4.40</version>
     <relativePath />
   </parent>
 
@@ -19,7 +19,6 @@
     <revision>3.8</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <java.level>8</java.level>
     <jira-rest-client.version>5.2.4</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <!-- jenkins -->
