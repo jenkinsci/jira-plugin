@@ -132,6 +132,11 @@
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
         </exclusion>
+        <!-- provided by commons-lang3-api -->
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -190,6 +195,11 @@
           <groupId>org.glassfish.jersey.media</groupId>
           <artifactId>jersey-media-json-jettison</artifactId>
         </exclusion>
+        <!-- provided by commons-lang3-api -->
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -203,9 +213,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-      <version>3.12.0</version>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
+      <version>3.12.0.0</version>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>
