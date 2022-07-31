@@ -106,17 +106,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * See issue JENKINS-729, JENKINS-4092
      */
     public static final Pattern DEFAULT_ISSUE_PATTERN = Pattern.compile("([a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*)([^.]|\\.[^0-9]|\\.$|$)");
-    
+
     /**
      * Default rest api client calls timeout, in seconds
-     * See issue JENKINS-31113 
+     * See issue JENKINS-31113
      */
     public static final int DEFAULT_TIMEOUT = 10;
 
     public static final int DEFAULT_READ_TIMEOUT = 30;
 
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
-    
+
     /**
      * URL of Jira for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
      * Mandatory. Normalized to end with '/'
@@ -197,7 +197,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @since 1.22
      */
     public boolean updateJiraIssueForAllStatus;
-    
+
     /**
      * connection timeout used when calling jira rest api, in seconds
      */
@@ -219,7 +219,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Configuration  for formatting (date -> text) in jira comments.
      */
     private String dateTimePattern;
-    
+
     /**
      * To add scm entry change date and time in jira comments.
      *
@@ -401,7 +401,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public String getDateTimePattern() {
         return dateTimePattern;
     }
-    
+
     public boolean isAppendChangeTimestamp() {
         return appendChangeTimestamp;
     }
@@ -533,8 +533,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return null if remote access is not supported.
      */
-    private JiraSession createSession(Item item) {
-
+    JiraSession createSession(Item item) {
         ItemGroup itemGroup = map(item);
         item = itemGroup instanceof Folder? ((Folder)itemGroup):item;
 
@@ -562,6 +561,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             );
         return new JiraSession(this, new JiraRestService(uri, jiraRestClient, credentials.getUsername(),
                                                          credentials.getPassword().getPlainText(), readTimeout));
+    }
+
+    Lock getProjectUpdateLock() {
+        return projectUpdateLock;
     }
 
     /**
@@ -882,7 +885,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         Pattern result = getUserPattern();
         return result == null ? DEFAULT_ISSUE_PATTERN : result;
     }
-    
+
 
     /**
      * Gets the list of project IDs in this Jira.
@@ -892,14 +895,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         // FIXME it means projects list will be never updated until Jenkins is restarted...
         if (projects == null) {
             try {
-                if (projectUpdateLock.tryLock(3, TimeUnit.SECONDS)) {
+                if (getProjectUpdateLock().tryLock(3, TimeUnit.SECONDS)) {
                     try {
                         JiraSession session = getSession(item);
                         if (session != null) {
                             projects = Collections.unmodifiableSet(session.getProjectKeys());
                         }
                     } finally {
-                        projectUpdateLock.unlock();
+                        getProjectUpdateLock().unlock();
                     }
                 }
             } catch (InterruptedException e) {
