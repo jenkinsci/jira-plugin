@@ -51,7 +51,7 @@ public class ExplicitIssueSelector extends AbstractIssueSelector {
 
     @Override
     public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
-        EnvVars envVars = EnvironmentExpander.GetEnvVars(run, listener);
+        EnvVars envVars = EnvironmentExpander.getEnvVars(run, listener);
 
         List<String> issueKeys = new ArrayList<>();
         for (String issue : jiraIssueKeys) {

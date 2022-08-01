@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class EnvironmentExpander
 {
-    public static EnvVars GetEnvVars(Run<?, ?> run, TaskListener listener)
+    public static EnvVars getEnvVars(Run<?, ?> run, TaskListener listener)
     {
         if (run == null || listener == null)
             return null;
@@ -22,7 +22,7 @@ public class EnvironmentExpander
 
     public static String expandVariable(String variable, Run<?, ?> run, TaskListener listener)
     {
-        EnvVars envVars = GetEnvVars(run, listener);
+        EnvVars envVars = getEnvVars(run, listener);
 
         return expandVariable(variable, envVars);
     }
