@@ -10,10 +10,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-import hudson.MarkupText;
-import hudson.model.FreeStyleBuild;
-import hudson.model.Run;
-import hudson.plugins.jira.model.JiraIssue;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -21,6 +17,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,6 +26,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+
+import hudson.MarkupText;
+import hudson.model.Run;
+import hudson.plugins.jira.model.JiraIssue;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -48,7 +49,7 @@ public class JiraChangeLogAnnotatorTest {
 
     @Before
     public void before() throws Exception {
-        when(session.getProjectKeys()).thenReturn(new HashSet(Arrays.asList( "DUMMY", "JENKINS")));
+        when(session.getProjectKeys()).thenReturn(new HashSet(Arrays.asList("DUMMY", "JENKINS")));
         when(site.getSession(any())).thenReturn(session);
         when(site.getProjectUpdateLock()).thenReturn(new ReentrantLock());
 
@@ -63,7 +64,8 @@ public class JiraChangeLogAnnotatorTest {
 
     @Test
     public void annotate() {
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+        when(run.getAction(JiraBuildAction.class))
+                .thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 
         MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
@@ -78,18 +80,21 @@ public class JiraChangeLogAnnotatorTest {
 
     @Test
     public void annotateDisabledOnSiteLevel() {
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
-        MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
         doReturn(true).when(site).getDisableChangelogAnnotations();
+
+        MarkupText text = new MarkupText("marking up DUMMY-1.");
+        annotator.annotate(run, null, text);
 
         assertThat(text.toString(false), not(containsString("href")));
     }
 
     @Test
     public void annotateWf() {
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+        when(run.getAction(JiraBuildAction.class))
+                .thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 
         MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
@@ -145,10 +150,9 @@ public class JiraChangeLogAnnotatorTest {
 
         assertThat(text.toString(false), is(
                 "<a href='http://dummy/DUMMY-1'>DUMMY-1</a> Text " +
-                "<a href='http://dummy/DUMMY-2'>DUMMY-2</a>," +
-                "<a href='http://dummy/DUMMY-3'>DUMMY-3</a> " +
-                "<a href='http://dummy/DUMMY-4'>DUMMY-4</a>!")
-        );
+                        "<a href='http://dummy/DUMMY-2'>DUMMY-2</a>," +
+                        "<a href='http://dummy/DUMMY-3'>DUMMY-3</a> " +
+                        "<a href='http://dummy/DUMMY-4'>DUMMY-4</a>!"));
     }
 
     @Test
@@ -156,9 +160,13 @@ public class JiraChangeLogAnnotatorTest {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
+        MarkupText text = new MarkupText("fixed DUMMY-42");
+        annotator.annotate(mock(Run.class), null, text);
+
         assertThat(annotator.hasProjectForIssue("JENKINS-123", site, run), is(true));
         assertThat(annotator.hasProjectForIssue("jenKiNs-123", site, run), is(true));
         assertThat(annotator.hasProjectForIssue("dummy-4711", site, run), is(true));
+        assertThat(annotator.hasProjectForIssue("OThEr-4711", site, run), is(false));
     }
 
     @Test
@@ -168,7 +176,7 @@ public class JiraChangeLogAnnotatorTest {
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
         MarkupText text = new MarkupText("fixed DUMMY-42");
-        annotator.annotate(mock(FreeStyleBuild.class), null, text);
+        annotator.annotate(mock(Run.class), null, text);
 
         assertThat(text.toString(false), is("fixed <a href='http://dummy/DUMMY-42'>DUMMY-42</a>"));
     }
@@ -194,21 +202,25 @@ public class JiraChangeLogAnnotatorTest {
     }
 
     /**
-     * Tests that no exception is thrown if user issue pattern is invalid (contains no groups)
+     * Tests that no exception is thrown if user issue pattern is invalid (contains
+     * no groups)
      */
     @Test
     public void invalidUserPattern() {
-        when(site.getIssuePattern()).thenReturn(Pattern.compile("[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"));
-
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+
+        when(site.getIssuePattern()).thenReturn(Pattern.compile("[a-zA-Z][a-zA-Z0-9_]+-[1-9][0-9]*"));
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
         MarkupText text = new MarkupText("fixed DUMMY-42");
+        annotator.annotate(mock(Run.class), null, text);
+
         assertThat(text.toString(false), not(containsString(TITLE)));
     }
 
     /**
-     * Tests that only the 1st matching group is hyperlinked and not the whole pattern.
+     * Tests that only the 1st matching group is hyperlinked and not the whole
+     * pattern.
      * Previous implementation did so.
      */
     @Test
@@ -229,8 +241,7 @@ public class JiraChangeLogAnnotatorTest {
         annotator.annotate(mock(Run.class), null, text);
         assertThat(
                 text.toString(false),
-                is("fixed <a href='http://dummy/DUMMY-42' tooltip='title with $sign to confuse TextMarkup.replace'>DUMMY-42</a>abc")
-        );
+                is("fixed <a href='http://dummy/DUMMY-42' tooltip='title with $sign to confuse TextMarkup.replace'>DUMMY-42</a>abc"));
     }
 
     /**
@@ -249,7 +260,8 @@ public class JiraChangeLogAnnotatorTest {
 
         Run run = mock(Run.class);
 
-        when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
+        when(run.getAction(JiraBuildAction.class))
+                .thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
         MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());

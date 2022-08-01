@@ -1,34 +1,6 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.StatusCategory;
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
-import com.atlassian.jira.rest.client.api.domain.Priority;
-import com.atlassian.jira.rest.client.api.domain.Status;
-import com.cloudbees.hudson.plugins.folder.Folder;
-import hudson.EnvVars;
-import hudson.Extension;
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Item;
-import hudson.model.ItemGroup;
-import hudson.model.Result;
-import hudson.model.TaskListener;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Notifier;
-import hudson.tasks.Publisher;
-import hudson.util.FormValidation;
-import hudson.util.ListBoxModel;
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -43,11 +15,39 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+
+import com.atlassian.jira.rest.client.api.StatusCategory;
+import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.Priority;
+import com.atlassian.jira.rest.client.api.domain.Status;
+
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Item;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Notifier;
+import hudson.tasks.Publisher;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import net.sf.json.JSONObject;
 
 /**
  * When a build fails it creates jira issues.
- * Repeated failures does not create a new issue but update the existing issue until the issue is closed.
+ * Repeated failures does not create a new issue but update the existing issue
+ * until the issue is closed.
  *
  * @author Rupali Behera rupali@vertisinfotech.com
  */
@@ -70,9 +70,11 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     @DataBoundConstructor
-    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component, Long typeId,
-                                   Long priorityId, Integer actionIdOnSuccess) {
-        if (projectKey == null) throw new IllegalArgumentException("Project key cannot be null");
+    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component,
+            Long typeId,
+            Long priorityId, Integer actionIdOnSuccess) {
+        if (projectKey == null)
+            throw new IllegalArgumentException("Project key cannot be null");
         this.projectKey = projectKey;
 
         this.testDescription = testDescription;
@@ -81,11 +83,6 @@ public class JiraCreateIssueNotifier extends Notifier {
         this.typeId = typeId;
         this.priorityId = priorityId;
         this.actionIdOnSuccess = actionIdOnSuccess;
-    }
-
-    @Deprecated
-    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component) {
-        this(projectKey, testDescription, assignee, component, null, null, null);
     }
 
     public String getProjectKey() {
@@ -145,7 +142,8 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+            throws IOException, InterruptedException {
 
         String jobDirPath = build.getProject().getBuildDir().getPath();
         String filename = jobDirPath + File.separator + "issue.txt";
@@ -174,7 +172,8 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     /**
-     * It creates a issue in the given project, with the given description, assignee,components and summary.
+     * It creates a issue in the given project, with the given description,
+     * assignee,components and summary.
      * The created issue ID is saved to the file at "filename".
      *
      * @param build
@@ -194,8 +193,7 @@ public class JiraCreateIssueNotifier extends Notifier {
                 "%s\n\nThe build %s has failed.\nFirst failed run: %s",
                 (this.testDescription.equals("")) ? "No description is provided" : vars.expand(this.testDescription),
                 buildName,
-                getBuildDetailsString(vars)
-        );
+                getBuildDetailsString(vars));
         Iterable<String> components = Arrays.stream(component.split(","))
                 .filter(s -> !StringUtils.isEmpty(s)).map(s -> StringUtils.trim(s))
                 .collect(Collectors.toList());
@@ -240,7 +238,8 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param comment
      * @throws IOException
      */
-    private void addComment(AbstractBuild<?, ?> build, BuildListener listener, String id, String comment) throws IOException {
+    private void addComment(AbstractBuild<?, ?> build, BuildListener listener, String id, String comment)
+            throws IOException {
         JiraSession session = getJiraSession(build);
         session.addCommentWithoutConstrains(id, comment);
         listener.getLogger().println(String.format("[%s] Commented issue", id));
@@ -257,7 +256,7 @@ public class JiraCreateIssueNotifier extends Notifier {
     private String getIssue(String filename) throws IOException, InterruptedException {
         String issueId = "";
         Path path = Paths.get(filename);
-        if(Files.notExists(path)){
+        if (Files.notExists(path)) {
             return null;
         }
         try (BufferedReader br = Files.newBufferedReader(path)) {
@@ -288,7 +287,8 @@ public class JiraCreateIssueNotifier extends Notifier {
         JiraSite site = getSiteForProject(build.getProject());
 
         if (site == null) {
-            throw new IllegalStateException("Jira site needs to be configured in the project " + build.getFullDisplayName());
+            throw new IllegalStateException(
+                    "Jira site needs to be configured in the project " + build.getFullDisplayName());
         }
 
         JiraSession session = site.getSession(build.getProject());
@@ -317,30 +317,32 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @throws FileNotFoundException
      */
     private void writeInFile(String filename, Issue issue) throws IOException {
-         // olamy really weird to write an empty file especially with null
+        // olamy really weird to write an empty file especially with null
         // but backward compat and unit tests assert that.....
         // can't believe such stuff has been merged......
-        try(BufferedWriter bw =Files.newBufferedWriter(Paths.get(filename))) {
-            bw.write(issue.getKey()==null?"null":issue.getKey());
+        try (BufferedWriter bw = Files.newBufferedWriter(Paths.get(filename))) {
+            bw.write(issue.getKey() == null ? "null" : issue.getKey());
         }
     }
 
     /**
      * when the current build fails it checks for the previous build's result,
-     * creates jira issue if the result was "success" and adds comment if the result was "fail".
+     * creates jira issue if the result was "success" and adds comment if the result
+     * was "fail".
      * It adds comment until the previously created issue is closed.
      */
-    private void currentBuildResultFailure(AbstractBuild<?, ?> build, BuildListener listener, Result previousBuildResult,
-                                           String filename, EnvVars vars) throws InterruptedException, IOException {
+    private void currentBuildResultFailure(AbstractBuild<?, ?> build, BuildListener listener,
+            Result previousBuildResult,
+            String filename, EnvVars vars) throws InterruptedException, IOException {
 
         if (previousBuildResult == Result.FAILURE) {
             String comment = String.format("Build is still failing.\nFailed run: %s", getBuildDetailsString(vars));
 
-            //Get the issue-id which was filed when the previous built failed
+            // Get the issue-id which was filed when the previous built failed
             String issueId = getIssue(filename);
             if (issueId != null) {
                 try {
-                    //The status of the issue which was filed when the previous build failed
+                    // The status of the issue which was filed when the previous build failed
                     Status status = getStatus(build, issueId);
 
                     // Issue Closed, need to open new one
@@ -375,7 +377,8 @@ public class JiraCreateIssueNotifier extends Notifier {
 
     /**
      * when the current build's result is "success",
-     * it checks for the previous build's result and adds comment until the previously created issue is closed.
+     * it checks for the previous build's result and adds comment until the
+     * previously created issue is closed.
      *
      * @param build
      * @param previousBuildResult
@@ -384,19 +387,22 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @throws InterruptedException
      * @throws IOException
      */
-    private void currentBuildResultSuccess(AbstractBuild<?, ?> build, BuildListener listener, Result previousBuildResult,
-                                           String filename, EnvVars vars) throws InterruptedException, IOException {
+    private void currentBuildResultSuccess(AbstractBuild<?, ?> build, BuildListener listener,
+            Result previousBuildResult,
+            String filename, EnvVars vars) throws InterruptedException, IOException {
 
         if (previousBuildResult == Result.FAILURE || previousBuildResult == Result.SUCCESS) {
-            String comment = String.format("Previously failing build now is OK.\n Passed run: %s", getBuildDetailsString(vars));
+            String comment = String.format("Previously failing build now is OK.\n Passed run: %s",
+                    getBuildDetailsString(vars));
             String issueId = getIssue(filename);
 
-            //if issue exists it will check the status and comment or delete the file accordingly
+            // if issue exists it will check the status and comment or delete the file
+            // accordingly
             if (issueId != null) {
                 try {
                     Status status = getStatus(build, issueId);
 
-                    //if issue is in closed status
+                    // if issue is in closed status
                     if (isDone(status)) {
                         LOG.info(String.format("%s is closed", issueId));
                         deleteFile(filename);
@@ -419,9 +425,9 @@ public class JiraCreateIssueNotifier extends Notifier {
 
     static boolean isDone(Status status) {
         if (status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
-          status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-          status.getName().equalsIgnoreCase(finishedStatuses.Done.toString())) {
-          return true;
+                status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
+                status.getName().equalsIgnoreCase(finishedStatuses.Done.toString())) {
+            return true;
         }
 
         StatusCategory category = status.getStatusCategory();
@@ -431,7 +437,8 @@ public class JiraCreateIssueNotifier extends Notifier {
         return "done".equals(category.getKey());
     }
 
-    private void progressWorkflowAction(AbstractBuild<?, ?> build, String issueId, Integer actionId) throws IOException {
+    private void progressWorkflowAction(AbstractBuild<?, ?> build, String issueId, Integer actionId)
+            throws IOException {
         JiraSession session = getJiraSession(build);
         session.progressWorkflowAction(issueId, actionId);
     }
