@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.40</version>
+    <version>4.45</version>
     <relativePath />
   </parent>
 
@@ -22,7 +23,7 @@
     <jira-rest-client.version>5.2.4</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <!-- jenkins -->
-    <jenkins.version>2.332.1</jenkins.version>
+    <jenkins.version>2.346.2</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
   </properties>
@@ -89,24 +90,24 @@
       </plugin>
       <!-- spotbugs is defined in parent plugin-pom but overriding some things here -->
       <plugin>
-       <groupId>com.github.spotbugs</groupId>
-       <artifactId>spotbugs-maven-plugin</artifactId>
-       <executions>
-         <execution>
-           <id>spotbugs</id>
-           <goals>
-             <goal>check</goal>
-           </goals>
-           <phase>verify</phase>
-           <configuration>
-             <failOnError>${spotbugs.failOnError}</failOnError>
-             <spotbugsXmlOutput>false</spotbugsXmlOutput>
-             <effort>${spotbugs.effort}</effort>
-             <threshold>${spotbugs.threshold}</threshold>
-             <onlyAnalyze>hudson.plugins.jira.*</onlyAnalyze>
-           </configuration>
-         </execution>
-       </executions>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>spotbugs</id>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>verify</phase>
+            <configuration>
+              <failOnError>${spotbugs.failOnError}</failOnError>
+              <spotbugsXmlOutput>false</spotbugsXmlOutput>
+              <effort>${spotbugs.effort}</effort>
+              <threshold>${spotbugs.threshold}</threshold>
+              <onlyAnalyze>hudson.plugins.jira.*</onlyAnalyze>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -140,7 +141,6 @@
       </exclusions>
     </dependency>
     <dependency>
-      <!-- TODO maybe these dependency needs to be changed/removed -->
       <groupId>io.atlassian.util.concurrent</groupId>
       <artifactId>atlassian-util-concurrent</artifactId>
       <version>4.0.1</version>
@@ -223,6 +223,7 @@
       <version>2.11.0</version>
     </dependency>
 
+    <!-- Jenkins plugin dependencies -->
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
@@ -234,17 +235,16 @@
         </exclusion>
       </exclusions>
     </dependency>
-
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>caffeine-api</artifactId>
     </dependency>
 
-    <!-- Jenkins plugin dependencies -->
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>matrix-project</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>mailer</artifactId>
@@ -340,8 +340,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.332.x</artifactId>
-        <version>1289.v5c4b_1c43511b_</version>
+        <artifactId>bom-2.346.x</artifactId>
+        <version>1556.vfc6a_f216e3c6</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
@@ -349,11 +349,6 @@
         <groupId>org.json</groupId>
         <artifactId>json</artifactId>
         <version>20220320</version>
-      </dependency>
-      <dependency>
-        <groupId>jakarta.activation</groupId>
-        <artifactId>jakarta.activation-api</artifactId>
-        <version>1.2.2</version>
       </dependency>
       <dependency>
         <groupId>com.atlassian.plugins</groupId>
@@ -369,7 +364,7 @@
   </dependencyManagement>
 
   <repositories>
-   <repository>
+    <repository>
       <id>repo.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/public/</url>
       <releases>
@@ -396,14 +391,14 @@
 
   <pluginRepositories>
     <pluginRepository>
-       <id>repo.jenkins-ci.org</id>
-       <url>https://repo.jenkins-ci.org/public/</url>
-       <releases>
-         <enabled>true</enabled>
-       </releases>
-       <snapshots>
-         <enabled>false</enabled>
-       </snapshots>
+      <id>repo.jenkins-ci.org</id>
+      <url>https://repo.jenkins-ci.org/public/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </pluginRepository>
   </pluginRepositories>
 
