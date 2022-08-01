@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.StringContains.containsString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -22,27 +23,34 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.Issue;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import org.powermock.reflect.Whitebox;
 
 /**
  * @author Kohsuke Kawaguchi
  */
+@RunWith(MockitoJUnitRunner.class)
 public class JiraChangeLogAnnotatorTest {
     private static final String TITLE = "title with $sign to confuse TextMarkup.replace";
+
+    @Mock
     private JiraSite site;
+
+    @Mock
     private Run run;
+
+    @Mock
+    private JiraSession session;
 
     @Before
     public void before() throws Exception {
-        JiraSession session = mock(JiraSession.class);
-        this.site = mock(JiraSite.class);
-        this.run = mock(Run.class);
-
         when(session.getProjectKeys()).thenReturn(new HashSet(Arrays.asList( "DUMMY", "JENKINS")));
-        when(site.getSession(run.getParent())).thenReturn(session);
+        when(site.getSession(any())).thenReturn(session);
+        when(site.getProjectUpdateLock()).thenReturn(new ReentrantLock());
 
         when(site.getUrl(Mockito.anyString())).thenAnswer(
                 (Answer<URL>) invocation -> {
@@ -51,16 +59,10 @@ public class JiraChangeLogAnnotatorTest {
                 });
         when(site.getProjectKeys(run.getParent())).thenCallRealMethod();
         when(site.getIssuePattern()).thenCallRealMethod();
-
-        // create inner objects
-        Whitebox.setInternalState(site,"projectUpdateLock", new ReentrantLock());
-        Whitebox.setInternalState(site,"issueCache", JiraSite.makeIssueCache());
     }
 
     @Test
     public void annotate() {
-        Run run = mock(Run.class);
-
         when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 
         MarkupText text = new MarkupText("marking up DUMMY-1.");
@@ -76,8 +78,6 @@ public class JiraChangeLogAnnotatorTest {
 
     @Test
     public void annotateDisabledOnSiteLevel() {
-        Run run = mock(Run.class);
-
         when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
         MarkupText text = new MarkupText("marking up DUMMY-1.");
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
@@ -89,8 +89,6 @@ public class JiraChangeLogAnnotatorTest {
 
     @Test
     public void annotateWf() {
-        Run run = mock(Run.class);
-
         when(run.getAction(JiraBuildAction.class)).thenReturn(new JiraBuildAction(Collections.singleton(new JiraIssue("DUMMY-1", TITLE))));
 
         MarkupText text = new MarkupText("marking up DUMMY-1.");
@@ -113,8 +111,6 @@ public class JiraChangeLogAnnotatorTest {
     public void wordBoundaryProblem() {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
-
-        Run run = mock(Run.class);
 
         // old changelog annotator used MarkupText#findTokens
         // That broke because of the space after the issue id.
@@ -144,8 +140,6 @@ public class JiraChangeLogAnnotatorTest {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
         doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
-        Run run = mock(Run.class);
-
         MarkupText text = new MarkupText("DUMMY-1 Text DUMMY-2,DUMMY-3 DUMMY-4!");
         annotator.annotate(run, null, text);
 
@@ -160,6 +154,7 @@ public class JiraChangeLogAnnotatorTest {
     @Test
     public void hasProjectForIssueIsCaseInsensitive() {
         JiraChangeLogAnnotator annotator = spy(new JiraChangeLogAnnotator());
+        doReturn(site).when(annotator).getSiteForProject(Mockito.any());
 
         assertThat(annotator.hasProjectForIssue("JENKINS-123", site, run), is(true));
         assertThat(annotator.hasProjectForIssue("jenKiNs-123", site, run), is(true));

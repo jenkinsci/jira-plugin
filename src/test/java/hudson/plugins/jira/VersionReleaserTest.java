@@ -28,7 +28,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import org.powermock.reflect.Whitebox;
 
 @RunWith(MockitoJUnitRunner.class)
 public class VersionReleaserTest {
@@ -65,7 +64,7 @@ public class VersionReleaserTest {
 
     @Before
     public void createMocks() throws Exception {
-        Whitebox.setInternalState(site,"jiraSession", session);
+        when(site.getSession(any())).thenReturn(session);
 
         when(build.getEnvironment(listener)).thenReturn(env);
         when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
@@ -91,7 +90,7 @@ public class VersionReleaserTest {
         when(site.getSession(any())).thenReturn(session);
 
         versionReleaser.perform(project, JIRA_PRJ, JIRA_VER, JIRA_DES, build, listener);
-        
+
         verify(session).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue().getName(), is(JIRA_VER));

@@ -3,6 +3,7 @@ package hudson.plugins.jira;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Item;
 import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
 import java.io.IOException;
@@ -31,7 +33,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.powermock.reflect.Whitebox;
 
 @RunWith( MockitoJUnitRunner.class)
 public class JiraCreateReleaseNotesTest {
@@ -59,6 +60,8 @@ public class JiraCreateReleaseNotesTest {
     private PrintWriter printWriter;
     @Mock
     JiraSession session;
+    @Mock
+    Item mockItem;
 
     @Before
     public void createCommonMocks() throws IOException, InterruptedException {
@@ -77,8 +80,9 @@ public class JiraCreateReleaseNotesTest {
                     return expanded;
         });
 
-        Whitebox.setInternalState(site,"jiraSession", session);
-
+        when(site.createSession(any())).thenReturn(session);
+        when(site.getSession(any())).thenCallRealMethod();
+        site.getSession(mockItem);
     }
 
     @Test
@@ -113,7 +117,7 @@ public class JiraCreateReleaseNotesTest {
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
         Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.any());
-        jcrn.setUp(build, launcher, buildListener);        
+        jcrn.setUp(build, launcher, buildListener);
         assertThat(finishedListener.getResult(), Matchers.equalTo(Result.FAILURE));
     }
 
@@ -123,21 +127,23 @@ public class JiraCreateReleaseNotesTest {
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
         BuildListenerResultMethodMock finishedListener = new BuildListenerResultMethodMock();
         Mockito.doAnswer(finishedListener).when(buildListener).finished(Mockito.any());
-        jcrn.setUp(build, launcher, buildListener);        
+        jcrn.setUp(build, launcher, buildListener);
         assertThat(finishedListener.getResult(), Matchers.equalTo(Result.FAILURE));
     }
-    
+
     @Test
-    public void releaseNotesContent() throws InterruptedException, Exception {
+    public void releaseNotesContent() throws Exception {
         JiraCreateReleaseNotes jcrn = spy(new JiraCreateReleaseNotes(JIRA_PRJ,JIRA_RELEASE,JIRA_VARIABLE));
         doReturn(site).when(jcrn).getSiteForProject(Mockito.any());
         when(site.getReleaseNotesForFixVersion(JIRA_PRJ, JIRA_RELEASE, JiraCreateReleaseNotes.DEFAULT_FILTER)).thenCallRealMethod();
+
         Issue issue1 = Mockito.mock(Issue.class);
         IssueType issueType1 = Mockito.mock(IssueType.class);
         Status issueStatus = Mockito.mock(Status.class);
         when(issue1.getIssueType()).thenReturn(issueType1);
         when(issue1.getStatus()).thenReturn(issueStatus);
         when(issueType1.getName()).thenReturn("Bug");
+
         Issue issue2 = Mockito.mock(Issue.class);
         IssueType issueType2 = Mockito.mock(IssueType.class);
         when(issue2.getIssueType()).thenReturn(issueType2);

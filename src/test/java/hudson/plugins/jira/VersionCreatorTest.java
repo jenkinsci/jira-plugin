@@ -27,8 +27,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-import org.powermock.reflect.Whitebox;
-
 
 @RunWith(MockitoJUnitRunner.class)
 public class VersionCreatorTest {
@@ -62,9 +60,8 @@ public class VersionCreatorTest {
     private ExtendedVersion existingVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, false, ANY_DATE, ANY_DATE);
 
     @Before
-    public void createMocks() throws Exception {
-        Whitebox.setInternalState(site,"jiraSession", session);
-
+    public void createMocks() {
+        when(site.getSession(any())).thenReturn(session);
         when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
             String expanded = (String) args[0];
