@@ -10,14 +10,14 @@ public class EnvironmentExpander
 {
     public static EnvVars GetEnvVars(Run<?, ?> run, TaskListener listener)
     {
-        EnvVars envVars;
-        try {
-            envVars = run.getEnvironment(listener);
-        } catch (IOException | InterruptedException e) {
-            throw new IllegalStateException("Can't expand variables to environment", e);
-        }
+        if (run == null || listener == null)
+            return null;
 
-        return envVars;
+        try {
+            return run.getEnvironment(listener);
+        } catch (IOException | InterruptedException e) {
+            return null;
+        }
     }
 
     public static String expandVariable(String variable, Run<?, ?> run, TaskListener listener)
@@ -29,6 +29,9 @@ public class EnvironmentExpander
 
     public static String expandVariable(String variable, EnvVars envVars)
     {
+        if (envVars == null)
+            return variable;
+
         return envVars.expand(variable);
     }
 }
