@@ -10,6 +10,7 @@ import hudson.model.AbstractProject;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.EnvironmentExpander;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
@@ -20,7 +21,6 @@ import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -121,16 +121,13 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         List<JiraIssueField> fields = Collections.singletonList(
             new JiraIssueField(
                 prepareFieldId(getFieldId()),
-                getFieldValue()
+                EnvironmentExpander.expandVariable(getFieldValue(), env)
             )
         );
-
-        fields = expandVariables(fields, env);
 
         for (String issue : issues) {
             submitFields(session, issue, fields, logger);
         }
-
     }
 
     @Override
@@ -138,19 +135,6 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
     public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         this.perform(run, workspace, run.getEnvironment(listener), launcher, listener);
-    }
-
-    private List<JiraIssueField> expandVariables(List<JiraIssueField> fields, EnvVars envVars) {
-        List<JiraIssueField> expandedFields = new ArrayList<>();
-        for (JiraIssueField f : fields) {
-            JiraIssueField jiraIssueField = new JiraIssueField(
-                f.getId(),
-                envVars.expand(f.getValue().toString())
-            );
-            expandedFields.add(jiraIssueField);
-        }
-
-        return expandedFields;
     }
 
     /**
