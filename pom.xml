@@ -374,19 +374,6 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
-    <repository>
-      <id>atlassian-public</id>
-      <url>https://packages.atlassian.com/mvn/maven-public/</url>
-      <releases>
-        <enabled>true</enabled>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>daily</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </snapshots>
-    </repository>
   </repositories>
 
   <pluginRepositories>
