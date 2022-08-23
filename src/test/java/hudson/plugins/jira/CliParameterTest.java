@@ -34,7 +34,7 @@ public class CliParameterTest {
 
     CLICommandInvoker invoker = new CLICommandInvoker(jenkins, new BuildCommand());
     CLICommandInvoker.Result result =
-        invoker.invokeWithArgs(project.getName(), "-p", "jiraissue=TEST-1");
+        invoker.invokeWithArgs(project.getName(), "-s", "-p", "jiraissue=TEST-1");
     assertThat(result, succeeded());
   }
 
@@ -47,7 +47,7 @@ public class CliParameterTest {
 
     CLICommandInvoker invoker = new CLICommandInvoker(jenkins, new BuildCommand());
     CLICommandInvoker.Result result =
-        invoker.invokeWithArgs(project.getName(), "-p", "jiraversion=1.0");
+        invoker.invokeWithArgs(project.getName(), "-s", "-p", "jiraversion=1.0");
     assertThat(result, succeeded());
   }
 }
