@@ -302,6 +302,13 @@
     </dependency>
 
     <!-- test dependencies -->
+    <!-- required to start p4 tests -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>command-launcher</artifactId>
+      <version>1.4</version>
+      <scope></scope>
+    </dependency>
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
