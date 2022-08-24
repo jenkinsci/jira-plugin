@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>jira</artifactId>
-  <version>3.8</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Jenkins Jira plugin</name>
   <description>Integrates Jenkins to Jira</description>
@@ -31,7 +31,7 @@
     <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <url>https://github.com/${gitHubRepo}</url>
-    <tag>jira-3.8</tag>
+    <tag>${scmTag}</tag>
   </scm>
 
   <licenses>
@@ -306,7 +306,7 @@
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>command-launcher</artifactId>
       <version>1.4</version>
-      <scope />
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
