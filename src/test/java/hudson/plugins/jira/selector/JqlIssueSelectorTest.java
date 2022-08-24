@@ -44,8 +44,8 @@ public class JqlIssueSelectorTest {
     @Test
     public void dontDependOnRunAndTaskListener() {
         JqlIssueSelector jqlUpdaterIssueSelector = new JqlIssueSelector(TEST_JQL);
-        Set<String> findedIssueIds = jqlUpdaterIssueSelector.findIssueIds(run, site, null);
-        assertThat(findedIssueIds, empty());
+        Set<String> foundIssues = jqlUpdaterIssueSelector.findIssueIds(run, site, null);
+        assertThat(foundIssues, empty());
     }
 
     @Test
@@ -59,5 +59,4 @@ public class JqlIssueSelectorTest {
         assertThat(foundIssueIds, hasSize(1));
         assertThat(foundIssueIds.iterator().next(), equalTo("EXAMPLE-1"));
     }
-
 }

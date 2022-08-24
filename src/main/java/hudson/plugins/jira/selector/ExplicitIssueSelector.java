@@ -1,15 +1,18 @@
 package hudson.plugins.jira.selector;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.EnvironmentExpander;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,7 +51,14 @@ public class ExplicitIssueSelector extends AbstractIssueSelector {
 
     @Override
     public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
-        return new HashSet(jiraIssueKeys);
+        EnvVars envVars = EnvironmentExpander.getEnvVars(run, listener);
+
+        List<String> issueKeys = new ArrayList<>();
+        for (String issue : jiraIssueKeys) {
+            issueKeys.add(EnvironmentExpander.expandVariable(issue, envVars));
+        }
+
+        return new HashSet(issueKeys);
     }
 
     @Extension

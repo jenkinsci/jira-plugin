@@ -5,13 +5,13 @@ import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.EnvironmentExpander;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,7 +44,9 @@ public class JqlIssueSelector extends AbstractIssueSelector {
             if (session == null)
                 throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
 
-            List<Issue> issues = session.getIssuesFromJqlSearch(jql);
+            String expandedJql = EnvironmentExpander.expandVariable(jql, run, listener);
+
+            List<Issue> issues = session.getIssuesFromJqlSearch(expandedJql);
 
             List<String> issueKeys = new ArrayList<>();
 
