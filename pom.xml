@@ -287,7 +287,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>p4</artifactId>
-      <version>1.12.4</version>
+      <version>1.13.0</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
@@ -302,6 +302,13 @@
     </dependency>
 
     <!-- test dependencies -->
+    <!-- required to start p4 tests -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>command-launcher</artifactId>
+      <version>1.4</version>
+      <scope></scope>
+    </dependency>
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
