@@ -64,6 +64,18 @@ public class JiraRestServiceProxyTest {
   }
 
   @Test
+  public void withProxyAndNoProxyHosts() throws Exception {
+    int localPort = connector.getLocalPort();
+    Jenkins.get().proxy = new ProxyConfiguration("localhost", localPort);
+    Jenkins.get().proxy.setNoProxyHost("example.com|google.com");
+
+
+    assertNull(getProxyObjectFromRequest());
+
+  }
+
+
+  @Test
   public void withoutProxy() throws Exception {
     assertNull(getProxyObjectFromRequest());
   }
@@ -76,7 +88,7 @@ public class JiraRestServiceProxyTest {
     Method m = service.getClass().getDeclaredMethod("buildGetRequest", URI.class);
     m.setAccessible(true);
 
-    Request buildGetRequestValue = (Request) m.invoke(service, URI.create(""));
+    Request buildGetRequestValue = (Request) m.invoke(service, JIRA_URI);
 
     assertNotNull(buildGetRequestValue);
 
