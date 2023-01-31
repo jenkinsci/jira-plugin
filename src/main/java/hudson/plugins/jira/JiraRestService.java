@@ -445,7 +445,13 @@ public class JiraRestService {
         ProxyConfiguration proxyConfiguration = Jenkins.get().proxy;
         if ( proxyConfiguration != null ) {
             final HttpHost proxyHost = new HttpHost( proxyConfiguration.name, proxyConfiguration.port );
-            request.viaProxy(proxyHost);
+
+            boolean shouldByPassProxy = proxyConfiguration.getNoProxyHostPatterns().stream().anyMatch(
+                    it -> it.matcher(uri.getHost()).matches()
+            );
+
+            if(!shouldByPassProxy)
+                request.viaProxy(proxyHost);
         }
 
         return request
