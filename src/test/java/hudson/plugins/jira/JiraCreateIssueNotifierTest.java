@@ -302,7 +302,7 @@ public class JiraCreateIssueNotifierTest {
         { // test at folder level
             Folder folder = j.jenkins.createProject( Folder.class, "folder" + j.jenkins.getItems().size());
 
-            CredentialsStore folderStore = JiraFolderPropertyTest.getFolderStore( folder);
+            CredentialsStore folderStore = JiraFolderPropertyTest.getFolderStore(folder);
             folderStore.addCredentials( Domain.global(), cred2);
 
             JiraFolderProperty foo = new JiraFolderProperty();
