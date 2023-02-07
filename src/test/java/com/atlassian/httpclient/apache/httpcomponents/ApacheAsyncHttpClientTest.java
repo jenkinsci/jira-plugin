@@ -1,12 +1,18 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
-import com.atlassian.httpclient.api.Response;
-import com.atlassian.httpclient.api.factory.HttpClientOptions;
-import com.atlassian.sal.api.ApplicationProperties;
-import com.atlassian.sal.api.UrlMode;
-import com.atlassian.sal.api.executor.ThreadLocalContextManager;
-import hudson.ProxyConfiguration;
-import jenkins.model.Jenkins;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Base64;
+import java.util.Date;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Nonnull;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.http.HttpHeader;
@@ -17,27 +23,22 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.util.B64Code;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
+import com.atlassian.httpclient.api.Response;
+import com.atlassian.httpclient.api.factory.HttpClientOptions;
+import com.atlassian.sal.api.ApplicationProperties;
+import com.atlassian.sal.api.UrlMode;
+import com.atlassian.sal.api.executor.ThreadLocalContextManager;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
-
-import javax.annotation.Nonnull;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.Date;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import hudson.ProxyConfiguration;
+import jenkins.model.Jenkins;
 
 public class ApacheAsyncHttpClientTest
 {
@@ -119,7 +120,7 @@ public class ApacheAsyncHttpClientTest
         ProxyTestHandler testHandler = new ProxyTestHandler();
         prepare( testHandler );
 
-        Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar", "www.apache.org" );
+        Jenkins.get().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar", "www.apache.org" );
 
         ApacheAsyncHttpClient httpClient =
                 new ApacheAsyncHttpClient( null, buildApplicationProperties(),
@@ -157,7 +158,7 @@ public class ApacheAsyncHttpClientTest
         ProxyTestHandler testHandler = new ProxyTestHandler();
         prepare( testHandler );
 
-        Jenkins.getInstance().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
+        Jenkins.get().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
 
         ApacheAsyncHttpClient httpClient =
             new ApacheAsyncHttpClient( null, buildApplicationProperties(),
@@ -174,8 +175,7 @@ public class ApacheAsyncHttpClientTest
     }
 
 
-    public class ProxyTestHandler
-        extends AbstractHandler
+    public class ProxyTestHandler extends AbstractHandler
     {
 
         String postReceived;
@@ -184,7 +184,6 @@ public class ApacheAsyncHttpClientTest
 
         final String password = "bar";
 
-        final String credentials = B64Code.encode( user + ":" + password, StandardCharsets.ISO_8859_1 );
 
         final String serverHost = "server";
 
@@ -195,6 +194,9 @@ public class ApacheAsyncHttpClientTest
                             HttpServletResponse response )
             throws IOException, ServletException
         {
+
+            final String credentials = Base64.getEncoder().encodeToString((user + ":" + password).getBytes("UTF-8"));
+
             jettyRequest.setHandled( true );
 
             String authorization = request.getHeader( HttpHeader.PROXY_AUTHORIZATION.asString() );
