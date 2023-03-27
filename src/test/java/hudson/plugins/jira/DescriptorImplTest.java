@@ -137,7 +137,7 @@ public class DescriptorImplTest {
         FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
             null, false, null,
             JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-            project);
+            false, project);
 
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
         verify(site).getSession(project);
@@ -145,7 +145,7 @@ public class DescriptorImplTest {
         validation = descriptor.doValidate("http://localhost:8080", null, null,
             null, false, null,
             -1, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-            project);
+            false, project);
         assertEquals(Messages.JiraSite_timeoutMinimunValue("1"), validation.getLocalizedMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
         verify(site).getSession(project);
@@ -153,7 +153,7 @@ public class DescriptorImplTest {
         validation = descriptor.doValidate("http://localhost:8080", null, null,
             null, false, null,
             JiraSite.DEFAULT_TIMEOUT, -1, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-            project);
+            false, project);
 
         assertEquals(Messages.JiraSite_readTimeoutMinimunValue("1"), validation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
@@ -162,7 +162,7 @@ public class DescriptorImplTest {
         validation = descriptor.doValidate("http://localhost:8080", null, null,
             null, false, null,
             JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, -1,
-            project);
+            false, project);
         assertEquals(Messages.JiraSite_threadExecutorMinimunSize("1"), validation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
         verify(site).getSession(project);
@@ -180,7 +180,7 @@ public class DescriptorImplTest {
         FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
             null, false, null,
             JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-            project);
+            false, project);
 
         verify(builder).build();
         verify(site).getSession(project);
