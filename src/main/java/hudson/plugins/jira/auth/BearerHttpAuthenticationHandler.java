@@ -1,4 +1,4 @@
-package hudson.plugins.jira.authenticationhandler;
+package hudson.plugins.jira.auth;
 
 import com.atlassian.jira.rest.client.api.AuthenticationHandler;
 import com.atlassian.httpclient.api.Request.Builder;
