@@ -116,7 +116,19 @@ public class JiraRestService {
             throw new RuntimeException("failed to encode username:password using Base64");
         }
         this.jiraRestClient = jiraRestClient;
+        baseApiPath = buildBaseApiPath(uri);
+    }
 
+    public JiraRestService(URI uri, ExtendedJiraRestClient jiraRestClient, String token, int timeout) {
+        this.uri = uri;
+        this.objectMapper = new ObjectMapper();
+        this.timeout = timeout;
+        this.authHeader = "Bearer " + token;
+        this.jiraRestClient = jiraRestClient;
+        baseApiPath = buildBaseApiPath(uri);
+    }
+
+    private String buildBaseApiPath(URI uri) {
         final StringBuilder builder = new StringBuilder();
         if (uri.getPath() != null) {
             builder.append(uri.getPath());
@@ -127,7 +139,7 @@ public class JiraRestService {
             builder.append('/');
         }
         builder.append(BASE_API_PATH);
-        baseApiPath = builder.toString();
+        return builder.toString();
     }
 
     public void addComment(String issueId, String commentBody,
