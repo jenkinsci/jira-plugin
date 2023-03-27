@@ -24,6 +24,9 @@
   <f:entry>
     <f:checkbox title="${%Update Relevant Jira Issues For All Build Results}" field="updateJiraIssueForAllStatus" />
   </f:entry>
+  <f:entry>
+     <f:checkbox title="${%%Use Bearer authentication}" field="useBearerAuth" />
+  </f:entry>
   <f:entry title="${%Credentials}" field="credentialsId">
     <c:select />
   </f:entry>
@@ -50,7 +53,7 @@
   </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
-            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout,readTimeout,threadExecutorNumber" />
+            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout,readTimeout,threadExecutorNumber,useBearerAuth" />
   </f:entry>
   <f:entry title="">
     <div align="right">
