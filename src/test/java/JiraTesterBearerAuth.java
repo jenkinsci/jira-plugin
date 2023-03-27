@@ -7,9 +7,9 @@ import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.User;
 import hudson.plugins.jira.JiraRestService;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.auth.BearerHttpAuthenticationHandler;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
-import hudson.plugins.jira.authenticationhandler.BearerHttpAuthenticationHandler;
 
 import java.net.URI;
 import java.net.URL;
