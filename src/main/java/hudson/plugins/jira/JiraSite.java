@@ -1216,7 +1216,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withGroupVisibility(groupVisibility)
                     .withRoleVisibility(roleVisibility)
                     .withUseHTTPAuth(useHTTPAuth)
-                    .withUseBearerAuth(useBearerAuth)
                     .build();
 
             if(threadExecutorNumber<1){
@@ -1232,6 +1231,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setTimeout(timeout);
             site.setReadTimeout(readTimeout);
             site.setThreadExecutorNumber(threadExecutorNumber);
+            site.setUseBearerAuth(useBearerAuth);
             JiraSession session = null;
             try {
                 session = site.getSession(item);
@@ -1280,7 +1280,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         private String groupVisibility;
         private String roleVisibility;
         private boolean useHTTPAuth;
-        private boolean useBearerAuth;
 
         public Builder withMainURL( URL mainURL) {
             this.mainURL = mainURL;
@@ -1329,11 +1328,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         public Builder withUseHTTPAuth( boolean useHTTPAuth) {
             this.useHTTPAuth = useHTTPAuth;
-            return this;
-        }
-
-        public Builder withUseBearerAuth( boolean useBearerAuth) {
-            this.useBearerAuth = useBearerAuth;
             return this;
         }
 
