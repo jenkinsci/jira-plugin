@@ -47,7 +47,6 @@ public class JiraSessionFactory {
                     jiraRestClient,
                     credentials.getPassword().getPlainText(),
                     jiraSite.getReadTimeout());
-
         } else {
             jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
                     .create(
