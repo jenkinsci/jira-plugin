@@ -25,7 +25,7 @@
     <f:checkbox title="${%Update Relevant Jira Issues For All Build Results}" field="updateJiraIssueForAllStatus" />
   </f:entry>
   <f:entry>
-     <f:checkbox title="${%%Use Bearer authentication}" field="useBearerAuth" />
+     <f:checkbox title="${%Use Bearer authentication}" field="useBearerAuth" />
   </f:entry>
   <f:entry title="${%Credentials}" field="credentialsId">
     <c:select />
