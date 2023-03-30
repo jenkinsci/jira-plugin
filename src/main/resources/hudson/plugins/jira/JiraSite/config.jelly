@@ -10,6 +10,9 @@
     <f:checkbox title="${%Use HTTP authentication instead of normal login}" field="useHTTPAuth" />
   </f:entry>
   <f:entry>
+     <f:checkbox title="${%Use Bearer authentication}" field="useBearerAuth" />
+  </f:entry>
+  <f:entry>
     <f:checkbox title="${%Supports Wiki notation}" field="supportsWikiStyleComment" />
   </f:entry>
   <f:entry>
