@@ -6,16 +6,10 @@
   <f:entry title="Link URL" field="alternativeUrl" description="${%site.alternativeUrl}">
     <f:textbox />
   </f:entry>
-  <f:entry>
-    <f:checkbox title="${%Use HTTP authentication instead of normal login}" field="useHTTPAuth" />
-  </f:entry>
-  <f:entry>
-     <f:checkbox title="${%Use Bearer authentication}" field="useBearerAuth" />
-  </f:entry>
-  <f:entry name="authenticationMethod" title="${%Check the authentication method you want to use}" field="authenticationMethod">
-    <select name="authenticationMethod">
-        <option value="useHTTPAuth" selected="${it.useHTTPAuth}">Use HTTP authentication</option>
-        <option value="useBearerAuth" selected="${it.useBearerAuth} >Use Bearer authentication</option>
+  <f:entry name="useBearerAuth" title="${%Check the authentication method you want to use}" field="useBearerAuth">
+    <select name="useBearerAuth">
+        <option value="false" selected="!${useBearerAuth}">Use HTTP authentication</option>
+        <option value="true" selected="${useBearerAuth}" >Use Bearer authentication</option>
     </select>
 </f:entry>
   <f:entry>
@@ -59,7 +53,7 @@
   </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
-            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,${authenticationMethod == 'useHTTPAuth'},alternativeUrl,timeout,readTimeout,threadExecutorNumber,${authenticationMethod == 'useBearerAuth'}" />
+            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useBearerAuth,alternativeUrl,timeout,readTimeout,threadExecutorNumber,useBearerAuth" />
   </f:entry>
   <f:entry title="">
     <div align="right">
