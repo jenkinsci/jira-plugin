@@ -14,8 +14,8 @@
   </f:entry>
   <f:entry name="authenticationMethod" title="${%Check the authentication method you want to use}" field="authenticationMethod">
     <select name="authenticationMethod">
-        <option value="useHTTPAuth" selected="selected">Use HTTP authentication</option>
-        <option value="useBearerAuth">Use Bearer authentication</option>
+        <option value="useHTTPAuth" selected="${it.authenticationMethod == 'useHTTPAuth'}">Use HTTP authentication</option>
+        <option value="useBearerAuth" selected="${it.authenticationMethod == 'useBearerAuth'} >Use Bearer authentication</option>
     </select>
 </f:entry>
   <f:entry>
