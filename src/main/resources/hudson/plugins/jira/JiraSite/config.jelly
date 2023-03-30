@@ -59,7 +59,7 @@
   </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
-            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,${authenticationMethod.value == 'useHTTPAuth'},alternativeUrl,timeout,readTimeout,threadExecutorNumber,${authenticationMethod.value == 'useBearerAuth'}" />
+            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,${authenticationMethod == 'useHTTPAuth'},alternativeUrl,timeout,readTimeout,threadExecutorNumber,${authenticationMethod == 'useBearerAuth'}" />
   </f:entry>
   <f:entry title="">
     <div align="right">
