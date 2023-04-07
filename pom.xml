@@ -162,10 +162,6 @@
           <artifactId>activation</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpmime</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>com.atlassian.httpclient</groupId>
           <artifactId>atlassian-httpclient-plugin</artifactId>
         </exclusion>
