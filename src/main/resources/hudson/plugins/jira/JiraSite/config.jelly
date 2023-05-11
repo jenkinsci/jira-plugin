@@ -10,7 +10,7 @@
     <f:checkbox title="${%Use HTTP authentication instead of normal login}" field="useHTTPAuth" />
   </f:invisibleEntry>
   <f:entry>
-     <f:checkbox title="${%Use Bearer authentication instead of Basic authentication}" field="useBearerAuth" />
+     <f:checkbox title="${%Use Bearer authentication instead of Basic authentication (Note: Bearer authentication is only supported in Jira Server, for Jira Cloud leave this unchecked)}" field="useBearerAuth" />
   </f:entry>
   <f:entry>
     <f:checkbox title="${%Supports Wiki notation}" field="supportsWikiStyleComment" />
