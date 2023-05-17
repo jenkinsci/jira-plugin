@@ -9,8 +9,8 @@
   <f:invisibleEntry>
     <f:checkbox title="${%Use HTTP authentication instead of normal login}" field="useHTTPAuth" />
   </f:invisibleEntry>
-  <f:entry>
-    <f:checkbox title="${%Use Bearer authentication instead of Basic authentication}" field="useBearerAuth" description="${%site.useBearerAuth}" />
+  <f:entry description="${%site.useBearerAuth}">
+    <f:checkbox title="${%Use Bearer authentication instead of Basic authentication}" field="useBearerAuth" />
   </f:entry>
   <f:entry>
     <f:checkbox title="${%Supports Wiki notation}" field="supportsWikiStyleComment" />
