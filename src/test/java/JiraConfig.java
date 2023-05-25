@@ -16,4 +16,8 @@ public final class JiraConfig {
     public static String getPassword() {
         return CONFIG.getString("password");
     }
+
+    public static String getToken() {
+        return CONFIG.getString("token");
+    }
 }

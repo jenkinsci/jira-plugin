@@ -6,8 +6,11 @@
   <f:entry title="Link URL" field="alternativeUrl" description="${%site.alternativeUrl}">
     <f:textbox />
   </f:entry>
-  <f:entry>
+  <f:invisibleEntry>
     <f:checkbox title="${%Use HTTP authentication instead of normal login}" field="useHTTPAuth" />
+  </f:invisibleEntry>
+  <f:entry description="${%site.useBearerAuth}">
+    <f:checkbox title="${%Use Bearer authentication instead of Basic authentication}" field="useBearerAuth" />
   </f:entry>
   <f:entry>
     <f:checkbox title="${%Supports Wiki notation}" field="supportsWikiStyleComment" />
@@ -50,7 +53,7 @@
   </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
-            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout,readTimeout,threadExecutorNumber" />
+            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout,readTimeout,threadExecutorNumber,useBearerAuth" />
   </f:entry>
   <f:entry title="">
     <div align="right">

@@ -34,6 +34,7 @@ import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.model.JiraIssue;
+import hudson.plugins.jira.JiraSessionFactory;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -138,6 +139,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * The id of the credentials to use. Optional.
      */
     public String credentialsId;
+
+    /**
+     * Jira requires Bearer Authentication for login
+     */
+    public boolean useBearerAuth;
 
     /**
      * User name needed to login. Optional.
@@ -322,6 +328,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
     }
 
+    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
+    @Deprecated
+    public JiraSite(URL url, URL alternativeUrl, StandardUsernamePasswordCredentials credentials, boolean supportsWikiStyleComment, boolean recordScmChanges, String userPattern,
+                    boolean updateJiraIssueForAllStatus, String groupVisibility, String roleVisibility, boolean useHTTPAuth, int timeout, int readTimeout, int threadExecutorNumber, boolean useBearerAuth) {
+        this(url, alternativeUrl, credentials==null?null:credentials.getId(), supportsWikiStyleComment, recordScmChanges, userPattern,
+        updateJiraIssueForAllStatus, groupVisibility, roleVisibility, useHTTPAuth, timeout, readTimeout, threadExecutorNumber);
+        this.useBearerAuth = useBearerAuth;
+    }
+
     static URL toURL(String url) {
         url = Util.fixEmptyAndTrim(url);
         if (url == null) return null;
@@ -414,6 +429,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return useHTTPAuth;
     }
 
+    public boolean isUseBearerAuth() {
+        return useBearerAuth;
+    }
+
     public String getGroupVisibility() {
         return groupVisibility;
     }
@@ -442,6 +461,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @DataBoundSetter
     public void setUseHTTPAuth(boolean useHTTPAuth) {
         this.useHTTPAuth = useHTTPAuth;
+    }
+
+    @DataBoundSetter
+    public void setUseBearerAuth(boolean useBearerAuth) {
+        this.useBearerAuth = useBearerAuth;
     }
 
     @DataBoundSetter
@@ -553,14 +577,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         }
         LOGGER.fine("creating Jira Session: " + uri);
 
-        ExtendedJiraRestClient jiraRestClient = new ExtendedAsynchronousJiraRestClientFactory()
-            .create(uri, new BasicHttpAuthenticationHandler(
-                        credentials.getUsername(), credentials.getPassword().getPlainText()
-                    ),
-                    getHttpClientOptions()
-            );
-        return new JiraSession(this, new JiraRestService(uri, jiraRestClient, credentials.getUsername(),
-                                                         credentials.getPassword().getPlainText(), readTimeout));
+        return JiraSessionFactory.create(this, uri, credentials);
     }
 
     Lock getProjectUpdateLock() {
@@ -599,7 +616,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     }
 
-    private HttpClientOptions getHttpClientOptions() {
+    protected HttpClientOptions getHttpClientOptions() {
         final HttpClientOptions options = new HttpClientOptions();
         options.setRequestTimeout(readTimeout, TimeUnit.SECONDS);
         options.setSocketTimeout(timeout, TimeUnit.SECONDS);
@@ -1161,6 +1178,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                                          @QueryParameter int timeout,
                                          @QueryParameter int readTimeout,
                                          @QueryParameter int threadExecutorNumber,
+                                         @QueryParameter boolean useBearerAuth,
                                          @AncestorInPath Item item) {
 
             if (item == null) {
@@ -1213,6 +1231,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setTimeout(timeout);
             site.setReadTimeout(readTimeout);
             site.setThreadExecutorNumber(threadExecutorNumber);
+            site.setUseBearerAuth(useBearerAuth);
             JiraSession session = null;
             try {
                 session = site.getSession(item);
