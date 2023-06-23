@@ -172,6 +172,7 @@ public class UpdaterTest {
         // mock build:
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         FreeStyleProject project = mock(FreeStyleProject.class);
+        when(build.getParent()).thenReturn(project);
         when(build.getProject()).thenReturn(project);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -222,6 +223,7 @@ public class UpdaterTest {
         // mock build:
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         FreeStyleProject project = mock(FreeStyleProject.class);
+        when(build.getParent()).thenReturn(project);
         when(build.getProject()).thenReturn(project);
         ChangeLogSet changeLogSet = ChangeLogSet.createEmpty(build);
         when(build.getChangeSet()).thenReturn(changeLogSet);

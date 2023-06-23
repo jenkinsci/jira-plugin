@@ -65,9 +65,8 @@ public class JiraCreateReleaseNotesTest {
 
     @Before
     public void createCommonMocks() throws IOException, InterruptedException {
-        when(build.getProject()).thenReturn(project);
         when(build.getEnvironment(buildListener)).thenReturn(env);
-        when(buildListener.fatalError(Mockito.anyString(), Mockito.any())).thenReturn(printWriter);
+        when(buildListener.fatalError(Mockito.anyString(), Mockito.any(Object[].class))).thenReturn(printWriter);
 
         when(env.expand(Mockito.anyString())).thenAnswer(invocationOnMock -> {
                 Object[] args = invocationOnMock.getArguments();
