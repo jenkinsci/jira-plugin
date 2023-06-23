@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.Util;
 import hudson.init.InitMilestone;
@@ -11,7 +12,6 @@ import hudson.model.JobPropertyDescriptor;
 import hudson.util.ListBoxModel;
 import java.util.List;
 import java.util.stream.Stream;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -59,13 +59,13 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
 
         Stream<JiraSite> streams = sites.stream();
         if (owner != null) {
-            Stream<JiraSite> stream2 = JiraFolderProperty.getSitesFromFolders(owner.getParent())
-                .stream();
+            Stream<JiraSite> stream2 = JiraFolderProperty.getSitesFromFolders(owner.getParent()).stream();
             streams = Stream.concat(streams, stream2).parallel();
         }
 
         return streams.filter(jiraSite -> jiraSite.getName().equals(siteName))
-            .findFirst().orElse(null);
+                .findFirst()
+                .orElse(null);
     }
 
     @Extension
@@ -118,10 +118,9 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         }
 
         @SuppressWarnings("unused") // Used to start migration after all extensions are loaded
-        @Initializer(after=InitMilestone.EXTENSIONS_AUGMENTED)
+        @Initializer(after = InitMilestone.EXTENSIONS_AUGMENTED)
         public void migrate() {
-            DescriptorImpl descriptor = (DescriptorImpl) Jenkins.getInstance()
-                .getDescriptor(JiraProjectProperty.class);
+            DescriptorImpl descriptor = (DescriptorImpl) Jenkins.getInstance().getDescriptor(JiraProjectProperty.class);
             if (descriptor != null) {
                 descriptor.load(); // force readResolve without registering descriptor as configurable
             }
@@ -130,14 +129,14 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         @SuppressWarnings("deprecation") // Migrate configuration
         protected Object readResolve() {
             if (sites != null) {
-                JiraGlobalConfiguration jiraGlobalConfiguration = (JiraGlobalConfiguration) Jenkins.getInstance()
-                    .getDescriptorOrDie(JiraGlobalConfiguration.class);
+                JiraGlobalConfiguration jiraGlobalConfiguration = (JiraGlobalConfiguration)
+                        Jenkins.getInstance().getDescriptorOrDie(JiraGlobalConfiguration.class);
                 jiraGlobalConfiguration.load();
                 jiraGlobalConfiguration.getSites().addAll(sites);
                 jiraGlobalConfiguration.save();
                 sites = null;
-                DescriptorImpl oldDescriptor = (DescriptorImpl) Jenkins.getInstance()
-                    .getDescriptor(JiraProjectProperty.class);
+                DescriptorImpl oldDescriptor =
+                        (DescriptorImpl) Jenkins.getInstance().getDescriptor(JiraProjectProperty.class);
                 if (oldDescriptor != null) {
                     oldDescriptor.save();
                 }

@@ -19,12 +19,11 @@ import static org.mockito.Mockito.when;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Transition;
+import hudson.model.Item;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
-
-import hudson.model.Item;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -95,7 +94,7 @@ public class ChangingWorkflowTest {
         Transition action1 = mock(Transition.class);
         when(action1.getName()).thenReturn("name");
 
-        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn( Collections.singletonList(action1));
+        when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(Collections.singletonList(action1));
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, workflowAction), nullValue());
     }
 
@@ -107,7 +106,8 @@ public class ChangingWorkflowTest {
         when(restService.getAvailableActions(ISSUE_JQL)).thenReturn(Arrays.asList(action1));
         when(action1.getId()).thenReturn(Integer.valueOf(id));
 
-        assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), equalTo(Integer.valueOf(id)));
+        assertThat(
+                spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), equalTo(Integer.valueOf(id)));
     }
 
     @Test
@@ -116,16 +116,14 @@ public class ChangingWorkflowTest {
         when(site.createSession(any())).thenReturn(mockSession);
         site.getSession(mockItem);
 
-        when(mockSession.getIssuesFromJqlSearch(anyString()))
-            .thenReturn(Arrays.asList(mock(Issue.class)));
+        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
 
         when(site.progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class)))
-             .thenCallRealMethod();
-        site.progressMatchingIssues(ISSUE_JQL,
-                NON_EMPTY_WORKFLOW_LOWERCASE, NON_EMPTY_COMMENT, mock(PrintStream.class));
+                .thenCallRealMethod();
+        site.progressMatchingIssues(
+                ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE, NON_EMPTY_COMMENT, mock(PrintStream.class));
 
-        verify(mockSession, times(1)).addComment(any(), eq(NON_EMPTY_COMMENT),
-                isNull(), isNull());
+        verify(mockSession, times(1)).addComment(any(), eq(NON_EMPTY_COMMENT), isNull(), isNull());
         verify(mockSession, times(1)).progressWorkflowAction(any(), anyInt());
     }
 
@@ -135,15 +133,13 @@ public class ChangingWorkflowTest {
         when(site.createSession(any())).thenReturn(mockSession);
         site.getSession(mockItem);
 
-        when(mockSession.getIssuesFromJqlSearch(anyString()))
-            .thenReturn(Arrays.asList(mock(Issue.class)));
+        when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
 
         when(site.progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class)))
-            .thenCallRealMethod();
+                .thenCallRealMethod();
         site.progressMatchingIssues(ISSUE_JQL, "", NON_EMPTY_COMMENT, mock(PrintStream.class));
 
-        verify(mockSession, times(1)).addComment(any(), eq(NON_EMPTY_COMMENT),
-                isNull(), isNull());
+        verify(mockSession, times(1)).addComment(any(), eq(NON_EMPTY_COMMENT), isNull(), isNull());
     }
 
     @Test

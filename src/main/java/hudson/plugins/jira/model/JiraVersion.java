@@ -2,7 +2,6 @@ package hudson.plugins.jira.model;
 
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.plugins.jira.extension.ExtendedVersion;
-
 import java.util.Calendar;
 
 public class JiraVersion implements Comparable<JiraVersion> {
@@ -30,7 +29,13 @@ public class JiraVersion implements Comparable<JiraVersion> {
         this.archived = archived;
     }
 
-    public JiraVersion(String name, String description, Calendar startDate, Calendar releaseDate, boolean released, boolean archived) {
+    public JiraVersion(
+            String name,
+            String description,
+            Calendar startDate,
+            Calendar releaseDate,
+            boolean released,
+            boolean archived) {
         this.name = name;
         this.description = description;
         this.startDate = startDate;
@@ -40,18 +45,28 @@ public class JiraVersion implements Comparable<JiraVersion> {
     }
 
     public JiraVersion(Version version) {
-        this(version.getName(), version.getReleaseDate() == null ? null : version.getReleaseDate().toGregorianCalendar(), version.isReleased(), version.isArchived());
+        this(
+                version.getName(),
+                version.getReleaseDate() == null
+                        ? null
+                        : version.getReleaseDate().toGregorianCalendar(),
+                version.isReleased(),
+                version.isArchived());
     }
 
-	public JiraVersion(ExtendedVersion version) {
-		this(version.getName(),
-				version.getDescription(),
-				version.getStartDate() == null ? null : version.getStartDate().toGregorianCalendar(),
-				version.getReleaseDate() == null ? null : version.getReleaseDate().toGregorianCalendar(),
-				version.isReleased(),
-				version.isArchived());
-	}
+    public JiraVersion(ExtendedVersion version) {
+        this(
+                version.getName(),
+                version.getDescription(),
+                version.getStartDate() == null ? null : version.getStartDate().toGregorianCalendar(),
+                version.getReleaseDate() == null
+                        ? null
+                        : version.getReleaseDate().toGregorianCalendar(),
+                version.isReleased(),
+                version.isArchived());
+    }
 
+    @Override
     public int compareTo(JiraVersion that) {
         int result = this.releaseDate.compareTo(that.releaseDate);
         if (result == 0) {
@@ -66,8 +81,7 @@ public class JiraVersion implements Comparable<JiraVersion> {
         int result = 1;
         result = prime * result + (archived ? 1231 : 1237);
         result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result
-                + ((releaseDate == null) ? 0 : releaseDate.hashCode());
+        result = prime * result + ((releaseDate == null) ? 0 : releaseDate.hashCode());
         result = prime * result + (released ? 1231 : 1237);
         return result;
     }
@@ -94,13 +108,13 @@ public class JiraVersion implements Comparable<JiraVersion> {
         } else if (!name.equals(other.name)) {
             return false;
         }
-		if (startDate == null) {
-			if (other.startDate != null) {
-				return false;
-			}
-		} else if (!startDate.equals(other.startDate)) {
-			return false;
-		}
+        if (startDate == null) {
+            if (other.startDate != null) {
+                return false;
+            }
+        } else if (!startDate.equals(other.startDate)) {
+            return false;
+        }
         if (releaseDate == null) {
             if (other.releaseDate != null) {
                 return false;
@@ -123,8 +137,8 @@ public class JiraVersion implements Comparable<JiraVersion> {
     }
 
     public Calendar getStartDate() {
-		return startDate;
-	}
+        return startDate;
+    }
 
     public Calendar getReleaseDate() {
         return releaseDate;
@@ -137,6 +151,4 @@ public class JiraVersion implements Comparable<JiraVersion> {
     public boolean isArchived() {
         return archived;
     }
-
-
 }

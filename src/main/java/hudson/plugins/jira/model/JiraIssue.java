@@ -1,11 +1,10 @@
 package hudson.plugins.jira.model;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.jira.JiraSite;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * One Jira issue.
@@ -20,6 +19,7 @@ public final class JiraIssue implements Comparable<JiraIssue> {
 
     /** Note these fields have not been renamed for backward compatibility purposes */
     private final String id;
+
     private final String title;
 
     public JiraIssue(String key, String summary) {
@@ -47,6 +47,7 @@ public final class JiraIssue implements Comparable<JiraIssue> {
         this(issue.getKey(), issue.getSummary());
     }
 
+    @Override
     public int compareTo(@NonNull JiraIssue that) {
         return this.id.compareTo(that.id);
     }

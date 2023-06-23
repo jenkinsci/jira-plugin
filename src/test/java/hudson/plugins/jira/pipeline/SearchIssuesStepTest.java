@@ -1,5 +1,12 @@
 package hudson.plugins.jira.pipeline;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.inject.Inject;
 import hudson.model.AbstractProject;
@@ -11,24 +18,16 @@ import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.pipeline.SearchIssuesStep.SearchStepExecution;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class SearchIssuesStepTest {
 
@@ -62,11 +61,11 @@ public class SearchIssuesStepTest {
         when(issue.getKey()).thenReturn("EXAMPLE-1");
 
         final List<Issue> assertCalledList = new ArrayList<>();
-        when(session.getIssuesFromJqlSearch(jql)).then(invocation ->  {
-                Issue issue2 = mock(Issue.class);
-                when(issue2.getKey()).thenReturn("EXAMPLE-1");
-                assertCalledList.add(issue2);
-                return assertCalledList;
+        when(session.getIssuesFromJqlSearch(jql)).then(invocation -> {
+            Issue issue2 = mock(Issue.class);
+            when(issue2.getKey()).thenReturn("EXAMPLE-1");
+            assertCalledList.add(issue2);
+            return assertCalledList;
         });
 
         JiraSite site = mock(JiraSite.class);
@@ -96,5 +95,4 @@ public class SearchIssuesStepTest {
         assertThat(assertCalledList.iterator().next().getKey(), equalTo("EXAMPLE-1"));
         assertThat(returnedList.iterator().next(), equalTo("EXAMPLE-1"));
     }
-
 }

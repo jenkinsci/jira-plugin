@@ -1,23 +1,21 @@
 package hudson.plugins.jira.pipeline;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Simple add comment step.
@@ -87,7 +85,7 @@ public class CommentStep extends Step {
         @Override
         protected Void run() throws Exception {
             JiraSite site = JiraSite.get(getContext().get(Run.class).getParent());
-            if(site == null) {
+            if (site == null) {
                 return null;
             }
             JiraSession session = site.getSession(getContext().get(Run.class).getParent());
@@ -99,7 +97,5 @@ public class CommentStep extends Step {
             session.addComment(step.issueKey, step.body, site.groupVisibility, site.roleVisibility);
             return null;
         }
-
     }
-
 }

@@ -1,21 +1,21 @@
 package hudson.plugins.jira;
 
-import org.apache.commons.beanutils.Converter;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.beanutils.Converter;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 /**
  * It's little hackish.
  */
 @Restricted(NoExternalUse.class)
 public class EmptyFriendlyURLConverter implements Converter {
-    private static final Logger LOGGER = Logger
-            .getLogger(JiraProjectProperty.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(JiraProjectProperty.class.getName());
 
+    @Override
     public Object convert(Class aClass, Object o) {
         if (o == null || "".equals(o) || "null".equals(o)) {
             return null;

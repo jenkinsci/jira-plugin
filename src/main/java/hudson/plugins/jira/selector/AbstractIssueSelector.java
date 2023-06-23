@@ -1,21 +1,20 @@
 package hudson.plugins.jira.selector;
 
-import java.util.Set;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
-
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSite;
+import java.util.Set;
 
 /**
  * Strategy of finding issues which should be updated after completed run.
  *
  * @author Franta Mejta
  */
-public abstract class AbstractIssueSelector extends AbstractDescribableImpl<AbstractIssueSelector> implements ExtensionPoint {
+public abstract class AbstractIssueSelector extends AbstractDescribableImpl<AbstractIssueSelector>
+        implements ExtensionPoint {
 
     /**
      * Finds the strings that match Jira issue ID patterns.
@@ -28,6 +27,6 @@ public abstract class AbstractIssueSelector extends AbstractDescribableImpl<Abst
      * @param listener Current's run listener.
      * @return Set of ids of issues which should be updated.
      */
-    public abstract Set<String> findIssueIds(@NonNull Run<?, ?> run, @NonNull JiraSite site, @NonNull TaskListener listener);
-
+    public abstract Set<String> findIssueIds(
+            @NonNull Run<?, ?> run, @NonNull JiraSite site, @NonNull TaskListener listener);
 }

@@ -1,5 +1,13 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
+import com.atlassian.httpclient.api.Response;
+import com.atlassian.httpclient.api.factory.HttpClientOptions;
+import com.atlassian.sal.api.ApplicationProperties;
+import com.atlassian.sal.api.UrlMode;
+import com.atlassian.sal.api.executor.ThreadLocalContextManager;
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import hudson.ProxyConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -7,12 +15,11 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
+import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.http.HttpHeader;
@@ -29,19 +36,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import com.atlassian.httpclient.api.Response;
-import com.atlassian.httpclient.api.factory.HttpClientOptions;
-import com.atlassian.sal.api.ApplicationProperties;
-import com.atlassian.sal.api.UrlMode;
-import com.atlassian.sal.api.executor.ThreadLocalContextManager;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.Nullable;
-import hudson.ProxyConfiguration;
-import jenkins.model.Jenkins;
-
-public class ApacheAsyncHttpClientTest
-{
+public class ApacheAsyncHttpClientTest {
 
     @Rule
     public JenkinsRule j = new JenkinsRule();
@@ -52,131 +47,112 @@ public class ApacheAsyncHttpClientTest
 
     private ServerConnector connector;
 
-
     static final String CONTENT_RESPONSE = "Sounds Good";
 
-
-    public void prepare( Handler handler )
-        throws Exception
-    {
+    public void prepare(Handler handler) throws Exception {
         server = new Server();
-        connector = new ServerConnector( server, connectionFactory );
-        server.addConnector( connector );
-        server.setHandler( handler );
+        connector = new ServerConnector(server, connectionFactory);
+        server.addConnector(connector);
+        server.setHandler(handler);
         server.start();
     }
 
     @After
-    public void dispose()
-        throws Exception
-    {
-        if ( server != null )
-        {
+    public void dispose() throws Exception {
+        if (server != null) {
             server.stop();
         }
     }
 
     @Test
-    public void simple_get()
-        throws Exception
-    {
+    public void simple_get() throws Exception {
         TestHandler testHandler = new TestHandler();
-        prepare( testHandler );
+        prepare(testHandler);
 
-        ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
-                                       new NoOpThreadLocalContextManager(), new HttpClientOptions() );
+        ApacheAsyncHttpClient httpClient = new ApacheAsyncHttpClient(
+                null, buildApplicationProperties(), new NoOpThreadLocalContextManager(), new HttpClientOptions());
 
-        Response response = httpClient.newRequest( "http://localhost:" + connector.getLocalPort() + "/foo" ) //
-            .get().get( 10, TimeUnit.SECONDS );
-        Assert.assertEquals( 200, response.getStatusCode() );
-        Assert.assertEquals( CONTENT_RESPONSE, IOUtils.toString( response.getEntityStream() ) );
+        Response response = httpClient
+                .newRequest("http://localhost:" + connector.getLocalPort() + "/foo")
+                .get()
+                .get(10, TimeUnit.SECONDS);
+        Assert.assertEquals(200, response.getStatusCode());
+        Assert.assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
     }
 
     @Test
-    public void simple_post()
-        throws Exception
-    {
+    public void simple_post() throws Exception {
         TestHandler testHandler = new TestHandler();
-        prepare( testHandler );
+        prepare(testHandler);
 
-        ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
-                                       new NoOpThreadLocalContextManager(), new HttpClientOptions() );
+        ApacheAsyncHttpClient httpClient = new ApacheAsyncHttpClient(
+                null, buildApplicationProperties(), new NoOpThreadLocalContextManager(), new HttpClientOptions());
 
-        Response response = httpClient.newRequest( "http://localhost:" + connector.getLocalPort() + "/foo" ) //
-            .setEntity( "FOO" ) //
-            .setContentType( "text" ) //
-            .post().get( 10, TimeUnit.SECONDS );
-        Assert.assertEquals( 200, response.getStatusCode() );
-        Assert.assertEquals( CONTENT_RESPONSE, IOUtils.toString( response.getEntityStream() ) );
-        Assert.assertEquals( "FOO", testHandler.postReceived );
+        Response response = httpClient
+                .newRequest("http://localhost:" + connector.getLocalPort() + "/foo")
+                .setEntity("FOO")
+                .setContentType("text")
+                .post()
+                .get(10, TimeUnit.SECONDS);
+        Assert.assertEquals(200, response.getStatusCode());
+        Assert.assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
+        Assert.assertEquals("FOO", testHandler.postReceived);
     }
 
     @Test
-    public void simple_get_with_non_proxy_host()
-            throws Exception
-    {
+    public void simple_get_with_non_proxy_host() throws Exception {
         ProxyTestHandler testHandler = new ProxyTestHandler();
-        prepare( testHandler );
+        prepare(testHandler);
 
-        Jenkins.get().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar", "www.apache.org" );
+        Jenkins.get().proxy =
+                new ProxyConfiguration("localhost", connector.getLocalPort(), "foo", "bar", "www.apache.org");
 
-        ApacheAsyncHttpClient httpClient =
-                new ApacheAsyncHttpClient( null, buildApplicationProperties(),
-                        new NoOpThreadLocalContextManager(), new HttpClientOptions() );
+        ApacheAsyncHttpClient httpClient = new ApacheAsyncHttpClient(
+                null, buildApplicationProperties(), new NoOpThreadLocalContextManager(), new HttpClientOptions());
 
-        Response response = httpClient.newRequest( "http://www.apache.org" )
-                .get().get( 30, TimeUnit.SECONDS );
-        Assert.assertEquals( 200, response.getStatusCode() );
-        //Assert.assertEquals( CONTENT_RESPONSE, IOUtils.toString( response.getEntityStream() ) );
+        Response response = httpClient.newRequest("http://www.apache.org").get().get(30, TimeUnit.SECONDS);
+        Assert.assertEquals(200, response.getStatusCode());
+        // Assert.assertEquals( CONTENT_RESPONSE, IOUtils.toString( response.getEntityStream() ) );
     }
 
     @Test
-    public void simple_get_with_proxy()
-        throws Exception
-    {
+    public void simple_get_with_proxy() throws Exception {
         ProxyTestHandler testHandler = new ProxyTestHandler();
-        prepare( testHandler );
+        prepare(testHandler);
 
-        Jenkins.get().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
+        Jenkins.get().proxy = new ProxyConfiguration("localhost", connector.getLocalPort(), "foo", "bar");
 
-        ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
-                                       new NoOpThreadLocalContextManager(), new HttpClientOptions() );
+        ApacheAsyncHttpClient httpClient = new ApacheAsyncHttpClient(
+                null, buildApplicationProperties(), new NoOpThreadLocalContextManager(), new HttpClientOptions());
 
-        Response response = httpClient.newRequest( "http://jenkins.io" ) //
-            .get().get( 30, TimeUnit.SECONDS );
-        Assert.assertEquals( 200, response.getStatusCode() );
-        Assert.assertEquals( CONTENT_RESPONSE, IOUtils.toString( response.getEntityStream() ) );
+        Response response = httpClient.newRequest("http://jenkins.io").get().get(30, TimeUnit.SECONDS);
+        Assert.assertEquals(200, response.getStatusCode());
+        Assert.assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
     }
 
     @Test
-    public void simple_post_with_proxy()
-        throws Exception
-    {
+    public void simple_post_with_proxy() throws Exception {
         ProxyTestHandler testHandler = new ProxyTestHandler();
-        prepare( testHandler );
+        prepare(testHandler);
 
-        Jenkins.get().proxy = new ProxyConfiguration( "localhost", connector.getLocalPort(), "foo", "bar" );
+        Jenkins.get().proxy = new ProxyConfiguration("localhost", connector.getLocalPort(), "foo", "bar");
 
-        ApacheAsyncHttpClient httpClient =
-            new ApacheAsyncHttpClient( null, buildApplicationProperties(),
-                                       new NoOpThreadLocalContextManager(), new HttpClientOptions() );
+        ApacheAsyncHttpClient httpClient = new ApacheAsyncHttpClient(
+                null, buildApplicationProperties(), new NoOpThreadLocalContextManager(), new HttpClientOptions());
 
-        Response response = httpClient.newRequest( "http://jenkins.io" ) //
-            .setEntity( "FOO" ) //
-            .setContentType( "text" ) //
-            .post().get( 30, TimeUnit.SECONDS );
+        Response response = httpClient
+                .newRequest("http://jenkins.io")
+                .setEntity("FOO")
+                .setContentType("text")
+                .post()
+                .get(30, TimeUnit.SECONDS);
         // we are sure to hit the proxy first :-)
-        Assert.assertEquals( 200, response.getStatusCode() );
-        Assert.assertEquals( CONTENT_RESPONSE, IOUtils.toString( response.getEntityStream() ) );
-        Assert.assertEquals( "FOO", testHandler.postReceived );
+        Assert.assertEquals(200, response.getStatusCode());
+        Assert.assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
+        Assert.assertEquals("FOO", testHandler.postReceived);
     }
 
-
-    public class ProxyTestHandler extends AbstractHandler
-    {
+    public class ProxyTestHandler extends AbstractHandler {
 
         String postReceived;
 
@@ -184,134 +160,114 @@ public class ApacheAsyncHttpClientTest
 
         final String password = "bar";
 
-
         final String serverHost = "server";
 
         final String realm = "test_realm";
 
         @Override
-        public void handle( String target, org.eclipse.jetty.server.Request jettyRequest, HttpServletRequest request,
-                            HttpServletResponse response )
-            throws IOException, ServletException
-        {
+        public void handle(
+                String target,
+                org.eclipse.jetty.server.Request jettyRequest,
+                HttpServletRequest request,
+                HttpServletResponse response)
+                throws IOException, ServletException {
 
             final String credentials = Base64.getEncoder().encodeToString((user + ":" + password).getBytes("UTF-8"));
 
-            jettyRequest.setHandled( true );
+            jettyRequest.setHandled(true);
 
-            String authorization = request.getHeader( HttpHeader.PROXY_AUTHORIZATION.asString() );
-            if ( authorization == null )
-            {
-                response.setStatus( HttpStatus.PROXY_AUTHENTICATION_REQUIRED_407 );
-                response.setHeader( HttpHeader.PROXY_AUTHENTICATE.asString(), "Basic realm=\"" + realm + "\"" );
+            String authorization = request.getHeader(HttpHeader.PROXY_AUTHORIZATION.asString());
+            if (authorization == null) {
+                response.setStatus(HttpStatus.PROXY_AUTHENTICATION_REQUIRED_407);
+                response.setHeader(HttpHeader.PROXY_AUTHENTICATE.asString(), "Basic realm=\"" + realm + "\"");
                 return;
-            }
-            else
-            {
+            } else {
                 String prefix = "Basic ";
-                if ( authorization.startsWith( prefix ) )
-                {
-                    String attempt = authorization.substring( prefix.length() );
-                    if ( !credentials.equals( attempt ) )
-                    {
+                if (authorization.startsWith(prefix)) {
+                    String attempt = authorization.substring(prefix.length());
+                    if (!credentials.equals(attempt)) {
                         return;
                     }
                 }
             }
 
-            if ( StringUtils.equalsIgnoreCase( "post", request.getMethod() ) )
-            {
-                postReceived = IOUtils.toString( request.getReader() );
+            if (StringUtils.equalsIgnoreCase("post", request.getMethod())) {
+                postReceived = IOUtils.toString(request.getReader());
             }
-            response.getWriter().write( CONTENT_RESPONSE );
-
+            response.getWriter().write(CONTENT_RESPONSE);
         }
     }
 
-
-    public class TestHandler
-        extends AbstractHandler
-    {
+    public class TestHandler extends AbstractHandler {
 
         String postReceived;
 
         @Override
-        public void handle( String target, org.eclipse.jetty.server.Request jettyRequest, HttpServletRequest request,
-                            HttpServletResponse response )
-            throws IOException, ServletException
-        {
-            jettyRequest.setHandled( true );
-            if ( StringUtils.equalsIgnoreCase( "post", request.getMethod() ) )
-            {
-                postReceived = IOUtils.toString( request.getReader() );
+        public void handle(
+                String target,
+                org.eclipse.jetty.server.Request jettyRequest,
+                HttpServletRequest request,
+                HttpServletResponse response)
+                throws IOException, ServletException {
+            jettyRequest.setHandled(true);
+            if (StringUtils.equalsIgnoreCase("post", request.getMethod())) {
+                postReceived = IOUtils.toString(request.getReader());
             }
-            response.getWriter().write( CONTENT_RESPONSE );
-
+            response.getWriter().write(CONTENT_RESPONSE);
         }
     }
 
-    private ApplicationProperties buildApplicationProperties()
-    {
-        ApplicationProperties applicationProperties = new ApplicationProperties()
-        {
+    private ApplicationProperties buildApplicationProperties() {
+        ApplicationProperties applicationProperties = new ApplicationProperties() {
             @Override
-            public String getBaseUrl()
-            {
+            public String getBaseUrl() {
                 return null;
             }
 
             @NonNull
             @Override
-            public String getBaseUrl( UrlMode urlMode )
-            {
+            public String getBaseUrl(UrlMode urlMode) {
                 return null;
             }
 
             @NonNull
             @Override
-            public String getDisplayName()
-            {
+            public String getDisplayName() {
                 return "Foo";
             }
 
             @NonNull
             @Override
-            public String getPlatformId()
-            {
+            public String getPlatformId() {
                 return null;
             }
 
             @NonNull
             @Override
-            public String getVersion()
-            {
+            public String getVersion() {
                 return "1";
             }
 
             @NonNull
             @Override
-            public Date getBuildDate()
-            {
+            public Date getBuildDate() {
                 return null;
             }
 
             @NonNull
             @Override
-            public String getBuildNumber()
-            {
+            public String getBuildNumber() {
                 return "1";
             }
 
             @Nullable
             @Override
-            public File getHomeDirectory()
-            {
+            public File getHomeDirectory() {
                 return null;
             }
 
             @Override
-            public String getPropertyValue( String s )
-            {
+            public String getPropertyValue(String s) {
                 return null;
             }
 
@@ -336,25 +292,16 @@ public class ApacheAsyncHttpClientTest
         return applicationProperties;
     }
 
-
-    private static final class NoOpThreadLocalContextManager<C>
-        implements ThreadLocalContextManager<C>
-    {
+    private static final class NoOpThreadLocalContextManager<C> implements ThreadLocalContextManager<C> {
         @Override
-        public C getThreadLocalContext()
-        {
+        public C getThreadLocalContext() {
             return null;
         }
 
         @Override
-        public void setThreadLocalContext( C context )
-        {
-        }
+        public void setThreadLocalContext(C context) {}
 
         @Override
-        public void clearThreadLocalContext()
-        {
-        }
+        public void clearThreadLocalContext() {}
     }
-
 }

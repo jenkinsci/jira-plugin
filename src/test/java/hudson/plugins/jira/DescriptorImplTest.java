@@ -1,5 +1,14 @@
 package hudson.plugins.jira;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Permissions;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
@@ -21,6 +30,9 @@ import hudson.security.ACL;
 import hudson.security.ACLContext;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.io.IOException;
+import java.net.URL;
+import java.util.Arrays;
 import jenkins.model.Jenkins;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,19 +40,6 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockFolder;
 import org.mockito.Mockito;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.Arrays;
-
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * Created by warden on 14.09.15.
@@ -58,7 +57,7 @@ public class DescriptorImplTest {
     JiraSession session = mock(JiraSession.class);
 
     JiraSite.DescriptorImpl descriptor = spy(new JiraSite.DescriptorImpl());
-    JiraSite.Builder builder = spy( new JiraSite.Builder());
+    JiraSite.Builder builder = spy(new JiraSite.Builder());
 
     @Test
     public void doFillCredentialsIdItems() throws IOException {
@@ -71,24 +70,16 @@ public class DescriptorImplTest {
         as.grant(Item.CONFIGURE).onItems(dummy).to("dev");
         r.jenkins.setAuthorizationStrategy(as);
 
-        Domain domain = new Domain("example", "test domain", Arrays.asList(new HostnameSpecification("example.org", null)));
-        StandardUsernamePasswordCredentials c1 = new UsernamePasswordCredentialsImpl(
-            CredentialsScope.SYSTEM,
-            null,
-            null,
-            "username",
-            "password"
-        );
-        CredentialsStore credentialsStore = CredentialsProvider.lookupStores(r.jenkins).iterator().next();
+        Domain domain =
+                new Domain("example", "test domain", Arrays.asList(new HostnameSpecification("example.org", null)));
+        StandardUsernamePasswordCredentials c1 =
+                new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, null, null, "username", "password");
+        CredentialsStore credentialsStore =
+                CredentialsProvider.lookupStores(r.jenkins).iterator().next();
         credentialsStore.addDomain(domain, c1);
 
-        StandardUsernamePasswordCredentials c2 = new UsernamePasswordCredentialsImpl(
-            CredentialsScope.GLOBAL,
-            null,
-            null,
-            "uid",
-            "pwd"
-        );
+        StandardUsernamePasswordCredentials c2 =
+                new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, null, null, "uid", "pwd");
 
         credentialsStore = CredentialsProvider.lookupStores(dummy).iterator().next();
         credentialsStore.addCredentials(domain, c2);
@@ -120,7 +111,10 @@ public class DescriptorImplTest {
     }
 
     private boolean listBoxModelContainsName(ListBoxModel options, String name) {
-        return options.stream().filter(option -> name.equals(option.name)).findFirst().isPresent();
+        return options.stream()
+                .filter(option -> name.equals(option.name))
+                .findFirst()
+                .isPresent();
     }
 
     @Test
@@ -134,35 +128,67 @@ public class DescriptorImplTest {
         when(site.getSession(project)).thenReturn(session);
         when(session.getMyPermissions()).thenThrow(RestClientException.class);
 
-        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
-            null, false, null,
-            JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-            false, project);
+        FormValidation validation = descriptor.doValidate(
+                "http://localhost:8080",
+                null,
+                null,
+                null,
+                false,
+                null,
+                JiraSite.DEFAULT_TIMEOUT,
+                JiraSite.DEFAULT_READ_TIMEOUT,
+                JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                false,
+                project);
 
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
         verify(site).getSession(project);
 
-        validation = descriptor.doValidate("http://localhost:8080", null, null,
-            null, false, null,
-            -1, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-            false, project);
+        validation = descriptor.doValidate(
+                "http://localhost:8080",
+                null,
+                null,
+                null,
+                false,
+                null,
+                -1,
+                JiraSite.DEFAULT_READ_TIMEOUT,
+                JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                false,
+                project);
         assertEquals(Messages.JiraSite_timeoutMinimunValue("1"), validation.getLocalizedMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
         verify(site).getSession(project);
 
-        validation = descriptor.doValidate("http://localhost:8080", null, null,
-            null, false, null,
-            JiraSite.DEFAULT_TIMEOUT, -1, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-            false, project);
+        validation = descriptor.doValidate(
+                "http://localhost:8080",
+                null,
+                null,
+                null,
+                false,
+                null,
+                JiraSite.DEFAULT_TIMEOUT,
+                -1,
+                JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                false,
+                project);
 
         assertEquals(Messages.JiraSite_readTimeoutMinimunValue("1"), validation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
         verify(site).getSession(project);
 
-        validation = descriptor.doValidate("http://localhost:8080", null, null,
-            null, false, null,
-            JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, -1,
-            false, project);
+        validation = descriptor.doValidate(
+                "http://localhost:8080",
+                null,
+                null,
+                null,
+                false,
+                null,
+                JiraSite.DEFAULT_TIMEOUT,
+                JiraSite.DEFAULT_READ_TIMEOUT,
+                -1,
+                false,
+                project);
         assertEquals(Messages.JiraSite_threadExecutorMinimunSize("1"), validation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
         verify(site).getSession(project);
@@ -177,14 +203,21 @@ public class DescriptorImplTest {
         when(site.getSession(project)).thenReturn(session);
         when(session.getMyPermissions()).thenReturn(mock(Permissions.class));
 
-        FormValidation validation = descriptor.doValidate("http://localhost:8080", null, null,
-            null, false, null,
-            JiraSite.DEFAULT_TIMEOUT, JiraSite.DEFAULT_READ_TIMEOUT, JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
-            false, project);
+        FormValidation validation = descriptor.doValidate(
+                "http://localhost:8080",
+                null,
+                null,
+                null,
+                false,
+                null,
+                JiraSite.DEFAULT_TIMEOUT,
+                JiraSite.DEFAULT_READ_TIMEOUT,
+                JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                false,
+                project);
 
         verify(builder).build();
         verify(site).getSession(project);
         assertEquals(FormValidation.Kind.OK, validation.kind);
     }
-
 }

@@ -1,6 +1,7 @@
 package hudson.plugins.jira.pipeline;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.model.Run;
@@ -8,19 +9,17 @@ import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 /**
  * Simple search issues step
@@ -91,11 +90,10 @@ public class SearchIssuesStep extends Step {
 
             List<String> resultList = new ArrayList<>();
             List<Issue> issuesFromJqlSearch = session.getIssuesFromJqlSearch(step.jql);
-            for (Issue issue : issuesFromJqlSearch)
+            for (Issue issue : issuesFromJqlSearch) {
                 resultList.add(issue.getKey());
+            }
             return resultList;
         }
-
     }
-
 }

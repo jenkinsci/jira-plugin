@@ -1,19 +1,18 @@
 package hudson.plugins.jira;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
+
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.plugins.jira.selector.DefaultIssueSelector;
-
+import hudson.scm.ChangeLogParser;
+import hudson.scm.SCM;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-
-import hudson.scm.ChangeLogParser;
-import hudson.scm.SCM;
 import org.junit.Test;
 
 public class JiraIssueUpdaterTest {
@@ -32,7 +31,6 @@ public class JiraIssueUpdaterTest {
             public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
-
         }
 
         final JiraIssueUpdater updater = new JiraIssueUpdater(new TestSelector(), null, null);
@@ -47,7 +45,6 @@ public class JiraIssueUpdaterTest {
             public ChangeLogParser createChangeLogParser() {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
-
         }
 
         final JiraIssueUpdater updater = new JiraIssueUpdater(null, new TestSCM(), null);
@@ -61,5 +58,4 @@ public class JiraIssueUpdaterTest {
         final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, testLabels);
         assertThat(updater.getLabels(), is(testLabels));
     }
-
 }

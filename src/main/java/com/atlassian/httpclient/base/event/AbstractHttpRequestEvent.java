@@ -2,8 +2,7 @@ package com.atlassian.httpclient.base.event;
 
 import java.util.Map;
 
-abstract class AbstractHttpRequestEvent
-{
+abstract class AbstractHttpRequestEvent {
     private final String url;
     private final String httpMethod;
     private final long requestDuration;
@@ -12,8 +11,8 @@ abstract class AbstractHttpRequestEvent
     private int statusCode;
     private String error;
 
-    public AbstractHttpRequestEvent(String url, String httpMethod, int statusCode, long requestDuration, Map<String, String> properties)
-    {
+    public AbstractHttpRequestEvent(
+            String url, String httpMethod, int statusCode, long requestDuration, Map<String, String> properties) {
         this.url = url;
         this.httpMethod = httpMethod;
         this.statusCode = statusCode;
@@ -21,8 +20,8 @@ abstract class AbstractHttpRequestEvent
         this.properties = properties;
     }
 
-    public AbstractHttpRequestEvent(String url, String httpMethod, String error, long requestDuration, Map<String, String> properties)
-    {
+    public AbstractHttpRequestEvent(
+            String url, String httpMethod, String error, long requestDuration, Map<String, String> properties) {
         this.url = url;
         this.httpMethod = httpMethod;
         this.error = error;
@@ -30,28 +29,23 @@ abstract class AbstractHttpRequestEvent
         this.properties = properties;
     }
 
-    public String getUrl()
-    {
+    public String getUrl() {
         return url;
     }
 
-    public int getStatusCode()
-    {
+    public int getStatusCode() {
         return statusCode;
     }
 
-    public String getError()
-    {
+    public String getError() {
         return error;
     }
 
-    public long getRequestDuration()
-    {
+    public long getRequestDuration() {
         return requestDuration;
     }
 
-    public Map<String, String> getProperties()
-    {
+    public Map<String, String> getProperties() {
         return properties;
     }
 }

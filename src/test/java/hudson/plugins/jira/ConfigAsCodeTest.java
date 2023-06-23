@@ -1,5 +1,10 @@
 package hudson.plugins.jira;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertNotNull;
+
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.Configurator;
 import io.jenkins.plugins.casc.ConfiguratorRegistry;
@@ -14,11 +19,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 public class ConfigAsCodeTest {
 
     @Rule
@@ -29,11 +29,12 @@ public class ConfigAsCodeTest {
     public void shouldSupportConfigurationAsCode() throws Exception {
         List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
         assertThat(sites, hasSize(2));
-        Assert.assertEquals("https://issues.jenkins-ci.org/", Objects
-            .requireNonNull(sites.get(0).getUrl()).toExternalForm());
-        Assert.assertEquals("https://jira.com/", Objects
-            .requireNonNull(sites.get(1).getUrl()).toExternalForm());
-
+        Assert.assertEquals(
+                "https://issues.jenkins-ci.org/",
+                Objects.requireNonNull(sites.get(0).getUrl()).toExternalForm());
+        Assert.assertEquals(
+                "https://jira.com/",
+                Objects.requireNonNull(sites.get(1).getUrl()).toExternalForm());
     }
 
     @Test
@@ -49,5 +50,4 @@ public class ConfigAsCodeTest {
 
         assertThat(sites.getScalarValue("url"), is("https://jira.com/"));
     }
-
 }

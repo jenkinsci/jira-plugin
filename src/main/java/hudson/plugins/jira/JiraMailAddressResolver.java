@@ -4,12 +4,11 @@ import hudson.Extension;
 import hudson.model.Job;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Resolve user email by searching his userId as username in Jira.
@@ -37,7 +36,7 @@ public class JiraMailAddressResolver extends MailAddressResolver {
         Job<?, ?> job = null;
 
         StaplerRequest req = Stapler.getCurrentRequest();
-        if(req != null) {
+        if (req != null) {
             job = req.findAncestorObject(Job.class);
         }
 

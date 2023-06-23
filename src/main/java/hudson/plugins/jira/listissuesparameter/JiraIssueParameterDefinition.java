@@ -61,8 +61,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 
     @Override
     public ParameterValue createValue(StaplerRequest req, JSONObject formData) {
-        JiraIssueParameterValue value = req.bindJSON(
-                JiraIssueParameterValue.class, formData);
+        JiraIssueParameterValue value = req.bindJSON(JiraIssueParameterValue.class, formData);
         return value;
     }
 
@@ -75,11 +74,15 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         Job<?, ?> job = Stapler.getCurrentRequest().findAncestorObject(Job.class);
 
         JiraSite site = JiraSite.get(job);
-        if (site == null)
-            throw new IllegalStateException("Jira site needs to be configured in the project " + job.getFullDisplayName());
+        if (site == null) {
+            throw new IllegalStateException(
+                    "Jira site needs to be configured in the project " + job.getFullDisplayName());
+        }
 
         JiraSession session = site.getSession(job);
-        if (session == null) throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
+        if (session == null) {
+            throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
+        }
 
         List<Issue> issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
 
@@ -127,18 +130,18 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
 
         public Result(final Issue issue, String altSummaryFields) {
             this.key = issue.getKey();
-            if(StringUtils.isEmpty(altSummaryFields)) {
+            if (StringUtils.isEmpty(altSummaryFields)) {
                 this.summary = issue.getSummary();
             } else {
                 String[] fields = altSummaryFields.split(",");
                 StringBuilder sb = new StringBuilder();
-                for(String f : fields) {
+                for (String f : fields) {
                     String fn = f.trim();
-                    if(StringUtils.isNotEmpty(fn)) {
+                    if (StringUtils.isNotEmpty(fn)) {
                         IssueField field = issue.getFieldByName(fn);
-                        if(field != null && field.getValue() != null) {
+                        if (field != null && field.getValue() != null) {
                             String fv = field.getValue().toString();
-                            if(StringUtils.isNotEmpty(fv)) {
+                            if (StringUtils.isNotEmpty(fv)) {
                                 sb.append(fv);
                                 sb.append(' ');
                             }

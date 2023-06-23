@@ -2,8 +2,7 @@ import java.util.ResourceBundle;
 
 public final class JiraConfig {
 
-    private static final ResourceBundle CONFIG = ResourceBundle
-            .getBundle("jira");
+    private static final ResourceBundle CONFIG = ResourceBundle.getBundle("jira");
 
     public static String getUrl() {
         return CONFIG.getString("url");

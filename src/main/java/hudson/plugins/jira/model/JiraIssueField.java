@@ -1,7 +1,5 @@
 package hudson.plugins.jira.model;
 
-import java.lang.String;
-
 public class JiraIssueField implements Comparable<JiraIssueField> {
 
     private final String fieldId;
@@ -12,6 +10,7 @@ public class JiraIssueField implements Comparable<JiraIssueField> {
         this.fieldValue = fieldValue;
     }
 
+    @Override
     public int compareTo(JiraIssueField that) {
         return this.compareTo(that);
     }
@@ -64,5 +63,4 @@ public class JiraIssueField implements Comparable<JiraIssueField> {
     public Object getValue() {
         return fieldValue;
     }
-
 }

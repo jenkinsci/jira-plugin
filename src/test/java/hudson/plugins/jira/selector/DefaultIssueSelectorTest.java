@@ -1,5 +1,8 @@
 package hudson.plugins.jira.selector;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.ParameterValue;
@@ -9,10 +12,6 @@ import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
-import org.junit.Assert;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,9 +22,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.Assert;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 
 public class DefaultIssueSelectorTest {
 
@@ -60,17 +59,22 @@ public class DefaultIssueSelectorTest {
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
         JiraSite site = mock(JiraSite.class);
-        
+
         when(site.getIssuePattern()).thenReturn(JiraSite.DEFAULT_ISSUE_PATTERN);
-        
-        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("Fixed JI123-4711"),
-                new MockEntry("Fixed foo_bar-4710"), new MockEntry("Fixed FoO_bAr-4711"),
-                new MockEntry("Fixed something.\nJFoO_bAr_MULTI-4718"), new MockEntry("TR-123: foo"),
-                new MockEntry("[ABC-42] hallo"), new MockEntry("#123: this one must not match"),
+
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(
+                new MockEntry("Fixed JI123-4711"),
+                new MockEntry("Fixed foo_bar-4710"),
+                new MockEntry("Fixed FoO_bAr-4711"),
+                new MockEntry("Fixed something.\nJFoO_bAr_MULTI-4718"),
+                new MockEntry("TR-123: foo"),
+                new MockEntry("[ABC-42] hallo"),
+                new MockEntry("#123: this one must not match"),
                 new MockEntry("ABC-: this one must also not match"),
                 new MockEntry("ABC-: \n\nABC-127:\nthis one should match"),
                 new MockEntry("ABC-: \n\nABC-128:\nthis one should match"),
-                new MockEntry("ABC-: \n\nXYZ-10:\nXYZ-20 this one too"), new MockEntry("Fixed DOT-4."),
+                new MockEntry("ABC-: \n\nXYZ-10:\nXYZ-20 this one too"),
+                new MockEntry("Fixed DOT-4."),
                 new MockEntry("Fixed DOT-5. Did it right this time")));
 
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -80,8 +84,19 @@ public class DefaultIssueSelectorTest {
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
-        Set<String> expected = new HashSet(Arrays.asList("JI123-4711", "FOO_BAR-4710", "FOO_BAR-4711", "JFOO_BAR_MULTI-4718",
-                                            "TR-123", "ABC-42", "ABC-127", "ABC-128", "XYZ-10", "XYZ-20", "DOT-4", "DOT-5"));
+        Set<String> expected = new HashSet(Arrays.asList(
+                "JI123-4711",
+                "FOO_BAR-4710",
+                "FOO_BAR-4711",
+                "JFOO_BAR_MULTI-4718",
+                "TR-123",
+                "ABC-42",
+                "ABC-127",
+                "ABC-128",
+                "XYZ-10",
+                "XYZ-20",
+                "DOT-4",
+                "DOT-5"));
 
         Set<String> result = new DefaultIssueSelector().findIssueIds(build, site, listener);
 
@@ -100,10 +115,9 @@ public class DefaultIssueSelectorTest {
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
         JiraSite site = mock(JiraSite.class);
-        
+
         when(site.getIssuePattern()).thenReturn(JiraSite.DEFAULT_ISSUE_PATTERN);
-       
-        
+
         JiraIssueParameterValue parameter = mock(JiraIssueParameterValue.class);
         JiraIssueParameterValue parameterTwo = mock(JiraIssueParameterValue.class);
         ParametersAction action = mock(ParametersAction.class);
@@ -128,7 +142,7 @@ public class DefaultIssueSelectorTest {
         parameters.add(parameterTwo);
         ids = new DefaultIssueSelector().findIssueIds(build, site, listener);
         Assert.assertEquals(2, ids.size());
-        Set<String> expected = new TreeSet( Arrays.asList( "JIRA-123", "JIRA-321"));
+        Set<String> expected = new TreeSet(Arrays.asList("JIRA-123", "JIRA-321"));
         Assert.assertEquals(expected, ids);
     }
 
@@ -155,7 +169,8 @@ public class DefaultIssueSelectorTest {
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
 
-        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("Fixed toto [FOOBAR-4711]  [FOOBAR-21] "),
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(
+                new MockEntry("Fixed toto [FOOBAR-4711]  [FOOBAR-21] "),
                 new MockEntry("[TEST-9] with [dede]"),
                 new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3")));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
@@ -180,7 +195,8 @@ public class DefaultIssueSelectorTest {
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
 
-        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("Fixed toto [FOOBAR-4711]"),
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(
+                new MockEntry("Fixed toto [FOOBAR-4711]"),
                 new MockEntry("[TEST-9] with [dede]"),
                 new MockEntry("toto [maven-release-plugin] prepare release foo-2.2.3")));
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
@@ -216,5 +232,4 @@ public class DefaultIssueSelectorTest {
         DefaultIssueSelector.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         Assert.assertEquals(0, ids.size());
     }
-
 }

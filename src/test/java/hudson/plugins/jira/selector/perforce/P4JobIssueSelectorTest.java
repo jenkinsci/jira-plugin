@@ -1,23 +1,22 @@
 package hudson.plugins.jira.selector.perforce;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.perforce.p4java.impl.generic.core.Fix;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.plugins.jira.JiraSite;
 import hudson.scm.ChangeLogSet;
-import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
-import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
 
@@ -55,7 +54,7 @@ public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
-        Set<String> expected = new HashSet<>(Arrays.asList( jobIdEC3453, jobIdIW1231));
+        Set<String> expected = new HashSet<>(Arrays.asList(jobIdEC3453, jobIdIW1231));
 
         P4JobIssueSelector selector = new P4JobIssueSelector();
         Set<String> result = selector.findIssueIds(build, jiraSite, listener);
@@ -68,5 +67,4 @@ public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
     protected JobIssueSelector createJobIssueSelector() {
         return new P4JobIssueSelector();
     }
-
 }

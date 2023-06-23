@@ -3,16 +3,13 @@ package hudson.plugins.jira;
 import com.cloudbees.hudson.plugins.folder.AbstractFolder;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.ItemGroup;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Provides folder level Jira configuration.
@@ -27,8 +24,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
      * Constructor.
      */
     @DataBoundConstructor
-    public JiraFolderProperty() {
-    }
+    public JiraFolderProperty() {}
 
     /**
      * Return the Jira sites.

@@ -42,25 +42,34 @@ public class VersionReleaserTest {
 
     @Mock
     AbstractBuild build;
+
     @Mock
     BuildListener listener;
+
     @Mock
     PrintStream logger;
+
     @Mock
     EnvVars env;
+
     @Mock
     AbstractProject project;
+
     @Mock
     JiraSite site;
+
     @Mock
     JiraSession session;
+
     @Captor
     ArgumentCaptor<ExtendedVersion> versionCaptor;
+
     @Captor
     ArgumentCaptor<String> projectCaptor;
 
     private VersionReleaser versionReleaser = spy(VersionReleaser.class);
-    private ExtendedVersion existingVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, false, ANY_DATE, ANY_DATE);
+    private ExtendedVersion existingVersion =
+            new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, false, ANY_DATE, ANY_DATE);
 
     @Before
     public void createMocks() throws Exception {
@@ -70,14 +79,15 @@ public class VersionReleaserTest {
         when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
             String expanded = (String) args[0];
-            if (expanded.equals(JIRA_PRJ_PARAM))
+            if (expanded.equals(JIRA_PRJ_PARAM)) {
                 return JIRA_PRJ;
-            else if (expanded.equals(JIRA_VER_PARAM))
+            } else if (expanded.equals(JIRA_VER_PARAM)) {
                 return JIRA_VER;
-            else if (expanded.equals(JIRA_DES_PARAM))
+            } else if (expanded.equals(JIRA_DES_PARAM)) {
                 return JIRA_DES;
-            else
+            } else {
                 return expanded;
+            }
         });
         when(listener.getLogger()).thenReturn(logger);
         doReturn(site).when(versionReleaser).getSiteForProject(any());
@@ -113,12 +123,11 @@ public class VersionReleaserTest {
 
     @Test
     public void buildDidNotFailWhenVersionExists() {
-        ExtendedVersion releasedVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, true, ANY_DATE, ANY_DATE);
+        ExtendedVersion releasedVersion =
+                new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, true, ANY_DATE, ANY_DATE);
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));
 
         versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, JIRA_DES_PARAM, build, listener);
-        verify(session, times(0))
-                .releaseVersion(projectCaptor.capture(), versionCaptor.capture());
+        verify(session, times(0)).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
     }
-
 }
