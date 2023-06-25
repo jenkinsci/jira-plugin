@@ -117,13 +117,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
 
     /**
-     * URL of Jira for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
+     * URL of Jira for Jenkins access, like {@code http://jira.codehaus.org/}.
      * Mandatory. Normalized to end with '/'
      */
     public final URL url;
 
     /**
-     * URL of Jira for normal access, like <tt>http://jira.codehaus.org/</tt>.
+     * URL of Jira for normal access, like {@code http://jira.codehaus.org/}.
      * Mandatory. Normalized to end with '/'
      */
     public URL alternativeUrl;
