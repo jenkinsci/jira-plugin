@@ -117,13 +117,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
 
     /**
-     * URL of Jira for Jenkins access, like <tt>http://jira.codehaus.org/</tt>.
+     * URL of Jira for Jenkins access, like {@code http://jira.codehaus.org/}.
      * Mandatory. Normalized to end with '/'
      */
     public final URL url;
 
     /**
-     * URL of Jira for normal access, like <tt>http://jira.codehaus.org/</tt>.
+     * URL of Jira for normal access, like {@code http://jira.codehaus.org/}.
      * Mandatory. Normalized to end with '/'
      */
     public URL alternativeUrl;
@@ -1501,8 +1501,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Creates automatically jiraSession for each jiraSite found
-     * @param item
-     * @return
      */
     public static List<JiraSite> getJiraSites(Item item) {
         ItemGroup itemGroup = JiraSite.map(item);
@@ -1515,8 +1513,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Creates automatically jiraSession for each jiraSite found
-     * @param itemGroup
-     * @return
      */
     public static List<JiraSite> getSitesFromFolders(ItemGroup itemGroup) {
         List<JiraSite> result = new ArrayList<>();
