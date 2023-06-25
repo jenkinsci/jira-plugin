@@ -1501,8 +1501,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Creates automatically jiraSession for each jiraSite found
-     * @param item
-     * @return
      */
     public static List<JiraSite> getJiraSites(Item item) {
         ItemGroup itemGroup = JiraSite.map(item);
@@ -1515,8 +1513,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Creates automatically jiraSession for each jiraSite found
-     * @param itemGroup
-     * @return
      */
     public static List<JiraSite> getSitesFromFolders(ItemGroup itemGroup) {
         List<JiraSite> result = new ArrayList<>();

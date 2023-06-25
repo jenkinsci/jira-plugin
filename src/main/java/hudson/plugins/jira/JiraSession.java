@@ -71,8 +71,6 @@ public class JiraSession {
     /**
      * Adds a comment to the existing issue. Constrains the visibility of the
      * comment the the supplied groupVisibility.
-     *
-     * @param groupVisibility
      */
     public void addComment(String issueId, String comment, String groupVisibility, String roleVisibility) {
         service.addComment(issueId, comment, groupVisibility, roleVisibility);
@@ -204,8 +202,6 @@ public class JiraSession {
 
     /**
      * Release given version in given project
-     * @param projectKey
-     * @param version
      */
     public void releaseVersion(String projectKey, ExtendedVersion version) {
         LOGGER.fine("Releasing version: " + version.getName());
@@ -329,8 +325,6 @@ public class JiraSession {
     /**
      * Progresses the issue's workflow by performing the specified action. The issue's new status is returned.
      *
-     * @param issueKey
-     * @param actionId
      * @return The new status
      */
     public String progressWorkflowAction(String issueKey, Integer actionId) {
@@ -343,8 +337,6 @@ public class JiraSession {
     /**
      * Returns the matching action id for a given action name.
      *
-     * @param issueKey
-     * @param workflowAction
      * @return The action id, or null if the action cannot be found.
      */
     public Integer getActionIdForIssue(String issueKey, String workflowAction) {
@@ -364,7 +356,6 @@ public class JiraSession {
     /**
      * Returns the status name by status id.
      *
-     * @param statusId
      * @return status name
      */
     public String getStatusById(Long statusId) {
@@ -399,11 +390,6 @@ public class JiraSession {
     /**
      * Returns issue-id of the created issue
      *
-     * @param projectKey
-     * @param description
-     * @param assignee
-     * @param components
-     * @param summary
      * @return The issue id
      */
     @Deprecated
@@ -427,9 +413,6 @@ public class JiraSession {
 
     /**
      * Adds a comment to the existing issue.There is no constrains to the visibility of the comment.
-     *
-     * @param issueId
-     * @param comment
      */
     public void addCommentWithoutConstrains(String issueId, String comment) {
         service.addComment(issueId, comment, null, null);
@@ -438,7 +421,6 @@ public class JiraSession {
     /**
      * Returns information about the specific issue as identified by the issue id
      *
-     * @param issueId
      * @return issue object
      */
     public Issue getIssueByKey(String issueId) {
@@ -448,7 +430,6 @@ public class JiraSession {
     /**
      * Returns all the components for the particular project
      *
-     * @param projectKey
      * @return An array of components
      */
     public List<Component> getComponents(String projectKey) {
@@ -459,7 +440,6 @@ public class JiraSession {
      * Creates a new version and returns it
      *
      * @param version    version id to create
-     * @param projectKey
      * @return created Version instance
      *
      */
