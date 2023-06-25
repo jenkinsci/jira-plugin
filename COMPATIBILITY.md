@@ -1,7 +1,19 @@
 # Plugin Compatibility with [Pipeline](https://github.com/jenkinsci/pipeline-plugin)
-(formerly known as Pipeline plugin)
 
-This document captures the status of features to be compatible or incompatible.
+(formerly known as Pipeline plugin). This document captures the status of features to be compatible or incompatible.
+
+- [X] `JIRA Issue Parameter` supported
+- [X] `JIRA Version Parameter` supported
+- [X] `JiraChangeLogAnnotator` supported
+- [X] `JiraIssueUpdater` supported
+- [X] `JiraIssueUpdateBuilder` supported
+- [X] `JiraCreateReleaseNotes` supported
+- [ ] `JiraCreateIssueNotifier` never supported
+- [ ] `JiraIssueMigrator` never supported
+- [ ] `JiraReleaseVersionUpdater` never supported
+- [X] `JiraReleaseVersionUpdaterBuilder` supported
+- [ ] `JiraVersionCreator` never supported
+- [ ] `JiraEnvironmentVariableBuilder` not supported (workaround exists)
 
 ## JiraIssueUpdater usage example
 
@@ -22,6 +34,7 @@ node {
 Note that a pointer to scm class should be better cleared to not serialize scm object between steps.
 
 You can add some labels to issue in jira:
+
 ```groovy
     step([$class: 'hudson.plugins.jira.JiraIssueUpdater', 
             issueSelector: [$class: 'hudson.plugins.jira.selector.DefaultIssueSelector'], 
@@ -44,13 +57,12 @@ node {
 ```groovy
 node {
     wrap([$class: 'hudson.plugins.jira.JiraCreateReleaseNotes', jiraProjectKey: 'TST', 
-	    jiraRelease: '1.1.1', jiraEnvironmentVariable: 'notes', jiraFilter: 'status in (Resolved, Closed)']) 
-	{
+    jiraRelease: '1.1.1', jiraEnvironmentVariable: 'notes', jiraFilter: 'status in (Resolved, Closed)']) 
+    {
         //do some useful here
-		//release notes can be found in environment variable jiraEnvironmentVariable
-		print env.notes
+        //release notes can be found in environment variable jiraEnvironmentVariable
+        print env.notes
     }
-
 ```
 
 ## JiraReleaseVersionUpdaterBuilder usage example
@@ -68,6 +80,7 @@ node {
 Custom pipeline step (see [step-api](https://github.com/jenkinsci/workflow-plugin/blob/master/step-api/README.md)) that allow to search by jql query directly from workflow.
 
 usage:
+
 ```groovy
 node {
     List<String> issueKeys = jiraSearch(jql: "project = EX and labels = 'jenkins' and labels = '${version}'")	
@@ -76,15 +89,17 @@ node {
 
 ## CommentStep
 
-Interface for Pipeline job types that simply want to post a comment e.g.
+Interface for Pipeline job types that simply want to post a comment e.g.:
+
 ```groovy
 node {
     jiraComment(issueKey: "EX-111", body: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) builded. Please go to ${env.BUILD_URL}.")
 }
 ```
 
-##JiraEnvironmentVariableBuilder
-Is not supported in Pipeline. You can get current jira url (if you are not using the Groovy sandbox):
+## JiraEnvironmentVariableBuilder
+
+Not supported in Pipeline. You can get current jira url (if you are not using the Groovy sandbox):
 
 ```groovy
 import hudson.plugins.jira.JiraSite;
@@ -96,11 +111,13 @@ node {
 ```
 
 To replace JIRA_ISSUES env variable, you can use pipeline step jiraIssueSelector:
+
 ```groovy
     List<String> issueKeys = jiraIssueSelector()
 ```
 
 or if you use custom issue selector:
+
 ```groovy
     List<String> issueKeys = jiraIssueSelector(new CustomIssueSelector())
 ```
@@ -115,20 +132,3 @@ See [here](https://github.com/jenkinsci/workflow-plugin/blob/master/basic-steps/
 Running a notifiers is trickier since normally a flow in progress has no status yet, unlike a freestyle project whose status is determined before the notifier is called (never supported).
 So notifiers will never be implemented as you can use the catchError step and run jira action manually.
 I'm going to create a special pipeline steps to replace this notifiers in future.
-
-Other builders will be supported in future (not supported yet).
-
-##Current status:
-
-- [X] `JIRA Issue Parameter` supported
-- [X] `JIRA Version Parameter` supported
-- [X] `JiraChangeLogAnnotator` supported
-- [X] `JiraIssueUpdater` supported
-- [X] `JiraIssueUpdateBuilder` supported
-- [X] `JiraCreateReleaseNotes` supported
-- [ ] `JiraCreateIssueNotifier` never supported
-- [ ] `JiraIssueMigrator` never supported
-- [ ] `JiraReleaseVersionUpdater` never supported
-- [X] `JiraReleaseVersionUpdaterBuilder` supported
-- [ ] `JiraVersionCreator` never supported
-- [ ] `JiraEnvironmentVariableBuilder` not supported (workaround exists)
