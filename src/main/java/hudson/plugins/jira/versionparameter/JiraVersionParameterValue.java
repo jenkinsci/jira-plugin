@@ -19,7 +19,9 @@ public class JiraVersionParameterValue extends ParameterValue {
     @DataBoundConstructor
     public JiraVersionParameterValue(final String name, final String version) {
         super(name);
-        if (version == null) throw new IllegalArgumentException("Version cannot be null");
+        if (version == null) {
+            throw new IllegalArgumentException("Version cannot be null");
+        }
         this.version = version;
     }
 

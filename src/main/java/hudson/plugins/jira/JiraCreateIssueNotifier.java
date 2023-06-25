@@ -2,31 +2,11 @@ package hudson.plugins.jira;
 
 import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-
 import com.atlassian.jira.rest.client.api.StatusCategory;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.jira.rest.client.api.domain.Priority;
 import com.atlassian.jira.rest.client.api.domain.Status;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
@@ -42,7 +22,24 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * When a build fails it creates jira issues.
@@ -70,11 +67,17 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     @DataBoundConstructor
-    public JiraCreateIssueNotifier(String projectKey, String testDescription, String assignee, String component,
+    public JiraCreateIssueNotifier(
+            String projectKey,
+            String testDescription,
+            String assignee,
+            String component,
             Long typeId,
-            Long priorityId, Integer actionIdOnSuccess) {
-        if (projectKey == null)
+            Long priorityId,
+            Integer actionIdOnSuccess) {
+        if (projectKey == null) {
             throw new IllegalArgumentException("Project key cannot be null");
+        }
         this.projectKey = projectKey;
 
         this.testDescription = testDescription;
@@ -137,6 +140,7 @@ public class JiraCreateIssueNotifier extends Notifier {
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
     }
@@ -195,7 +199,8 @@ public class JiraCreateIssueNotifier extends Notifier {
                 buildName,
                 getBuildDetailsString(vars));
         Iterable<String> components = Arrays.stream(component.split(","))
-                .filter(s -> !StringUtils.isEmpty(s)).map(s -> StringUtils.trim(s))
+                .filter(s -> !StringUtils.isEmpty(s))
+                .map(StringUtils::trim)
                 .collect(Collectors.toList());
 
         Long type = typeId;
@@ -331,9 +336,13 @@ public class JiraCreateIssueNotifier extends Notifier {
      * was "fail".
      * It adds comment until the previously created issue is closed.
      */
-    private void currentBuildResultFailure(AbstractBuild<?, ?> build, BuildListener listener,
+    private void currentBuildResultFailure(
+            AbstractBuild<?, ?> build,
+            BuildListener listener,
             Result previousBuildResult,
-            String filename, EnvVars vars) throws InterruptedException, IOException {
+            String filename,
+            EnvVars vars)
+            throws InterruptedException, IOException {
 
         if (previousBuildResult == Result.FAILURE) {
             String comment = String.format("Build is still failing.\nFailed run: %s", getBuildDetailsString(vars));
@@ -387,13 +396,17 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @throws InterruptedException
      * @throws IOException
      */
-    private void currentBuildResultSuccess(AbstractBuild<?, ?> build, BuildListener listener,
+    private void currentBuildResultSuccess(
+            AbstractBuild<?, ?> build,
+            BuildListener listener,
             Result previousBuildResult,
-            String filename, EnvVars vars) throws InterruptedException, IOException {
+            String filename,
+            EnvVars vars)
+            throws InterruptedException, IOException {
 
         if (previousBuildResult == Result.FAILURE || previousBuildResult == Result.SUCCESS) {
-            String comment = String.format("Previously failing build now is OK.\n Passed run: %s",
-                    getBuildDetailsString(vars));
+            String comment =
+                    String.format("Previously failing build now is OK.\n Passed run: %s", getBuildDetailsString(vars));
             String issueId = getIssue(filename);
 
             // if issue exists it will check the status and comment or delete the file
@@ -419,14 +432,13 @@ public class JiraCreateIssueNotifier extends Notifier {
                     LOG.warning("Error updating Jira issue " + issueId + "\n" + e);
                 }
             }
-
         }
     }
 
     static boolean isDone(Status status) {
-        if (status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString()) ||
-                status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString()) ||
-                status.getName().equalsIgnoreCase(finishedStatuses.Done.toString())) {
+        if (status.getName().equalsIgnoreCase(finishedStatuses.Closed.toString())
+                || status.getName().equalsIgnoreCase(finishedStatuses.Resolved.toString())
+                || status.getName().equalsIgnoreCase(finishedStatuses.Done.toString())) {
             return true;
         }
 

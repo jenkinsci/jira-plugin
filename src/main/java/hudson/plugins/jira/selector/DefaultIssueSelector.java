@@ -1,5 +1,21 @@
 package hudson.plugins.jira.selector;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractBuild.DependencyChange;
+import hudson.model.Descriptor;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersAction;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraCarryOverAction;
+import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
+import hudson.plugins.jira.RunScmChangeExtractor;
+import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
+import hudson.scm.ChangeLogSet;
+import hudson.scm.ChangeLogSet.Entry;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -8,42 +24,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import hudson.Extension;
-import hudson.model.AbstractBuild;
-import hudson.model.Descriptor;
-import hudson.model.ParameterValue;
-import hudson.model.ParametersAction;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.model.AbstractBuild.DependencyChange;
-import hudson.plugins.jira.JiraCarryOverAction;
-import hudson.plugins.jira.JiraSite;
-import hudson.plugins.jira.Messages;
-import hudson.plugins.jira.RunScmChangeExtractor;
-import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.Entry;
 
 public class DefaultIssueSelector extends AbstractIssueSelector {
 
     private static final Logger LOGGER = Logger.getLogger(DefaultIssueSelector.class.getName());
 
     @DataBoundConstructor
-    public DefaultIssueSelector() {
-    }
+    public DefaultIssueSelector() {}
 
     /**
      * See {@link #addIssuesRecursive(Run, JiraSite, TaskListener, Set)}
      */
     @Override
-    public Set<String> findIssueIds(@NonNull final Run<?, ?> run, @NonNull final JiraSite site,
-            @NonNull final TaskListener listener) {
+    public Set<String> findIssueIds(
+            @NonNull final Run<?, ?> run, @NonNull final JiraSite site, @NonNull final TaskListener listener) {
         HashSet<String> issuesIds = new LinkedHashSet<>();
         addIssuesRecursive(run, site, listener, issuesIds);
         return issuesIds;
@@ -67,7 +63,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
      * all likely candidates and doesn't check if such ID actually exists or
      * not. We don't want to use {@link JiraSite#existsIssue(String)} here so
      * that new projects in Jira can be detected.
-     * 
+     *
      */
     protected static void findIssues(Run<?, ?> build, Set<String> issueIds, Pattern pattern, TaskListener listener) {
         for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(build)) {
@@ -116,8 +112,8 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
      * {@link #addIssuesFromChangeLog(Run, JiraSite, TaskListener, Set)}
      * {@link #addIssuesFromParameters(Run, JiraSite, TaskListener, Set)}
      */
-    protected void addIssuesFromCurrentBuild(Run<?, ?> build, JiraSite site, TaskListener listener,
-            Set<String> issueIds) {
+    protected void addIssuesFromCurrentBuild(
+            Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
         addIssuesFromChangeLog(build, site, listener, issueIds);
         addIssuesFromParameters(build, site, listener, issueIds);
     }
@@ -127,11 +123,12 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
      * For each dependency change
      * {@link #addIssuesRecursive(Run, JiraSite, TaskListener, Set)} is called.
      */
-    protected void addIssuesFromDependentBuilds(Run<?, ?> build, JiraSite site, TaskListener listener,
-            Set<String> issueIds) {		
+    protected void addIssuesFromDependentBuilds(
+            Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
         Pattern pattern = site.getIssuePattern();
 
-        for (DependencyChange depc : RunScmChangeExtractor.getDependencyChanges(build).values()) {
+        for (DependencyChange depc :
+                RunScmChangeExtractor.getDependencyChanges(build).values()) {
             for (AbstractBuild<?, ?> b : depc.getBuilds()) {
                 getLogger().finer("Searching for Jira issues in dependency " + b + " of " + build);
 
@@ -145,8 +142,8 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     /**
      * Adds issues to issueIds from parameters
      */
-    protected void addIssuesFromParameters(Run<?, ?> build, JiraSite site, TaskListener listener,
-            Set<String> issueIds) {
+    protected void addIssuesFromParameters(
+            Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
         // Now look for any JiraIssueParameterValue's set in the build
         // Implements JENKINS-12312
         ParametersAction parameters = build.getAction(ParametersAction.class);
@@ -166,8 +163,8 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     /**
      * Adds issues that were carried over from previous build to issueIds
      */
-    protected void addIssuesCarriedOverFromPreviousBuild(Run<?, ?> build, JiraSite site, TaskListener listener,
-            Set<String> ids) {
+    protected void addIssuesCarriedOverFromPreviousBuild(
+            Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> ids) {
         Run<?, ?> prev = build.getPreviousCompletedBuild();
         if (prev != null) {
             JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
@@ -183,5 +180,4 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
             }
         }
     }
-
 }

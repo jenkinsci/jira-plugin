@@ -1,14 +1,6 @@
 package hudson.plugins.jira.selector.perforce;
 
-import java.util.List;
-import java.util.Set;
-import java.util.logging.Logger;
-
-import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import com.perforce.p4java.core.IFix;
-
 import hudson.Extension;
 import hudson.model.Descriptor;
 import hudson.model.Run;
@@ -19,10 +11,15 @@ import hudson.plugins.jira.RunScmChangeExtractor;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
+import java.util.List;
+import java.util.Set;
+import java.util.logging.Logger;
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Job selector for Perforce Software SCM plugin (P4)
- * 
+ *
  * @author Jacek Tomaka
  * @since 2.3
  */
@@ -39,8 +36,7 @@ public class P4JobIssueSelector extends JobIssueSelector {
     }
 
     @DataBoundConstructor
-    public P4JobIssueSelector() {
-    }
+    public P4JobIssueSelector() {}
 
     @Override
     protected void addJobIdsFromChangeLog(Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
@@ -69,5 +65,4 @@ public class P4JobIssueSelector extends JobIssueSelector {
     protected Logger getLogger() {
         return LOGGER;
     }
-
 }

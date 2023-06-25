@@ -25,7 +25,12 @@ public class JiraIssueMigrator extends Notifier {
     private boolean addRelease;
 
     @DataBoundConstructor
-    public JiraIssueMigrator(String jiraProjectKey, String jiraRelease, String jiraQuery, String jiraReplaceVersion, boolean addRelease) {
+    public JiraIssueMigrator(
+            String jiraProjectKey,
+            String jiraRelease,
+            String jiraQuery,
+            String jiraReplaceVersion,
+            boolean addRelease) {
         this.jiraRelease = jiraRelease;
         this.jiraProjectKey = jiraProjectKey;
         this.jiraQuery = jiraQuery;
@@ -65,9 +70,13 @@ public class JiraIssueMigrator extends Notifier {
         this.jiraReplaceVersion = jiraReplaceVersion;
     }
 
-    public boolean isAddRelease() { return addRelease; }
+    public boolean isAddRelease() {
+        return addRelease;
+    }
 
-    public void setAddRelease(boolean addRelease) { this.addRelease = addRelease; }
+    public void setAddRelease(boolean addRelease) {
+        this.addRelease = addRelease;
+    }
 
     @Override
     public BuildStepDescriptor<Publisher> getDescriptor() {
@@ -78,8 +87,7 @@ public class JiraIssueMigrator extends Notifier {
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
-                           BuildListener listener) {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         String realRelease = null;
         String realReplace = null;
         String realQuery = "";
@@ -114,9 +122,8 @@ public class JiraIssueMigrator extends Notifier {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace(listener.fatalError(
-                    "Unable to release jira version %s/%s: %s", realRelease,
-                    realProjectKey, e));
+            e.printStackTrace(
+                    listener.fatalError("Unable to release jira version %s/%s: %s", realRelease, realProjectKey, e));
             listener.finished(Result.FAILURE);
             return false;
         }
@@ -127,6 +134,7 @@ public class JiraIssueMigrator extends Notifier {
         return JiraSite.get(project);
     }
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
     }
@@ -138,8 +146,7 @@ public class JiraIssueMigrator extends Notifier {
         }
 
         @Override
-        public JiraIssueMigrator newInstance(StaplerRequest req,
-                                             JSONObject formData) throws FormException {
+        public JiraIssueMigrator newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             return req.bindJSON(JiraIssueMigrator.class, formData);
         }
 
@@ -158,5 +165,4 @@ public class JiraIssueMigrator extends Notifier {
             return "/plugin/jira/help-release-migrate.html";
         }
     }
-
 }

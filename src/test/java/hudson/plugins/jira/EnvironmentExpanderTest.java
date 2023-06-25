@@ -1,25 +1,24 @@
 package hudson.plugins.jira;
 
-import hudson.EnvVars;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
-import hudson.model.FreeStyleBuild;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-
-import java.io.IOException;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
+import hudson.EnvVars;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
+import hudson.model.FreeStyleBuild;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
+
 public class EnvironmentExpanderTest {
 
-    private final static String VARIABLE = "${ISSUE_ID}";
-    private final static String ENVIRONMENT_KEY = "ISSUE_ID";
-    private final static String ENVIRONMENT_VALUE = "EXAMPLE-1";
+    private static final String VARIABLE = "${ISSUE_ID}";
+    private static final String ENVIRONMENT_KEY = "ISSUE_ID";
+    private static final String ENVIRONMENT_VALUE = "EXAMPLE-1";
 
     EnvVars env;
 
@@ -53,13 +52,13 @@ public class EnvironmentExpanderTest {
     }
 
     @Test
-    public void returnVariableFromNullRunEnvironment(){
+    public void returnVariableFromNullRunEnvironment() {
         String value = EnvironmentExpander.expandVariable(VARIABLE, null, null);
         assertThat(value, equalTo(VARIABLE));
     }
 
     @Test
-    public void returnValueFromRunEnvironment(){
+    public void returnValueFromRunEnvironment() {
         env.put(ENVIRONMENT_KEY, ENVIRONMENT_VALUE);
 
         String value = EnvironmentExpander.expandVariable(VARIABLE, currentBuild, buildListener);

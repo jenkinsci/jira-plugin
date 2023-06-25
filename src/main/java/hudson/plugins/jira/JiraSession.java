@@ -1,5 +1,7 @@
 package hudson.plugins.jira;
 
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
+
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
@@ -9,12 +11,10 @@ import com.atlassian.jira.rest.client.api.domain.Priority;
 import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.Version;
-import hudson.plugins.jira.extension.ExtendedVersion;
-import hudson.plugins.jira.model.JiraIssueField;
-import org.apache.commons.lang.StringUtils;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import hudson.plugins.jira.extension.ExtendedVersion;
+import hudson.plugins.jira.model.JiraIssueField;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -26,8 +26,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Connection to Jira.
@@ -49,7 +48,7 @@ public class JiraSession {
 
     private final String jiraSiteName;
 
-    /* package */JiraSession(JiraSite site, JiraRestService jiraRestService) {
+    /* package */ JiraSession(JiraSite site, JiraRestService jiraRestService) {
         this.service = jiraRestService;
         this.jiraSiteName = site.getName();
     }
@@ -75,8 +74,7 @@ public class JiraSession {
      *
      * @param groupVisibility
      */
-    public void addComment(String issueId, String comment,
-                           String groupVisibility, String roleVisibility) {
+    public void addComment(String issueId, String comment, String groupVisibility, String roleVisibility) {
         service.addComment(issueId, comment, groupVisibility, roleVisibility);
     }
 
@@ -90,25 +88,25 @@ public class JiraSession {
     public void addLabels(String issueId, List<String> labels) {
         List<String> newLabels = new ArrayList();
         Issue existingIssue = service.getIssue(issueId);
-        if(existingIssue.getLabels() != null) {
+        if (existingIssue.getLabels() != null) {
             newLabels.addAll(existingIssue.getLabels());
         }
         boolean changed = false;
-        for(String label : labels) {
-            if(!newLabels.contains(label)) {
+        for (String label : labels) {
+            if (!newLabels.contains(label)) {
                 newLabels.add(label);
                 changed = true;
             }
         }
-        if(changed) {
+        if (changed) {
             service.setIssueLabels(issueId, newLabels);
         }
     }
-    
+
     /**
      * Adds new to or updates existing fields of the issue.
      * Can add or update custom fields.
-     * 
+     *
      * @param issueId Jira issue ID like "PRJ-123"
      * @param fields Fields to add or update
      */
@@ -172,12 +170,16 @@ public class JiraSession {
         return getIssuesWithFixVersion(projectKey, version, "");
     }
 
-    public List<Issue> getIssuesWithFixVersion(String projectKey, String version, String filter) throws TimeoutException {
+    public List<Issue> getIssuesWithFixVersion(String projectKey, String version, String filter)
+            throws TimeoutException {
         LOGGER.fine("Fetching versions from project: " + projectKey + " with fixVersion:" + version);
         if (isNotEmpty(filter)) {
-            return service.getIssuesFromJqlSearch(String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version), Integer.MAX_VALUE);
+            return service.getIssuesFromJqlSearch(
+                    String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version),
+                    Integer.MAX_VALUE);
         }
-        return service.getIssuesFromJqlSearch(String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), Integer.MAX_VALUE);
+        return service.getIssuesFromJqlSearch(
+                String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), Integer.MAX_VALUE);
     }
 
     /**
@@ -232,10 +234,10 @@ public class JiraSession {
         }
         LOGGER.fine("Found issues: " + issues.size());
 
-        issues.stream().forEach( issue -> {
+        issues.stream().forEach(issue -> {
             LOGGER.fine("Migrating issue: " + issue.getKey());
-            service.updateIssue( issue.getKey(), Collections.singletonList(newVersion));
-        } );
+            service.updateIssue(issue.getKey(), Collections.singletonList(newVersion));
+        });
     }
 
     /**
@@ -246,7 +248,8 @@ public class JiraSession {
      * @param toVersion   The name of the replacement version
      * @param query       The JQL Query
      */
-    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query) throws TimeoutException {
+    public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query)
+            throws TimeoutException {
 
         Version newVersion = getVersionByName(projectKey, toVersion);
         if (newVersion == null) {
@@ -265,7 +268,7 @@ public class JiraSession {
             Set<Version> newVersions = new HashSet<>();
             newVersions.add(newVersion);
 
-            if(StringUtils.startsWith(fromVersion, "/") && StringUtils.endsWith(fromVersion, "/")) {
+            if (StringUtils.startsWith(fromVersion, "/") && StringUtils.endsWith(fromVersion, "/")) {
 
                 String regEx = StringUtils.removeStart(fromVersion, "/");
                 regEx = StringUtils.removeEnd(regEx, "/");
@@ -388,7 +391,7 @@ public class JiraSession {
         if (knownStatuses == null) {
             List<Status> statuses = service.getStatuses();
             knownStatuses = new HashMap<>(statuses.size());
-            statuses.stream().forEach( status ->  knownStatuses.put(status.getId(), status.getName()));
+            statuses.stream().forEach(status -> knownStatuses.put(status.getId(), status.getName()));
         }
         return knownStatuses;
     }
@@ -404,12 +407,21 @@ public class JiraSession {
      * @return The issue id
      */
     @Deprecated
-    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary) {
+    public Issue createIssue(
+            String projectKey, String description, String assignee, Iterable<String> components, String summary) {
         return createIssue(projectKey, description, assignee, components, summary, null, null);
     }
 
-    public Issue createIssue(String projectKey, String description, String assignee, Iterable<String> components, String summary, @NonNull Long issueTypeId, @Nullable Long priorityId) {
-        final BasicIssue basicIssue = service.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
+    public Issue createIssue(
+            String projectKey,
+            String description,
+            String assignee,
+            Iterable<String> components,
+            String summary,
+            @NonNull Long issueTypeId,
+            @Nullable Long priorityId) {
+        final BasicIssue basicIssue =
+                service.createIssue(projectKey, description, assignee, components, summary, issueTypeId, priorityId);
         return service.getIssue(basicIssue.getKey());
     }
 
@@ -458,8 +470,7 @@ public class JiraSession {
     /**
      * Get User's permissions
      */
-    public Permissions getMyPermissions(){ return service.getMyPermissions(); }
-
-
-
+    public Permissions getMyPermissions() {
+        return service.getMyPermissions();
+    }
 }

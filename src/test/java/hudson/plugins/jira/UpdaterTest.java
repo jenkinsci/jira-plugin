@@ -1,5 +1,17 @@
 package hudson.plugins.jira;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
@@ -14,6 +26,16 @@ import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.EditType;
 import hudson.scm.SCM;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import jenkins.model.Jenkins;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -28,29 +50,6 @@ import org.jvnet.hudson.test.WithoutJenkins;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 /**
  * Test case for the Jira {@link Updater}.
  *
@@ -59,12 +58,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SuppressWarnings("unchecked")
 public class UpdaterTest {
 
-        @Rule
-        public JenkinsRule rule = new JenkinsRule();
+    @Rule
+    public JenkinsRule rule = new JenkinsRule();
 
-        private Updater updater;
+    private Updater updater;
 
-        private static class MockEntry extends Entry {
+    private static class MockEntry extends Entry {
 
         private final String msg;
 
@@ -108,8 +107,9 @@ public class UpdaterTest {
             when(build1.getResult()).thenReturn(Result.FAILURE);
             doReturn(project).when(build1).getProject();
 
-            doReturn(new JiraCarryOverAction(new HashSet(Arrays.asList( new JiraIssue( "FOOBAR-1", null)))))
-                    .when(build1).getAction(JiraCarryOverAction.class);
+            doReturn(new JiraCarryOverAction(new HashSet(Arrays.asList(new JiraIssue("FOOBAR-1", null)))))
+                    .when(build1)
+                    .getAction(JiraCarryOverAction.class);
 
             final Set<? extends Entry> entries = new HashSet(Arrays.asList(entry1));
             when(changeLogSet.iterator()).thenAnswer(invocation -> entries.iterator());
@@ -134,14 +134,19 @@ public class UpdaterTest {
         final List<Comment> comments = new ArrayList();
         final JiraSession session = mock(JiraSession.class);
         doAnswer((Answer<Object>) invocation -> {
-            Comment rc = Comment.createWithGroupLevel((String) invocation.getArguments()[1], (String) invocation.getArguments()[2]);
-            comments.add(rc);
-            return null;
-        }).when(session).addComment(anyString(), anyString(), anyString(), anyString());
+                    Comment rc =
+                            Comment.createWithGroupLevel((String) invocation.getArguments()[1], (String)
+                                    invocation.getArguments()[2]);
+                    comments.add(rc);
+                    return null;
+                })
+                .when(session)
+                .addComment(anyString(), anyString(), anyString(), anyString());
 
-        this.updater = new Updater(build2.getProject().getScm());        
-        
-        final Set<JiraIssue> ids = new HashSet(Arrays.asList(new JiraIssue("FOOBAR-1", null), new JiraIssue("FOOBAR-2", null)));
+        this.updater = new Updater(build2.getProject().getScm());
+
+        final Set<JiraIssue> ids =
+                new HashSet(Arrays.asList(new JiraIssue("FOOBAR-1", null), new JiraIssue("FOOBAR-2", null)));
         updater.submitComments(build2, System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(2, comments.size());
@@ -158,7 +163,7 @@ public class UpdaterTest {
     public void comment() {
         // mock Jira session:
         JiraSession session = mock(JiraSession.class);
-        final Issue mockIssue = Mockito.mock( Issue.class);
+        final Issue mockIssue = Mockito.mock(Issue.class);
         when(session.getIssue(Mockito.anyString())).thenReturn(mockIssue);
 
         final List<String> comments = new ArrayList<>();
@@ -167,7 +172,9 @@ public class UpdaterTest {
             comments.add((String) invocation.getArguments()[1]);
             return null;
         };
-        doAnswer(answer).when(session).addComment(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doAnswer(answer)
+                .when(session)
+                .addComment(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 
         // mock build:
         FreeStyleBuild build = mock(FreeStyleBuild.class);
@@ -188,8 +195,7 @@ public class UpdaterTest {
         // test:
         Set<JiraIssue> ids = new HashSet(Arrays.asList(new JiraIssue("FOOBAR-4711", "Title")));
         Updater updaterCurrent = new Updater(build.getParent().getScm());
-        updaterCurrent.submitComments(build,
-                System.out, "http://jenkins", ids, session, false, false, "", "");
+        updaterCurrent.submitComments(build, System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(1, comments.size());
         String comment = comments.get(0);
@@ -202,18 +208,16 @@ public class UpdaterTest {
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
         ids = new HashSet(Arrays.asList(new JiraIssue("FOOBAR-4711", "Title")));
 
-        updaterCurrent.submitComments(build,
-                System.out, "http://jenkins", ids, session, false, false, "", "");
+        updaterCurrent.submitComments(build, System.out, "http://jenkins", ids, session, false, false, "", "");
 
         Assert.assertEquals(1, comments.size());
         comment = comments.get(0);
 
         Assert.assertTrue(comment.contains("Foobar-4711"));
-
     }
 
     /**
-    /**
+     * /**
      * Checks if issues are correctly removed from the carry over list.
      */
     @Test
@@ -235,7 +239,8 @@ public class UpdaterTest {
         final JiraIssue deletedIssue = new JiraIssue("FOOBAR-2", "Title");
         final JiraIssue forbiddenIssue = new JiraIssue("LASSO-17", "Title");
 
-        // assume that there is a following list of jira issues from scm commit messages out of hudson.plugins.jira.JiraCarryOverAction
+        // assume that there is a following list of jira issues from scm commit messages out of
+        // hudson.plugins.jira.JiraCarryOverAction
         Set<JiraIssue> issues = new HashSet(Arrays.asList(firstIssue, secondIssue, forbiddenIssue, thirdIssue));
 
         // mock Jira session:
@@ -244,19 +249,29 @@ public class UpdaterTest {
         final List<Comment> comments = new ArrayList<>();
 
         Answer answer = (Answer<Object>) invocation -> {
-            Comment c = Comment.createWithGroupLevel((String) invocation.getArguments()[0], (String) invocation.getArguments()[1]);
+            Comment c = Comment.createWithGroupLevel(
+                    (String) invocation.getArguments()[0], (String) invocation.getArguments()[1]);
             comments.add(c);
             return null;
         };
 
-        doAnswer(answer).when(session).addComment(eq(firstIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-        doAnswer(answer).when(session).addComment(eq(secondIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-        doAnswer(answer).when(session).addComment(eq(thirdIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doAnswer(answer)
+                .when(session)
+                .addComment(eq(firstIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doAnswer(answer)
+                .when(session)
+                .addComment(eq(secondIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doAnswer(answer)
+                .when(session)
+                .addComment(eq(thirdIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 
         // issue for the caught exception
-        doThrow(new RestClientException(new Throwable(), 404)).when(session).addComment(eq(deletedIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-        doThrow(new RestClientException(new Throwable(), 403)).when(session).addComment(eq(forbiddenIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
-
+        doThrow(new RestClientException(new Throwable(), 404))
+                .when(session)
+                .addComment(eq(deletedIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        doThrow(new RestClientException(new Throwable(), 403))
+                .when(session)
+                .addComment(eq(forbiddenIssue.getKey()), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 
         final String groupVisibility = "";
         final String roleVisibility = "";
@@ -264,15 +279,14 @@ public class UpdaterTest {
         Updater updaterCurrent = new Updater(build.getParent().getScm());
 
         updaterCurrent.submitComments(
-                build, System.out, "http://jenkins", issues, session, false, false, groupVisibility, roleVisibility
-        );
+                build, System.out, "http://jenkins", issues, session, false, false, groupVisibility, roleVisibility);
 
         // expected issue list
         final Set<JiraIssue> expectedIssuesToCarryOver = new LinkedHashSet();
         expectedIssuesToCarryOver.add(forbiddenIssue);
         assertThat(issues, is(expectedIssuesToCarryOver));
     }
-    
+
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
 
@@ -285,20 +299,21 @@ public class UpdaterTest {
     @WithoutJenkins
     public void getChangesUsingReflectionForWorkflowJob() throws IOException {
         Jenkins jenkins = mock(Jenkins.class);
-        
+
         when(jenkins.getRootDirFor(Mockito.any())).thenReturn(folder.getRoot());
         WorkflowJob workflowJob = new WorkflowJob(jenkins, "job");
         WorkflowRun workflowRun = new WorkflowRun(workflowJob);
-        
+
         ChangeLogSet.createEmpty(workflowRun);
-        
-        List<ChangeLogSet<? extends Entry>> changesUsingReflection = RunScmChangeExtractor.getChangesUsingReflection(workflowRun);
+
+        List<ChangeLogSet<? extends Entry>> changesUsingReflection =
+                RunScmChangeExtractor.getChangesUsingReflection(workflowRun);
         Assert.assertNotNull(changesUsingReflection);
         Assert.assertTrue(changesUsingReflection.isEmpty());
     }
-    
+
     @WithoutJenkins
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void getChangesUsingReflectionForunknownJob() {
         Run run = mock(Run.class);
         RunScmChangeExtractor.getChangesUsingReflection(run);
@@ -358,53 +373,53 @@ public class UpdaterTest {
     }
 
     /**
-     * Test formatting of scm entry change description 
+     * Test formatting of scm entry change description
      * when no format is provided (e.g. when null).
      *
      */
     @Test
     @WithoutJenkins
     public void appendChangeTimestampToDescriptionNullFormat() {
-        //set default locale -> predictable test without explicit format
+        // set default locale -> predictable test without explicit format
         Locale.setDefault(Locale.ENGLISH);
-        
+
         Updater updater = new Updater(null);
         JiraSite site = mock(JiraSite.class);
         when(site.isAppendChangeTimestamp()).thenReturn(true);
         when(site.getDateTimePattern()).thenReturn(null);
-        //when(site.getDateTimePattern()).thenReturn("d/M/yy hh:mm a");
+        // when(site.getDateTimePattern()).thenReturn("d/M/yy hh:mm a");
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(2016, 0, 1, 0, 0, 0);
-        
+
         StringBuilder builder = new StringBuilder();
         updater.appendChangeTimestampToDescription(builder, site, calendar.getTimeInMillis());
-        assertThat(builder.toString(), equalTo("1/1/16 12:00 AM"));        
+        assertThat(builder.toString(), equalTo("1/1/16 12:00 AM"));
     }
-    
+
     /**
-     * Test formatting of scm entry change description 
+     * Test formatting of scm entry change description
      * when no format is provided (e.g. when empty string).
      *
      */
     @Test
     @WithoutJenkins
     public void appendChangeTimestampToDescriptionNoFormat() {
-        //set default locale -> predictable test without explicit format
+        // set default locale -> predictable test without explicit format
         Locale.setDefault(Locale.ENGLISH);
-        
+
         Updater updater = new Updater(null);
         JiraSite site = mock(JiraSite.class);
         when(site.isAppendChangeTimestamp()).thenReturn(true);
         when(site.getDateTimePattern()).thenReturn(null);
-        //when(site.getDateTimePattern()).thenReturn("d/M/yy hh:mm a");
+        // when(site.getDateTimePattern()).thenReturn("d/M/yy hh:mm a");
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(2016, 0, 1, 0, 0, 0);
-        
+
         StringBuilder builder = new StringBuilder();
         updater.appendChangeTimestampToDescription(builder, site, calendar.getTimeInMillis());
-        assertThat(builder.toString(), equalTo("1/1/16 12:00 AM"));        
+        assertThat(builder.toString(), equalTo("1/1/16 12:00 AM"));
     }
 
     /**
@@ -434,7 +449,7 @@ public class UpdaterTest {
         User mockAuthor = mock(User.class);
         when(mockAuthor.getId()).thenReturn("jenkins-user");
         when(entry.getAuthor()).thenReturn(mockAuthor);
-        
+
         Collection<MockAffectedFile> affectedFiles = new ArrayList();
         MockAffectedFile affectedFile1 = mock(MockAffectedFile.class);
         when(affectedFile1.getEditType()).thenReturn(EditType.ADD);
@@ -456,9 +471,9 @@ public class UpdaterTest {
 
         String description = updater.createScmChangeEntryDescription(r, entry, true, true);
         System.out.println(description);
-        assertThat(description,
+        assertThat(
+                description,
                 equalTo(" (jenkins-user: rev dsgsvds2re3dsv)\n" + "* (add) hudson/plugins/jira/File1\n" + "* \n"
                         + "* (delete) hudson/plugins/jira/File2\n" + "* (edit) hudson/plugins/jira/File3\n"));
     }
-    
 }

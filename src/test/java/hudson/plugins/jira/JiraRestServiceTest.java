@@ -1,25 +1,24 @@
 package hudson.plugins.jira;
 
-import com.atlassian.jira.rest.client.api.SearchRestClient;
-import com.atlassian.jira.rest.client.api.domain.SearchResult;
-import io.atlassian.util.concurrent.Promise;
-import hudson.plugins.jira.extension.ExtendedJiraRestClient;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mockito;
-
-import java.net.URI;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+
+import com.atlassian.jira.rest.client.api.SearchRestClient;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import hudson.plugins.jira.extension.ExtendedJiraRestClient;
+import io.atlassian.util.concurrent.Promise;
+import java.net.URI;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mockito;
 
 public class JiraRestServiceTest {
 
@@ -55,7 +54,8 @@ public class JiraRestServiceTest {
 
     @Test(expected = TimeoutException.class)
     public void getIssuesFromJqlSearchTimeout() throws TimeoutException, InterruptedException, ExecutionException {
-        JiraRestService service = spy(new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT));
+        JiraRestService service =
+                spy(new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT));
         doThrow(new TimeoutException()).when(promise).get(Mockito.anyLong(), Mockito.any());
         service.getIssuesFromJqlSearch("*", null);
     }

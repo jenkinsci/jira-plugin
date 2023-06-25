@@ -1,15 +1,19 @@
 package hudson.plugins.jira.pipeline;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
+import hudson.model.Descriptor;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
+import hudson.plugins.jira.selector.AbstractIssueSelector;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-import hudson.model.Descriptor;
-import hudson.model.Result;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -18,13 +22,6 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-
-import hudson.Extension;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.plugins.jira.JiraSite;
-import hudson.plugins.jira.Messages;
-import hudson.plugins.jira.selector.AbstractIssueSelector;
 
 /**
  * Step that run selected issue selector.
@@ -36,8 +33,7 @@ public class IssueSelectorStep extends Step {
     private AbstractIssueSelector issueSelector;
 
     @DataBoundConstructor
-    public IssueSelectorStep() {
-    }
+    public IssueSelectorStep() {}
 
     @DataBoundSetter
     public void setIssueSelector(AbstractIssueSelector issueSelector) {
@@ -94,13 +90,12 @@ public class IssueSelectorStep extends Step {
             TaskListener listener = getContext().get(TaskListener.class);
             Run run = getContext().get(Run.class);
             return Optional.ofNullable(JiraSite.get(run.getParent()))
-                .map(site -> step.getIssueSelector().findIssueIds(run, site, listener))
-                .orElseGet(() -> {
-                    listener.getLogger().println(Messages.NoJiraSite());
-                    run.setResult(Result.FAILURE);
-                    return new HashSet<>();
-                });
+                    .map(site -> step.getIssueSelector().findIssueIds(run, site, listener))
+                    .orElseGet(() -> {
+                        listener.getLogger().println(Messages.NoJiraSite());
+                        run.setResult(Result.FAILURE);
+                        return new HashSet<>();
+                    });
         }
     }
-
 }

@@ -1,5 +1,14 @@
 package hudson.plugins.jira.pipeline;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.google.inject.Inject;
 import hudson.model.Node;
 import hudson.model.Result;
@@ -8,6 +17,10 @@ import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraGlobalConfiguration;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
+import java.io.PrintStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Set;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -17,20 +30,6 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import java.io.PrintStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Set;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.mock;
-
 @RunWith(MockitoJUnitRunner.class)
 public class IssueSelectorStepTest {
 
@@ -39,12 +38,16 @@ public class IssueSelectorStepTest {
 
     @Mock
     private AbstractIssueSelector issueSelector;
+
     @Mock
     private TaskListener listener;
+
     @Mock
     private PrintStream logger;
+
     @Mock
     private Run run;
+
     @Mock
     private StepContext stepContext;
 
@@ -53,7 +56,6 @@ public class IssueSelectorStepTest {
 
     @ClassRule
     public static JenkinsRule jenkinsRule = new JenkinsRule();
-
 
     @Before
     public void setUp() throws Exception {
@@ -71,7 +73,7 @@ public class IssueSelectorStepTest {
     @Test
     public void runWithNullSite() throws Exception {
         stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
-        //doReturn(Optional.empty()).when(stepExecution).getOptionalJiraSite();
+        // doReturn(Optional.empty()).when(stepExecution).getOptionalJiraSite();
 
         doCallRealMethod().when(run).getParent();
         Set<String> ids = stepExecution.run();

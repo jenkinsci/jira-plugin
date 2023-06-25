@@ -10,6 +10,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import hudson.MarkupText;
+import hudson.model.Run;
+import hudson.plugins.jira.model.JiraIssue;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -17,7 +20,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,10 +28,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
-
-import hudson.MarkupText;
-import hudson.model.Run;
-import hudson.plugins.jira.model.JiraIssue;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -53,11 +51,10 @@ public class JiraChangeLogAnnotatorTest {
         when(site.getSession(any())).thenReturn(session);
         when(site.getProjectUpdateLock()).thenReturn(new ReentrantLock());
 
-        when(site.getUrl(Mockito.anyString())).thenAnswer(
-                (Answer<URL>) invocation -> {
-                    String id = invocation.getArguments()[0].toString();
-                    return new URL("http://dummy/" + id);
-                });
+        when(site.getUrl(Mockito.anyString())).thenAnswer((Answer<URL>) invocation -> {
+            String id = invocation.getArguments()[0].toString();
+            return new URL("http://dummy/" + id);
+        });
         when(site.getProjectKeys(run.getParent())).thenCallRealMethod();
         when(site.getIssuePattern()).thenCallRealMethod();
     }
@@ -148,11 +145,11 @@ public class JiraChangeLogAnnotatorTest {
         MarkupText text = new MarkupText("DUMMY-1 Text DUMMY-2,DUMMY-3 DUMMY-4!");
         annotator.annotate(run, null, text);
 
-        assertThat(text.toString(false), is(
-                "<a href='http://dummy/DUMMY-1'>DUMMY-1</a> Text " +
-                        "<a href='http://dummy/DUMMY-2'>DUMMY-2</a>," +
-                        "<a href='http://dummy/DUMMY-3'>DUMMY-3</a> " +
-                        "<a href='http://dummy/DUMMY-4'>DUMMY-4</a>!"));
+        assertThat(
+                text.toString(false),
+                is("<a href='http://dummy/DUMMY-1'>DUMMY-1</a> Text " + "<a href='http://dummy/DUMMY-2'>DUMMY-2</a>,"
+                        + "<a href='http://dummy/DUMMY-3'>DUMMY-3</a> "
+                        + "<a href='http://dummy/DUMMY-4'>DUMMY-4</a>!"));
     }
 
     @Test
@@ -241,7 +238,8 @@ public class JiraChangeLogAnnotatorTest {
         annotator.annotate(mock(Run.class), null, text);
         assertThat(
                 text.toString(false),
-                is("fixed <a href='http://dummy/DUMMY-42' tooltip='title with $sign to confuse TextMarkup.replace'>DUMMY-42</a>abc"));
+                is(
+                        "fixed <a href='http://dummy/DUMMY-42' tooltip='title with $sign to confuse TextMarkup.replace'>DUMMY-42</a>abc"));
     }
 
     /**
@@ -252,11 +250,10 @@ public class JiraChangeLogAnnotatorTest {
      */
     @Test
     public void alternativeURLAnnotate() throws Exception {
-        when(site.getAlternativeUrl(Mockito.anyString())).thenAnswer(
-                (Answer<URL>) invocation -> {
-                    String id = invocation.getArguments()[0].toString();
-                    return new URL("http://altdummy/" + id);
-                });
+        when(site.getAlternativeUrl(Mockito.anyString())).thenAnswer((Answer<URL>) invocation -> {
+            String id = invocation.getArguments()[0].toString();
+            return new URL("http://altdummy/" + id);
+        });
 
         Run run = mock(Run.class);
 
@@ -270,5 +267,4 @@ public class JiraChangeLogAnnotatorTest {
 
         assertThat(text.toString(false), containsString("<a href='http://altdummy/DUMMY-1'"));
     }
-
 }

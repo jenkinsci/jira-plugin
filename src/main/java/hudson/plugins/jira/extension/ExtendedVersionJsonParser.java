@@ -2,11 +2,10 @@ package hudson.plugins.jira.extension;
 
 import com.atlassian.jira.rest.client.internal.json.JsonObjectParser;
 import com.atlassian.jira.rest.client.internal.json.JsonParseUtil;
+import java.net.URI;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 import org.joda.time.DateTime;
-
-import java.net.URI;
 
 public class ExtendedVersionJsonParser implements JsonObjectParser<ExtendedVersion> {
     @Override
@@ -26,7 +25,9 @@ public class ExtendedVersionJsonParser implements JsonObjectParser<ExtendedVersi
 
     private DateTime parseDate(String dateStr) {
         if (dateStr != null) {
-            return dateStr.length() > "YYYY-MM-RR".length() ? JsonParseUtil.parseDateTime(dateStr) : JsonParseUtil.parseDate(dateStr);
+            return dateStr.length() > "YYYY-MM-RR".length()
+                    ? JsonParseUtil.parseDateTime(dateStr)
+                    : JsonParseUtil.parseDate(dateStr);
         } else {
             return null;
         }

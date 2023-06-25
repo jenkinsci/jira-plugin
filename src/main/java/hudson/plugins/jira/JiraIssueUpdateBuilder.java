@@ -27,13 +27,12 @@ import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Build step that will mass-update all issues matching a JQL query, using the specified workflow
@@ -73,7 +72,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
     public String getComment() {
         return comment;
     }
-    
+
     JiraSite getSiteForJob(Job<?, ?> job) {
         return JiraSite.get(job);
     }
@@ -82,10 +81,12 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
      * Performs the actual update based on job configuration.
      */
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
         String realComment = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(comment));
         String realJql = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(jqlSearch));
-        String realWorkflowActionName = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(workflowActionName));
+        String realWorkflowActionName =
+                Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(workflowActionName));
 
         JiraSite site = getSiteForJob(run.getParent());
 
@@ -145,6 +146,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
             return FormValidation.ok();
         }
 
+        @Override
         public boolean isApplicable(Class<? extends AbstractProject> klass) {
             return true;
         }
@@ -152,6 +154,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
         /**
          * This human readable name is used in the configuration screen.
          */
+        @Override
         public String getDisplayName() {
             return Messages.JiraIssueUpdateBuilder_DisplayName();
         }

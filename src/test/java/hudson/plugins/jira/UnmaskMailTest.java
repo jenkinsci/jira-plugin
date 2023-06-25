@@ -46,5 +46,4 @@ public class UnmaskMailTest {
     private void test(String expected, String masked) {
         Assert.assertEquals(expected, JiraMailAddressResolver.unmaskEmail(masked));
     }
-
 }

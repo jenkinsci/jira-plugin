@@ -1,17 +1,16 @@
 package hudson.plugins.jira.selector.perforce;
 
-import java.util.Set;
-
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.selector.DefaultIssueSelector;
+import java.util.Set;
 
 /**
  * Base class for job selectors. Perforce offers mechanism to associate Jira
  * issues with change lists called jobs. The classes inheriting from this class
  * find issues by examining jobs associated with changes
- * 
+ *
  * @author Jacek Tomaka
  * @since 2.3
  */
@@ -28,7 +27,6 @@ public abstract class JobIssueSelector extends DefaultIssueSelector {
     /**
      * Adds job ids from change log to issueIds.
      */
-    protected abstract void addJobIdsFromChangeLog(Run<?, ?> build, JiraSite site, TaskListener listener,
-            Set<String> issueIds);
-
+    protected abstract void addJobIdsFromChangeLog(
+            Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds);
 }

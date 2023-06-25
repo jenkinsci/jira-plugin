@@ -25,75 +25,73 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 public class JiraRestServiceProxyTest {
 
-  private final ConnectionFactory connectionFactory = new HttpConnectionFactory();
-  private final URI JIRA_URI = URI.create("http://example.com:8080/");
-  private final String USERNAME = "user";
-  private final String PASSWORD = "password";
-  @Rule public JenkinsRule j = new JenkinsRule();
-  private Server server;
-  private ServerConnector connector;
-  private ExtendedJiraRestClient client;
+    private final ConnectionFactory connectionFactory = new HttpConnectionFactory();
+    private final URI JIRA_URI = URI.create("http://example.com:8080/");
+    private final String USERNAME = "user";
+    private final String PASSWORD = "password";
 
-  @Before
-  public void prepare() throws Exception {
-    server = new Server();
-    connector = new ServerConnector(server, connectionFactory);
-    server.addConnector(connector);
-    server.start();
-  }
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
-  @After
-  public void dispose() throws Exception {
-    if (server != null) {
-      server.stop();
+    private Server server;
+    private ServerConnector connector;
+    private ExtendedJiraRestClient client;
+
+    @Before
+    public void prepare() throws Exception {
+        server = new Server();
+        connector = new ServerConnector(server, connectionFactory);
+        server.addConnector(connector);
+        server.start();
     }
-  }
 
-  @Test
-  public void withProxy() throws Exception {
-    int localPort = connector.getLocalPort();
-    Jenkins.get().proxy = new ProxyConfiguration("localhost", localPort);
+    @After
+    public void dispose() throws Exception {
+        if (server != null) {
+            server.stop();
+        }
+    }
 
-    Object objectProxy = getProxyObjectFromRequest();
+    @Test
+    public void withProxy() throws Exception {
+        int localPort = connector.getLocalPort();
+        Jenkins.get().proxy = new ProxyConfiguration("localhost", localPort);
 
-    assertNotNull(objectProxy);
-    assertEquals(HttpHost.class, objectProxy.getClass());
-    HttpHost proxyHost = (HttpHost) objectProxy;
-    assertEquals("localhost", proxyHost.getHostName());
-    assertEquals(localPort, proxyHost.getPort());
-  }
+        Object objectProxy = getProxyObjectFromRequest();
 
-  @Test
-  public void withProxyAndNoProxyHosts() throws Exception {
-    int localPort = connector.getLocalPort();
-    Jenkins.get().proxy = new ProxyConfiguration("localhost", localPort);
-    Jenkins.get().proxy.setNoProxyHost("example.com|google.com");
+        assertNotNull(objectProxy);
+        assertEquals(HttpHost.class, objectProxy.getClass());
+        HttpHost proxyHost = (HttpHost) objectProxy;
+        assertEquals("localhost", proxyHost.getHostName());
+        assertEquals(localPort, proxyHost.getPort());
+    }
 
+    @Test
+    public void withProxyAndNoProxyHosts() throws Exception {
+        int localPort = connector.getLocalPort();
+        Jenkins.get().proxy = new ProxyConfiguration("localhost", localPort);
+        Jenkins.get().proxy.setNoProxyHost("example.com|google.com");
 
-    assertNull(getProxyObjectFromRequest());
+        assertNull(getProxyObjectFromRequest());
+    }
 
-  }
+    @Test
+    public void withoutProxy() throws Exception {
+        assertNull(getProxyObjectFromRequest());
+    }
 
+    private Object getProxyObjectFromRequest()
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+        JiraRestService service = new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT);
+        Method m = service.getClass().getDeclaredMethod("buildGetRequest", URI.class);
+        m.setAccessible(true);
 
-  @Test
-  public void withoutProxy() throws Exception {
-    assertNull(getProxyObjectFromRequest());
-  }
+        Request buildGetRequestValue = (Request) m.invoke(service, JIRA_URI);
 
-  private Object getProxyObjectFromRequest()
-      throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
-          NoSuchFieldException {
-    JiraRestService service =
-        new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT);
-    Method m = service.getClass().getDeclaredMethod("buildGetRequest", URI.class);
-    m.setAccessible(true);
+        assertNotNull(buildGetRequestValue);
 
-    Request buildGetRequestValue = (Request) m.invoke(service, JIRA_URI);
-
-    assertNotNull(buildGetRequestValue);
-
-    Field proxy = buildGetRequestValue.getClass().getDeclaredField("proxy");
-    proxy.setAccessible(true);
-    return proxy.get(buildGetRequestValue);
-  }
+        Field proxy = buildGetRequestValue.getClass().getDeclaredField("proxy");
+        proxy.setAccessible(true);
+        return proxy.get(buildGetRequestValue);
+    }
 }

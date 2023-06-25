@@ -1,8 +1,5 @@
 package hudson.plugins.jira;
 
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -13,6 +10,8 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * A build step which creates new Jira version
@@ -92,5 +91,4 @@ public class JiraVersionCreator extends Notifier {
             return "/plugin/jira/help-version-create.html";
         }
     }
-
 }

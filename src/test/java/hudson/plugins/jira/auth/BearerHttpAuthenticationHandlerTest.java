@@ -1,10 +1,10 @@
 package hudson.plugins.jira.auth;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+
 import com.atlassian.httpclient.api.Request;
 import org.junit.Test;
-import static org.mockito.Mockito.mock;
-
-import static org.mockito.Mockito.verify;
 
 public class BearerHttpAuthenticationHandlerTest {
 

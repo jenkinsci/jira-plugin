@@ -1,5 +1,13 @@
 package hudson.plugins.jira;
 
+import hudson.Extension;
+import hudson.MarkupText;
+import hudson.Util;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.plugins.jira.model.JiraIssue;
+import hudson.scm.ChangeLogAnnotator;
+import hudson.scm.ChangeLogSet.Entry;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -9,17 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import hudson.plugins.jira.model.JiraIssue;
 import org.apache.commons.lang.StringUtils;
-
-import hudson.Extension;
-import hudson.MarkupText;
-import hudson.Util;
-import hudson.model.Job;
-import hudson.model.Run;
-import hudson.scm.ChangeLogAnnotator;
-import hudson.scm.ChangeLogSet.Entry;
 
 /**
  * {@link ChangeLogAnnotator} that picks up Jira issue IDs.
@@ -39,10 +37,10 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
     @Override
     public void annotate(Run<?, ?> run, Entry change, MarkupText text) {
         JiraSite site = getSiteForProject(run.getParent());
-        
+
         if (site == null) {
             LOGGER.fine("not configured with Jira site");
-            return;    // not configured with Jira
+            return; // not configured with Jira
         }
 
         if (site.getDisableChangelogAnnotations()) {
@@ -116,8 +114,11 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                 if (issue == null) {
                     text.addMarkup(m.start(1), m.end(1), "<a href='" + url + "'>", "</a>");
                 } else {
-                    text.addMarkup(m.start(1), m.end(1),
-                            String.format("<a href='%s' tooltip='%s'>", url, Util.escape(issue.getSummary())), "</a>");
+                    text.addMarkup(
+                            m.start(1),
+                            m.end(1),
+                            String.format("<a href='%s' tooltip='%s'>", url, Util.escape(issue.getSummary())),
+                            "</a>");
                 }
 
             } else {

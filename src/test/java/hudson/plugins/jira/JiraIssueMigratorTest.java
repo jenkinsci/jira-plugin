@@ -1,16 +1,5 @@
 package hudson.plugins.jira;
 
-import hudson.EnvVars;
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.util.concurrent.TimeoutException;
-
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -20,6 +9,16 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import hudson.EnvVars;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+import org.junit.Before;
+import org.junit.Test;
 
 public class JiraIssueMigratorTest {
 

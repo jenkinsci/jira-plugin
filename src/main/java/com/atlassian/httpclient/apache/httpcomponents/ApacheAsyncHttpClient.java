@@ -1,5 +1,8 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
+import static io.atlassian.util.concurrent.Promises.rejected;
+import static java.lang.String.format;
+
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.httpclient.api.DefaultResponseTransformation;
 import com.atlassian.httpclient.api.HttpClient;
@@ -14,8 +17,27 @@ import com.atlassian.httpclient.base.event.HttpRequestCompletedEvent;
 import com.atlassian.httpclient.base.event.HttpRequestFailedEvent;
 import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
-import io.atlassian.util.concurrent.ThreadFactories;
 import hudson.ProxyConfiguration;
+import io.atlassian.util.concurrent.ThreadFactories;
+import java.io.IOException;
+import java.net.URI;
+import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.X509Certificate;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.regex.Pattern;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocket;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
@@ -68,36 +90,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.SSLSocket;
-import java.io.IOException;
-import java.net.URI;
-import java.security.GeneralSecurityException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.X509Certificate;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.regex.Pattern;
-
-import static io.atlassian.util.concurrent.Promises.rejected;
-import static java.lang.String.format;
-
-public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBean
-{
+public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBean {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     private static final Supplier<String> httpClientVersion =
             () -> MavenUtils.getVersion("com.atlassian.httpclient", "atlassian-httpclient-api");
-
 
     private final Function<Object, Void> eventConsumer;
     private final Supplier<String> applicationName;
@@ -107,42 +104,42 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
 
     private final CloseableHttpAsyncClient nonCachingHttpClient;
 
-    public ApacheAsyncHttpClient(EventPublisher eventConsumer, ApplicationProperties applicationProperties, ThreadLocalContextManager<C> threadLocalContextManager)
-    {
+    public ApacheAsyncHttpClient(
+            EventPublisher eventConsumer,
+            ApplicationProperties applicationProperties,
+            ThreadLocalContextManager<C> threadLocalContextManager) {
         this(eventConsumer, applicationProperties, threadLocalContextManager, new HttpClientOptions());
     }
 
-    public ApacheAsyncHttpClient(EventPublisher eventConsumer,
+    public ApacheAsyncHttpClient(
+            EventPublisher eventConsumer,
             ApplicationProperties applicationProperties,
             ThreadLocalContextManager<C> threadLocalContextManager,
-            HttpClientOptions options)
-    {
-        this(new DefaultApplicationNameSupplier(applicationProperties),
+            HttpClientOptions options) {
+        this(
+                new DefaultApplicationNameSupplier(applicationProperties),
                 new EventConsumerFunction(eventConsumer),
                 threadLocalContextManager,
                 options);
     }
 
-    public ApacheAsyncHttpClient(final Supplier<String> applicationName,
+    public ApacheAsyncHttpClient(
+            final Supplier<String> applicationName,
             final Function<Object, Void> eventConsumer,
             final ThreadLocalContextManager<C> threadLocalContextManager,
-            final HttpClientOptions options)
-    {
+            final HttpClientOptions options) {
         this.eventConsumer = Objects.requireNonNull(eventConsumer);
         this.applicationName = Objects.requireNonNull(applicationName);
         this.threadLocalContextManager = Objects.requireNonNull(threadLocalContextManager);
         this.httpClientOptions = Objects.requireNonNull(options);
 
-        try
-        {
+        try {
             final HttpAsyncClientBuilder clientBuilder = createClientBuilder();
 
             this.nonCachingHttpClient = clientBuilder.build();
             this.callbackExecutor = options.getCallbackExecutor();
             nonCachingHttpClient.start();
-        }
-        catch (IOReactorException e)
-        {
+        } catch (IOReactorException e) {
             throw new RuntimeException("Reactor " + options.getThreadPrefix() + "not set up correctly", e);
         }
     }
@@ -157,49 +154,42 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                 .build();
 
         final DefaultConnectingIOReactor ioReactor = new DefaultConnectingIOReactor(reactorConfig);
-        ioReactor.setExceptionHandler(new IOReactorExceptionHandler()
-        {
+        ioReactor.setExceptionHandler(new IOReactorExceptionHandler() {
             @Override
-            public boolean handle(final IOException e)
-            {
+            public boolean handle(final IOException e) {
                 log.error("IO exception in reactor ", e);
                 return false;
             }
 
             @Override
-            public boolean handle(final RuntimeException e)
-            {
+            public boolean handle(final RuntimeException e) {
                 log.error("Fatal runtime error", e);
                 return false;
             }
         });
 
-        final PoolingNHttpClientConnectionManager connectionManager = new PoolingNHttpClientConnectionManager(
-                ioReactor,
-                ManagedNHttpClientConnectionFactory.INSTANCE,
-                getRegistry(options),
-                DefaultSchemePortResolver.INSTANCE,
-                SystemDefaultDnsResolver.INSTANCE,
-                options.getConnectionPoolTimeToLive(),
-                TimeUnit.MILLISECONDS)
-        {
-            @Override
-            protected void finalize() throws Throwable
-            {
-                // prevent the PoolingClientAsyncConnectionManager from logging - this causes exceptions due to
-                // the ClassLoader probably having been removed when the plugin shuts down.  Added a
-                // PluginEventListener to make sure the shutdown method is called while the plugin classloader
-                // is still active.
-                try
-                {
-                    this.shutdown();
-                }
-                catch ( Throwable e )
-                {
-                    // ignore e.printStackTrace();
-                }
-            }
-        };
+        final PoolingNHttpClientConnectionManager connectionManager =
+                new PoolingNHttpClientConnectionManager(
+                        ioReactor,
+                        ManagedNHttpClientConnectionFactory.INSTANCE,
+                        getRegistry(options),
+                        DefaultSchemePortResolver.INSTANCE,
+                        SystemDefaultDnsResolver.INSTANCE,
+                        options.getConnectionPoolTimeToLive(),
+                        TimeUnit.MILLISECONDS) {
+                    @Override
+                    protected void finalize() throws Throwable {
+                        // prevent the PoolingClientAsyncConnectionManager from logging - this causes exceptions due to
+                        // the ClassLoader probably having been removed when the plugin shuts down.  Added a
+                        // PluginEventListener to make sure the shutdown method is called while the plugin classloader
+                        // is still active.
+                        try {
+                            this.shutdown();
+                        } catch (Throwable e) {
+                            // ignore e.printStackTrace();
+                        }
+                    }
+                };
 
         connectionManager.setDefaultMaxPerRoute(options.getMaxConnectionsPerHost());
 
@@ -211,29 +201,31 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                 .build();
 
         final HttpAsyncClientBuilder clientBuilder = HttpAsyncClients.custom()
-                .setThreadFactory(ThreadFactories.namedThreadFactory(options.getThreadPrefix() + "-io", ThreadFactories.Type.DAEMON))
+                .setThreadFactory(ThreadFactories.namedThreadFactory(
+                        options.getThreadPrefix() + "-io", ThreadFactories.Type.DAEMON))
                 .setDefaultIOReactorConfig(reactorConfig)
                 .setConnectionManager(connectionManager)
                 .setRedirectStrategy(new RedirectStrategy())
                 .setUserAgent(getUserAgent(options))
                 .setDefaultRequestConfig(requestConfig);
 
-        if(Jenkins.get() != null) {
+        if (Jenkins.get() != null) {
             ProxyConfiguration proxyConfiguration = Jenkins.getInstance().proxy;
-            if ( proxyConfiguration != null ) {
-                final HttpHost proxy = new HttpHost( proxyConfiguration.name, proxyConfiguration.port );
-                //clientBuilder.setProxy( proxy );
-                if ( StringUtils.isNotBlank( proxyConfiguration.getUserName() ) ) {
-                    clientBuilder.setProxyAuthenticationStrategy( ProxyAuthenticationStrategy.INSTANCE );
+            if (proxyConfiguration != null) {
+                final HttpHost proxy = new HttpHost(proxyConfiguration.name, proxyConfiguration.port);
+                // clientBuilder.setProxy( proxy );
+                if (StringUtils.isNotBlank(proxyConfiguration.getUserName())) {
+                    clientBuilder.setProxyAuthenticationStrategy(ProxyAuthenticationStrategy.INSTANCE);
                     CredentialsProvider credsProvider = new BasicCredentialsProvider();
-                    credsProvider.setCredentials( new AuthScope( proxyConfiguration.name, proxyConfiguration.port ),
-                                                  new UsernamePasswordCredentials( proxyConfiguration.getUserName(),
-                                                                                   proxyConfiguration.getPassword() ) );
-                    clientBuilder.setDefaultCredentialsProvider( credsProvider );
+                    credsProvider.setCredentials(
+                            new AuthScope(proxyConfiguration.name, proxyConfiguration.port),
+                            new UsernamePasswordCredentials(
+                                    proxyConfiguration.getUserName(), proxyConfiguration.getPassword()));
+                    clientBuilder.setDefaultCredentialsProvider(credsProvider);
                 }
 
                 clientBuilder.setRoutePlanner(
-                    new JenkinsProxyRoutePlanner( proxy, proxyConfiguration.getNoProxyHostPatterns() ) );
+                        new JenkinsProxyRoutePlanner(proxy, proxyConfiguration.getNoProxyHostPatterns()));
             }
         }
 
@@ -251,7 +243,8 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
         }
 
         @Override
-        protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context) throws HttpException {
+        protected HttpHost determineProxy(HttpHost target, HttpRequest request, HttpContext context)
+                throws HttpException {
             return bypassProxy(target.getHostName()) ? null : this.proxy;
         }
 
@@ -265,12 +258,10 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
         }
     }
 
-    private Registry<SchemeIOSessionStrategy> getRegistry(final HttpClientOptions options)
-    {
-        try
-        {
-            final TrustSelfSignedStrategy strategy = options.trustSelfSignedCertificates() ?
-                    new TrustSelfSignedStrategy() : null;
+    private Registry<SchemeIOSessionStrategy> getRegistry(final HttpClientOptions options) {
+        try {
+            final TrustSelfSignedStrategy strategy =
+                    options.trustSelfSignedCertificates() ? new TrustSelfSignedStrategy() : null;
 
             final SSLContext sslContext = new SSLContextBuilder()
                     .useTLS()
@@ -281,53 +272,45 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                     sslContext,
                     split(System.getProperty("https.protocols")),
                     split(System.getProperty("https.cipherSuites")),
-                    options.trustSelfSignedCertificates() ?
-                            getSelfSignedVerifier() : SSLIOSessionStrategy.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+                    options.trustSelfSignedCertificates()
+                            ? getSelfSignedVerifier()
+                            : SSLIOSessionStrategy.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
 
             return RegistryBuilder.<SchemeIOSessionStrategy>create()
                     .register("http", NoopIOSessionStrategy.INSTANCE)
                     .register("https", sslioSessionStrategy)
                     .build();
-        }
-        catch (KeyManagementException|NoSuchAlgorithmException|KeyStoreException e)
-        {
+        } catch (KeyManagementException | NoSuchAlgorithmException | KeyStoreException e) {
             return getFallbackRegistry(e);
         }
     }
 
-    private X509HostnameVerifier getSelfSignedVerifier()
-    {
-        return new X509HostnameVerifier()
-        {
+    private X509HostnameVerifier getSelfSignedVerifier() {
+        return new X509HostnameVerifier() {
             @Override
-            public void verify(final String host, final SSLSocket ssl) throws IOException
-            {
+            public void verify(final String host, final SSLSocket ssl) throws IOException {
                 log.debug("Verification for certificates from {} disabled", host);
             }
 
             @Override
-            public void verify(final String host, final X509Certificate cert) throws SSLException
-            {
+            public void verify(final String host, final X509Certificate cert) throws SSLException {
                 log.debug("Verification for certificates from {} disabled", host);
             }
 
             @Override
-            public void verify(final String host, final String[] cns, final String[] subjectAlts) throws SSLException
-            {
+            public void verify(final String host, final String[] cns, final String[] subjectAlts) throws SSLException {
                 log.debug("Verification for certificates from {} disabled", host);
             }
 
             @Override
-            public boolean verify(final String host, final SSLSession sslSession)
-            {
+            public boolean verify(final String host, final SSLSession sslSession) {
                 log.debug("Verification for certificates from {} disabled", host);
                 return true;
             }
         };
     }
 
-    private Registry<SchemeIOSessionStrategy> getFallbackRegistry(final GeneralSecurityException e)
-    {
+    private Registry<SchemeIOSessionStrategy> getFallbackRegistry(final GeneralSecurityException e) {
         log.error("Error when creating scheme session strategy registry", e);
         return RegistryBuilder.<SchemeIOSessionStrategy>create()
                 .register("http", NoopIOSessionStrategy.INSTANCE)
@@ -335,37 +318,29 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                 .build();
     }
 
-    private String getUserAgent(HttpClientOptions options)
-    {
-        return format("Atlassian HttpClient %s / %s / %s",
-                httpClientVersion.get(),
-                applicationName.get(),
-                options.getUserAgent());
+    private String getUserAgent(HttpClientOptions options) {
+        return format(
+                "Atlassian HttpClient %s / %s / %s",
+                httpClientVersion.get(), applicationName.get(), options.getUserAgent());
     }
 
     @Override
-    public final ResponsePromise execute(final Request request)
-    {
-        try
-        {
+    public final ResponsePromise execute(final Request request) {
+        try {
             return doExecute(request);
-        }
-        catch (Throwable t)
-        {
+        } catch (Throwable t) {
             return ResponsePromises.toResponsePromise(rejected(t));
         }
     }
 
-    private ResponsePromise doExecute(final Request request)
-    {
+    private ResponsePromise doExecute(final Request request) {
         httpClientOptions.getRequestPreparer().accept(request);
 
         final long start = System.currentTimeMillis();
         final HttpRequestBase op;
         final String uri = request.getUri().toString();
         final Request.Method method = request.getMethod();
-        switch (method)
-        {
+        switch (method) {
             case GET:
                 op = new HttpGet(uri);
                 break;
@@ -390,51 +365,46 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
             default:
                 throw new UnsupportedOperationException(method.toString());
         }
-        if (request.hasEntity())
-        {
+        if (request.hasEntity()) {
             new RequestEntityEffect(request).apply(op);
         }
 
-        for (Map.Entry<String, String> entry : request.getHeaders().entrySet())
-        {
+        for (Map.Entry<String, String> entry : request.getHeaders().entrySet()) {
             op.setHeader(entry.getKey(), entry.getValue());
         }
 
         final PromiseHttpAsyncClient asyncClient = getPromiseHttpAsyncClient(request);
-        return ResponsePromises.toResponsePromise(asyncClient.execute(op, new BasicHttpContext()).fold(
-            throwable -> {
-                        final long requestDuration = System.currentTimeMillis() - start;
-                        publishEvent(request, requestDuration, throwable);
-                        throw new RuntimeException(throwable);
-                    },
-            httpResponse -> {
-                        final long requestDuration = System.currentTimeMillis() - start;
-                        publishEvent(request, requestDuration, httpResponse.getStatusLine().getStatusCode());
-                        try
-                        {
-                            return translate(httpResponse);
-                        }
-                        catch (IOException e)
-                        {
-                            throw new RuntimeException(e);
-                        }
-                }
-        ));
+        return ResponsePromises.toResponsePromise(asyncClient
+                .execute(op, new BasicHttpContext())
+                .fold(
+                        throwable -> {
+                            final long requestDuration = System.currentTimeMillis() - start;
+                            publishEvent(request, requestDuration, throwable);
+                            throw new RuntimeException(throwable);
+                        },
+                        httpResponse -> {
+                            final long requestDuration = System.currentTimeMillis() - start;
+                            publishEvent(
+                                    request,
+                                    requestDuration,
+                                    httpResponse.getStatusLine().getStatusCode());
+                            try {
+                                return translate(httpResponse);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }));
     }
 
-    private void publishEvent(Request request, long requestDuration, int statusCode)
-    {
-        if (HttpStatus.OK.code <= statusCode && statusCode < HttpStatus.MULTIPLE_CHOICES.code)
-        {
+    private void publishEvent(Request request, long requestDuration, int statusCode) {
+        if (HttpStatus.OK.code <= statusCode && statusCode < HttpStatus.MULTIPLE_CHOICES.code) {
             eventConsumer.apply(new HttpRequestCompletedEvent(
                     request.getUri().toString(),
                     request.getMethod().name(),
                     statusCode,
                     requestDuration,
                     request.getAttributes()));
-        }
-        else
-        {
+        } else {
             eventConsumer.apply(new HttpRequestFailedEvent(
                     request.getUri().toString(),
                     request.getMethod().name(),
@@ -444,8 +414,7 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
         }
     }
 
-    private void publishEvent(Request request, long requestDuration, Throwable ex)
-    {
+    private void publishEvent(Request request, long requestDuration, Throwable ex) {
         eventConsumer.apply(new HttpRequestFailedEvent(
                 request.getUri().toString(),
                 request.getMethod().name(),
@@ -454,25 +423,24 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                 request.getAttributes()));
     }
 
-    private PromiseHttpAsyncClient getPromiseHttpAsyncClient(Request request)
-    {
+    private PromiseHttpAsyncClient getPromiseHttpAsyncClient(Request request) {
 
-        log.trace( "Creating new HttpAsyncClient" );
+        log.trace("Creating new HttpAsyncClient");
         final CloseableHttpAsyncClient nonCachingHttpClient;
         try {
             final HttpAsyncClientBuilder clientBuilder = createClientBuilder();
 
             nonCachingHttpClient = clientBuilder.build();
             nonCachingHttpClient.start();
-        } catch ( IOReactorException e ) {
-            throw new RuntimeException( "Reactor " + httpClientOptions.getThreadPrefix() + "not set up correctly" , e );
+        } catch (IOReactorException e) {
+            throw new RuntimeException("Reactor " + httpClientOptions.getThreadPrefix() + "not set up correctly", e);
         }
 
-        return new CompletableFuturePromiseHttpPromiseAsyncClient<>(nonCachingHttpClient, threadLocalContextManager, callbackExecutor);
+        return new CompletableFuturePromiseHttpPromiseAsyncClient<>(
+                nonCachingHttpClient, threadLocalContextManager, callbackExecutor);
     }
 
-    private Response translate(HttpResponse httpResponse) throws IOException
-    {
+    private Response translate(HttpResponse httpResponse) throws IOException {
         StatusLine status = httpResponse.getStatusLine();
         Response.Builder responseBuilder = DefaultResponse.builder()
                 .setMaxEntitySize(httpClientOptions.getMaxEntitySize())
@@ -480,144 +448,118 @@ public final class ApacheAsyncHttpClient<C> implements HttpClient, DisposableBea
                 .setStatusText(status.getReasonPhrase());
 
         Header[] httpHeaders = httpResponse.getAllHeaders();
-        for (Header httpHeader : httpHeaders)
-        {
+        for (Header httpHeader : httpHeaders) {
             responseBuilder.setHeader(httpHeader.getName(), httpHeader.getValue());
         }
         final HttpEntity entity = httpResponse.getEntity();
-        if (entity != null)
-        {
+        if (entity != null) {
             responseBuilder.setEntityStream(entity.getContent());
         }
         return responseBuilder.build();
     }
 
     @Override
-    public void destroy() throws Exception
-    {
+    public void destroy() throws Exception {
         try {
             callbackExecutor.shutdown();
-        } catch ( Exception e ) {
-            log.warn( "skip fail to shutdown callbackExecutor:" + e.getMessage(),e);
+        } catch (Exception e) {
+            log.warn("skip fail to shutdown callbackExecutor:" + e.getMessage(), e);
         }
         try {
             nonCachingHttpClient.close();
-        } catch ( Exception e ) {
-            log.warn( "skip fail to shutdown nonCachingHttpClient:" + e.getMessage(),e);
+        } catch (Exception e) {
+            log.warn("skip fail to shutdown nonCachingHttpClient:" + e.getMessage(), e);
         }
     }
 
     @Override
-    public void flushCacheByUriPattern(Pattern urlPattern)
-    {
-        //httpCacheStorage.flushByUriPattern(urlPattern);
+    public void flushCacheByUriPattern(Pattern urlPattern) {
+        // httpCacheStorage.flushByUriPattern(urlPattern);
     }
 
-
-
-    private static final class NoOpThreadLocalContextManager<C> implements ThreadLocalContextManager<C>
-    {
+    private static final class NoOpThreadLocalContextManager<C> implements ThreadLocalContextManager<C> {
         @Override
-        public C getThreadLocalContext()
-        {
+        public C getThreadLocalContext() {
             return null;
         }
 
         @Override
-        public void setThreadLocalContext(C context)
-        {
-        }
+        public void setThreadLocalContext(C context) {}
 
         @Override
-        public void clearThreadLocalContext()
-        {
-        }
+        public void clearThreadLocalContext() {}
     }
 
-    private static final class DefaultApplicationNameSupplier implements Supplier<String>
-    {
+    private static final class DefaultApplicationNameSupplier implements Supplier<String> {
         private final ApplicationProperties applicationProperties;
 
-        public DefaultApplicationNameSupplier(ApplicationProperties applicationProperties)
-        {
+        public DefaultApplicationNameSupplier(ApplicationProperties applicationProperties) {
             this.applicationProperties = Objects.requireNonNull(applicationProperties);
         }
 
         @Override
-        public String get()
-        {
-            return format("%s-%s (%s)",
+        public String get() {
+            return format(
+                    "%s-%s (%s)",
                     applicationProperties.getDisplayName(),
                     applicationProperties.getVersion(),
                     applicationProperties.getBuildNumber());
         }
     }
 
-    private static class EventConsumerFunction implements Function<Object, Void>
-    {
+    private static class EventConsumerFunction implements Function<Object, Void> {
         private final EventPublisher eventPublisher;
 
-        public EventConsumerFunction(EventPublisher eventPublisher)
-        {
+        public EventConsumerFunction(EventPublisher eventPublisher) {
             this.eventPublisher = eventPublisher;
         }
 
         @Override
-        public Void apply(Object event)
-        {
-            if (eventPublisher != null)
-            {
-                eventPublisher.publish( event );
+        public Void apply(Object event) {
+            if (eventPublisher != null) {
+                eventPublisher.publish(event);
             }
             return null;
         }
     }
 
-    private static String[] split(final String s)
-    {
-        if (TextUtils.isBlank(s))
-        {
+    private static String[] split(final String s) {
+        if (TextUtils.isBlank(s)) {
             return null;
         }
         return s.split(" *, *");
     }
 
     @Override
-    public Request.Builder newRequest()
-    {
+    public Request.Builder newRequest() {
         return DefaultRequest.builder(this);
     }
 
     @Override
-    public Request.Builder newRequest(URI uri)
-    {
+    public Request.Builder newRequest(URI uri) {
         return DefaultRequest.builder(this).setUri(uri);
     }
 
     @Override
-    public Request.Builder newRequest(URI uri, String contentType, String entity)
-    {
+    public Request.Builder newRequest(URI uri, String contentType, String entity) {
         return DefaultRequest.builder(this)
-            .setContentType(contentType)
-            .setEntity(entity)
-            .setUri(uri);
+                .setContentType(contentType)
+                .setEntity(entity)
+                .setUri(uri);
     }
 
     @Override
-    public Request.Builder newRequest(String uri)
-    {
+    public Request.Builder newRequest(String uri) {
         return newRequest(URI.create(uri));
     }
 
     @Override
-    public Request.Builder newRequest(String uri, String contentType, String entity)
-    {
+    public Request.Builder newRequest(String uri, String contentType, String entity) {
         return newRequest(URI.create(uri), contentType, entity);
     }
 
     @Override
-    public <A> ResponseTransformation.Builder<A> transformation()
-    {
+    public <A> ResponseTransformation.Builder<A> transformation() {
         return DefaultResponseTransformation.builder();
     }
 }

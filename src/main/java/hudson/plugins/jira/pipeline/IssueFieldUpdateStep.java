@@ -32,9 +32,9 @@ import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Issue custom fields updater
- * 
+ *
  * @author Dmitry Frolov tekillaz.dev@gmail.com
- * 
+ *
  */
 public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
@@ -80,15 +80,15 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
     public String prepareFieldId(String fieldId) {
         String prepared = fieldId;
-        if (!prepared.startsWith("customfield_"))
+        if (!prepared.startsWith("customfield_")) {
             prepared = "customfield_" + prepared;
+        }
         return prepared;
     }
 
-  @Override
-  public void perform(
-      Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener)
-      throws IOException {
+    @Override
+    public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener)
+            throws IOException {
 
         PrintStream logger = listener.getLogger();
 
@@ -118,12 +118,8 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
-        List<JiraIssueField> fields = Collections.singletonList(
-            new JiraIssueField(
-                prepareFieldId(getFieldId()),
-                EnvironmentExpander.expandVariable(getFieldValue(), env)
-            )
-        );
+        List<JiraIssueField> fields = Collections.singletonList(new JiraIssueField(
+                prepareFieldId(getFieldId()), EnvironmentExpander.expandVariable(getFieldValue(), env)));
 
         for (String issue : issues) {
             submitFields(session, issue, fields, logger);
@@ -151,13 +147,11 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             }
 
             if (e.getStatusCode().or(0).equals(403)) {
-                logger.println(issueId
-                        + " - Jenkins Jira user does not have permissions to comment on this issue");
+                logger.println(issueId + " - Jenkins Jira user does not have permissions to comment on this issue");
             }
 
             if (e.getStatusCode().or(0).equals(401)) {
-                logger.println(
-                        issueId + " - Jenkins Jira authentication problem");
+                logger.println(issueId + " - Jenkins Jira authentication problem");
             }
 
             logger.println(Messages.FailedToUpdateIssue(issueId));
@@ -174,10 +168,12 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         public FormValidation doCheckField_id(@QueryParameter String value) throws IOException, ServletException {
-            if (Util.fixNull(value).trim().length() == 0)
+            if (Util.fixNull(value).trim().length() == 0) {
                 return FormValidation.warning(Messages.JiraIssueFieldUpdater_NoIssueFieldID());
-            if (!value.matches("\\d+"))
+            }
+            if (!value.matches("\\d+")) {
                 return FormValidation.error(Messages.JiraIssueFieldUpdater_NotAtIssueFieldID());
+            }
             return FormValidation.ok();
         }
 
@@ -191,5 +187,4 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return Messages.JiraIssueFieldUpdater_DisplayName();
         }
     }
-
 }

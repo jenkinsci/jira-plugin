@@ -23,9 +23,18 @@
  */
 package hudson.plugins.jira;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.User;
 import hudson.security.HudsonPrivateSecurityRealm;
+import java.net.URI;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import jenkins.model.Jenkins;
 import jenkins.security.SecurityListener;
 import org.junit.Before;
@@ -39,16 +48,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.net.URI;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-
 @RunWith(MockitoJUnitRunner.class)
 public class MailResolverWithExtensionTest extends JenkinsRule {
     @Rule
@@ -58,6 +57,7 @@ public class MailResolverWithExtensionTest extends JenkinsRule {
     JiraSite site;
 
     JiraSession session;
+
     @Mock
     JiraRestService service;
 
@@ -69,8 +69,8 @@ public class MailResolverWithExtensionTest extends JenkinsRule {
         Map<String, URI> avatars = new HashMap<>();
         // pre check condition in Jira User constructor and do not ask me why!!
         avatars.put("48x48", new URI("https://foo.com"));
-        com.atlassian.jira.rest.client.api.domain.User jiraUser =
-                new com.atlassian.jira.rest.client.api.domain.User(null, "foo", "bar", "foo@beer.com", true, null, avatars, null);
+        com.atlassian.jira.rest.client.api.domain.User jiraUser = new com.atlassian.jira.rest.client.api.domain.User(
+                null, "foo", "bar", "foo@beer.com", true, null, avatars, null);
 
         doReturn(session).when(site).getSession(any());
         doReturn(jiraUser).when(service).getUser("foo");
@@ -104,11 +104,11 @@ public class MailResolverWithExtensionTest extends JenkinsRule {
 
             User user = User.getById(userId, false);
 
-            JiraMailAddressResolver jiraMailAddressResolver =
-                    Jenkins.get().getExtensionList(JiraMailAddressResolver.class).get(0);
+            JiraMailAddressResolver jiraMailAddressResolver = Jenkins.get()
+                    .getExtensionList(JiraMailAddressResolver.class)
+                    .get(0);
             String email = jiraMailAddressResolver.findMailAddressFor(user);
             assertThat(email, is("foo@beer.com"));
-
         }
     }
 }

@@ -39,25 +39,34 @@ public class VersionCreatorTest {
 
     @Mock
     AbstractBuild build;
+
     @Mock
     BuildListener listener;
+
     @Mock
     PrintStream logger;
+
     @Mock
     EnvVars env;
+
     @Mock
     AbstractProject project;
+
     @Mock
     JiraSite site;
+
     @Mock
     JiraSession session;
+
     @Captor
     ArgumentCaptor<String> versionCaptor;
+
     @Captor
     ArgumentCaptor<String> projectCaptor;
 
     private VersionCreator versionCreator = spy(VersionCreator.class);
-    private ExtendedVersion existingVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, false, ANY_DATE, ANY_DATE);
+    private ExtendedVersion existingVersion =
+            new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, false, ANY_DATE, ANY_DATE);
 
     @Before
     public void createMocks() {
@@ -65,12 +74,13 @@ public class VersionCreatorTest {
         when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
             String expanded = (String) args[0];
-            if (expanded.equals(JIRA_PRJ_PARAM))
+            if (expanded.equals(JIRA_PRJ_PARAM)) {
                 return JIRA_PRJ;
-            else if (expanded.equals(JIRA_VER_PARAM))
+            } else if (expanded.equals(JIRA_VER_PARAM)) {
                 return JIRA_VER;
-            else
+            } else {
                 return expanded;
+            }
         });
         when(listener.getLogger()).thenReturn(logger);
         doReturn(site).when(versionCreator).getSiteForProject(any());
@@ -79,7 +89,7 @@ public class VersionCreatorTest {
     @Test
     public void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
-        when(site.getSession( any() )).thenReturn(session);
+        when(site.getSession(any())).thenReturn(session);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
 
         versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
@@ -103,13 +113,12 @@ public class VersionCreatorTest {
     @Test
     public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
         when(build.getEnvironment(listener)).thenReturn(env);
-        ExtendedVersion releasedVersion = new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, true, ANY_DATE, ANY_DATE);
+        ExtendedVersion releasedVersion =
+                new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, true, ANY_DATE, ANY_DATE);
         when(site.getSession(any())).thenReturn(session);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(releasedVersion));
 
         versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
-        verify(session, times(0))
-                .addVersion(any(), any());
+        verify(session, times(0)).addVersion(any(), any());
     }
-
 }

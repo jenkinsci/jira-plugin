@@ -1,9 +1,7 @@
 package hudson.plugins.jira.versionparameter;
 
 import com.atlassian.jira.rest.client.api.domain.Version;
-
 import java.util.Comparator;
-
 import org.apache.maven.artifact.versioning.ComparableVersion;
 
 /**
@@ -21,6 +19,7 @@ public class VersionComparator implements Comparator<Version> {
 
     public static final VersionComparator INSTANCE = new VersionComparator();
 
+    @Override
     public int compare(Version rev1, Version rev2) {
         ComparableVersion comparableVersion1 = new ComparableVersion(getNumberVersion(rev1.getName()));
         ComparableVersion comparableVersion2 = new ComparableVersion(getNumberVersion(rev2.getName()));
@@ -43,12 +42,11 @@ public class VersionComparator implements Comparator<Version> {
         String res = firstV;
         if (firstV.contains("-")) {
             String[] splittedVersion = firstV.split("-");
-            if(splittedVersion.length > 1) {
+            if (splittedVersion.length > 1) {
                 res = splittedVersion[1];
             }
         }
 
         return res;
     }
-
 }

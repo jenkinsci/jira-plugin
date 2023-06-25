@@ -1,17 +1,16 @@
 package hudson.plugins.jira.selector;
 
-import org.junit.Test;
-
-import java.util.Collections;
-import java.util.Set;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
 
+import java.util.Collections;
+import java.util.Set;
+import org.junit.Test;
+
 public class ExplicitIssueSelectorTest {
 
-    private final static String TEST_KEY = "EXAMPLE-1";
+    private static final String TEST_KEY = "EXAMPLE-1";
 
     @Test
     public void returnsExplicitCollections() {

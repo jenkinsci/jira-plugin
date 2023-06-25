@@ -1,5 +1,8 @@
 package hudson.plugins.jira.selector.perforce;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.ParameterValue;
@@ -8,24 +11,19 @@ import hudson.plugins.jira.JiraCarryOverAction;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
 import hudson.scm.ChangeLogSet;
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import org.junit.Assert;
+import org.junit.Test;
 
 public abstract class JobIssueSelectorTest {
 
+    protected abstract JobIssueSelector createJobIssueSelector();
 
-    protected abstract JobIssueSelector createJobIssueSelector(); 
     @Test
     public void findsIssuesWithJiraParameters() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
@@ -52,7 +50,6 @@ public abstract class JobIssueSelectorTest {
         ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
         Assert.assertTrue(ids.isEmpty());
 
-
         parameters.add(parameter);
         ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
         Assert.assertEquals(1, ids.size());
@@ -64,22 +61,22 @@ public abstract class JobIssueSelectorTest {
         Set<String> expected = new TreeSet(Arrays.asList("JIRA-123", "JIRA-321"));
         Assert.assertEquals(expected, ids);
     }
+
     @Test
     public void findsCarriedOnIssues() {
-        
+
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         FreeStyleBuild previousBuild = mock(FreeStyleBuild.class);
         ArrayList<String> issues = new ArrayList<>();
         issues.add("GC-131");
         JiraCarryOverAction jiraCarryOverAction = mock(JiraCarryOverAction.class);
-        when (build.getPreviousCompletedBuild()).thenReturn(previousBuild);
-        when (previousBuild.getAction(JiraCarryOverAction.class)).thenReturn(jiraCarryOverAction);
-        when (jiraCarryOverAction.getIDs()).thenReturn(issues);
-        
+        when(build.getPreviousCompletedBuild()).thenReturn(previousBuild);
+        when(previousBuild.getAction(JiraCarryOverAction.class)).thenReturn(jiraCarryOverAction);
+        when(jiraCarryOverAction.getIDs()).thenReturn(issues);
+
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
         JiraSite jiraSite = mock(JiraSite.class);
-       
 
         when(listener.getLogger()).thenReturn(System.out);
         when(changeLogSet.iterator()).thenReturn(Collections.EMPTY_LIST.iterator());

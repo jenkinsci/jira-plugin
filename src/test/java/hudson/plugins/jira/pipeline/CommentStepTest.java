@@ -1,5 +1,12 @@
 package hudson.plugins.jira.pipeline;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.google.inject.Inject;
 import hudson.model.AbstractProject;
 import hudson.model.FreeStyleProject;
@@ -9,6 +16,11 @@ import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.pipeline.CommentStep.CommentStepExecution;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.junit.Before;
@@ -16,19 +28,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mockito;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class CommentStepTest {
 
@@ -49,8 +48,8 @@ public class CommentStepTest {
     }
 
     private void configRoundTrip(String issueKey, String body) throws Exception {
-        CommentStep configRoundTrip = new StepConfigTester(jenkinsRule)
-                .configRoundTrip(new CommentStep(issueKey, body));
+        CommentStep configRoundTrip =
+                new StepConfigTester(jenkinsRule).configRoundTrip(new CommentStep(issueKey, body));
 
         assertEquals(issueKey, configRoundTrip.getIssueKey());
         assertEquals(body, configRoundTrip.getBody());
@@ -74,18 +73,18 @@ public class CommentStepTest {
 
         final List<Object> assertCalledParams = new ArrayList<>();
 
-        Mockito.doAnswer( invocation -> {
-                String issueId = invocation.getArgument(0, String.class);
-                String comment = invocation.getArgument(1, String.class);
-                System.out.println("issueId: " + issueId);
-                System.out.println("comment: " + comment);
-                assertThat(issueId, equalTo(issueKey));
-                assertThat(comment, equalTo(body));
-                assertCalledParams.addAll(Arrays.asList(invocation.getArguments()));
-                return null;
-        }).when(session).addComment(Mockito.any(), Mockito.any(),
-                Mockito.any(), Mockito.any());
-
+        Mockito.doAnswer(invocation -> {
+                    String issueId = invocation.getArgument(0, String.class);
+                    String comment = invocation.getArgument(1, String.class);
+                    System.out.println("issueId: " + issueId);
+                    System.out.println("comment: " + comment);
+                    assertThat(issueId, equalTo(issueKey));
+                    assertThat(comment, equalTo(body));
+                    assertCalledParams.addAll(Arrays.asList(invocation.getArguments()));
+                    return null;
+                })
+                .when(session)
+                .addComment(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
 
         Map<String, Object> r = new HashMap<>();
         r.put("issueKey", issueKey);
@@ -103,5 +102,4 @@ public class CommentStepTest {
 
         assertThat(assertCalledParams, hasSize(4));
     }
-
 }

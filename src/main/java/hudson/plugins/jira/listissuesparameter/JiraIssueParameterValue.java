@@ -42,8 +42,11 @@ public class JiraIssueParameterValue extends ParameterValue {
     @Override
     public VariableResolver<String> createVariableResolver(final AbstractBuild<?, ?> build) {
         return new VariableResolver<String>() {
+            @Override
             public String resolve(final String name) {
-                return JiraIssueParameterValue.this.name.equals(name) ? getValue().toString() : null;
+                return JiraIssueParameterValue.this.name.equals(name)
+                        ? getValue().toString()
+                        : null;
             }
         };
     }
@@ -52,6 +55,7 @@ public class JiraIssueParameterValue extends ParameterValue {
         this.value = value;
     }
 
+    @Override
     @Exported
     public Object getValue() {
         return value;

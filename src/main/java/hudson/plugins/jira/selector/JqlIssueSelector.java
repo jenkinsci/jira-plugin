@@ -1,5 +1,7 @@
 package hudson.plugins.jira.selector;
 
+import static hudson.Util.fixNull;
+
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -9,15 +11,12 @@ import hudson.plugins.jira.EnvironmentExpander;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
-
-import static hudson.Util.fixNull;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class JqlIssueSelector extends AbstractIssueSelector {
 
@@ -29,7 +28,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
         this.jql = jql;
     }
 
-    public void setJql(String jql){
+    public void setJql(String jql) {
         this.jql = jql;
     }
 
@@ -41,8 +40,9 @@ public class JqlIssueSelector extends AbstractIssueSelector {
     public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
         try {
             JiraSession session = site.getSession(run.getParent());
-            if (session == null)
+            if (session == null) {
                 throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
+            }
 
             String expandedJql = EnvironmentExpander.expandVariable(jql, run, listener);
 

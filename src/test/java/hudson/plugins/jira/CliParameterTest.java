@@ -17,37 +17,33 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 public class CliParameterTest {
 
-  @Rule public JenkinsRule jenkins = new JenkinsRule();
+    @Rule
+    public JenkinsRule jenkins = new JenkinsRule();
 
-  FreeStyleProject project;
+    FreeStyleProject project;
 
-  @Before
-  public void setup() throws IOException {
-    project = jenkins.createFreeStyleProject();
-  }
+    @Before
+    public void setup() throws IOException {
+        project = jenkins.createFreeStyleProject();
+    }
 
-  @Test
-  public void jiraIssueParameterViaCli() throws Exception {
-    project.addProperty(
-        new ParametersDefinitionProperty(
-            new JiraIssueParameterDefinition("jiraissue", "description", "filter")));
+    @Test
+    public void jiraIssueParameterViaCli() throws Exception {
+        project.addProperty(new ParametersDefinitionProperty(
+                new JiraIssueParameterDefinition("jiraissue", "description", "filter")));
 
-    CLICommandInvoker invoker = new CLICommandInvoker(jenkins, new BuildCommand());
-    CLICommandInvoker.Result result =
-        invoker.invokeWithArgs(project.getName(), "-s", "-p", "jiraissue=TEST-1");
-    assertThat(result, succeeded());
-  }
+        CLICommandInvoker invoker = new CLICommandInvoker(jenkins, new BuildCommand());
+        CLICommandInvoker.Result result = invoker.invokeWithArgs(project.getName(), "-s", "-p", "jiraissue=TEST-1");
+        assertThat(result, succeeded());
+    }
 
-  @Test
-  public void jiraVersionParameterViaCli() throws Exception {
-    project.addProperty(
-        new ParametersDefinitionProperty(
-            new JiraVersionParameterDefinition(
-                "jiraversion", "description", "PROJ", "RELEASE", "true", "false")));
+    @Test
+    public void jiraVersionParameterViaCli() throws Exception {
+        project.addProperty(new ParametersDefinitionProperty(
+                new JiraVersionParameterDefinition("jiraversion", "description", "PROJ", "RELEASE", "true", "false")));
 
-    CLICommandInvoker invoker = new CLICommandInvoker(jenkins, new BuildCommand());
-    CLICommandInvoker.Result result =
-        invoker.invokeWithArgs(project.getName(), "-s", "-p", "jiraversion=1.0");
-    assertThat(result, succeeded());
-  }
+        CLICommandInvoker invoker = new CLICommandInvoker(jenkins, new BuildCommand());
+        CLICommandInvoker.Result result = invoker.invokeWithArgs(project.getName(), "-s", "-p", "jiraversion=1.0");
+        assertThat(result, succeeded());
+    }
 }
