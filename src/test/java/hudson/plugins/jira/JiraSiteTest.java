@@ -181,7 +181,8 @@ public class JiraSiteTest {
     @WithoutJenkins
     @Test
     public void deserializeWithoutCredentials() {
-        JiraSite site = new JiraSite(exampleOrg, null, (String) null, false, false, null, false, null, null, true, true);
+        JiraSite site =
+                new JiraSite(exampleOrg, null, (String) null, false, false, null, false, null, null, true, true);
 
         XStream2 xStream2 = new XStream2();
         String xml = xStream2.toXML(site);
