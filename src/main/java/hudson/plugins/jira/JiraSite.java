@@ -437,41 +437,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 threadExecutorNumber);
     }
 
-    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
-    public JiraSite(
-            URL url,
-            URL alternativeUrl,
-            StandardUsernamePasswordCredentials credentials,
-            boolean supportsWikiStyleComment,
-            boolean recordScmChanges,
-            String userPattern,
-            boolean updateJiraIssueForAllStatus,
-            String groupVisibility,
-            String roleVisibility,
-            boolean useHTTPAuth,
-            int timeout,
-            int readTimeout,
-            int threadExecutorNumber,
-            boolean useBearerAuth) {
-        this(
-                url,
-                alternativeUrl,
-                credentials == null ? null : credentials.getId(),
-                supportsWikiStyleComment,
-                recordScmChanges,
-                userPattern,
-                updateJiraIssueForAllStatus,
-                groupVisibility,
-                roleVisibility,
-                useHTTPAuth,
-                useBearerAuth,
-                timeout,
-                readTimeout,
-                threadExecutorNumber
-                );
-    }
-
     static URL toURL(String url) {
         url = Util.fixEmptyAndTrim(url);
         if (url == null) {
