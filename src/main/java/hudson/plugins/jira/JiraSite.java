@@ -263,7 +263,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             @CheckForNull String groupVisibility,
             @CheckForNull String roleVisibility,
-            boolean useHTTPAuth) {
+            boolean useHTTPAuth,
+            boolean useBearerAuth) {
         this(
                 url,
                 alternativeUrl,
@@ -275,6 +276,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 groupVisibility,
                 roleVisibility,
                 useHTTPAuth,
+                useBearerAuth,
                 DEFAULT_TIMEOUT,
                 DEFAULT_READ_TIMEOUT,
                 DEFAULT_THREAD_EXECUTOR_NUMBER);
@@ -293,7 +295,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             @CheckForNull String groupVisibility,
             @CheckForNull String roleVisibility,
-            boolean useHTTPAuth) {
+            boolean useHTTPAuth,
+            boolean useBearerAuth) {
         this(
                 url,
                 alternativeUrl,
@@ -304,7 +307,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 updateJiraIssueForAllStatus,
                 groupVisibility,
                 roleVisibility,
-                useHTTPAuth);
+                useHTTPAuth,
+                useBearerAuth);
     }
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
@@ -319,7 +323,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             String groupVisibility,
             String roleVisibility,
-            boolean useHTTPAuth) {
+            boolean useHTTPAuth,
+            boolean useBearerAuth) {
         this(
                 url,
                 alternativeUrl,
@@ -331,6 +336,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 groupVisibility,
                 roleVisibility,
                 useHTTPAuth,
+                useBearerAuth,
                 DEFAULT_TIMEOUT,
                 DEFAULT_READ_TIMEOUT,
                 DEFAULT_THREAD_EXECUTOR_NUMBER);
@@ -359,6 +365,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             String groupVisibility,
             String roleVisibility,
             boolean useHTTPAuth,
+            boolean useBearerAuth,
             int timeout,
             int readTimeout,
             int threadExecutorNumber) {
@@ -383,6 +390,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         setGroupVisibility(groupVisibility);
         setRoleVisibility(roleVisibility);
         this.useHTTPAuth = useHTTPAuth;
+        this.useBearerAuth = useBearerAuth;
         this.jiraSession = null;
     }
 
@@ -408,6 +416,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             String groupVisibility,
             String roleVisibility,
             boolean useHTTPAuth,
+            boolean useBearerAuth,
             int timeout,
             int readTimeout,
             int threadExecutorNumber) {
@@ -422,6 +431,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 groupVisibility,
                 roleVisibility,
                 useHTTPAuth,
+                useBearerAuth,
                 timeout,
                 readTimeout,
                 threadExecutorNumber);
@@ -455,10 +465,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 groupVisibility,
                 roleVisibility,
                 useHTTPAuth,
+                useBearerAuth,
                 timeout,
                 readTimeout,
-                threadExecutorNumber);
-        this.useBearerAuth = useBearerAuth;
+                threadExecutorNumber
+                );
     }
 
     static URL toURL(String url) {
@@ -647,7 +658,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     updateJiraIssueForAllStatus,
                     groupVisibility,
                     roleVisibility,
-                    useHTTPAuth);
+                    useHTTPAuth,
+                    useBearerAuth);
         } else {
             jiraSite = new JiraSite(
                     url,
@@ -660,6 +672,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     groupVisibility,
                     roleVisibility,
                     useHTTPAuth,
+                    useBearerAuth,
                     timeout,
                     readTimeout,
                     threadExecutorNumber);
@@ -1355,6 +1368,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withGroupVisibility(groupVisibility)
                     .withRoleVisibility(roleVisibility)
                     .withUseHTTPAuth(useHTTPAuth)
+                    .withUseBearerAuth(useBearerAuth)
                     .build();
 
             if (threadExecutorNumber < 1) {
@@ -1417,6 +1431,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         private String groupVisibility;
         private String roleVisibility;
         private boolean useHTTPAuth;
+        private boolean useBearerAuth;
 
         public Builder withMainURL(URL mainURL) {
             this.mainURL = mainURL;
@@ -1468,6 +1483,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return this;
         }
 
+        public Builder withUseBearerAuth(boolean useBearerAuth) {
+            this.useBearerAuth = useBearerAuth;
+            return this;
+        }
+
         public JiraSite build() {
             return new JiraSite(
                     mainURL,
@@ -1479,7 +1499,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     updateJiraIssueForAllStatus,
                     groupVisibility,
                     roleVisibility,
-                    useHTTPAuth);
+                    useHTTPAuth,
+                    useBearerAuth);
         }
     }
 
