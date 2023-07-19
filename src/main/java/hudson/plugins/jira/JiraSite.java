@@ -1264,11 +1264,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 @QueryParameter String credentialsId,
                 @QueryParameter String groupVisibility,
                 @QueryParameter String roleVisibility,
+                @QueryParameter boolean useBearerAuth,
                 @QueryParameter String alternativeUrl,
                 @QueryParameter int timeout,
                 @QueryParameter int readTimeout,
                 @QueryParameter int threadExecutorNumber,
-                @QueryParameter boolean useBearerAuth,
                 @AncestorInPath Item item) {
 
             if (item == null) {
