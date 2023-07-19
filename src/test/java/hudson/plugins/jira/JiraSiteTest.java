@@ -73,7 +73,7 @@ public class JiraSiteTest {
                 false,
                 null,
                 null,
-                true,
+                // true,
                 true);
         site.setTimeout(1);
         JiraSession session = site.getSession(null);
@@ -94,7 +94,7 @@ public class JiraSiteTest {
                 false,
                 null,
                 null,
-                true,
+                // true,
                 true);
         site.setTimeout(1);
         JiraSession session = site.getSession(mock(Job.class));
@@ -114,7 +114,7 @@ public class JiraSiteTest {
                 false,
                 null,
                 null,
-                true,
+                // true,
                 true);
         site.setTimeout(1);
         JiraSession session = site.getSession(null);
@@ -125,7 +125,7 @@ public class JiraSiteTest {
     @Test
     public void deserializeMigrateCredentials() throws MalformedURLException {
         JiraSiteOld old = new JiraSiteOld(
-                validPrimaryUrl, null, ANY_USER, ANY_PASSWORD, false, false, null, false, null, null, true, true);
+                validPrimaryUrl, null, ANY_USER, ANY_PASSWORD, false, false, null, false, null, null, true);
 
         XStream2 xStream2 = new XStream2();
         String xml = xStream2.toXML(old);
@@ -165,7 +165,7 @@ public class JiraSiteTest {
                 new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, null, null, ANY_USER, ANY_PASSWORD);
         CredentialsProvider.lookupStores(j.jenkins).iterator().next().addDomain(domain, c);
 
-        JiraSite site = new JiraSite(exampleOrg, null, c.getId(), false, false, null, false, null, null, true, true);
+        JiraSite site = new JiraSite(exampleOrg, null, c.getId(), false, false, null, false, null, null, true);
 
         XStream2 xStream2 = new XStream2();
         String xml = xStream2.toXML(site);
@@ -182,7 +182,7 @@ public class JiraSiteTest {
     @Test
     public void deserializeWithoutCredentials() {
         JiraSite site =
-                new JiraSite(exampleOrg, null, (String) null, false, false, null, false, null, null, true, true);
+                new JiraSite(exampleOrg, null, (String) null, false, false, null, false, null, null, true);
 
         XStream2 xStream2 = new XStream2();
         String xml = xStream2.toXML(site);
@@ -211,7 +211,6 @@ public class JiraSiteTest {
                 boolean updateJiraIssueForAllStatus,
                 String groupVisibility,
                 String roleVisibility,
-                boolean useHTTPAuth,
                 boolean useBearerAuth) {
             super(
                     url,
@@ -223,7 +222,6 @@ public class JiraSiteTest {
                     updateJiraIssueForAllStatus,
                     groupVisibility,
                     roleVisibility,
-                    useHTTPAuth,
                     useBearerAuth);
             this.userName = userName;
             this.password = Secret.fromString(password);
@@ -243,7 +241,7 @@ public class JiraSiteTest {
                 false,
                 null,
                 null,
-                true,
+                // true,
                 true);
         assertNotNull(site.getAlternativeUrl());
         assertEquals(exampleOrg, site.getAlternativeUrl());
