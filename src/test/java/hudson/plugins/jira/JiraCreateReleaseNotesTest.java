@@ -21,6 +21,7 @@ import hudson.model.Item;
 import hudson.model.Result;
 import hudson.tasks.BuildWrapper;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -62,8 +63,7 @@ public class JiraCreateReleaseNotesTest {
     @Mock
     JiraSite site;
 
-    @Mock
-    private PrintWriter printWriter;
+    private final PrintWriter printWriter = new PrintWriter(OutputStream.nullOutputStream());
 
     @Mock
     JiraSession session;
