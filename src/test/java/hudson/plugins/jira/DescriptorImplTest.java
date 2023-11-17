@@ -125,7 +125,7 @@ public class DescriptorImplTest {
         when(descriptor.getBuilder()).thenReturn(builder);
         when(builder.build()).thenReturn(site);
         when(build.getParent()).thenReturn(project);
-        when(site.getSession(project)).thenReturn(session);
+        when(site.getSession(project, true)).thenReturn(session);
         when(session.getMyPermissions()).thenThrow(RestClientException.class);
 
         FormValidation validation = descriptor.doValidate(
@@ -142,7 +142,7 @@ public class DescriptorImplTest {
                 project);
 
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
-        verify(site).getSession(project);
+        verify(site).getSession(project, true);
 
         validation = descriptor.doValidate(
                 "http://localhost:8080",
@@ -158,7 +158,7 @@ public class DescriptorImplTest {
                 project);
         assertEquals(Messages.JiraSite_timeoutMinimunValue("1"), validation.getLocalizedMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
-        verify(site).getSession(project);
+        verify(site).getSession(project, true);
 
         validation = descriptor.doValidate(
                 "http://localhost:8080",
@@ -175,7 +175,7 @@ public class DescriptorImplTest {
 
         assertEquals(Messages.JiraSite_readTimeoutMinimunValue("1"), validation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
-        verify(site).getSession(project);
+        verify(site).getSession(project, true);
 
         validation = descriptor.doValidate(
                 "http://localhost:8080",
@@ -191,7 +191,7 @@ public class DescriptorImplTest {
                 project);
         assertEquals(Messages.JiraSite_threadExecutorMinimunSize("1"), validation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
-        verify(site).getSession(project);
+        verify(site).getSession(project, true);
     }
 
     @Test
@@ -200,7 +200,7 @@ public class DescriptorImplTest {
 
         when(descriptor.getBuilder()).thenReturn(builder);
         when(builder.build()).thenReturn(site);
-        when(site.getSession(project)).thenReturn(session);
+        when(site.getSession(project, true)).thenReturn(session);
         when(session.getMyPermissions()).thenReturn(mock(Permissions.class));
 
         FormValidation validation = descriptor.doValidate(
@@ -217,7 +217,7 @@ public class DescriptorImplTest {
                 project);
 
         verify(builder).build();
-        verify(site).getSession(project);
+        verify(site).getSession(project, true);
         assertEquals(FormValidation.Kind.OK, validation.kind);
     }
 }

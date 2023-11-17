@@ -694,10 +694,18 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     @Nullable
     public JiraSession getSession(Item item) {
+        return getSession(item, false);
+    }
+
+    JiraSession getSession(Item item, boolean uiValidation) {
         if (jiraSession == null) {
-            jiraSession = createSession(item);
+            jiraSession = createSession(item, uiValidation);
         }
         return jiraSession;
+    }
+
+    JiraSession createSession(Item item) {
+        return createSession(item, false);
     }
 
     /**
@@ -705,11 +713,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @return null if remote access is not supported.
      */
-    JiraSession createSession(Item item) {
+    JiraSession createSession(Item item, boolean uiValidation) {
         ItemGroup itemGroup = map(item);
         item = itemGroup instanceof Folder ? ((Folder) itemGroup) : item;
 
-        StandardUsernamePasswordCredentials credentials = resolveCredentials(item);
+        StandardUsernamePasswordCredentials credentials = resolveCredentials(item, uiValidation);
 
         if (credentials == null) {
             LOGGER.fine("no Jira credentials available for " + item);
@@ -735,8 +743,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * This method only supports credential matching by credentialsId.
      * Older methods are not and will not be supported as the credentials should have been migrated already.
+     * @param item can be <code>null</code> if top level
+     * @param uiValidation if <code>true</code> and credentials not found at item level will not go up
      */
-    private StandardUsernamePasswordCredentials resolveCredentials(Item item) {
+    private StandardUsernamePasswordCredentials resolveCredentials(Item item, boolean uiValidation) {
         if (credentialsId == null) {
             LOGGER.fine("credentialsId is null");
             return null; // remote access not supported
@@ -746,12 +756,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 .build();
 
         if (item != null) {
-            StandardUsernamePasswordCredentials creds = CredentialsMatchers.firstOrNull(
+            StandardUsernamePasswordCredentials credentials = CredentialsMatchers.firstOrNull(
                     CredentialsProvider.lookupCredentials(
                             StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, req),
                     CredentialsMatchers.withId(credentialsId));
-            if (creds != null) {
-                return creds;
+            if (credentials != null) {
+                return credentials;
+            }
+            // during UI validation of the configuration we definitely don't want to expose
+            // global credentials
+            if (uiValidation) {
+                return null;
             }
         }
         return CredentialsMatchers.firstOrNull(
@@ -1371,9 +1386,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setReadTimeout(readTimeout);
             site.setThreadExecutorNumber(threadExecutorNumber);
             site.setUseBearerAuth(useBearerAuth);
-            JiraSession session = null;
             try {
-                session = site.getSession(item);
+                JiraSession session = site.getSession(item, true);
+                if (session == null) {
+                    return FormValidation.error("Cannot validate configuration");
+                }
                 session.getMyPermissions();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {

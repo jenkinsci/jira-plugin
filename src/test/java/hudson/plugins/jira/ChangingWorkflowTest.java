@@ -4,6 +4,7 @@ import static org.apache.commons.lang.RandomStringUtils.randomNumeric;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -112,8 +113,9 @@ public class ChangingWorkflowTest {
 
     @Test
     public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws Exception {
+        when(site.getSession(any(), anyBoolean())).thenCallRealMethod();
         when(site.getSession(any())).thenCallRealMethod();
-        when(site.createSession(any())).thenReturn(mockSession);
+        when(site.createSession(any(), anyBoolean())).thenReturn(mockSession);
         site.getSession(mockItem);
 
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
@@ -130,7 +132,8 @@ public class ChangingWorkflowTest {
     @Test
     public void addCommentsOnNullWorkflowAndNonEmptyComment() throws Exception {
         when(site.getSession(any())).thenCallRealMethod();
-        when(site.createSession(any())).thenReturn(mockSession);
+        when(site.getSession(any(), anyBoolean())).thenCallRealMethod();
+        when(site.createSession(any(), anyBoolean())).thenReturn(mockSession);
         site.getSession(mockItem);
 
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));

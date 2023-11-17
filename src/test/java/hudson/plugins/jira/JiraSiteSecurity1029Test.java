@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,6 +34,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.Page;
 import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
 import org.htmlunit.util.NameValuePair;
 import org.junit.After;
 import org.junit.Rule;
@@ -164,6 +166,30 @@ public class JiraSiteSecurity1029Test {
             Page page = wc.getPage(request);
             // to avoid trouble, we always validate when the user has not the good permission
             assertThat(page.getWebResponse().getStatusCode(), equalTo(403));
+            assertThat(servlet.getPasswordAndReset(), nullValue());
+        }
+
+        { // as an user with just read access, I may not be able to leak any credentials with fake id in a folder
+            Folder folder = j.jenkins.createProject(
+                    Folder.class, "folder" + j.jenkins.getItems().size());
+
+            JenkinsRule.WebClient wc = j.createWebClient();
+            wc.getOptions().setThrowExceptionOnFailingStatusCode(false);
+            wc.withBasicApiToken(userFolderConfigure);
+
+            String jiraSiteValidateUrl = j.jenkins.getRootUrl() + folder.getUrl() + "descriptorByName/"
+                    + JiraSite.class.getName() + "/validate";
+            WebRequest request = new WebRequest(new URL(jiraSiteValidateUrl), HttpMethod.POST);
+            request.setRequestParameters(Arrays.asList(
+                    new NameValuePair("threadExecutorNumber", "1"),
+                    new NameValuePair("url", serverUri.toString()),
+                    new NameValuePair("credentialsId", "aussie-beer-is-the-best"), // use a non existing id on purpose
+                    new NameValuePair("useHTTPAuth", "true")));
+
+            Page page = wc.getPage(request);
+            WebResponse webResponse = page.getWebResponse();
+            assertThat(webResponse.getStatusCode(), equalTo(200));
+            assertThat(webResponse.getContentAsString(), containsString("Cannot validate configuration"));
             assertThat(servlet.getPasswordAndReset(), nullValue());
         }
 

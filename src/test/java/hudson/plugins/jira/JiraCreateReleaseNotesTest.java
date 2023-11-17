@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -89,9 +90,9 @@ public class JiraCreateReleaseNotesTest {
             }
         });
 
-        when(site.createSession(any())).thenReturn(session);
-        when(site.getSession(any())).thenCallRealMethod();
-        site.getSession(mockItem);
+        when(site.createSession(any(), anyBoolean())).thenReturn(session);
+        when(site.getSession(any(), anyBoolean())).thenCallRealMethod();
+        site.getSession(mockItem, false);
     }
 
     @Test

@@ -10,6 +10,7 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.StreamSupport;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -37,14 +38,9 @@ public class JiraFolderPropertyTest {
     }
 
     public static CredentialsStore getFolderStore(Folder f) {
-        Iterable<CredentialsStore> stores = CredentialsProvider.lookupStores(f);
-        CredentialsStore folderStore = null;
-        for (CredentialsStore s : stores) {
-            if (s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f) {
-                folderStore = s;
-                break;
-            }
-        }
-        return folderStore;
+        return StreamSupport.stream(CredentialsProvider.lookupStores(f).spliterator(), false)
+                .filter(s -> s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f)
+                .findFirst()
+                .orElse(null);
     }
 }
