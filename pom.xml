@@ -50,7 +50,7 @@
     <revision>3.13</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jira-rest-client.version>5.2.5</jira-rest-client.version>
+    <jira-rest-client.version>5.2.6</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <!-- jenkins -->
     <jenkins.version>2.375.2</jenkins.version>
