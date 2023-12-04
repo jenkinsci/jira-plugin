@@ -330,6 +330,16 @@
       <id>repo.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
+    <repository>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>atlassian-maven-public</id>
+      <url>https://packages.atlassian.com/maven-public/</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
