@@ -53,7 +53,7 @@
     <jira-rest-client.version>5.2.7</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <!-- jenkins -->
-    <jenkins.version>2.375.2</jenkins.version>
+    <jenkins.version>2.401.3</jenkins.version>
     <!-- security spotbugs -->
     <spotbugs.failOnError>false</spotbugs.failOnError>
     <spotless.check.skip>false</spotless.check.skip>
@@ -63,8 +63,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.375.x</artifactId>
-        <version>2198.v39c76fc308ca</version>
+        <artifactId>bom-2.401.x</artifactId>
+        <version>2643.vfa_93ff299d20</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -97,6 +97,11 @@
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
         </exclusion>
+        <!-- Provided by joda-time-api plugin -->
+        <exclusion>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -125,6 +130,11 @@
         <exclusion>
           <groupId>commons-codec</groupId>
           <artifactId>commons-codec</artifactId>
+        </exclusion>
+        <!-- Provided by joda-time-api plugin -->
+        <exclusion>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
         </exclusion>
         <!-- Provided by commons-lang3-api plugin -->
         <exclusion>
@@ -222,7 +232,10 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>jersey2-api</artifactId>
     </dependency>
-    <!-- Jenkins plugin dependencies -->
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>joda-time-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
