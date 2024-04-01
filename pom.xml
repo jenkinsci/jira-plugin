@@ -71,7 +71,7 @@
       <dependency>
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-core</artifactId>
-        <version>5.3.12</version>
+        <version>7.5.4</version>
       </dependency>
       <dependency>
         <groupId>org.json</groupId>
