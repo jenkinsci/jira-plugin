@@ -1171,7 +1171,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
         StringBuilder sb = new StringBuilder();
         for (Map.Entry<String, Set<String>> entry : releaseNotes.entrySet()) {
-            sb.append(String.format("# %s\n", entry.getKey()));
+            sb.append(String.format("# %s%n", entry.getKey()));
             for (String issue : entry.getValue()) {
                 sb.append(issue);
                 sb.append("\n");
