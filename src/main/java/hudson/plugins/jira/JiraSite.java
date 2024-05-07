@@ -73,7 +73,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
 import javax.annotation.PreDestroy;
 import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
@@ -980,19 +979,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             throw new UnsupportedOperationException("Not implemented");
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public String getApplicationFileEncoding() {
             return System.getProperty("file.encoding");
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public Optional<Path> getLocalHomeDirectory() {
             return Optional.empty();
         }
 
-        @Nonnull
+        @NonNull
         @Override
         public Optional<Path> getSharedHomeDirectory() {
             return Optional.empty();
