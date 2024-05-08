@@ -17,6 +17,7 @@ import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
@@ -252,7 +253,7 @@ class Updater {
                             : "%6$s: Integrated in Jenkins build %2$s (See [%4$s])\n%5$s",
                     jenkinsRootUrl,
                     build.getFullDisplayName(),
-                    result != null ? result.color.getImage() : null,
+                    result.color.getImage(),
                     Util.encode(jenkinsRootUrl + build.getUrl()),
                     getScmComments(wikiStyle, build, recordScmChanges, jiraIssue),
                     result.toString());
@@ -404,12 +405,9 @@ class Updater {
         try {
             Class<?> clazz = entry.getClass();
             Method method = clazz.getMethod("getRevision", (Class[]) null);
-            if (method == null) {
-                return null;
-            }
             Object revObj = method.invoke(entry, (Object[]) null);
             return (revObj != null) ? revObj.toString() : null;
-        } catch (Exception e) {
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             return null;
         }
     }

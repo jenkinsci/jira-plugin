@@ -194,7 +194,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         String buildName = getBuildName(vars);
         String summary = String.format("Build %s failed", buildName);
         String description = String.format(
-                "%s\n\nThe build %s has failed.\nFirst failed run: %s",
+                "%s%n%nThe build %s has failed.%nFirst failed run: %s",
                 (this.testDescription.equals("")) ? "No description is provided" : vars.expand(this.testDescription),
                 buildName,
                 getBuildDetailsString(vars));
@@ -345,7 +345,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             throws InterruptedException, IOException {
 
         if (previousBuildResult == Result.FAILURE) {
-            String comment = String.format("Build is still failing.\nFailed run: %s", getBuildDetailsString(vars));
+            String comment = String.format("Build is still failing.%nFailed run: %s", getBuildDetailsString(vars));
 
             // Get the issue-id which was filed when the previous built failed
             String issueId = getIssue(filename);
@@ -406,7 +406,7 @@ public class JiraCreateIssueNotifier extends Notifier {
 
         if (previousBuildResult == Result.FAILURE || previousBuildResult == Result.SUCCESS) {
             String comment =
-                    String.format("Previously failing build now is OK.\n Passed run: %s", getBuildDetailsString(vars));
+                    String.format("Previously failing build now is OK.%n Passed run: %s", getBuildDetailsString(vars));
             String issueId = getIssue(filename);
 
             // if issue exists it will check the status and comment or delete the file

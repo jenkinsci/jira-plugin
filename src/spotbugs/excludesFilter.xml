@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!--
+    Exclusions in this section have been triaged and determined to be
+    false positives.
+  -->
+  <Match>
+    <!-- Message string names are wrong style for Java but that's how Jenkins does it -->
+    <Bug pattern="NM_METHOD_NAMING_CONVENTION" />
+    <Class name="hudson.plugins.jira.Messages" />
+    <Or>
+      <Method name="ErrorCommentingIssues" />
+      <Method name="FailedToConnect" />
+      <Method name="FailedToUpdateIssue" />
+      <Method name="FailedToUpdateIssueWithCarryOver" />
+      <Method name="NoJenkinsUrl" />
+      <Method name="NoJiraSite" />
+      <Method name="NoRemoteAccess" />
+      <Method name="UpdatingIssue" />
+    </Or>
+  </Match>
+  <Match>
+    <Bug pattern="MS_SHOULD_BE_FINAL" />
+    <Class name="hudson.plugins.jira.JiraMailAddressResolver" />
+    <Field name="disabled" />
+  </Match>
+
+  <!--
+    Here lies technical debt. Exclusions in this section have not yet
+    been triaged. When working on this section, pick an exclusion to
+    triage, then:
+
+    - Add a @SuppressFBWarnings(value = "[...]", justification = "[...]")
+      annotation if it is a false positive.  Indicate the reason why
+      it is a false positive, then remove the exclusion from this
+      section.
+
+    - If it is not a false positive, fix the bug, then remove the
+      exclusion from this section.
+   -->
+  <Match>
+    <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE" />
+    <Class name="hudson.plugins.jira.JiraReleaseVersionUpdaterBuilder$DescriptorImpl" />
+  </Match>
+  <Match>
+    <Bug pattern="LI_LAZY_INIT_STATIC" />
+    <Class name="hudson.plugins.jira.JiraSite" />
+    <Field name="executorService" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NONNULL_PARAM_VIOLATION" />
+    <Class name="hudson.plugins.jira.JiraSession" />
+    <Method name="createIssue" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" />
+    <Class name="hudson.plugins.jira.Updater" />
+    <Method name="perform" />
+  </Match>
+  <Match>
+    <Bug pattern="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" />
+    <Class name="hudson.plugins.jira.Updater" />
+    <Method name="perform" />
+  </Match>
+</FindBugsFilter>
