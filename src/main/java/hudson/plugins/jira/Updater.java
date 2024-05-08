@@ -252,7 +252,7 @@ class Updater {
                             : "%6$s: Integrated in Jenkins build %2$s (See [%4$s])\n%5$s",
                     jenkinsRootUrl,
                     build.getFullDisplayName(),
-                    result != null ? result.color.getImage() : null,
+                    result.color.getImage(),
                     Util.encode(jenkinsRootUrl + build.getUrl()),
                     getScmComments(wikiStyle, build, recordScmChanges, jiraIssue),
                     result.toString());
