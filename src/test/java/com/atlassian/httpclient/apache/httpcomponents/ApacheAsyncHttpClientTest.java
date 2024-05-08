@@ -15,7 +15,6 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nonnull;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -271,19 +270,19 @@ public class ApacheAsyncHttpClientTest {
                 return null;
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public String getApplicationFileEncoding() {
                 return System.getProperty("file.encoding");
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public Optional<Path> getLocalHomeDirectory() {
                 return Optional.empty();
             }
 
-            @Nonnull
+            @NonNull
             @Override
             public Optional<Path> getSharedHomeDirectory() {
                 return Optional.empty();
