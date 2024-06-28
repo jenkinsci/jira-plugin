@@ -128,11 +128,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public URL alternativeUrl;
 
     /**
-     * Jira requires HTTP Authentication for login
-     */
-    public boolean useHTTPAuth;
-
-    /**
      * The id of the credentials to use. Optional.
      */
     public String credentialsId;
@@ -251,7 +246,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private static ExecutorService executorService;
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
+    // Contruct Test succeeded in JiraSiteTest.java, removal attempt for the first time.
     public JiraSite(
             URL url,
             @CheckForNull URL alternativeUrl,
@@ -262,7 +257,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             @CheckForNull String groupVisibility,
             @CheckForNull String roleVisibility,
-            boolean useHTTPAuth) {
+            boolean useBearerAuth) {
         this(
                 url,
                 alternativeUrl,
@@ -273,14 +268,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 updateJiraIssueForAllStatus,
                 groupVisibility,
                 roleVisibility,
-                useHTTPAuth,
+                useBearerAuth,
                 DEFAULT_TIMEOUT,
                 DEFAULT_READ_TIMEOUT,
                 DEFAULT_THREAD_EXECUTOR_NUMBER);
     }
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
+    // Contruct Test succeeded in JiraSiteTest.java, removal attempt for the first time.
     public JiraSite(
             URL url,
             @CheckForNull URL alternativeUrl,
@@ -292,7 +287,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             @CheckForNull String groupVisibility,
             @CheckForNull String roleVisibility,
-            boolean useHTTPAuth) {
+            boolean useBearerAuth) {
         this(
                 url,
                 alternativeUrl,
@@ -303,11 +298,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 updateJiraIssueForAllStatus,
                 groupVisibility,
                 roleVisibility,
-                useHTTPAuth);
+                useBearerAuth);
     }
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
+    // Contruct Test succeeded in JiraSiteTest.java, removal attempt for the first time.
     public JiraSite(
             URL url,
             URL alternativeUrl,
@@ -318,7 +313,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             String groupVisibility,
             String roleVisibility,
-            boolean useHTTPAuth) {
+            boolean useBearerAuth) {
         this(
                 url,
                 alternativeUrl,
@@ -329,7 +324,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 updateJiraIssueForAllStatus,
                 groupVisibility,
                 roleVisibility,
-                useHTTPAuth,
+                useBearerAuth,
                 DEFAULT_TIMEOUT,
                 DEFAULT_READ_TIMEOUT,
                 DEFAULT_THREAD_EXECUTOR_NUMBER);
@@ -346,7 +341,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
+    // Contruct Test succeeded in JiraSiteTest.java, removal attempt for the first time.
     public JiraSite(
             URL url,
             URL alternativeUrl,
@@ -357,7 +352,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             String groupVisibility,
             String roleVisibility,
-            boolean useHTTPAuth,
+            boolean useBearerAuth,
             int timeout,
             int readTimeout,
             int threadExecutorNumber) {
@@ -381,7 +376,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
         setGroupVisibility(groupVisibility);
         setRoleVisibility(roleVisibility);
-        this.useHTTPAuth = useHTTPAuth;
+        this.useBearerAuth = useBearerAuth;
         this.jiraSession = null;
     }
 
@@ -395,7 +390,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
+    // Contruct Test succeeded in JiraSiteTest.java, removal attempt for the first time.
     public JiraSite(
             URL url,
             URL alternativeUrl,
@@ -406,7 +401,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             String groupVisibility,
             String roleVisibility,
-            boolean useHTTPAuth,
+            boolean useBearerAuth,
             int timeout,
             int readTimeout,
             int threadExecutorNumber) {
@@ -420,44 +415,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 updateJiraIssueForAllStatus,
                 groupVisibility,
                 roleVisibility,
-                useHTTPAuth,
+                useBearerAuth,
                 timeout,
                 readTimeout,
                 threadExecutorNumber);
-    }
-
-    // Deprecate the previous constructor but leave it in place for Java-level compatibility.
-    @Deprecated
-    public JiraSite(
-            URL url,
-            URL alternativeUrl,
-            StandardUsernamePasswordCredentials credentials,
-            boolean supportsWikiStyleComment,
-            boolean recordScmChanges,
-            String userPattern,
-            boolean updateJiraIssueForAllStatus,
-            String groupVisibility,
-            String roleVisibility,
-            boolean useHTTPAuth,
-            int timeout,
-            int readTimeout,
-            int threadExecutorNumber,
-            boolean useBearerAuth) {
-        this(
-                url,
-                alternativeUrl,
-                credentials == null ? null : credentials.getId(),
-                supportsWikiStyleComment,
-                recordScmChanges,
-                userPattern,
-                updateJiraIssueForAllStatus,
-                groupVisibility,
-                roleVisibility,
-                useHTTPAuth,
-                timeout,
-                readTimeout,
-                threadExecutorNumber);
-        this.useBearerAuth = useBearerAuth;
     }
 
     static URL toURL(String url) {
@@ -552,10 +513,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         return alternativeUrl;
     }
 
-    public boolean isUseHTTPAuth() {
-        return useHTTPAuth;
-    }
-
     public boolean isUseBearerAuth() {
         return useBearerAuth;
     }
@@ -583,11 +540,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     @DataBoundSetter
     public void setAlternativeUrl(String alternativeUrl) {
         this.alternativeUrl = toURL(alternativeUrl);
-    }
-
-    @DataBoundSetter
-    public void setUseHTTPAuth(boolean useHTTPAuth) {
-        this.useHTTPAuth = useHTTPAuth;
     }
 
     @DataBoundSetter
@@ -646,7 +598,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     updateJiraIssueForAllStatus,
                     groupVisibility,
                     roleVisibility,
-                    useHTTPAuth);
+                    useBearerAuth);
         } else {
             jiraSite = new JiraSite(
                     url,
@@ -658,7 +610,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     updateJiraIssueForAllStatus,
                     groupVisibility,
                     roleVisibility,
-                    useHTTPAuth,
+                    useBearerAuth,
                     timeout,
                     readTimeout,
                     threadExecutorNumber);
@@ -1326,7 +1278,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 @QueryParameter String credentialsId,
                 @QueryParameter String groupVisibility,
                 @QueryParameter String roleVisibility,
-                @QueryParameter boolean useHTTPAuth,
                 @QueryParameter String alternativeUrl,
                 @QueryParameter int timeout,
                 @QueryParameter int readTimeout,
@@ -1368,7 +1319,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     .withCredentialsId(credentialsId)
                     .withGroupVisibility(groupVisibility)
                     .withRoleVisibility(roleVisibility)
-                    .withUseHTTPAuth(useHTTPAuth)
+                    .withUseBearerAuth(useBearerAuth)
                     .build();
 
             if (threadExecutorNumber < 1) {
@@ -1432,7 +1383,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         private boolean updateJiraIssueForAllStatus;
         private String groupVisibility;
         private String roleVisibility;
-        private boolean useHTTPAuth;
+        private boolean useBearerAuth;
 
         public Builder withMainURL(URL mainURL) {
             this.mainURL = mainURL;
@@ -1479,8 +1430,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return this;
         }
 
-        public Builder withUseHTTPAuth(boolean useHTTPAuth) {
-            this.useHTTPAuth = useHTTPAuth;
+        public Builder withUseBearerAuth(boolean useBearerAuth) {
+            this.useBearerAuth = useBearerAuth;
             return this;
         }
 
@@ -1495,7 +1446,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     updateJiraIssueForAllStatus,
                     groupVisibility,
                     roleVisibility,
-                    useHTTPAuth);
+                    useBearerAuth);
         }
     }
 

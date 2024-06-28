@@ -207,7 +207,7 @@ public class JiraSiteTest {
                 boolean updateJiraIssueForAllStatus,
                 String groupVisibility,
                 String roleVisibility,
-                boolean useHTTPAuth) {
+                boolean useBearerAuth) {
             super(
                     url,
                     alternativeUrl,
@@ -218,7 +218,7 @@ public class JiraSiteTest {
                     updateJiraIssueForAllStatus,
                     groupVisibility,
                     roleVisibility,
-                    useHTTPAuth);
+                    useBearerAuth);
             this.userName = userName;
             this.password = Secret.fromString(password);
         }
