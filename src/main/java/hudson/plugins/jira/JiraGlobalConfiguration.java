@@ -1,6 +1,7 @@
 package hudson.plugins.jira;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.util.PersistedList;
 import java.util.List;
@@ -16,6 +17,7 @@ public class JiraGlobalConfiguration extends GlobalConfiguration {
         return (JiraGlobalConfiguration) Jenkins.get().getDescriptorOrDie(JiraGlobalConfiguration.class);
     }
 
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public List<JiraSite> sites = new PersistedList<>(this);
 
     public JiraGlobalConfiguration() {
