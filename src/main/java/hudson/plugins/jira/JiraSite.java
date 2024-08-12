@@ -29,6 +29,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
@@ -125,21 +126,25 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * URL of Jira for normal access, like {@code http://jira.codehaus.org/}.
      * Mandatory. Normalized to end with '/'
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public URL alternativeUrl;
 
     /**
      * Jira requires HTTP Authentication for login
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public boolean useHTTPAuth;
 
     /**
      * The id of the credentials to use. Optional.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public String credentialsId;
 
     /**
      * Jira requires Bearer Authentication for login
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public boolean useBearerAuth;
 
     /**
@@ -159,16 +164,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Group visibility to constrain the visibility of the added comment. Optional.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public String groupVisibility;
 
     /**
      * Role visibility to constrain the visibility of the added comment. Optional.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public String roleVisibility;
 
     /**
      * True if this Jira is configured to allow Confluence-style Wiki comment.
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public boolean supportsWikiStyleComment;
 
     /**
@@ -176,6 +184,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @since 1.21
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public boolean recordScmChanges;
 
     /**
@@ -183,6 +192,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @since todo
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public boolean disableChangelogAnnotations;
 
     /**
@@ -199,23 +209,27 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      *
      * @since 1.22
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public boolean updateJiraIssueForAllStatus;
 
     /**
      * connection timeout used when calling jira rest api, in seconds
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     public int timeout = DEFAULT_TIMEOUT;
 
     /**
      * response timeout for jira rest call
      * @since 3.0.3
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     private int readTimeout = DEFAULT_READ_TIMEOUT;
 
     /**
      * thread pool number
      * @since 3.0.3
      */
+    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     private int threadExecutorNumber = DEFAULT_THREAD_EXECUTOR_NUMBER;
 
     /**
