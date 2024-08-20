@@ -52,8 +52,13 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jira-rest-client.version>5.2.7</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
+    <!-- TODO: replace when 2.472 is in LTS -->
+    <!-- <jenkins.version>${jenkins.baseline}.3</jenkins.version> -->
+    <jenkins.baseline>2.462</jenkins.baseline>
     <!-- jenkins -->
-    <jenkins.version>2.440.3</jenkins.version>
+    <jenkins.version>2.472</jenkins.version>
+    <!-- TODO JENKINS-73339 until in parent POM -->
+    <jenkins-test-harness.version>2254.vcff7a_d4969e5</jenkins-test-harness.version>
     <spotless.check.skip>false</spotless.check.skip>
   </properties>
 
@@ -61,8 +66,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.440.x</artifactId>
-        <version>3234.v5ca_5154341ef</version>
+        <artifactId>bom-${jenkins.baseline}.x</artifactId>
+        <version>3271.vf18ea_cb_9edfb_</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
