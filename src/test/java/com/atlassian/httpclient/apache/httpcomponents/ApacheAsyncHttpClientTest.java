@@ -170,7 +170,7 @@ public class ApacheAsyncHttpClientTest {
                 Callback callback)
                 throws IOException {
 
-            final String credentials = Base64.getEncoder().encodeToString((user + ":" + password).getBytes(StandardCharsets.UTF_8));
+            final String credentials = Base64.getEncoder().encodeToString((user + ":" + password).getBytes("UTF-8"));
 
             String authorization = request.getHeaders().get(HttpHeader.PROXY_AUTHORIZATION);
             if (authorization == null) {
