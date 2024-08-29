@@ -175,7 +175,7 @@ public class ApacheAsyncHttpClientTest {
             String authorization = request.getHeaders().get(HttpHeader.PROXY_AUTHORIZATION);
             if (authorization == null) {
                 response.setStatus(HttpStatus.PROXY_AUTHENTICATION_REQUIRED_407);
-                response.getHeaders().add(HttpHeader.PROXY_AUTHENTICATE, "Basic realm=\"" + realm + "\"");
+                response.getHeaders().add(HttpHeader.PROXY_AUTHENTICATE.asString(), "Basic realm=\"" + realm + "\"");
                 return true;
             } else {
                 String prefix = "Basic ";
