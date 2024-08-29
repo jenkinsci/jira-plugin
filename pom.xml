@@ -57,6 +57,7 @@
     <!-- TODO JENKINS-73339 until in parent POM -->
     <jenkins-test-harness.version>2254.vcff7a_d4969e5</jenkins-test-harness.version>
     <spotless.check.skip>false</spotless.check.skip>
+    <maven.compiler.release>17</maven.compiler.release>
   </properties>
 
   <dependencyManagement>
