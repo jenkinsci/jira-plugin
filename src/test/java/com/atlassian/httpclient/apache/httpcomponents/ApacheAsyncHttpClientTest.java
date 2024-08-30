@@ -10,25 +10,24 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.ProxyConfiguration;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
+import org.eclipse.jetty.io.Content;
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.util.Callback;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -151,7 +150,7 @@ public class ApacheAsyncHttpClientTest {
         Assert.assertEquals("FOO", testHandler.postReceived);
     }
 
-    public class ProxyTestHandler extends AbstractHandler {
+    public static class ProxyTestHandler extends Handler.Abstract {
 
         String postReceived;
 
@@ -164,55 +163,50 @@ public class ApacheAsyncHttpClientTest {
         final String realm = "test_realm";
 
         @Override
-        public void handle(
-                String target,
-                org.eclipse.jetty.server.Request jettyRequest,
-                HttpServletRequest request,
-                HttpServletResponse response)
-                throws IOException, ServletException {
+        public boolean handle(
+                org.eclipse.jetty.server.Request request, org.eclipse.jetty.server.Response response, Callback callback)
+                throws IOException {
 
             final String credentials = Base64.getEncoder().encodeToString((user + ":" + password).getBytes("UTF-8"));
 
-            jettyRequest.setHandled(true);
-
-            String authorization = request.getHeader(HttpHeader.PROXY_AUTHORIZATION.asString());
+            String authorization = request.getHeaders().get(HttpHeader.PROXY_AUTHORIZATION.asString());
             if (authorization == null) {
                 response.setStatus(HttpStatus.PROXY_AUTHENTICATION_REQUIRED_407);
-                response.setHeader(HttpHeader.PROXY_AUTHENTICATE.asString(), "Basic realm=\"" + realm + "\"");
-                return;
+                response.getHeaders().add(HttpHeader.PROXY_AUTHENTICATE.asString(), "Basic realm=\"" + realm + "\"");
+                callback.succeeded();
+                return true;
             } else {
                 String prefix = "Basic ";
                 if (authorization.startsWith(prefix)) {
                     String attempt = authorization.substring(prefix.length());
                     if (!credentials.equals(attempt)) {
-                        return;
+                        callback.succeeded();
+                        return true;
                     }
                 }
             }
 
             if (StringUtils.equalsIgnoreCase("post", request.getMethod())) {
-                postReceived = IOUtils.toString(request.getReader());
+                postReceived = Content.Source.asString(request, StandardCharsets.UTF_8);
             }
-            response.getWriter().write(CONTENT_RESPONSE);
+            Content.Sink.write(response, true, CONTENT_RESPONSE, callback);
+            return true;
         }
     }
 
-    public class TestHandler extends AbstractHandler {
+    public static class TestHandler extends Handler.Abstract {
 
         String postReceived;
 
         @Override
-        public void handle(
-                String target,
-                org.eclipse.jetty.server.Request jettyRequest,
-                HttpServletRequest request,
-                HttpServletResponse response)
-                throws IOException, ServletException {
-            jettyRequest.setHandled(true);
+        public boolean handle(
+                org.eclipse.jetty.server.Request request, org.eclipse.jetty.server.Response response, Callback callback)
+                throws IOException {
             if (StringUtils.equalsIgnoreCase("post", request.getMethod())) {
-                postReceived = IOUtils.toString(request.getReader());
+                postReceived = Content.Source.asString(request, StandardCharsets.UTF_8);
             }
-            response.getWriter().write(CONTENT_RESPONSE);
+            Content.Sink.write(response, true, CONTENT_RESPONSE, callback);
+            return true;
         }
     }
 
