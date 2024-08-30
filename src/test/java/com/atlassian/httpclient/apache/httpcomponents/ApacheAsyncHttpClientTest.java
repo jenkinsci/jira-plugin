@@ -164,9 +164,7 @@ public class ApacheAsyncHttpClientTest {
 
         @Override
         public boolean handle(
-                org.eclipse.jetty.server.Request request,
-                org.eclipse.jetty.server.Response response,
-                Callback callback)
+                org.eclipse.jetty.server.Request request, org.eclipse.jetty.server.Response response, Callback callback)
                 throws IOException {
 
             final String credentials = Base64.getEncoder().encodeToString((user + ":" + password).getBytes("UTF-8"));
@@ -202,9 +200,7 @@ public class ApacheAsyncHttpClientTest {
 
         @Override
         public boolean handle(
-                org.eclipse.jetty.server.Request request,
-                org.eclipse.jetty.server.Response response,
-                Callback callback)
+                org.eclipse.jetty.server.Request request, org.eclipse.jetty.server.Response response, Callback callback)
                 throws IOException {
             if (StringUtils.equalsIgnoreCase("post", request.getMethod())) {
                 postReceived = Content.Source.asString(request, StandardCharsets.UTF_8);
