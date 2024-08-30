@@ -172,7 +172,7 @@ public class ApacheAsyncHttpClientTest {
 
             final String credentials = Base64.getEncoder().encodeToString((user + ":" + password).getBytes("UTF-8"));
 
-            String authorization = request.getHeaders().get(HttpHeader.PROXY_AUTHORIZATION);
+            String authorization = request.getHeaders().get(HttpHeader.PROXY_AUTHORIZATION.asString());
             if (authorization == null) {
                 response.setStatus(HttpStatus.PROXY_AUTHENTICATION_REQUIRED_407);
                 response.getHeaders().add(HttpHeader.PROXY_AUTHENTICATE.asString(), "Basic realm=\"" + realm + "\"");
