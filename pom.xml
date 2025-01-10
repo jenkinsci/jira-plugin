@@ -55,6 +55,7 @@
     <!-- jenkins -->
     <jenkins.version>2.479.3</jenkins.version>
     <spotless.check.skip>false</spotless.check.skip>
+    <maven.compiler.release>17</maven.compiler.release>
   </properties>
 
   <dependencyManagement>
