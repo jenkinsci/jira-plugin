@@ -13,6 +13,19 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
+
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
+
 import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import com.cloudbees.hudson.plugins.folder.Folder;
@@ -24,24 +37,15 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
+import hudson.model.Descriptor.FormException;
 import hudson.plugins.jira.model.JiraIssue;
 import hudson.util.DescribableList;
 import hudson.util.Secret;
 import hudson.util.XStream2;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Arrays;
-import java.util.Collections;
 import jenkins.model.Jenkins;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.WithoutJenkins;
 
 public class JiraSiteTest {
 
@@ -62,7 +66,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void createSessionWithProvidedCredentials() {
+    public void createSessionWithProvidedCredentials() throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 null,
@@ -82,7 +86,7 @@ public class JiraSiteTest {
 
     @Test
     @Issue("JENKINS-64083")
-    public void createSessionWithGlobalCredentials() {
+    public void createSessionWithGlobalCredentials() throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 null,
@@ -101,7 +105,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void createSessionReturnsNullIfCredentialsIsNull() {
+    public void createSessionReturnsNullIfCredentialsIsNull() throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 null,
@@ -120,7 +124,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void deserializeMigrateCredentials() throws MalformedURLException {
+    public void deserializeMigrateCredentials() throws MalformedURLException, FormException {
         JiraSiteOld old = new JiraSiteOld(
                 validPrimaryUrl, null, ANY_USER, ANY_PASSWORD, false, false, null, false, null, null, true);
 
@@ -153,7 +157,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void deserializeNormal() throws IOException {
+    public void deserializeNormal() throws IOException, FormException {
         Domain domain = new Domain(
                 "example",
                 "test domain",
@@ -207,7 +211,7 @@ public class JiraSiteTest {
                 boolean updateJiraIssueForAllStatus,
                 String groupVisibility,
                 String roleVisibility,
-                boolean useHTTPAuth) {
+                boolean useHTTPAuth) throws FormException {
             super(
                     url,
                     alternativeUrl,
@@ -226,7 +230,7 @@ public class JiraSiteTest {
 
     @Test
     @WithoutJenkins
-    public void alternativeURLNotNull() {
+    public void alternativeURLNotNull() throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 exampleOrg,

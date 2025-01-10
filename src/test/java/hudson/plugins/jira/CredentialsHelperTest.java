@@ -6,6 +6,15 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Arrays;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
@@ -13,13 +22,8 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Arrays;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
+
+import hudson.model.Descriptor.FormException;
 
 /**
  * @author Zhenlei Huang
@@ -29,7 +33,7 @@ public class CredentialsHelperTest {
     public JenkinsRule r = new JenkinsRule();
 
     @Test
-    public void lookupSystemCredentials() throws IOException {
+    public void lookupSystemCredentials() throws IOException, FormException {
         assertNull(CredentialsHelper.lookupSystemCredentials("nonexistent-credentials-id", null));
 
         StandardUsernamePasswordCredentials c =
@@ -41,7 +45,7 @@ public class CredentialsHelperTest {
     }
 
     @Test
-    public void lookupSystemCredentialsWithDomainRestriction() throws IOException {
+    public void lookupSystemCredentialsWithDomainRestriction() throws IOException, FormException {
         Domain domain = new Domain(
                 "example",
                 "test domain",
@@ -56,7 +60,7 @@ public class CredentialsHelperTest {
     }
 
     @Test
-    public void migrateCredentials() throws MalformedURLException {
+    public void migrateCredentials() throws MalformedURLException, FormException {
         assertThat(
                 CredentialsProvider.lookupStores(r.jenkins).iterator().next().getCredentials(Domain.global()), empty());
 
@@ -70,7 +74,7 @@ public class CredentialsHelperTest {
     }
 
     @Test
-    public void migrateCredentialsWithExsitingCredentials() throws IOException {
+    public void migrateCredentialsWithExsitingCredentials() throws IOException, FormException {
         Domain domain = new Domain(
                 "example",
                 "test domain",
