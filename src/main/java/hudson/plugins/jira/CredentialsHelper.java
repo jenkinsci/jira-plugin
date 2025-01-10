@@ -12,6 +12,7 @@ import com.cloudbees.plugins.credentials.domains.URIRequirementBuilder;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.Descriptor.FormException;
 import hudson.model.Item;
 import hudson.model.Queue;
 import hudson.model.queue.Tasks;
@@ -53,7 +54,7 @@ public class CredentialsHelper {
     }
 
     protected static StandardUsernamePasswordCredentials migrateCredentials(
-            @NonNull String username, String password, @CheckForNull URL url) {
+            @NonNull String username, String password, @CheckForNull URL url) throws FormException {
         List<StandardUsernamePasswordCredentials> credentials = CredentialsMatchers.filter(
                 CredentialsProvider.lookupCredentials(
                         StandardUsernamePasswordCredentials.class,

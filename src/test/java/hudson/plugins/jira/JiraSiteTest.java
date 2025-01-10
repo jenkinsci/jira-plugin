@@ -24,6 +24,7 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import hudson.model.Descriptor.FormException;
 import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.plugins.jira.model.JiraIssue;
@@ -62,7 +63,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void createSessionWithProvidedCredentials() {
+    public void createSessionWithProvidedCredentials() throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 null,
@@ -82,7 +83,7 @@ public class JiraSiteTest {
 
     @Test
     @Issue("JENKINS-64083")
-    public void createSessionWithGlobalCredentials() {
+    public void createSessionWithGlobalCredentials() throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 null,
@@ -101,7 +102,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void createSessionReturnsNullIfCredentialsIsNull() {
+    public void createSessionReturnsNullIfCredentialsIsNull() throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 null,
@@ -120,7 +121,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void deserializeMigrateCredentials() throws MalformedURLException {
+    public void deserializeMigrateCredentials() throws MalformedURLException, FormException {
         JiraSiteOld old = new JiraSiteOld(
                 validPrimaryUrl, null, ANY_USER, ANY_PASSWORD, false, false, null, false, null, null, true);
 
@@ -153,7 +154,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void deserializeNormal() throws IOException {
+    public void deserializeNormal() throws IOException, FormException {
         Domain domain = new Domain(
                 "example",
                 "test domain",
@@ -207,7 +208,8 @@ public class JiraSiteTest {
                 boolean updateJiraIssueForAllStatus,
                 String groupVisibility,
                 String roleVisibility,
-                boolean useHTTPAuth) {
+                boolean useHTTPAuth)
+                throws FormException {
             super(
                     url,
                     alternativeUrl,
@@ -226,7 +228,7 @@ public class JiraSiteTest {
 
     @Test
     @WithoutJenkins
-    public void alternativeURLNotNull() {
+    public void alternativeURLNotNull() throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 exampleOrg,
