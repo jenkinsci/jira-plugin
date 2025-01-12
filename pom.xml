@@ -71,11 +71,6 @@
         <artifactId>atlassian-plugins-core</artifactId>
         <version>5.3.12</version>
       </dependency>
-      <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>20241224</version>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -233,6 +228,10 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>joda-time-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>json-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
