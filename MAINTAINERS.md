@@ -4,7 +4,7 @@
 
 ### Start dockerized Jenkins (for testing)
 
-The command below will start a local Jenkins using the version specificied as first argument (or lts):
+The command below will start a local Jenkins using the version specified as first argument (or LTS):
 
 ```bash
 ./examples/start_docker.sh 2.249.2
@@ -25,7 +25,7 @@ To resolve some binary compatibility issues [JENKINS-48357](https://issues.jenki
 the sources from the artifact [com.atlassian.httpclient:atlassian-httpclient-plugin:0.23](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/)
 has been imported in the project to have control over http(s) protocol transport layer.
 The downloaded sources didn't have any license headers but based on the [pom](https://packages.atlassian.com/maven-external/com/atlassian/httpclient/atlassian-httpclient-plugin/0.23.0/atlassian-httpclient-plugin-0.23.0.pom)
-sources are Apache License (see pom in src/main/resources/atlassian-httpclient-plugin-0.23.0.pom)   
+sources are Apache License (see pom in src/main/resources/atlassian-httpclient-plugin-0.23.0.pom)
 
 ### Testing
 
