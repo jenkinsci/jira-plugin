@@ -1,0 +1,11 @@
+{
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "emeraldwalk.runonsave": {
+        "commands": [
+            {
+                "match": "\\.java$",
+                "cmd": "mvn spotless:apply -DspotlessFiles=${file}"
+            },
+        ],
+    }
+}
