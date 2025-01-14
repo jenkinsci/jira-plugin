@@ -21,6 +21,7 @@ import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.Descriptor.FormException;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Item;
@@ -60,7 +61,7 @@ public class DescriptorImplTest {
     JiraSite.Builder builder = spy(new JiraSite.Builder());
 
     @Test
-    public void doFillCredentialsIdItems() throws IOException {
+    public void doFillCredentialsIdItems() throws IOException, FormException {
 
         MockFolder dummy = r.createFolder("dummy");
         r.jenkins.setSecurityRealm(r.createDummySecurityRealm());

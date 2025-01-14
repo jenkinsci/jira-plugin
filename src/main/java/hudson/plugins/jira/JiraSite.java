@@ -34,6 +34,7 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.model.Descriptor.FormException;
 import hudson.model.Item;
 import hudson.model.ItemGroup;
 import hudson.model.Job;
@@ -306,7 +307,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             @CheckForNull String groupVisibility,
             @CheckForNull String roleVisibility,
-            boolean useHTTPAuth) {
+            boolean useHTTPAuth)
+            throws FormException {
         this(
                 url,
                 alternativeUrl,
@@ -332,7 +334,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             String groupVisibility,
             String roleVisibility,
-            boolean useHTTPAuth) {
+            boolean useHTTPAuth)
+            throws FormException {
         this(
                 url,
                 alternativeUrl,
@@ -646,8 +649,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     @SuppressWarnings("unused")
-    protected Object readResolve() {
+    protected Object readResolve() throws FormException {
         JiraSite jiraSite;
+
         if (credentialsId == null && userName != null && password != null) { // Migrate credentials
             jiraSite = new JiraSite(
                     url,
