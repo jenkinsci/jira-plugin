@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>4.86</version>
+    <version>5.4</version>
     <relativePath />
   </parent>
 
@@ -52,8 +52,9 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jira-rest-client.version>5.2.7</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
-    <!-- jenkins -->
-    <jenkins.version>2.440.3</jenkins.version>
+    <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
+    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <spotless.check.skip>false</spotless.check.skip>
   </properties>
 
@@ -61,8 +62,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.440.x</artifactId>
-        <version>3234.v5ca_5154341ef</version>
+        <artifactId>bom-${jenkins.baseline}.x</artifactId>
+        <version>3875.v1df09947cde6</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -70,11 +71,6 @@
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-core</artifactId>
         <version>5.3.12</version>
-      </dependency>
-      <dependency>
-        <groupId>org.json</groupId>
-        <artifactId>json</artifactId>
-        <version>20240303</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -233,6 +229,10 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>joda-time-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>json-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.maven</groupId>
