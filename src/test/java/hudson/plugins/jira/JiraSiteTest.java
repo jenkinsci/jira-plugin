@@ -164,6 +164,7 @@ public class JiraSiteTest {
         CredentialsProvider.lookupStores(j.jenkins).iterator().next().addDomain(domain, c);
 
         JiraSite site = new JiraSite(exampleOrg, null, c.getId(), false, false, null, false, null, null, true);
+        site.setUseBearerAuth(true);
 
         XStream2 xStream2 = new XStream2();
         String xml = xStream2.toXML(site);
@@ -174,6 +175,7 @@ public class JiraSiteTest {
 
         JiraSite site1 = (JiraSite) xStream2.fromXML(xml);
         assertNotNull(site1.credentialsId);
+        assertTrue(site1.useBearerAuth);
     }
 
     @WithoutJenkins

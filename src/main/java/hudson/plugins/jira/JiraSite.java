@@ -684,6 +684,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         jiraSite.setAppendChangeTimestamp(appendChangeTimestamp);
         jiraSite.setDisableChangelogAnnotations(disableChangelogAnnotations);
         jiraSite.setDateTimePattern(dateTimePattern);
+        jiraSite.setUseBearerAuth(useBearerAuth);
+
         return jiraSite;
     }
 
