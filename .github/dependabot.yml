@@ -14,6 +14,7 @@ updates:
         patterns:
           - "com.atlassian.plugins:*"
           - "com.atlassian.jira:*"
+          - "io.atlassian.util.concurrent:*"
   
   - package-ecosystem: "github-actions"
     directory: "/"
