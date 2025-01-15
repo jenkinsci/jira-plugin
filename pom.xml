@@ -50,7 +50,7 @@
     <revision>3.14</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jira-rest-client.version>5.2.7</jira-rest-client.version>
+    <jira-rest-client.version>6.0.1</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
