@@ -19,9 +19,6 @@ updates:
         patterns:
           - "io.jenkins.tools.bom:*"
           - "org.jenkins-ci.plugins:plugin"
-      plugins:
-        patterns:
-          - "org.jenkins-ci.plugins:*"
   
   - package-ecosystem: "github-actions"
     directory: "/"
