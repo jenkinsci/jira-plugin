@@ -1,8 +1,6 @@
 package hudson.plugins.jira;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import hudson.ProxyConfiguration;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
@@ -17,43 +15,41 @@ import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class JiraRestServiceProxyTest {
+@WithJenkins
+class JiraRestServiceProxyTest {
 
     private final ConnectionFactory connectionFactory = new HttpConnectionFactory();
     private final URI JIRA_URI = URI.create("http://example.com:8080/");
     private final String USERNAME = "user";
     private final String PASSWORD = "password";
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
     private Server server;
     private ServerConnector connector;
     private ExtendedJiraRestClient client;
 
-    @Before
-    public void prepare() throws Exception {
+    @BeforeEach
+    void prepare() throws Exception {
         server = new Server();
         connector = new ServerConnector(server, connectionFactory);
         server.addConnector(connector);
         server.start();
     }
 
-    @After
-    public void dispose() throws Exception {
+    @AfterEach
+    void dispose() throws Exception {
         if (server != null) {
             server.stop();
         }
     }
 
     @Test
-    public void withProxy() throws Exception {
+    void withProxy(JenkinsRule r) throws Exception {
         int localPort = connector.getLocalPort();
         Jenkins.get().proxy = new ProxyConfiguration("localhost", localPort);
 
@@ -67,7 +63,7 @@ public class JiraRestServiceProxyTest {
     }
 
     @Test
-    public void withProxyAndNoProxyHosts() throws Exception {
+    void withProxyAndNoProxyHosts(JenkinsRule r) throws Exception {
         int localPort = connector.getLocalPort();
         Jenkins.get().proxy = new ProxyConfiguration("localhost", localPort);
         Jenkins.get().proxy.setNoProxyHost("example.com|google.com");
@@ -76,7 +72,7 @@ public class JiraRestServiceProxyTest {
     }
 
     @Test
-    public void withoutProxy() throws Exception {
+    void withoutProxy(JenkinsRule r) throws Exception {
         assertNull(getProxyObjectFromRequest());
     }
 

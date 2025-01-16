@@ -8,15 +8,15 @@ import static org.mockito.Mockito.when;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterDefinition;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JiraIssueParameterDefResultTest {
+class JiraIssueParameterDefResultTest {
 
     private Issue issueMock;
 
-    @Before
-    public void prepareMocks() {
+    @BeforeEach
+    void prepareMocks() {
         issueMock = mock(Issue.class);
         IssueField fieldMock1 = mock(IssueField.class);
         IssueField fieldMock2 = mock(IssueField.class);
@@ -33,14 +33,14 @@ public class JiraIssueParameterDefResultTest {
     }
 
     @Test
-    public void testSummaryResult() {
+    void testSummaryResult() {
         JiraIssueParameterDefinition.Result result = new JiraIssueParameterDefinition.Result(issueMock, "");
 
         assertThat("Summary", equalTo(result.summary));
     }
 
     @Test
-    public void testAltSummaryResultCommaSep() {
+    void testAltSummaryResultCommaSep() {
         JiraIssueParameterDefinition.Result result =
                 new JiraIssueParameterDefinition.Result(issueMock, "TestField1,TestField2");
 
@@ -48,7 +48,7 @@ public class JiraIssueParameterDefResultTest {
     }
 
     @Test
-    public void testAltSummaryResultCommaSpaceSep() {
+    void testAltSummaryResultCommaSpaceSep() {
         JiraIssueParameterDefinition.Result result =
                 new JiraIssueParameterDefinition.Result(issueMock, "TestField1, TestField2");
 
@@ -56,7 +56,7 @@ public class JiraIssueParameterDefResultTest {
     }
 
     @Test
-    public void testAltSummaryResultMissingFieldIgnored() {
+    void testAltSummaryResultMissingFieldIgnored() {
         JiraIssueParameterDefinition.Result result =
                 new JiraIssueParameterDefinition.Result(issueMock, "TestField1, TestField4");
 
@@ -64,7 +64,7 @@ public class JiraIssueParameterDefResultTest {
     }
 
     @Test
-    public void testAltSummaryResultEmptyFieldIgnored() {
+    void testAltSummaryResultEmptyFieldIgnored() {
         JiraIssueParameterDefinition.Result result =
                 new JiraIssueParameterDefinition.Result(issueMock, "TestField1, TestField3");
 

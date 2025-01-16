@@ -16,14 +16,14 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class JqlIssueSelectorTest {
+@ExtendWith(MockitoExtension.class)
+class JqlIssueSelectorTest {
 
     private static final String TEST_JQL = "key='EXAMPLE-1'";
 
@@ -39,21 +39,21 @@ public class JqlIssueSelectorTest {
     @Mock
     private Run run;
 
-    @Before
-    public void prepare() throws IOException {
+    @BeforeEach
+    void prepare() throws IOException {
         when(run.getParent()).thenReturn(project);
         when(site.getSession(project)).thenReturn(session);
     }
 
     @Test
-    public void dontDependOnRunAndTaskListener() {
+    void dontDependOnRunAndTaskListener() {
         JqlIssueSelector jqlUpdaterIssueSelector = new JqlIssueSelector(TEST_JQL);
         Set<String> foundIssues = jqlUpdaterIssueSelector.findIssueIds(run, site, null);
         assertThat(foundIssues, empty());
     }
 
     @Test
-    public void callGetIssuesFromJqlSearch() throws IOException, TimeoutException {
+    void callGetIssuesFromJqlSearch() throws IOException, TimeoutException {
         Issue issue = mock(Issue.class);
         when(issue.getKey()).thenReturn("EXAMPLE-1");
         when(session.getIssuesFromJqlSearch(TEST_JQL)).thenReturn(Collections.singletonList(issue));

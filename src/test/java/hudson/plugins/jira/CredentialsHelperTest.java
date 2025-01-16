@@ -3,8 +3,8 @@ package hudson.plugins.jira;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -18,19 +18,18 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Zhenlei Huang
  */
-public class CredentialsHelperTest {
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class CredentialsHelperTest {
 
     @Test
-    public void lookupSystemCredentials() throws IOException, FormException {
+    void lookupSystemCredentials(JenkinsRule r) throws IOException, FormException {
         assertNull(CredentialsHelper.lookupSystemCredentials("nonexistent-credentials-id", null));
 
         StandardUsernamePasswordCredentials c =
@@ -42,7 +41,7 @@ public class CredentialsHelperTest {
     }
 
     @Test
-    public void lookupSystemCredentialsWithDomainRestriction() throws IOException, FormException {
+    void lookupSystemCredentialsWithDomainRestriction(JenkinsRule r) throws IOException, FormException {
         Domain domain = new Domain(
                 "example",
                 "test domain",
@@ -57,7 +56,7 @@ public class CredentialsHelperTest {
     }
 
     @Test
-    public void migrateCredentials() throws MalformedURLException, FormException {
+    void migrateCredentials(JenkinsRule r) throws MalformedURLException, FormException {
         assertThat(
                 CredentialsProvider.lookupStores(r.jenkins).iterator().next().getCredentials(Domain.global()), empty());
 
@@ -71,7 +70,7 @@ public class CredentialsHelperTest {
     }
 
     @Test
-    public void migrateCredentialsWithExsitingCredentials() throws IOException, FormException {
+    void migrateCredentialsWithExsitingCredentials(JenkinsRule r) throws IOException, FormException {
         Domain domain = new Domain(
                 "example",
                 "test domain",

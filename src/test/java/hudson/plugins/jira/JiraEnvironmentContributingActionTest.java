@@ -8,17 +8,17 @@ import static org.mockito.Mockito.verify;
 
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-public class JiraEnvironmentContributingActionTest {
+class JiraEnvironmentContributingActionTest {
     private static final String JIRA_URL = "http://example.com";
     private static final String JIRA_URL_PROPERTY_NAME = "JIRA_URL";
     private static final String ISSUES_PROPERTY_NAME = "JIRA_ISSUES";
     private static final String ISSUES_LIST = "ISS-1,ISS-2";
 
     @Test
-    public void buildEnvVarsEnvIsNull() {
+    void buildEnvVarsEnvIsNull() {
         JiraEnvironmentContributingAction action = new JiraEnvironmentContributingAction(ISSUES_LIST, JIRA_URL);
         AbstractBuild build = mock(AbstractBuild.class);
 
@@ -27,7 +27,7 @@ public class JiraEnvironmentContributingActionTest {
     }
 
     @Test
-    public void buildEnvVarsAddVariables() {
+    void buildEnvVarsAddVariables() {
         JiraEnvironmentContributingAction action = new JiraEnvironmentContributingAction(ISSUES_LIST, JIRA_URL);
         AbstractBuild build = mock(AbstractBuild.class);
         EnvVars envVars = mock(EnvVars.class);

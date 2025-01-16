@@ -10,11 +10,11 @@ import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import java.io.IOException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-public class EnvironmentExpanderTest {
+class EnvironmentExpanderTest {
 
     private static final String VARIABLE = "${ISSUE_ID}";
     private static final String ENVIRONMENT_KEY = "ISSUE_ID";
@@ -25,8 +25,8 @@ public class EnvironmentExpanderTest {
     BuildListener buildListener = mock(BuildListener.class);
     AbstractBuild currentBuild = mock(FreeStyleBuild.class);
 
-    @Before
-    public void createCharacteristicEnvironment() throws IOException, InterruptedException {
+    @BeforeEach
+    void createCharacteristicEnvironment() throws IOException, InterruptedException {
         env = new EnvVars();
         env.put("BUILD_NUMBER", "1");
         env.put("BUILD_URL", "/some/url/to/job");
@@ -36,13 +36,13 @@ public class EnvironmentExpanderTest {
     }
 
     @Test
-    public void returnVariableWhenValueNotFound() {
+    void returnVariableWhenValueNotFound() {
         String value = EnvironmentExpander.expandVariable(VARIABLE, env);
         assertThat(value, equalTo(VARIABLE));
     }
 
     @Test
-    public void returnValueWhenFound() {
+    void returnValueWhenFound() {
         env.put(ENVIRONMENT_KEY, ENVIRONMENT_VALUE);
 
         String value = EnvironmentExpander.expandVariable(VARIABLE, env);
@@ -52,13 +52,13 @@ public class EnvironmentExpanderTest {
     }
 
     @Test
-    public void returnVariableFromNullRunEnvironment() {
+    void returnVariableFromNullRunEnvironment() {
         String value = EnvironmentExpander.expandVariable(VARIABLE, null, null);
         assertThat(value, equalTo(VARIABLE));
     }
 
     @Test
-    public void returnValueFromRunEnvironment() {
+    void returnValueFromRunEnvironment() {
         env.put(ENVIRONMENT_KEY, ENVIRONMENT_VALUE);
 
         String value = EnvironmentExpander.expandVariable(VARIABLE, currentBuild, buildListener);

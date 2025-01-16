@@ -4,12 +4,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import com.atlassian.httpclient.api.Request;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class BearerHttpAuthenticationHandlerTest {
+class BearerHttpAuthenticationHandlerTest {
 
     @Test
-    public void testConfigure() {
+    void testConfigure() {
         String token = "token";
         BearerHttpAuthenticationHandler handler = new BearerHttpAuthenticationHandler(token);
         Request.Builder builder = mock(Request.Builder.class);

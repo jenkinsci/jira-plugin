@@ -3,7 +3,7 @@ package hudson.plugins.jira.pipeline;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,26 +24,27 @@ import java.util.List;
 import java.util.Map;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class SearchIssuesStepTest {
+@WithJenkins
+class SearchIssuesStepTest {
 
-    @ClassRule
-    public static JenkinsRule jenkinsRule = new JenkinsRule();
+    private JenkinsRule jenkinsRule;
 
     @Inject
     SearchIssuesStep.DescriptorImpl descriptor;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(JenkinsRule jenkinsRule) throws Exception {
+        this.jenkinsRule = jenkinsRule;
         jenkinsRule.getInstance().getInjector().injectMembers(this);
     }
 
     @Test
-    public void configRoundTrip() throws Exception {
+    void configRoundTrip() throws Exception {
         configRoundTrip("");
         configRoundTrip("key='EXAMPLE-1'");
     }
@@ -54,7 +55,7 @@ public class SearchIssuesStepTest {
     }
 
     @Test
-    public void callGetIssuesFromJqlSearch() throws Exception {
+    void callGetIssuesFromJqlSearch() throws Exception {
         JiraSession session = mock(JiraSession.class);
         String jql = "key='EXAMPLE-1'";
         Issue issue = mock(Issue.class);

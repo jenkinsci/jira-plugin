@@ -1,5 +1,7 @@
 package hudson.plugins.jira.selector.perforce;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -17,8 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public abstract class JobIssueSelectorTest {
 
@@ -48,18 +49,18 @@ public abstract class JobIssueSelectorTest {
         JobIssueSelector jobIssueSelector = createJobIssueSelector();
         // Initial state contains zero parameters
         ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
-        Assert.assertTrue(ids.isEmpty());
+        assertTrue(ids.isEmpty());
 
         parameters.add(parameter);
         ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("JIRA-123", ids.iterator().next());
+        assertEquals(1, ids.size());
+        assertEquals("JIRA-123", ids.iterator().next());
 
         parameters.add(parameterTwo);
         ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
-        Assert.assertEquals(2, ids.size());
+        assertEquals(2, ids.size());
         Set<String> expected = new TreeSet(Arrays.asList("JIRA-123", "JIRA-321"));
-        Assert.assertEquals(expected, ids);
+        assertEquals(expected, ids);
     }
 
     @Test
@@ -85,8 +86,8 @@ public abstract class JobIssueSelectorTest {
         JobIssueSelector jobIssueSelector = createJobIssueSelector();
 
         Set<String> ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
-        Assert.assertEquals(1, ids.size());
+        assertEquals(1, ids.size());
         Set<String> expected = new TreeSet<>(Collections.singletonList("GC-131"));
-        Assert.assertEquals(expected, ids);
+        assertEquals(expected, ids);
     }
 }

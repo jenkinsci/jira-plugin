@@ -1,10 +1,7 @@
 package hudson.plugins.jira;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -36,14 +33,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
+@WithJenkins
 public class JiraCreateIssueNotifierTest {
 
     private static final String JIRA_PROJECT = "PROJECT";
@@ -66,18 +64,11 @@ public class JiraCreateIssueNotifierTest {
     AbstractBuild currentBuild = mock(FreeStyleBuild.class);
     File temporaryDirectory;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @TempDir
+    public File temporaryFolder;
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    {
-        j.timeout = 0;
-    }
-
-    @Before
-    public void createCommonMocks() throws IOException, InterruptedException {
+    @BeforeEach
+    void createCommonMocks() throws IOException, InterruptedException {
         env = new EnvVars();
         env.put("BUILD_NUMBER", "10");
         env.put("BUILD_URL", "/some/url/to/job");
@@ -92,7 +83,7 @@ public class JiraCreateIssueNotifierTest {
 
         doReturn(env).when(currentBuild).getEnvironment(Mockito.any());
 
-        temporaryDirectory = temporaryFolder.newFolder();
+        temporaryDirectory = newFolder(temporaryFolder, "junit");
 
         when(project.getBuildDir()).thenReturn(temporaryDirectory);
         when(currentBuild.getProject()).thenReturn(project);
@@ -105,7 +96,7 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     @WithoutJenkins
-    public void performSuccessFailure() throws Exception {
+    void performSuccessFailure() throws Exception {
 
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
@@ -129,7 +120,7 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     @WithoutJenkins
-    public void performSuccessFailureWithEnv() throws Exception {
+    void performSuccessFailureWithEnv() throws Exception {
         when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
 
@@ -153,7 +144,7 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     @WithoutJenkins
-    public void performFailureFailure() throws Exception {
+    void performFailureFailure() throws Exception {
         JiraCreateIssueNotifier notifier =
                 spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION, ASSIGNEE, COMPONENT, 1L, 1L, 1));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
@@ -197,7 +188,7 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     @WithoutJenkins
-    public void performFailureSuccessIssueOpen() throws Exception {
+    void performFailureSuccessIssueOpen() throws Exception {
         Long typeId = 1L;
         Long priorityId = 0L;
         Integer actionIdOnSuccess = 5;
@@ -244,7 +235,7 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     @WithoutJenkins
-    public void performFailureSuccessIssueClosedWithComponents() throws Exception {
+    void performFailureSuccessIssueClosedWithComponents() throws Exception {
         JiraCreateIssueNotifier notifier = spy(new JiraCreateIssueNotifier(JIRA_PROJECT, "", "", "", 1L, 1L, 1));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
 
@@ -282,7 +273,7 @@ public class JiraCreateIssueNotifierTest {
 
     @Test
     @WithoutJenkins
-    public void isDone() {
+    void isDone() {
         assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Closed", null, null, null)));
         assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Done", null, null, null)));
         assertTrue(JiraCreateIssueNotifier.isDone(new Status(null, null, "Resolved", null, null, null)));
@@ -293,7 +284,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void doFillPriorityIdItems() throws Exception {
+    void doFillPriorityIdItems(JenkinsRule j) throws Exception {
 
         String credId_1 = "cred-1-id";
         String credId_2 = "cred-2-id";
@@ -365,7 +356,7 @@ public class JiraCreateIssueNotifierTest {
     }
 
     @Test
-    public void doFillTypeItems() throws Exception {
+    void doFillTypeItems(JenkinsRule j) throws Exception {
 
         String credId_1 = "cred-1-id";
         String credId_2 = "cred-2-id";
@@ -434,5 +425,14 @@ public class JiraCreateIssueNotifierTest {
             assertTrue(options.get(1).name.contains("type-2"));
             assertTrue(options.get(1).name.contains("https://pale-ale.com.au"));
         }
+    }
+
+    private static File newFolder(File root, String... subDirs) throws IOException {
+        String subFolder = String.join("/", subDirs);
+        File result = new File(root, subFolder);
+        if (!result.mkdirs()) {
+            throw new IOException("Couldn't create folders " + root);
+        }
+        return result;
     }
 }
