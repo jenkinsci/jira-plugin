@@ -12,7 +12,7 @@ import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Created by Reda on 18/12/2014.
@@ -96,7 +96,7 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
         }
 
         @Override
-        public JiraReleaseVersionUpdaterBuilder newInstance(StaplerRequest req, JSONObject formData)
+        public JiraReleaseVersionUpdaterBuilder newInstance(StaplerRequest2 req, JSONObject formData)
                 throws FormException {
             return req.bindJSON(JiraReleaseVersionUpdaterBuilder.class, formData);
         }

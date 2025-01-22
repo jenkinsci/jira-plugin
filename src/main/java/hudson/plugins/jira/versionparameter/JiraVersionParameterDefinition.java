@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 public class JiraVersionParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 4232979892748310160L;
@@ -41,7 +41,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
     }
 
     @Override
-    public ParameterValue createValue(StaplerRequest req) {
+    public ParameterValue createValue(StaplerRequest2 req) {
         String[] values = req.getParameterValues(getName());
         if (values == null || values.length != 1) {
             return null;
@@ -50,7 +50,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
     }
 
     @Override
-    public ParameterValue createValue(StaplerRequest req, JSONObject formData) {
+    public ParameterValue createValue(StaplerRequest2 req, JSONObject formData) {
         JiraVersionParameterValue value = req.bindJSON(JiraVersionParameterValue.class, formData);
         return value;
     }
@@ -61,7 +61,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
     }
 
     public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException {
-        Job<?, ?> contextJob = Stapler.getCurrentRequest().findAncestorObject(Job.class);
+        Job<?, ?> contextJob = Stapler.getCurrentRequest2().findAncestorObject(Job.class);
 
         JiraSite site = JiraSite.get(contextJob);
         if (site == null) {

@@ -11,7 +11,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Task which releases the jira version specified in the parameters when the build completes.
@@ -91,7 +91,7 @@ public class JiraReleaseVersionUpdater extends Notifier {
         }
 
         @Override
-        public JiraReleaseVersionUpdater newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public JiraReleaseVersionUpdater newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
             return req.bindJSON(JiraReleaseVersionUpdater.class, formData);
         }
 
