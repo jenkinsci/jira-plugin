@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Resolve user email by searching his userId as username in Jira.
@@ -35,7 +35,7 @@ public class JiraMailAddressResolver extends MailAddressResolver {
 
         Job<?, ?> job = null;
 
-        StaplerRequest req = Stapler.getCurrentRequest();
+        StaplerRequest2 req = Stapler.getCurrentRequest2();
         if (req != null) {
             job = req.findAncestorObject(Job.class);
         }

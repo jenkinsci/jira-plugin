@@ -35,7 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 public class JiraIssueParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 3927562542249244416L;
@@ -50,7 +50,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     }
 
     @Override
-    public ParameterValue createValue(StaplerRequest req) {
+    public ParameterValue createValue(StaplerRequest2 req) {
         String[] values = req.getParameterValues(getName());
         if (values == null || values.length != 1) {
             return null;
@@ -60,7 +60,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     }
 
     @Override
-    public ParameterValue createValue(StaplerRequest req, JSONObject formData) {
+    public ParameterValue createValue(StaplerRequest2 req, JSONObject formData) {
         JiraIssueParameterValue value = req.bindJSON(JiraIssueParameterValue.class, formData);
         return value;
     }
@@ -71,7 +71,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     }
 
     public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException, TimeoutException {
-        Job<?, ?> job = Stapler.getCurrentRequest().findAncestorObject(Job.class);
+        Job<?, ?> job = Stapler.getCurrentRequest2().findAncestorObject(Job.class);
 
         JiraSite site = JiraSite.get(job);
         if (site == null) {

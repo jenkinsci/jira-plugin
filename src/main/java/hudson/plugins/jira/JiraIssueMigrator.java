@@ -12,7 +12,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 public class JiraIssueMigrator extends Notifier {
 
@@ -146,7 +146,7 @@ public class JiraIssueMigrator extends Notifier {
         }
 
         @Override
-        public JiraIssueMigrator newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public JiraIssueMigrator newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
             return req.bindJSON(JiraIssueMigrator.class, formData);
         }
 
