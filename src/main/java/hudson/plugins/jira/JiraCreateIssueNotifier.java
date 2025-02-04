@@ -39,7 +39,7 @@ import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * When a build fails it creates jira issues.
@@ -520,7 +520,7 @@ public class JiraCreateIssueNotifier extends Notifier {
         }
 
         @Override
-        public JiraCreateIssueNotifier newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public JiraCreateIssueNotifier newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
             return req.bindJSON(JiraCreateIssueNotifier.class, formData);
         }
 

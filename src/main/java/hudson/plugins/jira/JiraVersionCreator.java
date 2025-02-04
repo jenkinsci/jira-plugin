@@ -11,7 +11,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * A build step which creates new Jira version
@@ -77,7 +77,7 @@ public class JiraVersionCreator extends Notifier {
         }
 
         @Override
-        public JiraVersionCreator newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public JiraVersionCreator newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
             return req.bindJSON(JiraVersionCreator.class, formData);
         }
 
