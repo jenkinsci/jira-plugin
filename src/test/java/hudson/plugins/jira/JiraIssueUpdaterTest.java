@@ -13,18 +13,18 @@ import hudson.scm.SCM;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class JiraIssueUpdaterTest {
+class JiraIssueUpdaterTest {
 
     @Test
-    public void issueSelectorDefaultsToDefault() {
+    void issueSelectorDefaultsToDefault() {
         final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, null);
         assertThat(updater.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
     }
 
     @Test
-    public void setIssueSelectorPersists() {
+    void setIssueSelectorPersists() {
         class TestSelector extends AbstractIssueSelector {
 
             @Override
@@ -38,7 +38,7 @@ public class JiraIssueUpdaterTest {
     }
 
     @Test
-    public void setScmPersists() {
+    void setScmPersists() {
         class TestSCM extends SCM {
 
             @Override
@@ -52,7 +52,7 @@ public class JiraIssueUpdaterTest {
     }
 
     @Test
-    public void setLabelsPersists() {
+    void setLabelsPersists() {
         List<String> testLabels = Arrays.asList("testLabel1", "testLabel2");
 
         final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, testLabels);

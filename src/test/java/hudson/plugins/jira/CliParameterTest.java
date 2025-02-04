@@ -10,25 +10,26 @@ import hudson.model.ParametersDefinitionProperty;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterDefinition;
 import hudson.plugins.jira.versionparameter.JiraVersionParameterDefinition;
 import java.io.IOException;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class CliParameterTest {
+@WithJenkins
+class CliParameterTest {
 
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+    private JenkinsRule jenkins;
 
     FreeStyleProject project;
 
-    @Before
-    public void setup() throws IOException {
+    @BeforeEach
+    void setup(JenkinsRule jenkins) throws IOException {
+        this.jenkins = jenkins;
         project = jenkins.createFreeStyleProject();
     }
 
     @Test
-    public void jiraIssueParameterViaCli() throws Exception {
+    void jiraIssueParameterViaCli() throws Exception {
         project.addProperty(new ParametersDefinitionProperty(
                 new JiraIssueParameterDefinition("jiraissue", "description", "filter")));
 
@@ -38,7 +39,7 @@ public class CliParameterTest {
     }
 
     @Test
-    public void jiraVersionParameterViaCli() throws Exception {
+    void jiraVersionParameterViaCli() throws Exception {
         project.addProperty(new ParametersDefinitionProperty(
                 new JiraVersionParameterDefinition("jiraversion", "description", "PROJ", "RELEASE", "true", "false")));
 

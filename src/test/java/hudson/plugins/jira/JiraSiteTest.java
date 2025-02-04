@@ -4,10 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -37,33 +34,31 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import jenkins.model.Jenkins;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class JiraSiteTest {
+@WithJenkins
+class JiraSiteTest {
 
     private static final String ANY_USER = "Kohsuke";
     private static final String ANY_PASSWORD = "Kawaguchi";
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
 
     private URL validPrimaryUrl;
 
     private URL exampleOrg;
 
-    @Before
-    public void init() throws MalformedURLException {
+    @BeforeEach
+    void init() throws MalformedURLException {
         validPrimaryUrl = new URL("https://nonexistent.url");
         exampleOrg = new URL("https://example.org/");
     }
 
     @Test
-    public void createSessionWithProvidedCredentials() throws FormException {
+    void createSessionWithProvidedCredentials(JenkinsRule r) throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 null,
@@ -83,7 +78,7 @@ public class JiraSiteTest {
 
     @Test
     @Issue("JENKINS-64083")
-    public void createSessionWithGlobalCredentials() throws FormException {
+    void createSessionWithGlobalCredentials(JenkinsRule r) throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 null,
@@ -102,7 +97,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void createSessionReturnsNullIfCredentialsIsNull() throws FormException {
+    void createSessionReturnsNullIfCredentialsIsNull(JenkinsRule r) throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 null,
@@ -121,7 +116,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void deserializeMigrateCredentials() throws MalformedURLException, FormException {
+    void deserializeMigrateCredentials(JenkinsRule j) throws MalformedURLException, FormException {
         JiraSiteOld old = new JiraSiteOld(
                 validPrimaryUrl, null, ANY_USER, ANY_PASSWORD, false, false, null, false, null, null, true);
 
@@ -154,7 +149,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void deserializeNormal() throws IOException, FormException {
+    void deserializeNormal(JenkinsRule j) throws IOException, FormException {
         Domain domain = new Domain(
                 "example",
                 "test domain",
@@ -180,7 +175,7 @@ public class JiraSiteTest {
 
     @WithoutJenkins
     @Test
-    public void deserializeWithoutCredentials() {
+    void deserializeWithoutCredentials() {
         JiraSite site = new JiraSite(exampleOrg, null, (String) null, false, false, null, false, null, null, true);
 
         XStream2 xStream2 = new XStream2();
@@ -230,7 +225,7 @@ public class JiraSiteTest {
 
     @Test
     @WithoutJenkins
-    public void alternativeURLNotNull() throws FormException {
+    void alternativeURLNotNull() throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
                 exampleOrg,
@@ -248,7 +243,7 @@ public class JiraSiteTest {
 
     @Test
     @WithoutJenkins
-    public void ensureUrlEndsWithSlash() {
+    void ensureUrlEndsWithSlash() {
         JiraSite jiraSite = new JiraSite(validPrimaryUrl.toExternalForm());
         jiraSite.setAlternativeUrl(exampleOrg.toExternalForm());
         assertTrue(jiraSite.getUrl().toExternalForm().endsWith("/"));
@@ -261,7 +256,7 @@ public class JiraSiteTest {
 
     @Test
     @WithoutJenkins
-    public void urlNulls() {
+    void urlNulls() {
         JiraSite jiraSite = new JiraSite(validPrimaryUrl.toExternalForm());
         jiraSite.setAlternativeUrl(" ");
         assertNotNull(jiraSite.getUrl());
@@ -270,55 +265,59 @@ public class JiraSiteTest {
 
     @Test
     @WithoutJenkins
-    public void toUrlConvertsEmptyStringToNull() {
+    void toUrlConvertsEmptyStringToNull() {
         URL emptyString = JiraSite.toURL("");
         assertNull(emptyString);
     }
 
     @Test
     @WithoutJenkins
-    public void toUrlConvertsOnlyWhitespaceToNull() {
+    void toUrlConvertsOnlyWhitespaceToNull() {
         URL whitespace = JiraSite.toURL(" ");
         assertNull(whitespace);
     }
 
     @WithoutJenkins
-    @Test(expected = AssertionError.class)
-    public void ensureMainUrlIsMandatory() {
-        new JiraSite("");
+    @Test
+    void ensureMainUrlIsMandatory() {
+        assertThrows(AssertionError.class, () -> {
+            new JiraSite("");
+        });
     }
 
     @Test
     @WithoutJenkins
-    public void ensureAlternativeUrlIsNotMandatory() {
+    void ensureAlternativeUrlIsNotMandatory() {
         JiraSite jiraSite = new JiraSite(validPrimaryUrl.toExternalForm());
         jiraSite.setAlternativeUrl("");
         assertNull(jiraSite.getAlternativeUrl());
     }
 
     @WithoutJenkins
-    @Test(expected = AssertionError.class)
-    public void malformedUrl() {
-        new JiraSite("malformed.url");
+    @Test
+    void malformedUrl() {
+        assertThrows(AssertionError.class, () -> {
+            new JiraSite("malformed.url");
+        });
     }
 
     @WithoutJenkins
-    @Test(expected = AssertionError.class)
-    public void malformedAlternativeUrl() {
+    @Test
+    void malformedAlternativeUrl() {
         JiraSite jiraSite = new JiraSite(validPrimaryUrl.toExternalForm());
-        jiraSite.setAlternativeUrl("malformed.url");
+        assertThrows(AssertionError.class, () -> jiraSite.setAlternativeUrl("malformed.url"));
     }
 
     @Test
     @WithoutJenkins
-    public void credentialsAreNullByDefault() {
+    void credentialsAreNullByDefault() {
         JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
         jiraSite.setCredentialsId("");
         assertNull(jiraSite.getCredentialsId());
     }
 
     @Test
-    public void credentials() throws Exception {
+    void credentials(JenkinsRule r) throws Exception {
         JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
         String cred = "cred-1";
         String user = "user1";
@@ -342,7 +341,7 @@ public class JiraSiteTest {
 
     @Test
     @WithoutJenkins
-    public void siteAsProjectProperty() throws Exception {
+    void siteAsProjectProperty() throws Exception {
         JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());
         Job<?, ?> job = mock(Job.class);
         JiraProjectProperty jpp = mock(JiraProjectProperty.class);
@@ -353,7 +352,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void projectPropertySiteAndParentBothNull() {
+    void projectPropertySiteAndParentBothNull(JenkinsRule j) {
         JiraGlobalConfiguration jiraGlobalConfiguration = mock(JiraGlobalConfiguration.class);
         Job<?, ?> job = mock(Job.class);
         JiraProjectProperty jpp = mock(JiraProjectProperty.class);
@@ -367,18 +366,18 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void noProjectProperty() throws Exception {
+    void noProjectProperty(JenkinsRule j) throws Exception {
         JiraGlobalConfiguration.get().setSites(null);
         Job<?, ?> job = j.jenkins.createProject(FreeStyleProject.class, "foo");
         assertNull(JiraSite.get(job));
     }
 
     @Test
-    public void noProjectPropertyUpFoldersWithNoProperty() throws Exception {
+    void noProjectPropertyUpFoldersWithNoProperty(JenkinsRule j) throws Exception {
         JiraGlobalConfiguration jiraGlobalConfiguration = mock(JiraGlobalConfiguration.class);
 
-        Folder folder2 = spy(createFolder(null));
-        Folder folder1 = spy(createFolder(folder2));
+        Folder folder2 = spy(createFolder(j, null));
+        Folder folder1 = spy(createFolder(j, folder2));
         Job<?, ?> job = folder1.createProject(FreeStyleProject.class, "foo");
 
         DescribableList<AbstractFolderProperty<?>, AbstractFolderPropertyDescriptor> folder1Properties =
@@ -394,16 +393,16 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void noProjectPropertyFindFolderPropertyWithNullZeroLengthAndValidSites() throws Exception {
+    void noProjectPropertyFindFolderPropertyWithNullZeroLengthAndValidSites(JenkinsRule j) throws Exception {
         JiraSite jiraSite1 = new JiraSite(new URL("https://example1.org/").toExternalForm());
         JiraSite jiraSite2 = new JiraSite(new URL("https://example2.org/").toExternalForm());
 
-        Folder folder1 = spy(createFolder(null));
+        Folder folder1 = spy(createFolder(j, null));
         Job job = folder1.createProject(FreeStyleProject.class, "foo");
         DescribableList<AbstractFolderProperty<?>, AbstractFolderPropertyDescriptor> folder1Properties =
                 new DescribableList(Jenkins.get());
 
-        Folder folder2 = spy(createFolder(folder1));
+        Folder folder2 = spy(createFolder(j, folder1));
         DescribableList<AbstractFolderProperty<?>, AbstractFolderPropertyDescriptor> folder2Properties =
                 new DescribableList(Jenkins.get());
         JiraFolderProperty jfp = new JiraFolderProperty();
@@ -417,7 +416,7 @@ public class JiraSiteTest {
     }
 
     @Test
-    public void siteConfiguredGlobally() throws Exception {
+    void siteConfiguredGlobally(JenkinsRule j) throws Exception {
         JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());
         JiraGlobalConfiguration.get().setSites(Collections.singletonList(jiraSite));
         Job<?, ?> job = mock(Job.class);
@@ -428,7 +427,7 @@ public class JiraSiteTest {
 
     @Test
     @WithoutJenkins
-    public void getIssueWithoutSession() throws Exception {
+    void getIssueWithoutSession() throws Exception {
         JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());
         // Verify that no session will be created
         assertNull(jiraSite.getSession(null));
@@ -436,7 +435,7 @@ public class JiraSiteTest {
         assertNull(issue);
     }
 
-    private Folder createFolder(Folder folder) throws IOException {
+    private Folder createFolder(JenkinsRule j, Folder folder) throws IOException {
         return folder == null
                 ? j.jenkins.createProject(
                         Folder.class, "folder" + j.jenkins.getItems().size())

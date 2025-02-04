@@ -1,31 +1,30 @@
 package hudson.plugins.jira;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import hudson.model.FreeStyleProject;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
+import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 
-public class JiraProjectPropertyTest {
+@WithJenkinsConfiguredWithCode
+class JiraProjectPropertyTest {
 
-    @Rule
-    public final JenkinsRule r = new JenkinsConfiguredWithCodeRule();
+    private JenkinsRule r;
 
     private FreeStyleProject freeStyleProject;
     private Folder folder;
     private List<JiraSite> firstList;
 
-    @Before
-    public void initialize() throws Exception {
+    @BeforeEach
+    void initialize(JenkinsConfiguredWithCodeRule r) throws Exception {
+        this.r = r;
         folder = r.jenkins.createProject(Folder.class, "first");
         JiraFolderProperty jiraFolderProperty = new JiraFolderProperty();
         firstList = new ArrayList<>();
@@ -35,7 +34,7 @@ public class JiraProjectPropertyTest {
     }
 
     @Test
-    public void getSitesNullWithoutFolder() throws Exception {
+    void getSitesNullWithoutFolder() throws Exception {
         FreeStyleProject freeStyleProject = r.createFreeStyleProject();
         JiraProjectProperty prop = new JiraProjectProperty(null);
         freeStyleProject.addProperty(prop);
@@ -45,7 +44,7 @@ public class JiraProjectPropertyTest {
     }
 
     @Test
-    public void getSitesNullWithFolder() throws Exception {
+    void getSitesNullWithFolder() throws Exception {
         freeStyleProject = folder.createProject(FreeStyleProject.class, "something");
         JiraProjectProperty prop = new JiraProjectProperty(null);
         freeStyleProject.addProperty(prop);
@@ -56,7 +55,7 @@ public class JiraProjectPropertyTest {
 
     @Test
     @ConfiguredWithCode("single-site.yml")
-    public void getSiteFromProjectProperty() {
+    void getSiteFromProjectProperty() {
         JiraProjectProperty prop = new JiraProjectProperty(null);
         JiraSite site = prop.getSite();
         @SuppressWarnings("ConstantConditions")
@@ -66,7 +65,7 @@ public class JiraProjectPropertyTest {
 
     @Test
     @ConfiguredWithCode("single-site.yml")
-    public void getSiteFromSingleEntry() throws Exception {
+    void getSiteFromSingleEntry() throws Exception {
         freeStyleProject = r.createFreeStyleProject();
         JiraSite expected = JiraGlobalConfiguration.get().getSites().get(0);
         JiraProjectProperty prop = new JiraProjectProperty(null);
@@ -80,7 +79,7 @@ public class JiraProjectPropertyTest {
 
     @Test
     @ConfiguredWithCode("multiple-sites.yml")
-    public void getSiteFromFirstGlobalMultipleEntryMultipleSites() throws Exception {
+    void getSiteFromFirstGlobalMultipleEntryMultipleSites() throws Exception {
         freeStyleProject = r.createFreeStyleProject();
         JiraSite expected = JiraGlobalConfiguration.get().getSites().get(0);
         JiraProjectProperty prop = new JiraProjectProperty(null);
@@ -94,7 +93,7 @@ public class JiraProjectPropertyTest {
 
     @Test
     @ConfiguredWithCode("multiple-sites.yml")
-    public void getSiteFromSecondGlobalEntryMultipleSites() throws Exception {
+    void getSiteFromSecondGlobalEntryMultipleSites() throws Exception {
         freeStyleProject = r.createFreeStyleProject();
         JiraSite expected = new JiraSite("https://jira.com/");
         JiraProjectProperty prop = new JiraProjectProperty(expected.getName());
@@ -108,7 +107,7 @@ public class JiraProjectPropertyTest {
 
     @Test
     @ConfiguredWithCode("single-site.yml")
-    public void getSiteFromFirstFolderLayer() throws Exception {
+    void getSiteFromFirstFolderLayer() throws Exception {
         freeStyleProject = folder.createProject(FreeStyleProject.class, "something");
         JiraSite expected = firstList.get(0);
         JiraProjectProperty prop = new JiraProjectProperty(expected.getName());
@@ -122,7 +121,7 @@ public class JiraProjectPropertyTest {
 
     @Test
     @ConfiguredWithCode("single-site.yml")
-    public void getSiteFromNestedFolderLayer() throws Exception {
+    void getSiteFromNestedFolderLayer() throws Exception {
         Folder secondFolder = folder.createProject(Folder.class, "second");
         freeStyleProject = secondFolder.createProject(FreeStyleProject.class, "something");
         // testing we can get value from folder above.

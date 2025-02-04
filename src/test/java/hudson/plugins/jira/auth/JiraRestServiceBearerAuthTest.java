@@ -1,6 +1,7 @@
 package hudson.plugins.jira.auth;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyLong;
@@ -18,11 +19,11 @@ import io.atlassian.util.concurrent.Promise;
 import java.net.URI;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
-public class JiraRestServiceBearerAuthTest {
+class JiraRestServiceBearerAuthTest {
 
     private final URI JIRA_URI = URI.create("http://example.com:8080/");
     private final String TOKEN = "token";
@@ -31,8 +32,8 @@ public class JiraRestServiceBearerAuthTest {
     private Promise promise;
     private SearchResult searchResult;
 
-    @Before
-    public void createMocks() throws InterruptedException, ExecutionException, TimeoutException {
+    @BeforeEach
+    void createMocks() throws InterruptedException, ExecutionException, TimeoutException {
         client = mock(ExtendedJiraRestClient.class);
         searchRestClient = mock(SearchRestClient.class);
         promise = mock(Promise.class);
@@ -44,7 +45,7 @@ public class JiraRestServiceBearerAuthTest {
     }
 
     @Test
-    public void baseApiPath() {
+    void baseApiPath() {
         JiraRestService service = new JiraRestService(JIRA_URI, client, TOKEN, JiraSite.DEFAULT_TIMEOUT);
         assertEquals("/" + JiraRestService.BASE_API_PATH, service.getBaseApiPath());
 
@@ -53,10 +54,10 @@ public class JiraRestServiceBearerAuthTest {
         assertEquals("/path/to/jira/" + JiraRestService.BASE_API_PATH, service.getBaseApiPath());
     }
 
-    @Test(expected = TimeoutException.class)
-    public void getIssuesFromJqlSearchTimeout() throws TimeoutException, InterruptedException, ExecutionException {
+    @Test
+    void getIssuesFromJqlSearchTimeout() throws ExecutionException, InterruptedException, TimeoutException {
         JiraRestService service = spy(new JiraRestService(JIRA_URI, client, TOKEN, JiraSite.DEFAULT_TIMEOUT));
         doThrow(new TimeoutException()).when(promise).get(Mockito.anyLong(), Mockito.any());
-        service.getIssuesFromJqlSearch("*", null);
+        assertThrows(TimeoutException.class, () -> service.getIssuesFromJqlSearch("*", null));
     }
 }

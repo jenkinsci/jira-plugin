@@ -37,23 +37,22 @@ import java.util.HashMap;
 import java.util.Map;
 import jenkins.model.Jenkins;
 import jenkins.security.SecurityListener;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 
-@RunWith(MockitoJUnitRunner.class)
-public class MailResolverWithExtensionTest extends JenkinsRule {
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+@WithJenkins
+@ExtendWith(MockitoExtension.class)
+class MailResolverWithExtensionTest {
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     JiraSite site;
 
     JiraSession session;
@@ -61,8 +60,8 @@ public class MailResolverWithExtensionTest extends JenkinsRule {
     @Mock
     JiraRestService service;
 
-    @Before
-    public void createMocks() throws Exception {
+    @BeforeEach
+    void createMocks() throws Exception {
         session = new JiraSession(site, service);
         Mockito.when(site.getSession(any())).thenReturn(session);
 
@@ -77,7 +76,7 @@ public class MailResolverWithExtensionTest extends JenkinsRule {
     }
 
     @Test
-    public void emailResolverWithSecurityExtension() throws Exception {
+    void emailResolverWithSecurityExtension(JenkinsRule r) throws Exception {
         HudsonPrivateSecurityRealm realm = new HudsonPrivateSecurityRealm(true);
         realm.createAccount("foo", "pacific_ale");
 

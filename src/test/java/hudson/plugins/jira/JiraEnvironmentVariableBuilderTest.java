@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -24,12 +25,12 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
-public class JiraEnvironmentVariableBuilderTest {
+class JiraEnvironmentVariableBuilderTest {
 
     private static final String JIRA_URL = "http://example.com";
     private static final String JIRA_URL_PROPERTY_NAME = "JIRA_URL";
@@ -52,8 +53,8 @@ public class JiraEnvironmentVariableBuilderTest {
     PrintStream logger;
     Node node;
 
-    @Before
-    public void createMocks() throws IOException, InterruptedException {
+    @BeforeEach
+    void createMocks() throws IOException, InterruptedException {
         build = mock(AbstractBuild.class);
         launcher = mock(Launcher.class);
         listener = mock(BuildListener.class);
@@ -75,26 +76,26 @@ public class JiraEnvironmentVariableBuilderTest {
     }
 
     @Test
-    public void issueSelectorDefaultsToDefault() {
+    void issueSelectorDefaultsToDefault() {
         final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(null);
         assertThat(builder.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
     }
 
     @Test
-    public void setIssueSelectorPersists() {
+    void setIssueSelectorPersists() {
         final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(issueSelector);
         assertThat(builder.getIssueSelector(), is(issueSelector));
     }
 
-    @Test(expected = AbortException.class)
-    public void performWithNoSiteFailsBuild() throws InterruptedException, IOException {
+    @Test
+    void performWithNoSiteFailsBuild() {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
         doReturn(null).when(builder).getSiteForProject(Mockito.any());
-        builder.perform(build, launcher, listener);
+        assertThrows(AbortException.class, () -> builder.perform(build, launcher, listener));
     }
 
     @Test
-    public void performAddsAction() throws InterruptedException, IOException {
+    void performAddsAction() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
         doReturn(site).when(builder).getSiteForProject(Mockito.any());
 

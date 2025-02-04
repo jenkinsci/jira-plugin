@@ -1,5 +1,7 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.atlassian.httpclient.api.Response;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.atlassian.sal.api.ApplicationProperties;
@@ -28,16 +30,13 @@ import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.Callback;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+@WithJenkins
 public class ApacheAsyncHttpClientTest {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
 
     private final ConnectionFactory connectionFactory = new HttpConnectionFactory();
 
@@ -55,15 +54,15 @@ public class ApacheAsyncHttpClientTest {
         server.start();
     }
 
-    @After
-    public void dispose() throws Exception {
+    @AfterEach
+    void dispose() throws Exception {
         if (server != null) {
             server.stop();
         }
     }
 
     @Test
-    public void simple_get() throws Exception {
+    void simple_get(JenkinsRule r) throws Exception {
         TestHandler testHandler = new TestHandler();
         prepare(testHandler);
 
@@ -74,12 +73,12 @@ public class ApacheAsyncHttpClientTest {
                 .newRequest("http://localhost:" + connector.getLocalPort() + "/foo")
                 .get()
                 .get(10, TimeUnit.SECONDS);
-        Assert.assertEquals(200, response.getStatusCode());
-        Assert.assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
+        assertEquals(200, response.getStatusCode());
+        assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
     }
 
     @Test
-    public void simple_post() throws Exception {
+    void simple_post(JenkinsRule r) throws Exception {
         TestHandler testHandler = new TestHandler();
         prepare(testHandler);
 
@@ -92,13 +91,13 @@ public class ApacheAsyncHttpClientTest {
                 .setContentType("text")
                 .post()
                 .get(10, TimeUnit.SECONDS);
-        Assert.assertEquals(200, response.getStatusCode());
-        Assert.assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
-        Assert.assertEquals("FOO", testHandler.postReceived);
+        assertEquals(200, response.getStatusCode());
+        assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
+        assertEquals("FOO", testHandler.postReceived);
     }
 
     @Test
-    public void simple_get_with_non_proxy_host() throws Exception {
+    void simple_get_with_non_proxy_host(JenkinsRule r) throws Exception {
         ProxyTestHandler testHandler = new ProxyTestHandler();
         prepare(testHandler);
 
@@ -109,12 +108,12 @@ public class ApacheAsyncHttpClientTest {
                 null, buildApplicationProperties(), new NoOpThreadLocalContextManager(), new HttpClientOptions());
 
         Response response = httpClient.newRequest("http://www.apache.org").get().get(30, TimeUnit.SECONDS);
-        Assert.assertEquals(200, response.getStatusCode());
-        // Assert.assertEquals( CONTENT_RESPONSE, IOUtils.toString( response.getEntityStream() ) );
+        assertEquals(200, response.getStatusCode());
+        // assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
     }
 
     @Test
-    public void simple_get_with_proxy() throws Exception {
+    void simple_get_with_proxy(JenkinsRule r) throws Exception {
         ProxyTestHandler testHandler = new ProxyTestHandler();
         prepare(testHandler);
 
@@ -124,12 +123,12 @@ public class ApacheAsyncHttpClientTest {
                 null, buildApplicationProperties(), new NoOpThreadLocalContextManager(), new HttpClientOptions());
 
         Response response = httpClient.newRequest("http://jenkins.io").get().get(30, TimeUnit.SECONDS);
-        Assert.assertEquals(200, response.getStatusCode());
-        Assert.assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
+        assertEquals(200, response.getStatusCode());
+        assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
     }
 
     @Test
-    public void simple_post_with_proxy() throws Exception {
+    void simple_post_with_proxy(JenkinsRule r) throws Exception {
         ProxyTestHandler testHandler = new ProxyTestHandler();
         prepare(testHandler);
 
@@ -145,9 +144,9 @@ public class ApacheAsyncHttpClientTest {
                 .post()
                 .get(30, TimeUnit.SECONDS);
         // we are sure to hit the proxy first :-)
-        Assert.assertEquals(200, response.getStatusCode());
-        Assert.assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
-        Assert.assertEquals("FOO", testHandler.postReceived);
+        assertEquals(200, response.getStatusCode());
+        assertEquals(CONTENT_RESPONSE, IOUtils.toString(response.getEntityStream()));
+        assertEquals("FOO", testHandler.postReceived);
     }
 
     public static class ProxyTestHandler extends Handler.Abstract {

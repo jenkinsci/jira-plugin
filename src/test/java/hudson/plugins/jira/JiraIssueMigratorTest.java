@@ -1,6 +1,6 @@
 package hudson.plugins.jira;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -17,10 +17,10 @@ import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JiraIssueMigratorTest {
+class JiraIssueMigratorTest {
 
     private static final String PROJECT_KEY = "PROJECT";
     private static final String RELEASE = "release";
@@ -34,8 +34,8 @@ public class JiraIssueMigratorTest {
     AbstractProject project;
     JiraIssueMigrator jiraIssueMigrator;
 
-    @Before
-    public void prepareMocks() throws IOException, TimeoutException, InterruptedException {
+    @BeforeEach
+    void prepareMocks() throws IOException, TimeoutException, InterruptedException {
         build = mock(AbstractBuild.class);
         launcher = mock(Launcher.class);
         listener = mock(BuildListener.class);
@@ -53,7 +53,7 @@ public class JiraIssueMigratorTest {
     }
 
     @Test
-    public void addingVersion() throws IOException, TimeoutException {
+    void addingVersion() throws IOException, TimeoutException {
         boolean addRelease = true;
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, addRelease));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
@@ -65,7 +65,7 @@ public class JiraIssueMigratorTest {
     }
 
     @Test
-    public void migratingToVersion() throws IOException, TimeoutException {
+    void migratingToVersion() throws IOException, TimeoutException {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);
@@ -76,7 +76,7 @@ public class JiraIssueMigratorTest {
     }
 
     @Test
-    public void replacingVersion() throws IOException, TimeoutException {
+    void replacingVersion() throws IOException, TimeoutException {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, RELEASE_TO_REPLACE, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);

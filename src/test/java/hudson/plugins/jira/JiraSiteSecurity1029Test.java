@@ -36,21 +36,15 @@ import org.htmlunit.Page;
 import org.htmlunit.WebRequest;
 import org.htmlunit.WebResponse;
 import org.htmlunit.util.NameValuePair;
-import org.junit.After;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+@WithJenkins
 public class JiraSiteSecurity1029Test {
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    {
-        j.timeout = 0;
-    }
 
     private Server server;
     private URI serverUri;
@@ -58,8 +52,8 @@ public class JiraSiteSecurity1029Test {
 
     @Test
     @Issue("SECURITY-1029")
-    public void cannotLeakCredentials() throws Exception {
-        setupServer();
+    void cannotLeakCredentials(JenkinsRule j) throws Exception {
+        setupServer(j);
 
         final String ADMIN = "admin";
         final String USER = "user";
@@ -245,7 +239,7 @@ public class JiraSiteSecurity1029Test {
         }
     }
 
-    public void setupServer() throws Exception {
+    public void setupServer(JenkinsRule j) throws Exception {
         server = new Server();
         ServerConnector connector = new ServerConnector(server);
         // auto-bind to available port
@@ -271,8 +265,8 @@ public class JiraSiteSecurity1029Test {
         servlet.setServerUrl(serverUri);
     }
 
-    @After
-    public void stopEmbeddedJettyServer() {
+    @AfterEach
+    void stopEmbeddedJettyServer() {
         try {
             server.stop();
         } catch (Exception e) {

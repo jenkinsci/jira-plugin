@@ -1,5 +1,7 @@
 package hudson.plugins.jira.selector;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,11 +24,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 
-public class DefaultIssueSelectorTest {
+class DefaultIssueSelectorTest {
 
     private static class MockEntry extends Entry {
 
@@ -54,7 +55,7 @@ public class DefaultIssueSelectorTest {
 
     @Test
     @Issue("4132")
-    public void projectNamesAllowed() {
+    void projectNamesAllowed() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
@@ -100,8 +101,8 @@ public class DefaultIssueSelectorTest {
 
         Set<String> result = new DefaultIssueSelector().findIssueIds(build, site, listener);
 
-        Assert.assertEquals(expected.size(), result.size());
-        Assert.assertEquals(expected, result);
+        assertEquals(expected.size(), result.size());
+        assertEquals(expected, result);
     }
 
     /**
@@ -110,7 +111,7 @@ public class DefaultIssueSelectorTest {
      */
     @Test
     @Issue("12312")
-    public void findIssuesWithJiraParameters() {
+    void findIssuesWithJiraParameters() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
@@ -132,23 +133,23 @@ public class DefaultIssueSelectorTest {
 
         // Initial state contains zero parameters
         Set<String> ids = new DefaultIssueSelector().findIssueIds(build, site, listener);
-        Assert.assertTrue(ids.isEmpty());
+        assertTrue(ids.isEmpty());
 
         parameters.add(parameter);
         ids = new DefaultIssueSelector().findIssueIds(build, site, listener);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("JIRA-123", ids.iterator().next());
+        assertEquals(1, ids.size());
+        assertEquals("JIRA-123", ids.iterator().next());
 
         parameters.add(parameterTwo);
         ids = new DefaultIssueSelector().findIssueIds(build, site, listener);
-        Assert.assertEquals(2, ids.size());
+        assertEquals(2, ids.size());
         Set<String> expected = new TreeSet(Arrays.asList("JIRA-123", "JIRA-321"));
-        Assert.assertEquals(expected, ids);
+        assertEquals(expected, ids);
     }
 
     @Test
     @Issue("6043")
-    public void userPatternNotMatch() {
+    void userPatternNotMatch() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -159,12 +160,12 @@ public class DefaultIssueSelectorTest {
         Set<String> ids = new LinkedHashSet<>();
         DefaultIssueSelector.findIssues(build, ids, Pattern.compile("[(w)]"), mock(BuildListener.class));
 
-        Assert.assertEquals(0, ids.size());
+        assertEquals(0, ids.size());
     }
 
     @Test
     @Issue("6043")
-    public void userPatternMatchTwoIssuesInOneComment() {
+    void userPatternMatchTwoIssuesInOneComment() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -182,15 +183,15 @@ public class DefaultIssueSelectorTest {
         Set<String> ids = new LinkedHashSet<>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         DefaultIssueSelector.findIssues(build, ids, pat, mock(BuildListener.class));
-        Assert.assertEquals(3, ids.size());
-        Assert.assertTrue(ids.contains("TEST-9"));
-        Assert.assertTrue(ids.contains("FOOBAR-4711"));
-        Assert.assertTrue(ids.contains("FOOBAR-21"));
+        assertEquals(3, ids.size());
+        assertTrue(ids.contains("TEST-9"));
+        assertTrue(ids.contains("FOOBAR-4711"));
+        assertTrue(ids.contains("FOOBAR-21"));
     }
 
     @Test
     @Issue("6043")
-    public void userPatternMatch() {
+    void userPatternMatch() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -208,9 +209,9 @@ public class DefaultIssueSelectorTest {
         Set<String> ids = new LinkedHashSet<>();
         Pattern pat = Pattern.compile("\\[(\\w+-\\d+)\\]");
         DefaultIssueSelector.findIssues(build, ids, pat, mock(BuildListener.class));
-        Assert.assertEquals(2, ids.size());
-        Assert.assertTrue(ids.contains("TEST-9"));
-        Assert.assertTrue(ids.contains("FOOBAR-4711"));
+        assertEquals(2, ids.size());
+        assertTrue(ids.contains("TEST-9"));
+        assertTrue(ids.contains("FOOBAR-4711"));
     }
 
     /**
@@ -218,7 +219,7 @@ public class DefaultIssueSelectorTest {
      * These patterns are used e.g. by the maven release plugin.
      */
     @Test
-    public void defaultPatternNotToMatchMavenRelease() {
+    void defaultPatternNotToMatchMavenRelease() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         when(build.getChangeSet()).thenReturn(changeLogSet);
@@ -230,6 +231,6 @@ public class DefaultIssueSelectorTest {
 
         Set<String> ids = new LinkedHashSet<>();
         DefaultIssueSelector.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
-        Assert.assertEquals(0, ids.size());
+        assertEquals(0, ids.size());
     }
 }

@@ -2,8 +2,7 @@ package hudson.plugins.jira.pipeline;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -18,13 +17,13 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Job;
-import hudson.model.Result;
 import hudson.plugins.jira.JiraGlobalConfiguration;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.model.JiraIssueField;
 import hudson.plugins.jira.selector.ExplicitIssueSelector;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
+import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -32,49 +31,45 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.jvnet.hudson.test.JenkinsRule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /** @author Dmitry Frolov tekillaz.dev@gmail.com */
-@RunWith(MockitoJUnitRunner.class)
-public class IssueFieldUpdateStepTest {
+@WithJenkinsConfiguredWithCode
+@ExtendWith(MockitoExtension.class)
+class IssueFieldUpdateStepTest {
 
     private static final String BUILD_NUMBER_VAR = "${BUILD_NUMBER}";
 
-    @Rule
-    public JenkinsRule r = new JenkinsConfiguredWithCodeRule();
-
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     JiraSite site;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     JiraSession session;
 
     @Mock
     PrintStream logger;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     AbstractBuild build;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     Launcher launcher;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     BuildListener listener;
 
     @Mock
     AbstractProject project;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     Job job;
 
-    @Before
-    public void before() {
+    @BeforeEach
+    void before(JenkinsConfiguredWithCodeRule r) {
         when(build.getParent()).thenReturn(project);
         when(build.getProject()).thenReturn(project);
         when(listener.getLogger()).thenReturn(logger);
@@ -86,7 +81,7 @@ public class IssueFieldUpdateStepTest {
     }
 
     @Test
-    public void checkPrepareFieldId() {
+    void checkPrepareFieldId() {
 
         List<String> field_test = Arrays.asList("10100", "customfield_10100", "field_10100");
 
@@ -94,20 +89,19 @@ public class IssueFieldUpdateStepTest {
 
         IssueFieldUpdateStep jifu = new IssueFieldUpdateStep(null, null, "");
         for (int i = 0; i < field_test.size(); i++) {
-            assertEquals("Check field id conversion #" + i, jifu.prepareFieldId(field_test.get(i)), field_after.get(i));
+            assertEquals(jifu.prepareFieldId(field_test.get(i)), field_after.get(i), "Check field id conversion #" + i);
         }
     }
 
-    @Test(expected = IOException.class)
-    public void shouldFailIfSelectorIsNull() throws InterruptedException, IOException {
+    @Test
+    void shouldFailIfSelectorIsNull() throws IOException, InterruptedException {
         IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(null, "", ""));
-        jifu.perform(build, null, launcher, listener);
-        assertSame("Check selector is null", Result.FAILURE, build.getResult());
+        assertThrows(IOException.class, () -> jifu.perform(build, null, launcher, listener));
     }
 
-    @Test
     //  @ConfiguredWithCode("single-site.yml")
-    public void checkSubmit() throws InterruptedException, IOException {
+    @Test
+    void checkSubmit() throws InterruptedException, IOException {
         Random random = new Random();
         Integer randomBuildNumber = random.nextInt(85) + 15; // random number 15 < r < 99
         String issueId = "ISSUE-" + random.nextInt(1000) + 999;
@@ -135,7 +129,7 @@ public class IssueFieldUpdateStepTest {
         IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(issueSelector, beforeFieldid, beforeFieldValue));
         jifu.perform(build, null, launcher, listener);
 
-        assertEquals("Check issue value", issuesAfter.get(0), issueId);
+        assertEquals(issuesAfter.get(0), issueId, "Check issue value");
         assertEquals("customfield_" + beforeFieldid, fieldsAfter.get(0).getId());
         assertThat(fieldsAfter.get(0).getValue().toString(), containsString("build #" + randomBuildNumber.toString()));
 

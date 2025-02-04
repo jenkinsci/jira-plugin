@@ -1,7 +1,7 @@
 package hudson.plugins.jira;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.cloudbees.hudson.plugins.folder.Folder;
 import com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider;
@@ -11,16 +11,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.StreamSupport;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
+@WithJenkins
 public class JiraFolderPropertyTest {
-    @Rule
-    public final JenkinsRule r = new JenkinsRule();
 
     @Test
-    public void configRoundtrip() throws Exception {
+    void configRoundtrip(JenkinsRule r) throws Exception {
         Folder d = r.jenkins.createProject(Folder.class, "d");
         r.configRoundtrip(d);
         assertNull(d.getProperties().get(JiraFolderProperty.class));

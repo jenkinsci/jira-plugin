@@ -25,18 +25,18 @@ import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * User: lanwen
  * Date: 10.09.13
  * Time: 0:57
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ChangingWorkflowTest {
 
     public static final String NON_EMPTY_COMMENT = "Non empty comment";
@@ -57,25 +57,25 @@ public class ChangingWorkflowTest {
 
     private JiraSession spySession;
 
-    @Before
-    public void setupSpy() {
+    @BeforeEach
+    void setupSpy() {
         spySession = spy(new JiraSession(site, restService));
     }
 
     @Test
-    public void onGetActionItInvokesServiceMethod() {
+    void onGetActionItInvokesServiceMethod() {
         spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE);
         verify(restService, times(1)).getAvailableActions(eq(ISSUE_JQL));
     }
 
     @Test
-    public void getActionIdReturnsNullWhenServiceReturnsNull() {
+    void getActionIdReturnsNullWhenServiceReturnsNull() {
         doReturn(null).when(restService).getAvailableActions(ISSUE_JQL);
         assertThat(spySession.getActionIdForIssue(ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE), nullValue());
     }
 
     @Test
-    public void getActionIdIteratesOverAllActionsEvenOneOfNamesIsNull() {
+    void getActionIdIteratesOverAllActionsEvenOneOfNamesIsNull() {
         Transition action1 = mock(Transition.class);
         Transition action2 = mock(Transition.class);
 
@@ -90,7 +90,7 @@ public class ChangingWorkflowTest {
     }
 
     @Test
-    public void getActionIdReturnsNullWhenNullWorkflowUsed() {
+    void getActionIdReturnsNullWhenNullWorkflowUsed() {
         String workflowAction = null;
         Transition action1 = mock(Transition.class);
         when(action1.getName()).thenReturn("name");
@@ -100,7 +100,7 @@ public class ChangingWorkflowTest {
     }
 
     @Test
-    public void getActionIdReturnsIdWhenFoundIgnorecaseWorkflow() {
+    void getActionIdReturnsIdWhenFoundIgnorecaseWorkflow() {
         String id = randomNumeric(5);
         Transition action1 = mock(Transition.class);
         when(action1.getName()).thenReturn(NON_EMPTY_WORKFLOW_LOWERCASE.toUpperCase());
@@ -112,7 +112,7 @@ public class ChangingWorkflowTest {
     }
 
     @Test
-    public void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws Exception {
+    void addCommentsOnNonEmptyWorkflowAndNonEmptyComment() throws Exception {
         when(site.getSession(any(), anyBoolean())).thenCallRealMethod();
         when(site.getSession(any())).thenCallRealMethod();
         when(site.createSession(any(), anyBoolean())).thenReturn(mockSession);
@@ -130,7 +130,7 @@ public class ChangingWorkflowTest {
     }
 
     @Test
-    public void addCommentsOnNullWorkflowAndNonEmptyComment() throws Exception {
+    void addCommentsOnNullWorkflowAndNonEmptyComment() throws Exception {
         when(site.getSession(any())).thenCallRealMethod();
         when(site.getSession(any(), anyBoolean())).thenCallRealMethod();
         when(site.createSession(any(), anyBoolean())).thenReturn(mockSession);
@@ -146,7 +146,7 @@ public class ChangingWorkflowTest {
     }
 
     @Test
-    public void dontAddCommentsOnNullWorkflowAndNullComment() throws TimeoutException {
+    void dontAddCommentsOnNullWorkflowAndNullComment() throws TimeoutException {
         site.progressMatchingIssues(ISSUE_JQL, null, null, mock(PrintStream.class));
         verify(mockSession, never()).addComment(anyString(), anyString(), isNull(), isNull());
     }

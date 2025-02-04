@@ -3,43 +3,40 @@ package hudson.plugins.jira;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.jenkins.plugins.casc.ConfigurationContext;
 import io.jenkins.plugins.casc.Configurator;
 import io.jenkins.plugins.casc.ConfiguratorRegistry;
 import io.jenkins.plugins.casc.misc.ConfiguredWithCode;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
+import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
 import io.jenkins.plugins.casc.model.CNode;
 import io.jenkins.plugins.casc.model.Mapping;
 import java.util.List;
 import java.util.Objects;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
+import org.junit.jupiter.api.Test;
 
-public class ConfigAsCodeTest {
-
-    @Rule
-    public JenkinsRule r = new JenkinsConfiguredWithCodeRule();
+@WithJenkinsConfiguredWithCode
+class ConfigAsCodeTest {
 
     @Test
     @ConfiguredWithCode("multiple-sites.yml")
-    public void shouldSupportConfigurationAsCode() throws Exception {
+    void shouldSupportConfigurationAsCode(JenkinsConfiguredWithCodeRule r) throws Exception {
         List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
         assertThat(sites, hasSize(2));
-        Assert.assertEquals(
+        assertEquals(
                 "https://issues.jenkins-ci.org/",
                 Objects.requireNonNull(sites.get(0).getUrl()).toExternalForm());
-        Assert.assertEquals(
+        assertEquals(
                 "https://jira.com/",
                 Objects.requireNonNull(sites.get(1).getUrl()).toExternalForm());
     }
 
     @Test
     @ConfiguredWithCode("single-site.yml")
-    public void shouldExportConfigurationAsCode() throws Exception {
+    void shouldExportConfigurationAsCode(JenkinsConfiguredWithCodeRule r) throws Exception {
         ConfiguratorRegistry registry = ConfiguratorRegistry.get();
         ConfigurationContext context = new ConfigurationContext(registry);
         final Configurator c = context.lookupOrFail(JiraGlobalConfiguration.class);

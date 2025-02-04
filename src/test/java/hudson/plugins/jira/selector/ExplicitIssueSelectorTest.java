@@ -6,14 +6,14 @@ import static org.hamcrest.core.IsEqual.equalTo;
 
 import java.util.Collections;
 import java.util.Set;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ExplicitIssueSelectorTest {
+class ExplicitIssueSelectorTest {
 
     private static final String TEST_KEY = "EXAMPLE-1";
 
     @Test
-    public void returnsExplicitCollections() {
+    void returnsExplicitCollections() {
         ExplicitIssueSelector jqlUpdaterIssueSelector = new ExplicitIssueSelector(Collections.singletonList(TEST_KEY));
         Set<String> foundIssueIds = jqlUpdaterIssueSelector.findIssueIds(null, null, null);
         assertThat(foundIssueIds, hasSize(1));

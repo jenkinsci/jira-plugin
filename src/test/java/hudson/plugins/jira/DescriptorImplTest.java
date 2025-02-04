@@ -2,8 +2,8 @@ package hudson.plugins.jira;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -35,20 +35,18 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
 import jenkins.model.Jenkins;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.MockAuthorizationStrategy;
 import org.jvnet.hudson.test.MockFolder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
 /**
  * Created by warden on 14.09.15.
  */
-public class DescriptorImplTest {
-
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class DescriptorImplTest {
 
     AbstractBuild build = Mockito.mock(FreeStyleBuild.class);
     Run run = mock(Run.class);
@@ -61,7 +59,7 @@ public class DescriptorImplTest {
     JiraSite.Builder builder = spy(new JiraSite.Builder());
 
     @Test
-    public void doFillCredentialsIdItems() throws IOException, FormException {
+    void doFillCredentialsIdItems(JenkinsRule r) throws IOException, FormException {
 
         MockFolder dummy = r.createFolder("dummy");
         r.jenkins.setSecurityRealm(r.createDummySecurityRealm());
@@ -90,7 +88,7 @@ public class DescriptorImplTest {
         try (ACLContext ignored = ACL.as(User.getById("admin", true))) {
             ListBoxModel options = descriptor.doFillCredentialsIdItems(null, null, "http://example.org");
             assertThat(options.toString(), options, hasSize(3));
-            assertTrue(options.toString(), listBoxModelContainsName(options, CredentialsNameProvider.name(c1)));
+            assertTrue(listBoxModelContainsName(options, CredentialsNameProvider.name(c1)), options.toString());
 
             options = descriptor.doFillCredentialsIdItems(null, null, "http://nonexistent.url");
             assertThat(options.toString(), options, hasSize(1));
@@ -98,7 +96,7 @@ public class DescriptorImplTest {
 
             options = descriptor.doFillCredentialsIdItems(dummy, null, "http://example.org");
             assertThat(options.toString(), options, hasSize(2));
-            assertTrue(options.toString(), listBoxModelContainsName(options, CredentialsNameProvider.name(c2)));
+            assertTrue(listBoxModelContainsName(options, CredentialsNameProvider.name(c2)), options.toString());
         }
 
         try (ACLContext ignored = ACL.as(User.getById("alice", true))) {
@@ -119,7 +117,7 @@ public class DescriptorImplTest {
     }
 
     @Test
-    public void validateFormConnectionErrors() throws Exception {
+    void validateFormConnectionErrors(JenkinsRule r) throws Exception {
 
         builder.withMainURL(new URL("http://test.com"));
 
@@ -196,7 +194,7 @@ public class DescriptorImplTest {
     }
 
     @Test
-    public void validateFormConnectionOK() throws Exception {
+    void validateFormConnectionOK(JenkinsRule r) throws Exception {
         builder.withMainURL(new URL("http://test.com"));
 
         when(descriptor.getBuilder()).thenReturn(builder);

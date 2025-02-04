@@ -29,25 +29,24 @@ import static org.hamcrest.core.IsNull.nullValue;
 
 import hudson.model.User;
 import java.util.Collections;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author schristou88
  */
-public class MailResolverDisabledTest extends JenkinsRule {
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class MailResolverDisabledTest {
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @BeforeAll
+    static void setUp() throws Exception {
         System.setProperty("hudson.plugins.jira.JiraMailAddressResolver.disabled", "true");
     }
 
     @Test
-    public void disableEmailResolver() {
+    void disableEmailResolver(JenkinsRule r) {
         User user = User.get("bob", true, Collections.emptyMap());
         assertThat(JiraMailAddressResolver.resolve(user), is(nullValue()));
     }

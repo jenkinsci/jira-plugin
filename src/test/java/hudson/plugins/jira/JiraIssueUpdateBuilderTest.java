@@ -21,10 +21,10 @@ import hudson.model.TaskListener;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.concurrent.TimeoutException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JiraIssueUpdateBuilderTest {
+class JiraIssueUpdateBuilderTest {
 
     private Launcher launcher;
     private FilePath workspace;
@@ -37,8 +37,8 @@ public class JiraIssueUpdateBuilderTest {
     private Result result;
     private JiraSite site;
 
-    @Before
-    public void createMocks() throws IOException, InterruptedException {
+    @BeforeEach
+    void createMocks() throws IOException, InterruptedException {
         launcher = mock(Launcher.class);
         listener = mock(TaskListener.class);
         env = mock(EnvVars.class);
@@ -63,7 +63,7 @@ public class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    public void performNoSite() throws InterruptedException, IOException {
+    void performNoSite() throws InterruptedException, IOException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(null).when(builder).getSiteForJob(any());
         builder.perform(build, workspace, launcher, listener);
@@ -71,7 +71,7 @@ public class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    public void performTimeout() throws InterruptedException, IOException, TimeoutException {
+    void performTimeout() throws InterruptedException, IOException, TimeoutException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(site).when(builder).getSiteForJob(any());
         doThrow(new TimeoutException()).when(site).progressMatchingIssues(any(), any(), any(), any());
@@ -80,7 +80,7 @@ public class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    public void performProgressFails() throws InterruptedException, IOException, TimeoutException {
+    void performProgressFails() throws InterruptedException, IOException, TimeoutException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(site).when(builder).getSiteForJob(any());
         doReturn(false).when(site).progressMatchingIssues(anyString(), anyString(), anyString(), any());
@@ -89,7 +89,7 @@ public class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    public void performProgressOK() throws InterruptedException, IOException, TimeoutException {
+    void performProgressOK() throws InterruptedException, IOException, TimeoutException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(site).when(builder).getSiteForJob(any());
         doReturn(true).when(site).progressMatchingIssues(any(), any(), any(), any());

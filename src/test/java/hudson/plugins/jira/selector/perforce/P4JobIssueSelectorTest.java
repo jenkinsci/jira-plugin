@@ -1,5 +1,6 @@
 package hudson.plugins.jira.selector.perforce;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -15,13 +16,12 @@ import java.util.List;
 import java.util.Set;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
+class P4JobIssueSelectorTest extends JobIssueSelectorTest {
 
     @Test
-    public void findsTwoP4Jobs() {
+    void findsTwoP4Jobs() {
         final String jobIdIW1231 = "IW-1231";
         final String jobIdEC3453 = "EC-3453";
 
@@ -59,8 +59,8 @@ public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
         P4JobIssueSelector selector = new P4JobIssueSelector();
         Set<String> result = selector.findIssueIds(build, jiraSite, listener);
 
-        Assert.assertEquals(expected.size(), result.size());
-        Assert.assertEquals(expected, result);
+        assertEquals(expected.size(), result.size());
+        assertEquals(expected, result);
     }
 
     @Override

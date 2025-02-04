@@ -18,18 +18,18 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import org.joda.time.DateTime;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
-@RunWith(MockitoJUnitRunner.class)
-public class VersionCreatorTest {
+@ExtendWith(MockitoExtension.class)
+class VersionCreatorTest {
     private static final String JIRA_VER = Long.toString(System.currentTimeMillis());
     private static final String JIRA_PRJ = "TEST_PRJ";
     private static final String JIRA_VER_PARAM = "${JIRA_VER}";
@@ -68,8 +68,8 @@ public class VersionCreatorTest {
     private ExtendedVersion existingVersion =
             new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, false, ANY_DATE, ANY_DATE);
 
-    @Before
-    public void createMocks() {
+    @BeforeEach
+    void createMocks() {
         when(site.getSession(any())).thenReturn(session);
         when(env.expand(Mockito.anyString())).thenAnswer((Answer<String>) invocationOnMock -> {
             Object[] args = invocationOnMock.getArguments();
@@ -87,7 +87,7 @@ public class VersionCreatorTest {
     }
 
     @Test
-    public void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
+    void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
@@ -99,7 +99,7 @@ public class VersionCreatorTest {
     }
 
     @Test
-    public void expandsEnvParameters() throws InterruptedException, IOException {
+    void expandsEnvParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
@@ -111,7 +111,7 @@ public class VersionCreatorTest {
     }
 
     @Test
-    public void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
+    void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
         when(build.getEnvironment(listener)).thenReturn(env);
         ExtendedVersion releasedVersion =
                 new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, true, ANY_DATE, ANY_DATE);

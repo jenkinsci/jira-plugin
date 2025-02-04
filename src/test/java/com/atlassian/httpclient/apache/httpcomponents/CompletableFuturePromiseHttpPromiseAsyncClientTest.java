@@ -15,15 +15,15 @@ import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.protocol.HttpContext;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
-@RunWith(MockitoJUnitRunner.class)
-public class CompletableFuturePromiseHttpPromiseAsyncClientTest {
+@ExtendWith(MockitoExtension.class)
+class CompletableFuturePromiseHttpPromiseAsyncClientTest {
 
     @Mock
     private CloseableHttpAsyncClient client;
@@ -47,7 +47,7 @@ public class CompletableFuturePromiseHttpPromiseAsyncClientTest {
     private CompletableFuturePromiseHttpPromiseAsyncClient<Object> asyncClient;
 
     @Test
-    public void ensureCloseHttpclientOnCompletion() throws IOException {
+    void ensureCloseHttpclientOnCompletion() throws IOException {
         when(client.execute(eq(request), eq(context), any())).then((Answer<Future<HttpResponse>>) invocation -> {
             invocation.getArgument(2, FutureCallback.class).completed(response);
             return mock(Future.class);
@@ -59,7 +59,7 @@ public class CompletableFuturePromiseHttpPromiseAsyncClientTest {
     }
 
     @Test
-    public void ensureCloseHttpclientOnFailure() throws IOException {
+    void ensureCloseHttpclientOnFailure() throws IOException {
         when(client.execute(eq(request), eq(context), any())).then((Answer<Future<HttpResponse>>) invocation -> {
             invocation.getArgument(2, FutureCallback.class).failed(null);
             return mock(Future.class);
@@ -71,7 +71,7 @@ public class CompletableFuturePromiseHttpPromiseAsyncClientTest {
     }
 
     @Test
-    public void ensureCloseHttpclientOnCancellation() throws IOException {
+    void ensureCloseHttpclientOnCancellation() throws IOException {
         when(client.execute(eq(request), eq(context), any())).then((Answer<Future<HttpResponse>>) invocation -> {
             invocation.getArgument(2, FutureCallback.class).cancelled();
             return mock(Future.class);
