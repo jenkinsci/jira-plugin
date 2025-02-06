@@ -19,18 +19,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import org.joda.time.DateTime;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
-@RunWith(MockitoJUnitRunner.class)
-public class VersionReleaserTest {
+@ExtendWith(MockitoExtension.class)
+class VersionReleaserTest {
     private static final String JIRA_VER = Long.toString(System.currentTimeMillis());
     private static final String JIRA_PRJ = "TEST_PRJ";
     private static final String JIRA_DES = "TEST_DES";
@@ -55,7 +55,7 @@ public class VersionReleaserTest {
     @Mock
     AbstractProject project;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     JiraSite site;
 
     @Mock
@@ -71,8 +71,8 @@ public class VersionReleaserTest {
     private ExtendedVersion existingVersion =
             new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, false, ANY_DATE, ANY_DATE);
 
-    @Before
-    public void createMocks() throws Exception {
+    @BeforeEach
+    void createMocks() throws Exception {
         when(site.getSession(any())).thenReturn(session);
 
         when(build.getEnvironment(listener)).thenReturn(env);
@@ -94,7 +94,7 @@ public class VersionReleaserTest {
     }
 
     @Test
-    public void callsJiraWithSpecifiedParameters() {
+    void callsJiraWithSpecifiedParameters() {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
         when(site.getSession(any())).thenReturn(session);
@@ -108,7 +108,7 @@ public class VersionReleaserTest {
     }
 
     @Test
-    public void expandsEnvParameters() {
+    void expandsEnvParameters() {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
         when(site.getSession(any())).thenReturn(session);
@@ -122,7 +122,7 @@ public class VersionReleaserTest {
     }
 
     @Test
-    public void buildDidNotFailWhenVersionExists() {
+    void buildDidNotFailWhenVersionExists() {
         ExtendedVersion releasedVersion =
                 new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, true, ANY_DATE, ANY_DATE);
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));

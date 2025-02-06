@@ -17,15 +17,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import org.apache.commons.collections.CollectionUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class JiraReplaceFixVersionByRegExTest {
+@ExtendWith(MockitoExtension.class)
+class JiraReplaceFixVersionByRegExTest {
 
     private static final String PROJECT_KEY = "myKey";
     private static final String TO_VERSION = "toVersion";
@@ -39,13 +39,13 @@ public class JiraReplaceFixVersionByRegExTest {
     @Mock
     private JiraRestService service = null;
 
-    @Before
-    public void prepareMocks() throws IOException, InterruptedException {
+    @BeforeEach
+    void prepareMocks() throws IOException, InterruptedException {
         jiraSession = spy(new JiraSession(site, service));
     }
 
     @Test
-    public void replaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
+    void replaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
 
         List<ExtendedVersion> myVersions = new ArrayList<ExtendedVersion>();
         myVersions.add(new ExtendedVersion(new URI("self"), 0L, TO_VERSION, null, false, false, null, null));

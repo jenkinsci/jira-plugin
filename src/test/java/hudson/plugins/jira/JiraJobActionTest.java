@@ -1,20 +1,19 @@
 package hudson.plugins.jira;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 import hudson.plugins.jira.model.JiraIssue;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class JiraJobActionTest {
+@WithJenkins
+class JiraJobActionTest {
 
     JiraSite site;
 
@@ -22,13 +21,10 @@ public class JiraJobActionTest {
 
     WorkflowMultiBranchProject mbp;
 
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
-
     final JiraIssue issue = new JiraIssue("EXAMPLE-123", "I like cake");
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup(JenkinsRule r) throws Exception {
         mbp = r.jenkins.createProject(WorkflowMultiBranchProject.class, "mbp");
 
         site = spy(new JiraSite("https://foo.com"));
@@ -37,7 +33,7 @@ public class JiraJobActionTest {
     }
 
     @Test
-    public void detectBranchNameIssue() throws Exception {
+    void detectBranchNameIssue() throws Exception {
         job = new WorkflowJob(mbp, "feature/EXAMPLE-123");
         JiraJobAction.setAction(job, site);
 
@@ -48,7 +44,7 @@ public class JiraJobActionTest {
     }
 
     @Test
-    public void detectBranchNameIssueWithEncodedJobName() throws Exception {
+    void detectBranchNameIssueWithEncodedJobName() throws Exception {
         job = new WorkflowJob(mbp, "feature%2FEXAMPLE-123");
         JiraJobAction.setAction(job, site);
 
@@ -60,7 +56,7 @@ public class JiraJobActionTest {
     }
 
     @Test
-    public void detectBranchNameIssueJustIssueKey() throws Exception {
+    void detectBranchNameIssueJustIssueKey() throws Exception {
         job = new WorkflowJob(mbp, "EXAMPLE-123");
         JiraJobAction.setAction(job, site);
 
@@ -72,7 +68,7 @@ public class JiraJobActionTest {
     }
 
     @Test
-    public void detectBranchNameIssueNoIssueKey() throws Exception {
+    void detectBranchNameIssueNoIssueKey() throws Exception {
         job = new WorkflowJob(mbp, "NOTHING INTERESTING");
         JiraJobAction.setAction(job, site);
         JiraJobAction action = job.getAction(JiraJobAction.class);

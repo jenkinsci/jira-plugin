@@ -1,17 +1,18 @@
 package hudson.plugins.jira;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Test unmasking email. Eg: <code>john dot doe at example dot com</code> to <code>john.doe@example.com</code>
  *
  * @author Honza Brázdil <jbrazdil@redhat.com>
  */
-public class UnmaskMailTest {
+class UnmaskMailTest {
 
     @Test
-    public void unmaskMailTest() {
+    void unmaskMailTest() {
         test("user@example.com", "user at example dot com");
         test("user@example.com", "user AT example DOT com");
         test("user@example.com", "user aT example dOt com");
@@ -44,6 +45,6 @@ public class UnmaskMailTest {
     }
 
     private void test(String expected, String masked) {
-        Assert.assertEquals(expected, JiraMailAddressResolver.unmaskEmail(masked));
+        assertEquals(expected, JiraMailAddressResolver.unmaskEmail(masked));
     }
 }

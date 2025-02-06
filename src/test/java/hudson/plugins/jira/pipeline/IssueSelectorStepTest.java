@@ -22,16 +22,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-@RunWith(MockitoJUnitRunner.class)
-public class IssueSelectorStepTest {
+@WithJenkins
+@ExtendWith(MockitoExtension.class)
+class IssueSelectorStepTest {
 
     @Inject
     private IssueSelectorStep.DescriptorImpl descriptor;
@@ -39,7 +40,7 @@ public class IssueSelectorStepTest {
     @Mock
     private AbstractIssueSelector issueSelector;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     private TaskListener listener;
 
     @Mock
@@ -48,17 +49,14 @@ public class IssueSelectorStepTest {
     @Mock
     private Run run;
 
-    @Mock
+    @Mock(strictness = Mock.Strictness.LENIENT)
     private StepContext stepContext;
 
     private IssueSelectorStep.IssueSelectorStepExecution stepExecution;
     private IssueSelectorStep subject;
 
-    @ClassRule
-    public static JenkinsRule jenkinsRule = new JenkinsRule();
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp(JenkinsRule jenkinsRule) throws Exception {
         jenkinsRule.getInstance().getInjector().injectMembers(this);
 
         when(listener.getLogger()).thenReturn(logger);
@@ -71,7 +69,7 @@ public class IssueSelectorStepTest {
     }
 
     @Test
-    public void runWithNullSite() throws Exception {
+    void runWithNullSite() throws Exception {
         stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
         // doReturn(Optional.empty()).when(stepExecution).getOptionalJiraSite();
 
@@ -83,7 +81,7 @@ public class IssueSelectorStepTest {
     }
 
     @Test
-    public void run() throws Exception {
+    void run() throws Exception {
         JiraSite site = mock(JiraSite.class);
         JiraGlobalConfiguration jiraGlobalConfiguration = JiraGlobalConfiguration.get();
         jiraGlobalConfiguration.setSites(Collections.singletonList(site));

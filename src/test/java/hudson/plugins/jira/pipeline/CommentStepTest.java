@@ -3,7 +3,7 @@ package hudson.plugins.jira.pipeline;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -23,27 +23,28 @@ import java.util.List;
 import java.util.Map;
 import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 
-public class CommentStepTest {
+@WithJenkins
+class CommentStepTest {
 
-    @ClassRule
-    public static JenkinsRule jenkinsRule = new JenkinsRule();
+    private JenkinsRule jenkinsRule;
 
     @Inject
     CommentStep.DescriptorImpl descriptor;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(JenkinsRule jenkinsRule) {
+        this.jenkinsRule = jenkinsRule;
         jenkinsRule.getInstance().getInjector().injectMembers(this);
     }
 
     @Test
-    public void configRoundTrip() throws Exception {
+    void configRoundTrip() throws Exception {
         configRoundTrip("EXAMPLE-1", "comment");
     }
 
@@ -56,7 +57,7 @@ public class CommentStepTest {
     }
 
     @Test
-    public void callSessionAddComment() throws Exception {
+    void callSessionAddComment() throws Exception {
         JiraSession session = mock(JiraSession.class);
         final String issueKey = "KEY";
         final String body = "dsgsags";

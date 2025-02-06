@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -26,6 +27,7 @@ import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.EditType;
 import hudson.scm.SCM;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,13 +42,12 @@ import jenkins.model.Jenkins;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
@@ -56,10 +57,8 @@ import org.mockito.stubbing.Answer;
  * @author kutzi
  */
 @SuppressWarnings("unchecked")
+@WithJenkins
 public class UpdaterTest {
-
-    @Rule
-    public JenkinsRule rule = new JenkinsRule();
 
     private Updater updater;
 
@@ -87,14 +86,14 @@ public class UpdaterTest {
         }
     }
 
-    @Before
-    public void prepare() {
+    @BeforeEach
+    void prepare() {
         SCM scm = mock(SCM.class);
         this.updater = new Updater(scm);
     }
 
     @Test
-    public void getScmCommentsFromPreviousBuilds() {
+    void getScmCommentsFromPreviousBuilds(JenkinsRule r) {
         final FreeStyleProject project = mock(FreeStyleProject.class);
         final FreeStyleBuild build1 = mock(FreeStyleBuild.class);
         final MockEntry entry1 = new MockEntry("FOOBAR-1: The first build");
@@ -149,7 +148,7 @@ public class UpdaterTest {
                 new HashSet(Arrays.asList(new JiraIssue("FOOBAR-1", null), new JiraIssue("FOOBAR-2", null)));
         updater.submitComments(build2, System.out, "http://jenkins", ids, session, false, false, "", "");
 
-        Assert.assertEquals(2, comments.size());
+        assertEquals(2, comments.size());
         assertThat(comments.get(0).getBody(), Matchers.containsString(entry1.getMsg()));
         assertThat(comments.get(1).getBody(), Matchers.containsString(entry2.getMsg()));
     }
@@ -160,7 +159,7 @@ public class UpdaterTest {
      */
     @Test
     @org.jvnet.hudson.test.Issue("4572")
-    public void comment() {
+    void comment(JenkinsRule r) {
         // mock Jira session:
         JiraSession session = mock(JiraSession.class);
         final Issue mockIssue = Mockito.mock(Issue.class);
@@ -197,10 +196,10 @@ public class UpdaterTest {
         Updater updaterCurrent = new Updater(build.getParent().getScm());
         updaterCurrent.submitComments(build, System.out, "http://jenkins", ids, session, false, false, "", "");
 
-        Assert.assertEquals(1, comments.size());
+        assertEquals(1, comments.size());
         String comment = comments.get(0);
 
-        Assert.assertTrue(comment.contains("FOOBAR-4711"));
+        assertTrue(comment.contains("FOOBAR-4711"));
 
         // must also work case-insensitively (JENKINS-4132)
         comments.clear();
@@ -210,10 +209,10 @@ public class UpdaterTest {
 
         updaterCurrent.submitComments(build, System.out, "http://jenkins", ids, session, false, false, "", "");
 
-        Assert.assertEquals(1, comments.size());
+        assertEquals(1, comments.size());
         comment = comments.get(0);
 
-        Assert.assertTrue(comment.contains("Foobar-4711"));
+        assertTrue(comment.contains("Foobar-4711"));
     }
 
     /**
@@ -223,7 +222,7 @@ public class UpdaterTest {
     @Test
     @org.jvnet.hudson.test.Issue("17156")
     @WithoutJenkins
-    public void issueIsRemovedFromCarryOverListAfterSubmission() throws RestClientException {
+    void issueIsRemovedFromCarryOverListAfterSubmission() throws RestClientException {
         // mock build:
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         FreeStyleProject project = mock(FreeStyleProject.class);
@@ -287,8 +286,8 @@ public class UpdaterTest {
         assertThat(issues, is(expectedIssuesToCarryOver));
     }
 
-    @Rule
-    public TemporaryFolder folder = new TemporaryFolder();
+    @TempDir
+    public File folder;
 
     /**
      * Test that workflow job - run instance of type WorkflowJob - can
@@ -297,10 +296,10 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void getChangesUsingReflectionForWorkflowJob() throws IOException {
+    void getChangesUsingReflectionForWorkflowJob() throws IOException {
         Jenkins jenkins = mock(Jenkins.class);
 
-        when(jenkins.getRootDirFor(Mockito.any())).thenReturn(folder.getRoot());
+        when(jenkins.getRootDirFor(Mockito.any())).thenReturn(folder);
         WorkflowJob workflowJob = new WorkflowJob(jenkins, "job");
         WorkflowRun workflowRun = new WorkflowRun(workflowJob);
 
@@ -308,15 +307,15 @@ public class UpdaterTest {
 
         List<ChangeLogSet<? extends Entry>> changesUsingReflection =
                 RunScmChangeExtractor.getChangesUsingReflection(workflowRun);
-        Assert.assertNotNull(changesUsingReflection);
-        Assert.assertTrue(changesUsingReflection.isEmpty());
+        assertNotNull(changesUsingReflection);
+        assertTrue(changesUsingReflection.isEmpty());
     }
 
     @WithoutJenkins
-    @Test(expected = IllegalArgumentException.class)
-    public void getChangesUsingReflectionForunknownJob() {
+    @Test
+    void getChangesUsingReflectionForunknownJob() {
         Run run = mock(Run.class);
-        RunScmChangeExtractor.getChangesUsingReflection(run);
+        assertThrows(IllegalArgumentException.class, () -> RunScmChangeExtractor.getChangesUsingReflection(run));
     }
 
     /**
@@ -325,7 +324,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void appendChangeTimestampToDescription() {
+    void appendChangeTimestampToDescription() {
         Updater updater = new Updater(null);
         StringBuilder description = new StringBuilder();
         Calendar calendar = Calendar.getInstance();
@@ -342,7 +341,7 @@ public class UpdaterTest {
      *
      */
     @Test
-    public void dateTimeInChangeDescription() {
+    void dateTimeInChangeDescription(JenkinsRule rule) {
         rule.getInstance();
         Updater updater = new Updater(null);
         Calendar calendar = Calendar.getInstance();
@@ -379,7 +378,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void appendChangeTimestampToDescriptionNullFormat() {
+    void appendChangeTimestampToDescriptionNullFormat() {
         // set default locale -> predictable test without explicit format
         Locale.setDefault(Locale.ENGLISH);
 
@@ -404,7 +403,7 @@ public class UpdaterTest {
      */
     @Test
     @WithoutJenkins
-    public void appendChangeTimestampToDescriptionNoFormat() {
+    void appendChangeTimestampToDescriptionNoFormat() {
         // set default locale -> predictable test without explicit format
         Locale.setDefault(Locale.ENGLISH);
 
@@ -428,7 +427,7 @@ public class UpdaterTest {
      *
      */
     @Test
-    public void tesDescriptionWithAffectedFiles() {
+    void tesDescriptionWithAffectedFiles(JenkinsRule rule) {
         rule.getInstance();
         Updater updater = new Updater(null);
         Calendar calendar = Calendar.getInstance();

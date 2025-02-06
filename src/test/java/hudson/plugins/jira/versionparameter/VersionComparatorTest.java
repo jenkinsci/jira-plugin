@@ -1,19 +1,19 @@
 package hudson.plugins.jira.versionparameter;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.atlassian.jira.rest.client.api.domain.Version;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.hamcrest.collection.ArrayMatching;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class VersionComparatorTest {
+class VersionComparatorTest {
 
     @Test
-    public void complexCompare() {
+    void complexCompare() {
         String[] input = {
             "9.9.9.9.9",
             "V-5.2.3",
@@ -49,7 +49,7 @@ public class VersionComparatorTest {
     }
 
     @Test
-    public void singleComparisonsTests() {
+    void singleComparisonsTests() {
 
         assertEquals(0, compare("1.1.1.1", "1.1.1.1"));
         assertEquals(-1, compare("A-1.1.1.1", "1.1.1.1"));
@@ -77,7 +77,7 @@ public class VersionComparatorTest {
     }
 
     @Test
-    public void getNumberVersionTest() {
+    void getNumberVersionTest() {
         assertEquals("2.3.4", VersionComparator.INSTANCE.getNumberVersion("PDFREPORT-2.3.4"));
     }
 }
