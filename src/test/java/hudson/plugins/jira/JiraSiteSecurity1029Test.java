@@ -11,12 +11,16 @@ import com.cloudbees.plugins.credentials.CredentialsStore;
 import com.cloudbees.plugins.credentials.SystemCredentialsProvider;
 import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
 import hudson.model.Item;
 import hudson.model.User;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -26,11 +30,6 @@ import java.util.HashMap;
 import jenkins.model.Jenkins;
 import jenkins.security.ApiTokenProperty;
 import net.sf.json.JSONObject;
-import org.eclipse.jetty.ee9.servlet.DefaultServlet;
-import org.eclipse.jetty.ee9.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee9.servlet.ServletHolder;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.Page;
 import org.htmlunit.WebRequest;
@@ -46,7 +45,7 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 @WithJenkins
 public class JiraSiteSecurity1029Test {
 
-    private Server server;
+    private HttpServer server;
     private URI serverUri;
     private FakeJiraServlet servlet;
 
@@ -240,41 +239,26 @@ public class JiraSiteSecurity1029Test {
     }
 
     public void setupServer(JenkinsRule j) throws Exception {
-        server = new Server();
-        ServerConnector connector = new ServerConnector(server);
         // auto-bind to available port
-        connector.setPort(0);
-        server.addConnector(connector);
+        server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
 
         servlet = new FakeJiraServlet(j);
 
-        ServletContextHandler context = new ServletContextHandler();
-        ServletHolder servletHolder = new ServletHolder("default", servlet);
-        context.addServlet(servletHolder, "/*");
-        server.setHandler(context);
+        server.createContext("/", servlet);
 
         server.start();
 
-        String host = connector.getHost();
-        if (host == null) {
-            host = "localhost";
-        }
-
-        int port = connector.getLocalPort();
-        serverUri = new URI(String.format("http://%s:%d/", host, port));
+        InetSocketAddress address = server.getAddress();
+        serverUri = new URI(String.format("http://%s:%d/", address.getHostString(), address.getPort()));
         servlet.setServerUrl(serverUri);
     }
 
     @AfterEach
-    void stopEmbeddedJettyServer() {
-        try {
-            server.stop();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    void stopEmbeddedHttpServer() {
+        server.stop(1);
     }
 
-    private static class FakeJiraServlet extends DefaultServlet {
+    private static class FakeJiraServlet implements HttpHandler {
 
         private JenkinsRule jenkinsRule;
         private URI serverUri;
@@ -296,11 +280,10 @@ public class JiraSiteSecurity1029Test {
         }
 
         @Override
-        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-            String path = req.getRequestURL().toString();
-            String relativePath = path.substring(this.serverUri.toString().length());
+        public void handle(HttpExchange he) throws IOException {
+            String path = he.getRequestURI().getPath();
 
-            String authBasicBase64 = req.getHeader("Authorization");
+            String authBasicBase64 = he.getRequestHeaders().getFirst("Authorization");
             String authBase64 = authBasicBase64.substring("Basic ".length());
             String auth = new String(Base64.getDecoder().decode(authBase64), StandardCharsets.UTF_8);
             String[] authArray = auth.split(":");
@@ -309,14 +292,18 @@ public class JiraSiteSecurity1029Test {
 
             this.pwdCollected = pwd;
 
-            switch (relativePath) {
-                case "rest/api/latest/mypermissions":
-                    myPermissions(req, resp);
-                    break;
+            try {
+                if ("GET".equals(he.getRequestMethod()) && "/rest/api/latest/mypermissions".equals(path)) {
+                    myPermissions(he);
+                } else {
+                    he.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
+                }
+            } finally {
+                he.close();
             }
         }
 
-        private void myPermissions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        private void myPermissions(HttpExchange he) throws IOException {
             Object body = new HashMap<String, Object>() {
                 {
                     put("permissions", new HashMap<String, Object>() {
@@ -335,7 +322,12 @@ public class JiraSiteSecurity1029Test {
                 }
             };
 
-            resp.getWriter().write(JSONObject.fromObject(body).toString());
+            String response = JSONObject.fromObject(body).toString();
+            byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+            he.sendResponseHeaders(HttpURLConnection.HTTP_OK, bytes.length);
+            try (OutputStream os = he.getResponseBody()) {
+                os.write(bytes);
+            }
         }
     }
 }
