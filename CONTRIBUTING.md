@@ -1,23 +1,10 @@
 # Notes for maintainers
 
-## Developing in Docker
+## Local testing
 
-### Start dockerized Jenkins (for testing)
-
-The command below will start a local Jenkins using the version specificied as first argument (or lts):
+Use [docker-compose](./docker-compose.yml) to run a local Jenkins instance with the plugin installed. The configuration includes local volumes for both: Jenkins and ssh-agent, so you can easily test the plugin in a clean environment.
 
 ```bash
-./examples/start_docker.sh 2.249.2
-```
-
-### Build the plugin in Docker environment
-
-The command below allows to build the plugin using maven docker image. This is useful to test building against different Maven/JDK versions.
-See also [SDKMan](https://sdkman.io/) for a different approach.
-
-```bash
-docker run -it --rm -v "$PWD":/usr/src/mymaven -v "$HOME/.m2:/root/.m2" -w /usr/src/mymaven maven:3.3-jdk-8 mvn clean package
-```
 
 ### Atlassian sources import
 
