@@ -5,6 +5,9 @@
 build
 target
 bin
+.work
+.docker
+*.code-workspace
 
 # ignore all Idea files except for common codestyle settings
 *.iml
@@ -12,6 +15,4 @@ bin
 !.idea/checkstyle-idea.xml
 !.idea/google-java-format.xml
 
-work
 atlassian-ide-plugin.xml
-.work/
