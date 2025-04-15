@@ -113,6 +113,7 @@ class JiraReplaceFixVersionByRegExTest {
                 null,
                 null,
                 null,
+                null, 
                 null);
     }
 }
