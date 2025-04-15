@@ -223,14 +223,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * response timeout for jira rest call
      * @since 3.0.3
      */
-    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     private int readTimeout = DEFAULT_READ_TIMEOUT;
 
     /**
      * thread pool number
      * @since 3.0.3
      */
-    @SuppressFBWarnings(value = "PA_PUBLIC_PRIMITIVE_ATTRIBUTE", justification = "Backwards compatibility")
     private int threadExecutorNumber = DEFAULT_THREAD_EXECUTOR_NUMBER;
 
     /**
