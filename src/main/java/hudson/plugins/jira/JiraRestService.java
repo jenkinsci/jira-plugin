@@ -228,7 +228,7 @@ public class JiraRestService {
         try {
             final SearchResult searchResult = jiraRestClient
                     .getSearchClient()
-                    .searchJql(jqlSearch, maxResults, 0, null)
+                    .enhancedSearchJql(jqlSearch, maxResults, 0, null)
                     .get(timeout, TimeUnit.SECONDS);
             return StreamSupport.stream(searchResult.getIssues().spliterator(), false)
                     .collect(Collectors.toList());

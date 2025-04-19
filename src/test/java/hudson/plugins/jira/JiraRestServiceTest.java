@@ -60,4 +60,19 @@ class JiraRestServiceTest {
         doThrow(new TimeoutException()).when(promise).get(Mockito.anyLong(), Mockito.any());
         assertThrows(TimeoutException.class, () -> service.getIssuesFromJqlSearch("*", null));
     }
+
+    @Test
+    void testGetIssuesFromJqlSearch() throws Exception {
+        JiraRestService service = new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT);
+
+        String jqlQuery = "project = TEST";
+        int maxResults = 50;
+
+        doReturn(searchResult).when(promise).get(anyLong(), any());
+        doReturn(promise).when(searchRestClient).searchJql(jqlQuery, maxResults, 0, null);
+
+        SearchResult result = service.getIssuesFromJqlSearch(jqlQuery, maxResults);
+
+        assertEquals(searchResult, result, "Expected the search result to match the mocked result");
+    }
 }
