@@ -173,8 +173,7 @@ public class JiraSession {
         LOGGER.fine("Fetching versions from project: " + projectKey + " with fixVersion:" + version);
         if (isNotEmpty(filter)) {
             return service.getIssuesFromJqlSearch(
-                    String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version),
-                    100);
+                    String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version), 100);
         }
         return service.getIssuesFromJqlSearch(
                 String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), 100);
