@@ -129,7 +129,7 @@ public class JiraSession {
      * @return issues matching the JQL query
      */
     public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException {
-        return service.getIssuesFromJqlSearch(jqlSearch, Integer.MAX_VALUE);
+        return service.getIssuesFromJqlSearch(jqlSearch, 100);
     }
 
     /**
@@ -174,10 +174,10 @@ public class JiraSession {
         if (isNotEmpty(filter)) {
             return service.getIssuesFromJqlSearch(
                     String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version),
-                    Integer.MAX_VALUE);
+                    100);
         }
         return service.getIssuesFromJqlSearch(
-                String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), Integer.MAX_VALUE);
+                String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), 100);
     }
 
     /**
