@@ -5,7 +5,9 @@
 build
 target
 bin
+work/
 .work
+.env*
 .docker
 *.code-workspace
 

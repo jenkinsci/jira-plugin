@@ -51,10 +51,13 @@ import hudson.plugins.jira.model.JiraIssueField;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
@@ -226,9 +229,12 @@ public class JiraRestService {
 
     public List<Issue> getIssuesFromJqlSearch(String jqlSearch, Integer maxResults) throws TimeoutException {
         try {
+            Set<String> neededFields =
+                    new HashSet<>(Arrays.asList("summary", "issuetype", "created", "updated", "project", "status"));
+
             final SearchResult searchResult = jiraRestClient
                     .getSearchClient()
-                    .searchJql(jqlSearch, maxResults, 0, null)
+                    .searchJql(jqlSearch, maxResults, 0, neededFields)
                     .get(timeout, TimeUnit.SECONDS);
             return StreamSupport.stream(searchResult.getIssues().spliterator(), false)
                     .collect(Collectors.toList());

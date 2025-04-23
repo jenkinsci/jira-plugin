@@ -1,5 +1,5 @@
 name: "🚀 Feature request"
-labels: ["enhancement"]
+type: "feature"
 description: I have a suggestion
 
 body:

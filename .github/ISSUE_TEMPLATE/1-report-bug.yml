@@ -1,5 +1,5 @@
 name: "🐛 Bug report"
-labels: ["bug"]
+type: "Bug"
 description: Create a bug report to help us improve
 
 body:
