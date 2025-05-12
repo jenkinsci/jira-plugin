@@ -13,6 +13,7 @@ work/
 
 # ignore all Idea files except for common codestyle settings
 *.iml
+.vscode/
 .idea/*
 !.idea/checkstyle-idea.xml
 !.idea/google-java-format.xml
