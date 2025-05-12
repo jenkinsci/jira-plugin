@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.concurrent.TimeoutException;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.Stapler;
@@ -113,6 +114,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     }
 
     @Extension
+    @Symbol("jiraIssue")
     public static class DescriptorImpl extends ParameterDescriptor {
         @Override
         public String getDisplayName() {
