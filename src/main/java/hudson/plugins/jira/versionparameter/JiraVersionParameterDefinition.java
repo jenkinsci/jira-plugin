@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
@@ -142,6 +143,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
     }
 
     @Extension
+    @Symbol("jiraReleaseVersion")
     public static class DescriptorImpl extends ParameterDescriptor {
         @Override
         public String getDisplayName() {
