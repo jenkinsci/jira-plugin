@@ -129,7 +129,7 @@ public class JiraSession {
      * @return issues matching the JQL query
      */
     public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException {
-        return service.getIssuesFromJqlSearch(jqlSearch, 100);
+        return service.getIssuesFromJqlSearch(jqlSearch);
     }
 
     /**
@@ -173,10 +173,10 @@ public class JiraSession {
         LOGGER.fine("Fetching versions from project: " + projectKey + " with fixVersion:" + version);
         if (isNotEmpty(filter)) {
             return service.getIssuesFromJqlSearch(
-                    String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version), 100);
+                    String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version));
         }
         return service.getIssuesFromJqlSearch(
-                String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), 100);
+                String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version));
     }
 
     /**
@@ -223,7 +223,7 @@ public class JiraSession {
         }
 
         LOGGER.fine("Fetching versions with JQL:" + query);
-        List<Issue> issues = service.getIssuesFromJqlSearch(query, Integer.MAX_VALUE);
+        List<Issue> issues = service.getIssuesFromJqlSearch(query);
         if (issues == null || issues.isEmpty()) {
             return;
         }
@@ -253,7 +253,7 @@ public class JiraSession {
         }
 
         LOGGER.fine("Fetching versions with JQL:" + query);
-        List<Issue> issues = service.getIssuesFromJqlSearch(query, Integer.MAX_VALUE);
+        List<Issue> issues = service.getIssuesFromJqlSearch(query);
         if (issues == null) {
             return;
         }
@@ -306,7 +306,7 @@ public class JiraSession {
         }
 
         LOGGER.fine("Fetching issues with JQL:" + query);
-        List<Issue> issues = service.getIssuesFromJqlSearch(query, Integer.MAX_VALUE);
+        List<Issue> issues = service.getIssuesFromJqlSearch(query);
         if (issues == null || issues.isEmpty()) {
             return;
         }

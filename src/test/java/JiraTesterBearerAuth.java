@@ -105,7 +105,7 @@ public class JiraTesterBearerAuth {
     private static void callUniq(final JiraRestService restService) throws Exception {
         long start = System.currentTimeMillis();
         List<Issue> issues =
-                restService.getIssuesFromJqlSearch("key in ('JENKINS-53320','JENKINS-51057')", Integer.MAX_VALUE);
+                restService.getIssuesFromJqlSearch("key in ('JENKINS-53320','JENKINS-51057')");
         long end = System.currentTimeMillis();
         System.out.println("time uniq " + (end - start));
     }
@@ -113,8 +113,7 @@ public class JiraTesterBearerAuth {
     private static void callDuplicate(final JiraRestService restService) throws Exception {
         long start = System.currentTimeMillis();
         List<Issue> issues = restService.getIssuesFromJqlSearch(
-                "key in ('JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057')",
-                Integer.MAX_VALUE);
+                "key in ('JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057')");
         long end = System.currentTimeMillis();
         System.out.println("time duplicate " + (end - start));
     }
