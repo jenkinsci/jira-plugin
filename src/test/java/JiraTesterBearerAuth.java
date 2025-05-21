@@ -1,5 +1,3 @@
-import static hudson.plugins.jira.JiraSite.ExtendedAsynchronousJiraRestClientFactory;
-
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
@@ -7,7 +5,9 @@ import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.User;
 import hudson.plugins.jira.JiraRestService;
+import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.JiraSite.ExtendedAsynchronousJiraRestClientFactory;
 import hudson.plugins.jira.auth.BearerHttpAuthenticationHandler;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
@@ -105,7 +105,7 @@ public class JiraTesterBearerAuth {
     private static void callUniq(final JiraRestService restService) throws Exception {
         long start = System.currentTimeMillis();
         List<Issue> issues =
-                restService.getIssuesFromJqlSearch("key in ('JENKINS-53320','JENKINS-51057')", Integer.MAX_VALUE);
+                restService.getIssuesFromJqlSearch("key in ('JENKINS-53320','JENKINS-51057')", JiraSession.MAX_ISSUES);
         long end = System.currentTimeMillis();
         System.out.println("time uniq " + (end - start));
     }
@@ -114,7 +114,7 @@ public class JiraTesterBearerAuth {
         long start = System.currentTimeMillis();
         List<Issue> issues = restService.getIssuesFromJqlSearch(
                 "key in ('JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057')",
-                Integer.MAX_VALUE);
+                JiraSession.MAX_ISSUES);
         long end = System.currentTimeMillis();
         System.out.println("time duplicate " + (end - start));
     }
