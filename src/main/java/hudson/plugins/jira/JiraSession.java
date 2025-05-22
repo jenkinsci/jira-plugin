@@ -271,16 +271,23 @@ public class JiraSession {
                 LOGGER.fine("Using regular expression: " + regEx);
 
                 Pattern fromVersionPattern = Pattern.compile(regEx);
-                for (Version currentVersion : issue.getFixVersions()) {
-                    Matcher versionToRemove = fromVersionPattern.matcher(currentVersion.getName());
-                    if (!versionToRemove.matches()) {
-                        newVersions.add(currentVersion);
+
+                Iterable<Version> versions = issue.getFixVersions();
+                if(versions != null) {
+                    for (Version currentVersion : issue.getFixVersions()) {
+                        Matcher versionToRemove = fromVersionPattern.matcher(currentVersion.getName());
+                        if (!versionToRemove.matches()) {
+                            newVersions.add(currentVersion);
+                        }
                     }
                 }
             } else {
-                for (Version currentVersion : issue.getFixVersions()) {
-                    if (!currentVersion.getName().equals(fromVersion)) {
-                        newVersions.add(currentVersion);
+                Iterable<Version> versions = issue.getFixVersions();
+                if(versions != null) {
+                    for (Version currentVersion : issue.getFixVersions()) {
+                        if (!currentVersion.getName().equals(fromVersion)) {
+                            newVersions.add(currentVersion);
+                        }
                     }
                 }
             }
