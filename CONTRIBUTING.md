@@ -1,6 +1,24 @@
-# Notes for maintainers
+# Contribution guidelines
 
-## Local testing
+General rules:
+
+- check the [general Jenkins development guide](https://www.jenkins.io/doc/developer/book/)
+- make sure to provide tests
+- mark the Pull Request as _draft_ initially, to make sure all the checks pass correctly, then convert it to non-draft.
+
+## Setting up your environment
+
+### Install pre-commit hooks
+
+The [pre-commit](https://pre-commit.com/#install) hooks run various checks to make sure no unwanted files are committed and that the submitted change follows the code style and formatting rules:
+
+```sh
+brew install pre-commit && pre-commit install --install-hooks
+```
+
+## Notes for maintainers
+
+### Local testing
 
 Use [docker-compose](./docker-compose.yml) to run a local Jenkins instance with the plugin installed. The configuration includes local volumes for both: Jenkins and ssh-agent, so you can easily test the plugin in a clean environment.
 
