@@ -277,7 +277,7 @@ public class JiraSession {
 
                 Iterable<Version> versions = issue.getFixVersions();
                 if(versions != null) {
-                    for (Version currentVersion : issue.getFixVersions()) {
+                    for (Version currentVersion : versions) {
                         Matcher versionToRemove = fromVersionPattern.matcher(currentVersion.getName());
                         if (!versionToRemove.matches()) {
                             newVersions.add(currentVersion);
@@ -287,7 +287,7 @@ public class JiraSession {
             } else {
                 Iterable<Version> versions = issue.getFixVersions();
                 if(versions != null) {
-                    for (Version currentVersion : issue.getFixVersions()) {
+                    for (Version currentVersion : versions) {
                         if (!currentVersion.getName().equals(fromVersion)) {
                             newVersions.add(currentVersion);
                         }
