@@ -274,16 +274,23 @@ public class JiraSession {
                 LOGGER.fine("Using regular expression: " + regEx);
 
                 Pattern fromVersionPattern = Pattern.compile(regEx);
-                for (Version currentVersion : issue.getFixVersions()) {
-                    Matcher versionToRemove = fromVersionPattern.matcher(currentVersion.getName());
-                    if (!versionToRemove.matches()) {
-                        newVersions.add(currentVersion);
+
+                Iterable<Version> versions = issue.getFixVersions();
+                if (versions != null) {
+                    for (Version currentVersion : versions) {
+                        Matcher versionToRemove = fromVersionPattern.matcher(currentVersion.getName());
+                        if (!versionToRemove.matches()) {
+                            newVersions.add(currentVersion);
+                        }
                     }
                 }
             } else {
-                for (Version currentVersion : issue.getFixVersions()) {
-                    if (!currentVersion.getName().equals(fromVersion)) {
-                        newVersions.add(currentVersion);
+                Iterable<Version> versions = issue.getFixVersions();
+                if (versions != null) {
+                    for (Version currentVersion : versions) {
+                        if (!currentVersion.getName().equals(fromVersion)) {
+                            newVersions.add(currentVersion);
+                        }
                     }
                 }
             }
@@ -318,7 +325,12 @@ public class JiraSession {
         for (Issue issue : issues) {
             LOGGER.fine("Adding version: " + newVersion.getName() + " to issue: " + issue.getKey());
             List<Version> fixVersions = new ArrayList<>();
-            issue.getFixVersions().forEach(fixVersions::add);
+
+            Iterable<Version> versions = issue.getFixVersions();
+            if (versions != null) {
+                versions.forEach(fixVersions::add);
+            }
+
             fixVersions.add(newVersion);
             service.updateIssue(issue.getKey(), fixVersions);
         }
