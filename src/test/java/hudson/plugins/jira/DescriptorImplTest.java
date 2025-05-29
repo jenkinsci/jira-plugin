@@ -138,6 +138,7 @@ class DescriptorImplTest {
                 JiraSite.DEFAULT_READ_TIMEOUT,
                 JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
                 false,
+                100,
                 project);
 
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
@@ -154,6 +155,7 @@ class DescriptorImplTest {
                 JiraSite.DEFAULT_READ_TIMEOUT,
                 JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
                 false,
+                100,
                 project);
         assertEquals(Messages.JiraSite_timeoutMinimunValue("1"), validation.getLocalizedMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
@@ -170,6 +172,7 @@ class DescriptorImplTest {
                 -1,
                 JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
                 false,
+                100,
                 project);
 
         assertEquals(Messages.JiraSite_readTimeoutMinimunValue("1"), validation.getMessage());
@@ -187,6 +190,7 @@ class DescriptorImplTest {
                 JiraSite.DEFAULT_READ_TIMEOUT,
                 -1,
                 false,
+                100,
                 project);
         assertEquals(Messages.JiraSite_threadExecutorMinimunSize("1"), validation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
@@ -213,6 +217,7 @@ class DescriptorImplTest {
                 JiraSite.DEFAULT_READ_TIMEOUT,
                 JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
                 false,
+                100,
                 project);
 
         verify(builder).build();

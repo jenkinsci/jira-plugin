@@ -117,6 +117,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
 
+    public static final int DEFAULT_MAX_ISSUES = 100;
+
     /**
      * URL of Jira for Jenkins access, like {@code http://jira.codehaus.org/}.
      * Mandatory. Normalized to end with '/'
@@ -242,6 +244,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     private boolean appendChangeTimestamp;
 
+    /**
+     * To allow configurable value of max issues from jql search via jira site global configuration.
+     */
+    private int maxIssuesFromJqlSearch = DEFAULT_MAX_ISSUES;
+
     private int ioThreadCount = Integer.getInteger(JiraSite.class.getName() + ".httpclient.options.ioThreadCount", 2);
 
     /**
@@ -275,7 +282,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             @CheckForNull String groupVisibility,
             @CheckForNull String roleVisibility,
-            boolean useHTTPAuth) {
+            boolean useHTTPAuth,
+            int maxIssuesFromJqlSearch) {
         this(
                 url,
                 alternativeUrl,
@@ -289,7 +297,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 useHTTPAuth,
                 DEFAULT_TIMEOUT,
                 DEFAULT_READ_TIMEOUT,
-                DEFAULT_THREAD_EXECUTOR_NUMBER);
+                DEFAULT_THREAD_EXECUTOR_NUMBER,
+                DEFAULT_MAX_ISSUES);
     }
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
@@ -347,7 +356,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 useHTTPAuth,
                 DEFAULT_TIMEOUT,
                 DEFAULT_READ_TIMEOUT,
-                DEFAULT_THREAD_EXECUTOR_NUMBER);
+                DEFAULT_THREAD_EXECUTOR_NUMBER,
+                DEFAULT_MAX_ISSUES);
         if (credentials != null) {
             // we verify the credential really exists otherwise we migrate it
             StandardUsernamePasswordCredentials standardUsernamePasswordCredentials =
@@ -375,7 +385,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean useHTTPAuth,
             int timeout,
             int readTimeout,
-            int threadExecutorNumber) {
+            int threadExecutorNumber,
+            int maxIssuesFromJqlSearch) {
         if (url != null) {
             url = toURL(url.toExternalForm());
         }
@@ -398,6 +409,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         setRoleVisibility(roleVisibility);
         this.useHTTPAuth = useHTTPAuth;
         this.jiraSession = null;
+        this.maxIssuesFromJqlSearch = maxIssuesFromJqlSearch;
     }
 
     @DataBoundConstructor
@@ -424,7 +436,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean useHTTPAuth,
             int timeout,
             int readTimeout,
-            int threadExecutorNumber) {
+            int threadExecutorNumber,
+            int maxIssuesFromJqlSearch) {
         this(
                 url,
                 alternativeUrl,
@@ -438,7 +451,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 useHTTPAuth,
                 timeout,
                 readTimeout,
-                threadExecutorNumber);
+                threadExecutorNumber,
+                maxIssuesFromJqlSearch);
     }
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
@@ -457,7 +471,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             int timeout,
             int readTimeout,
             int threadExecutorNumber,
-            boolean useBearerAuth) {
+            boolean useBearerAuth,
+            int maxIssuesFromJqlSearch) {
         this(
                 url,
                 alternativeUrl,
@@ -471,7 +486,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 useHTTPAuth,
                 timeout,
                 readTimeout,
-                threadExecutorNumber);
+                threadExecutorNumber,
+                maxIssuesFromJqlSearch);
         this.useBearerAuth = useBearerAuth;
     }
 
@@ -646,6 +662,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
     }
 
+    @DataBoundSetter
+    public void setMaxIssuesFromJqlSearch(int maxIssuesFromJqlSearch) {
+        this.maxIssuesFromJqlSearch = maxIssuesFromJqlSearch;
+    }
+
+    public int getMaxIssuesFromJqlSearch() {
+        return maxIssuesFromJqlSearch;
+    }
+
     @SuppressWarnings("unused")
     protected Object readResolve() throws FormException {
         JiraSite jiraSite;
@@ -677,7 +702,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     useHTTPAuth,
                     timeout,
                     readTimeout,
-                    threadExecutorNumber);
+                    threadExecutorNumber,
+                    maxIssuesFromJqlSearch);
         }
         jiraSite.setAppendChangeTimestamp(appendChangeTimestamp);
         jiraSite.setDisableChangelogAnnotations(disableChangelogAnnotations);
@@ -1350,6 +1376,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 @QueryParameter int readTimeout,
                 @QueryParameter int threadExecutorNumber,
                 @QueryParameter boolean useBearerAuth,
+                @QueryParameter int maxIssuesFromJqlSearch,
                 @AncestorInPath Item item) {
 
             if (item == null) {
@@ -1403,6 +1430,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             site.setReadTimeout(readTimeout);
             site.setThreadExecutorNumber(threadExecutorNumber);
             site.setUseBearerAuth(useBearerAuth);
+            site.setMaxIssuesFromJqlSearch(maxIssuesFromJqlSearch);
             try {
                 JiraSession session = site.getSession(item, true);
                 if (session == null) {
@@ -1451,6 +1479,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         private String groupVisibility;
         private String roleVisibility;
         private boolean useHTTPAuth;
+        private int maxIssuesFromJqlSearch;
 
         public Builder withMainURL(URL mainURL) {
             this.mainURL = mainURL;
@@ -1513,7 +1542,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     updateJiraIssueForAllStatus,
                     groupVisibility,
                     roleVisibility,
-                    useHTTPAuth);
+                    useHTTPAuth,
+                    maxIssuesFromJqlSearch);
         }
     }
 

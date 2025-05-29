@@ -5,7 +5,6 @@ import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.User;
 import hudson.plugins.jira.JiraRestService;
-import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.JiraSite.ExtendedAsynchronousJiraRestClientFactory;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
@@ -57,7 +56,7 @@ public class JiraTester {
         //        restService.createIssue("TESTPROJECT", "This is a test issue created using Jira jenkins plugin. Please
         // ignore it.", "TESTUSER", components1, "test issue from Jira jenkins plugin");
 
-        final List<Issue> searchResults = restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", 3);
+        final List<Issue> searchResults = restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", JiraSite.DEFAULT_MAX_ISSUES);
         for (Issue searchResult : searchResults) {
             System.out.println("JQL search result: " + searchResult);
         }
@@ -103,7 +102,8 @@ public class JiraTester {
     private static void callUniq(final JiraRestService restService) throws Exception {
         long start = System.currentTimeMillis();
         List<Issue> issues =
-                restService.getIssuesFromJqlSearch("key in ('JENKINS-53320','JENKINS-51057')", JiraSession.MAX_ISSUES);
+                restService.getIssuesFromJqlSearch("key in ('JENKINS-53320','JENKINS-51057')",
+                JiraSite.DEFAULT_MAX_ISSUES);
         long end = System.currentTimeMillis();
         System.out.println("time uniq " + (end - start));
     }
@@ -112,7 +112,7 @@ public class JiraTester {
         long start = System.currentTimeMillis();
         List<Issue> issues = restService.getIssuesFromJqlSearch(
                 "key in ('JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057')",
-                JiraSession.MAX_ISSUES);
+                JiraSite.DEFAULT_MAX_ISSUES);
         long end = System.currentTimeMillis();
         System.out.println("time duplicate " + (end - start));
     }
