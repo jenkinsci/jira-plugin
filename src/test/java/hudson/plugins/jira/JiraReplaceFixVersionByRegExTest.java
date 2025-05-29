@@ -54,7 +54,8 @@ class JiraReplaceFixVersionByRegExTest {
         ArrayList<Issue> issues = new ArrayList<>();
         issues.add(getIssue("abcXXXXefg", 1L));
         issues.add(getIssue("dgcXXXXefg", 2L));
-        when(service.getIssuesFromJqlSearch(QUERY, site.getMaxIssuesFromJqlSearch())).thenReturn(issues);
+        when(service.getIssuesFromJqlSearch(QUERY, site.getMaxIssuesFromJqlSearch()))
+                .thenReturn(issues);
 
         jiraSession.replaceFixVersion(PROJECT_KEY, "/abc.*efg/", TO_VERSION, QUERY);
 

@@ -5,7 +5,6 @@ import com.atlassian.jira.rest.client.api.domain.Status;
 import com.atlassian.jira.rest.client.api.domain.Transition;
 import com.atlassian.jira.rest.client.api.domain.User;
 import hudson.plugins.jira.JiraRestService;
-import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.JiraSite.ExtendedAsynchronousJiraRestClientFactory;
 import hudson.plugins.jira.auth.BearerHttpAuthenticationHandler;
@@ -59,7 +58,8 @@ public class JiraTesterBearerAuth {
         //        restService.createIssue("TESTPROJECT", "This is a test issue created using Jira jenkins plugin. Please
         // ignore it.", "TESTUSER", components1, "test issue from Jira jenkins plugin");
 
-        final List<Issue> searchResults = restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", JiraSite.DEFAULT_MAX_ISSUES);
+        final List<Issue> searchResults =
+                restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", JiraSite.DEFAULT_MAX_ISSUES);
         for (Issue searchResult : searchResults) {
             System.out.println("JQL search result: " + searchResult);
         }
@@ -104,8 +104,8 @@ public class JiraTesterBearerAuth {
 
     private static void callUniq(final JiraRestService restService) throws Exception {
         long start = System.currentTimeMillis();
-        List<Issue> issues =
-                restService.getIssuesFromJqlSearch("key in ('JENKINS-53320','JENKINS-51057')", JiraSite.DEFAULT_MAX_ISSUES);
+        List<Issue> issues = restService.getIssuesFromJqlSearch(
+                "key in ('JENKINS-53320','JENKINS-51057')", JiraSite.DEFAULT_MAX_ISSUES);
         long end = System.currentTimeMillis();
         System.out.println("time uniq " + (end - start));
     }
