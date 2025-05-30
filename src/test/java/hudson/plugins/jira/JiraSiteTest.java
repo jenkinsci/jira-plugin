@@ -435,6 +435,14 @@ class JiraSiteTest {
         assertNull(issue);
     }
 
+    @Test
+    @WithoutJenkins
+    void ensureMaxIssuesFromJqlEndsUpMaxAllowed() throws MalformedURLException {
+        JiraSite jiraSite = new JiraSite(new URL("https://example1.org/").toExternalForm());
+        jiraSite.setMaxIssuesFromJqlSearch(6000);
+        assertEquals(5000, jiraSite.getMaxIssuesFromJqlSearch());
+    }
+
     private Folder createFolder(JenkinsRule j, Folder folder) throws IOException {
         return folder == null
                 ? j.jenkins.createProject(

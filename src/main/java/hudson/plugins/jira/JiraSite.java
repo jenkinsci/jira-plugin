@@ -118,6 +118,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
 
+    public static final Integer DEFAULT_ISSUES_FROM_JQL = 100;
+
     public static final Integer MAX_ALLOWED_ISSUES_FROM_JQL = 5000;
 
     /**
@@ -251,7 +253,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * To allow configurable value of max issues from jql search via jira site global configuration.
      */
-    private int maxIssuesFromJqlSearch;
+    private int maxIssuesFromJqlSearch = DEFAULT_ISSUES_FROM_JQL;
 
     private int ioThreadCount = Integer.getInteger(JiraSite.class.getName() + ".httpclient.options.ioThreadCount", 2);
 
@@ -707,7 +709,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         jiraSite.setDisableChangelogAnnotations(disableChangelogAnnotations);
         jiraSite.setDateTimePattern(dateTimePattern);
         jiraSite.setUseBearerAuth(useBearerAuth);
-        jiraSite.setMaxIssuesFromJqlSearch(maxIssuesFromJqlSearch);
+        if (this.maxIssuesFromJqlSearch <= 0) {
+            jiraSite.setMaxIssuesFromJqlSearch(DEFAULT_ISSUES_FROM_JQL);
+        } else {
+            jiraSite.setMaxIssuesFromJqlSearch(maxIssuesFromJqlSearch);
+        }
         return jiraSite;
     }
 
