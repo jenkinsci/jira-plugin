@@ -227,7 +227,7 @@ public class JiraRestService {
         return keys;
     }
 
-    public List<Issue> getIssuesFromJqlSearch(String jqlSearch, Integer maxResults) throws TimeoutException {
+    public List<Issue> getIssuesFromJqlSearch(String jqlSearch, int maxResults) throws TimeoutException {
         try {
             Set<String> neededFields =
                     new HashSet<>(Arrays.asList("summary", "issuetype", "created", "updated", "project", "status"));
