@@ -292,7 +292,7 @@ public class JiraSession {
                 }
             }
 
-            LOGGER.fine("Replacing version in issue: " + issue.getKey());
+            LOGGER.info(String.format("Moving issues matching JQL query: \"%s\" to version %s", query, toVersion));
             service.updateIssue(issue.getKey(), new ArrayList(newVersions));
         }
     }

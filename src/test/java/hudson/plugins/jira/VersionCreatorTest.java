@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -90,24 +91,41 @@ class VersionCreatorTest {
     void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
-        when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
 
+        // for new version, verify the addVersion method is called
+        when(session.getVersions(JIRA_PRJ)).thenReturn(null);
         versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
-        verify(session).addVersion(versionCaptor.capture(), projectCaptor.capture());
+        verify(session, times(1)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue(), is(JIRA_VER));
+        verify(logger, times(1)).println(Messages.JiraVersionCreator_CreatingVersion(JIRA_VER, JIRA_PRJ));
+
+        // for existing version, verify the addVersion method is not called
+        reset(session);
+        when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
+        versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
+        verify(session, times(0)).addVersion(versionCaptor.capture(), projectCaptor.capture());
+        verify(logger, times(1)).println(Messages.JiraVersionCreator_VersionExists(JIRA_VER, JIRA_PRJ));
     }
 
     @Test
     void expandsEnvParameters() throws InterruptedException, IOException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
-        when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
 
+        // for new version, verify the addVersion method is called
+        when(session.getVersions(JIRA_PRJ)).thenReturn(null);
         versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
-        verify(session).addVersion(versionCaptor.capture(), projectCaptor.capture());
+        verify(session, times(1)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue(), is(JIRA_VER));
+
+        // for existing version, verify the addVersion method is called
+        reset(session);
+        when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
+        versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
+        verify(session, times(0)).addVersion(versionCaptor.capture(), projectCaptor.capture());
+        verify(logger, times(1)).println(Messages.JiraVersionCreator_VersionExists(JIRA_VER, JIRA_PRJ));
     }
 
     @Test
