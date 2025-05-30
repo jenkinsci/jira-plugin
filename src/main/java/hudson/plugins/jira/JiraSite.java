@@ -661,11 +661,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     @DataBoundSetter
     public void setMaxIssuesFromJqlSearch(int maxIssuesFromJqlSearch) {
-        if (maxIssuesFromJqlSearch > MAX_ALLOWED_ISSUES_FROM_JQL) {
-            this.maxIssuesFromJqlSearch = MAX_ALLOWED_ISSUES_FROM_JQL;
-        } else {
-            this.maxIssuesFromJqlSearch = maxIssuesFromJqlSearch;
-        }
+        this.maxIssuesFromJqlSearch = maxIssuesFromJqlSearch > MAX_ALLOWED_ISSUES_FROM_JQL
+                ? MAX_ALLOWED_ISSUES_FROM_JQL
+                : maxIssuesFromJqlSearch;
     }
 
     public int getMaxIssuesFromJqlSearch() {
