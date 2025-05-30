@@ -14,6 +14,7 @@ import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -94,18 +95,21 @@ class VersionCreatorTest {
 
         // for new version, verify the addVersion method is called
         when(session.getVersions(JIRA_PRJ)).thenReturn(null);
-        versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
+        boolean result = versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
         verify(session, times(1)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue(), is(JIRA_VER));
         verify(logger, times(1)).println(Messages.JiraVersionCreator_CreatingVersion(JIRA_VER, JIRA_PRJ));
+        assertThat(result, is(true));
 
         // for existing version, verify the addVersion method is not called
         reset(session);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
-        versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
+        result = versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
         verify(session, times(0)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         verify(logger, times(1)).println(Messages.JiraVersionCreator_VersionExists(JIRA_VER, JIRA_PRJ));
+        verify(listener).finished(Result.FAILURE);
+        assertThat(result, is(false));
     }
 
     @Test
@@ -115,17 +119,20 @@ class VersionCreatorTest {
 
         // for new version, verify the addVersion method is called
         when(session.getVersions(JIRA_PRJ)).thenReturn(null);
-        versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
+        boolean result = versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
         verify(session, times(1)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue(), is(JIRA_VER));
+        assertThat(result, is(true));
 
         // for existing version, verify the addVersion method is called
         reset(session);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
-        versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
+        result = versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
         verify(session, times(0)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         verify(logger, times(1)).println(Messages.JiraVersionCreator_VersionExists(JIRA_VER, JIRA_PRJ));
+        verify(listener).finished(Result.FAILURE);
+        assertThat(result, is(false));
     }
 
     @Test
