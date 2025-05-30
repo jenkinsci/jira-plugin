@@ -52,11 +52,11 @@
     <f:textbox />
   </f:entry>
   <f:entry title="${%Max Issues From Jql Search}" field="maxIssuesFromJqlSearch">
-    <f:number default="100" />
+    <f:number default="100" max="5000" />
   </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
-            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout,readTimeout,threadExecutorNumber,useBearerAuth" />
+            method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout,readTimeout,threadExecutorNumber,useBearerAuth,maxIssuesFromJqlSearch" />
   </f:entry>
   <f:entry title="">
     <div align="right">

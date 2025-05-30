@@ -55,6 +55,6 @@ public class JiraSessionFactory {
                     jiraSite.getReadTimeout());
         }
 
-        return new JiraSession(jiraSite, jiraRestService, jiraSite.getMaxIssuesFromJqlSearch());
+        return new JiraSession(jiraSite, jiraRestService);
     }
 }

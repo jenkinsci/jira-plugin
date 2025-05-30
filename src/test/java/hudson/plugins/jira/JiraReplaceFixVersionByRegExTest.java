@@ -41,7 +41,7 @@ class JiraReplaceFixVersionByRegExTest {
 
     @BeforeEach
     void prepareMocks() throws IOException, InterruptedException {
-        jiraSession = spy(new JiraSession(site, service, site.getMaxIssuesFromJqlSearch()));
+        jiraSession = spy(new JiraSession(site, service));
     }
 
     @Test

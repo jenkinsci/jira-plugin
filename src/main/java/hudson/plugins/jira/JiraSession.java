@@ -50,10 +50,10 @@ public class JiraSession {
 
     private final int maxIssuesFromJqlSearch;
 
-    /* package */ JiraSession(JiraSite site, JiraRestService jiraRestService, int maxIssuesFromJqlSearch) {
+    /* package */ JiraSession(JiraSite site, JiraRestService jiraRestService) {
         this.service = jiraRestService;
         this.jiraSiteName = site.getName();
-        this.maxIssuesFromJqlSearch = maxIssuesFromJqlSearch;
+        this.maxIssuesFromJqlSearch = site.getMaxIssuesFromJqlSearch();
     }
 
     /**

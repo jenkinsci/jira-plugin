@@ -47,6 +47,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jakarta.servlet.ServletException;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -77,6 +78,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.annotation.PreDestroy;
+
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -92,6 +94,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
  * needed to access this Jira.
  * </p>
  * <b>When adding new fields do not miss to look at readResolve method!!</b>
+ *
  * @author Kohsuke Kawaguchi
  */
 public class JiraSite extends AbstractDescribableImpl<JiraSite> {
@@ -117,7 +120,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
 
-    public static final int DEFAULT_MAX_ISSUES = 100;
+    public static final int MAX_ALLOWED_ISSUES_FROM_JQL = 5000;
 
     /**
      * URL of Jira for Jenkins access, like {@code http://jira.codehaus.org/}.
@@ -152,6 +155,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * User name needed to login. Optional.
+     *
      * @deprecated use credentialsId
      */
     @Deprecated
@@ -159,6 +163,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Password needed to login. Optional.
+     *
      * @deprecated use credentialsId
      */
     @Deprecated
@@ -223,12 +228,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * response timeout for jira rest call
+     *
      * @since 3.0.3
      */
     private int readTimeout = DEFAULT_READ_TIMEOUT;
 
     /**
      * thread pool number
+     *
      * @since 3.0.3
      */
     private int threadExecutorNumber = DEFAULT_THREAD_EXECUTOR_NUMBER;
@@ -240,14 +247,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * To add scm entry change date and time in jira comments.
-     *
      */
     private boolean appendChangeTimestamp;
 
     /**
      * To allow configurable value of max issues from jql search via jira site global configuration.
      */
-    private int maxIssuesFromJqlSearch = DEFAULT_MAX_ISSUES;
+    private int maxIssuesFromJqlSearch;
 
     private int ioThreadCount = Integer.getInteger(JiraSite.class.getName() + ".httpclient.options.ioThreadCount", 2);
 
@@ -282,8 +288,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean updateJiraIssueForAllStatus,
             @CheckForNull String groupVisibility,
             @CheckForNull String roleVisibility,
-            boolean useHTTPAuth,
-            int maxIssuesFromJqlSearch) {
+            boolean useHTTPAuth) {
         this(
                 url,
                 alternativeUrl,
@@ -297,8 +302,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 useHTTPAuth,
                 DEFAULT_TIMEOUT,
                 DEFAULT_READ_TIMEOUT,
-                DEFAULT_THREAD_EXECUTOR_NUMBER,
-                DEFAULT_MAX_ISSUES);
+                DEFAULT_THREAD_EXECUTOR_NUMBER);
     }
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
@@ -356,8 +360,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 useHTTPAuth,
                 DEFAULT_TIMEOUT,
                 DEFAULT_READ_TIMEOUT,
-                DEFAULT_THREAD_EXECUTOR_NUMBER,
-                DEFAULT_MAX_ISSUES);
+                DEFAULT_THREAD_EXECUTOR_NUMBER);
         if (credentials != null) {
             // we verify the credential really exists otherwise we migrate it
             StandardUsernamePasswordCredentials standardUsernamePasswordCredentials =
@@ -385,8 +388,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean useHTTPAuth,
             int timeout,
             int readTimeout,
-            int threadExecutorNumber,
-            int maxIssuesFromJqlSearch) {
+            int threadExecutorNumber) {
         if (url != null) {
             url = toURL(url.toExternalForm());
         }
@@ -409,7 +411,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         setRoleVisibility(roleVisibility);
         this.useHTTPAuth = useHTTPAuth;
         this.jiraSession = null;
-        this.maxIssuesFromJqlSearch = maxIssuesFromJqlSearch;
     }
 
     @DataBoundConstructor
@@ -436,8 +437,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             boolean useHTTPAuth,
             int timeout,
             int readTimeout,
-            int threadExecutorNumber,
-            int maxIssuesFromJqlSearch) {
+            int threadExecutorNumber) {
         this(
                 url,
                 alternativeUrl,
@@ -451,8 +451,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 useHTTPAuth,
                 timeout,
                 readTimeout,
-                threadExecutorNumber,
-                maxIssuesFromJqlSearch);
+                threadExecutorNumber);
     }
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
@@ -471,8 +470,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             int timeout,
             int readTimeout,
             int threadExecutorNumber,
-            boolean useBearerAuth,
-            int maxIssuesFromJqlSearch) {
+            boolean useBearerAuth) {
         this(
                 url,
                 alternativeUrl,
@@ -486,8 +484,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 useHTTPAuth,
                 timeout,
                 readTimeout,
-                threadExecutorNumber,
-                maxIssuesFromJqlSearch);
+                threadExecutorNumber);
         this.useBearerAuth = useBearerAuth;
     }
 
@@ -518,6 +515,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Sets connect timeout (in seconds).
      * If not specified, a default timeout will be used.
+     *
      * @param timeoutSec Timeout in seconds
      */
     @DataBoundSetter
@@ -532,6 +530,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Sets read timeout (in seconds).
      * If not specified, a default timeout will be used.
+     *
      * @param readTimeout Timeout in seconds
      */
     @DataBoundSetter
@@ -702,14 +701,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     useHTTPAuth,
                     timeout,
                     readTimeout,
-                    threadExecutorNumber,
-                    maxIssuesFromJqlSearch);
+                    threadExecutorNumber);
         }
         jiraSite.setAppendChangeTimestamp(appendChangeTimestamp);
         jiraSite.setDisableChangelogAnnotations(disableChangelogAnnotations);
         jiraSite.setDateTimePattern(dateTimePattern);
         jiraSite.setUseBearerAuth(useBearerAuth);
-
+        jiraSite.setMaxIssuesFromJqlSearch(maxIssuesFromJqlSearch);
         return jiraSite;
     }
 
@@ -786,7 +784,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * This method only supports credential matching by credentialsId.
      * Older methods are not and will not be supported as the credentials should have been migrated already.
-     * @param item can be <code>null</code> if top level
+     *
+     * @param item         can be <code>null</code> if top level
      * @param uiValidation if <code>true</code> and credentials not found at item level will not go up
      */
     private StandardUsernamePasswordCredentials resolveCredentials(Item item, boolean uiValidation) {
@@ -917,10 +916,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     }
 
                     @Override
-                    public void setThreadLocalContext(Object context) {}
+                    public void setThreadLocalContext(Object context) {
+                    }
 
                     @Override
-                    public void clearThreadLocalContext() {}
+                    public void clearThreadLocalContext() {
+                    }
                 });
 
         final HttpClient httpClient = defaultHttpClientFactory.create(options);
@@ -948,16 +949,20 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     private static class NoOpEventPublisher implements EventPublisher {
         @Override
-        public void publish(Object o) {}
+        public void publish(Object o) {
+        }
 
         @Override
-        public void register(Object o) {}
+        public void register(Object o) {
+        }
 
         @Override
-        public void unregister(Object o) {}
+        public void unregister(Object o) {
+        }
 
         @Override
-        public void unregisterAll() {}
+        public void unregisterAll() {
+        }
     }
 
     @SuppressWarnings("deprecation")
@@ -1158,9 +1163,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Returns all versions for the given project key.
-     * @deprecated use {@link JiraSession#getVersions(String)}
+     *
      * @param projectKey Project Key
      * @return A set of JiraVersions
+     * @deprecated use {@link JiraSession#getVersions(String)}
      */
     @Deprecated
     public Set<ExtendedVersion> getVersions(String projectKey) {
@@ -1174,7 +1180,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Generates release notes for a given version.
      *
-     * @param projectKey the project key
+     * @param projectKey  the project key
      * @param versionName the version
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
      * @return release notes
@@ -1260,9 +1266,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Adds new fix version to issues matching the jql.
      *
-     * @param projectKey the project key
+     * @param projectKey  the project key
      * @param versionName the version
-     * @param query the query
+     * @param query       the query
      * @throws TimeoutException if too long
      */
     public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
@@ -1277,10 +1283,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Progresses all issues matching the JQL search, using the given workflow action. Optionally
      * adds a comment to the issue(s) at the same time.
      *
-     * @param jqlSearch the query
+     * @param jqlSearch          the query
      * @param workflowActionName the workflowActionName
-     * @param comment the comment
-     * @param console the console
+     * @param comment            the comment
+     * @param console            the console
      * @throws TimeoutException TimeoutException if too long
      */
     public boolean progressMatchingIssues(
@@ -1406,6 +1412,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 return FormValidation.error(String.format("Malformed alternative URL (%s)", alternativeUrl), e);
             }
 
+            if (maxIssuesFromJqlSearch > 5000) {
+                return FormValidation.error(String.format("Maximum number of allowed issues from jql search are %s",
+                        MAX_ALLOWED_ISSUES_FROM_JQL));
+            }
+
             credentialsId = Util.fixEmpty(credentialsId);
             JiraSite site = getBuilder()
                     .withMainURL(mainURL)
@@ -1463,6 +1474,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return CredentialsHelper.doCheckFillCredentialsId(item, value, url);
         }
 
+        @SuppressWarnings("unused") // used by stapler
+        public FormValidation doCheckMaxIssuesFromJqlSearch(@QueryParameter int maxIssuesFromJqlSearch) {
+            if (maxIssuesFromJqlSearch > MAX_ALLOWED_ISSUES_FROM_JQL) {
+                return FormValidation.error(String.format("Maximum number of allowed issues from jql search are %s",
+                        MAX_ALLOWED_ISSUES_FROM_JQL));
+            } else {
+                return FormValidation.ok();
+            }
+        }
+
         Builder getBuilder() {
             return new Builder();
         }
@@ -1479,7 +1500,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         private String groupVisibility;
         private String roleVisibility;
         private boolean useHTTPAuth;
-        private int maxIssuesFromJqlSearch;
 
         public Builder withMainURL(URL mainURL) {
             this.mainURL = mainURL;
@@ -1542,8 +1562,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     updateJiraIssueForAllStatus,
                     groupVisibility,
                     roleVisibility,
-                    useHTTPAuth,
-                    maxIssuesFromJqlSearch);
+                    useHTTPAuth);
         }
     }
 
@@ -1551,7 +1570,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     // yes this class hierarchy can be a real big mess...
 
     /**
-     *
      * @param item the Jenkins {@link Item} can be a {@link Job} or {@link Folder}
      * @return the parent as {@link ItemGroup} which can be {@link Jenkins} or {@link Folder}
      */
@@ -1597,6 +1615,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Gets the effective {@link JiraSite} associated with the given project
      * and creates automatically jiraSession for each jiraSite found
+     *
      * @return <code>null</code> if no such was found.
      */
     @Nullable

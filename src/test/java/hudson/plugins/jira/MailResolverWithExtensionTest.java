@@ -62,7 +62,7 @@ class MailResolverWithExtensionTest {
 
     @BeforeEach
     void createMocks() throws Exception {
-        session = new JiraSession(site, service, site.getMaxIssuesFromJqlSearch());
+        session = new JiraSession(site, service);
         Mockito.when(site.getSession(any())).thenReturn(session);
 
         Map<String, URI> avatars = new HashMap<>();

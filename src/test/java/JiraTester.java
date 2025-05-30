@@ -57,7 +57,7 @@ public class JiraTester {
         // ignore it.", "TESTUSER", components1, "test issue from Jira jenkins plugin");
 
         final List<Issue> searchResults =
-                restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", JiraSite.DEFAULT_MAX_ISSUES);
+                restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", 100);
         for (Issue searchResult : searchResults) {
             System.out.println("JQL search result: " + searchResult);
         }
@@ -103,7 +103,7 @@ public class JiraTester {
     private static void callUniq(final JiraRestService restService) throws Exception {
         long start = System.currentTimeMillis();
         List<Issue> issues = restService.getIssuesFromJqlSearch(
-                "key in ('JENKINS-53320','JENKINS-51057')", JiraSite.DEFAULT_MAX_ISSUES);
+                "key in ('JENKINS-53320','JENKINS-51057')", 100);
         long end = System.currentTimeMillis();
         System.out.println("time uniq " + (end - start));
     }
@@ -112,7 +112,7 @@ public class JiraTester {
         long start = System.currentTimeMillis();
         List<Issue> issues = restService.getIssuesFromJqlSearch(
                 "key in ('JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-53320','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057','JENKINS-51057')",
-                JiraSite.DEFAULT_MAX_ISSUES);
+                100);
         long end = System.currentTimeMillis();
         System.out.println("time duplicate " + (end - start));
     }

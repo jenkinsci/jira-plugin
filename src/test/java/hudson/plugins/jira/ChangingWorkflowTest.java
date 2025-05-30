@@ -59,7 +59,7 @@ public class ChangingWorkflowTest {
 
     @BeforeEach
     void setupSpy() {
-        spySession = spy(new JiraSession(site, restService, site.getMaxIssuesFromJqlSearch()));
+        spySession = spy(new JiraSession(site, restService));
     }
 
     @Test

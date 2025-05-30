@@ -138,7 +138,7 @@ class DescriptorImplTest {
                 JiraSite.DEFAULT_READ_TIMEOUT,
                 JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
                 false,
-                JiraSite.DEFAULT_MAX_ISSUES,
+                100,
                 project);
 
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
@@ -155,7 +155,7 @@ class DescriptorImplTest {
                 JiraSite.DEFAULT_READ_TIMEOUT,
                 JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
                 false,
-                JiraSite.DEFAULT_MAX_ISSUES,
+                100,
                 project);
         assertEquals(Messages.JiraSite_timeoutMinimunValue("1"), validation.getLocalizedMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
@@ -172,7 +172,7 @@ class DescriptorImplTest {
                 -1,
                 JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
                 false,
-                JiraSite.DEFAULT_MAX_ISSUES,
+                100,
                 project);
 
         assertEquals(Messages.JiraSite_readTimeoutMinimunValue("1"), validation.getMessage());
@@ -190,7 +190,7 @@ class DescriptorImplTest {
                 JiraSite.DEFAULT_READ_TIMEOUT,
                 -1,
                 false,
-                JiraSite.DEFAULT_MAX_ISSUES,
+                100,
                 project);
         assertEquals(Messages.JiraSite_threadExecutorMinimunSize("1"), validation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
@@ -217,11 +217,38 @@ class DescriptorImplTest {
                 JiraSite.DEFAULT_READ_TIMEOUT,
                 JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
                 false,
-                JiraSite.DEFAULT_MAX_ISSUES,
+                100,
                 project);
 
         verify(builder).build();
         verify(site).getSession(project, true);
         assertEquals(FormValidation.Kind.OK, validation.kind);
+    }
+
+    @Test
+    void validateMaxIssueFromJqlSearchError(JenkinsRule r) throws Exception {
+        builder.withMainURL(new URL("http://test.com"));
+
+        when(descriptor.getBuilder()).thenReturn(builder);
+        when(builder.build()).thenReturn(site);
+        when(site.getSession(project, true)).thenReturn(session);
+        when(session.getMyPermissions()).thenReturn(mock(Permissions.class));
+
+        FormValidation validation = descriptor.doValidate(
+                "http://localhost:8080",
+                null,
+                null,
+                null,
+                false,
+                null,
+                JiraSite.DEFAULT_TIMEOUT,
+                JiraSite.DEFAULT_READ_TIMEOUT,
+                JiraSite.DEFAULT_THREAD_EXECUTOR_NUMBER,
+                false,
+                5001,
+                project);
+
+        assertEquals(Messages.JiraSite_maxIssuesFromJqlMaximumNumber("5000"), validation.getMessage());
+        assertEquals(FormValidation.Kind.ERROR, validation.kind);
     }
 }

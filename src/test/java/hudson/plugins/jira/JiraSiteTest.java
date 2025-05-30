@@ -158,7 +158,7 @@ class JiraSiteTest {
                 new UsernamePasswordCredentialsImpl(CredentialsScope.SYSTEM, null, null, ANY_USER, ANY_PASSWORD);
         CredentialsProvider.lookupStores(j.jenkins).iterator().next().addDomain(domain, c);
 
-        JiraSite site = new JiraSite(exampleOrg, null, c.getId(), false, false, null, false, null, null, true, 100);
+        JiraSite site = new JiraSite(exampleOrg, null, c.getId(), false, false, null, false, null, null, true);
         site.setUseBearerAuth(true);
 
         XStream2 xStream2 = new XStream2();
@@ -176,7 +176,7 @@ class JiraSiteTest {
     @WithoutJenkins
     @Test
     void deserializeWithoutCredentials() {
-        JiraSite site = new JiraSite(exampleOrg, null, (String) null, false, false, null, false, null, null, true, 100);
+        JiraSite site = new JiraSite(exampleOrg, null, (String) null, false, false, null, false, null, null, true);
 
         XStream2 xStream2 = new XStream2();
         String xml = xStream2.toXML(site);
