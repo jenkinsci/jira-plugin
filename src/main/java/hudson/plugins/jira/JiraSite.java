@@ -1412,11 +1412,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 return FormValidation.error(String.format("Malformed alternative URL (%s)", alternativeUrl), e);
             }
 
-            if (maxIssuesFromJqlSearch > 5000) {
-                return FormValidation.error(String.format("Maximum number of allowed issues from jql search are %s",
-                        MAX_ALLOWED_ISSUES_FROM_JQL));
-            }
-
             credentialsId = Util.fixEmpty(credentialsId);
             JiraSite site = getBuilder()
                     .withMainURL(mainURL)
@@ -1435,6 +1430,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             }
             if (readTimeout < 0) {
                 return FormValidation.error(Messages.JiraSite_readTimeoutMinimunValue("1"));
+            }
+            if (maxIssuesFromJqlSearch > 5000) {
+                return FormValidation.error(Messages.JiraSite_maxIssuesFromJqlMaximumNumber(MAX_ALLOWED_ISSUES_FROM_JQL));
             }
 
             site.setTimeout(timeout);
