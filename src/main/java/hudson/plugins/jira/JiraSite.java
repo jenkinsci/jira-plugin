@@ -92,6 +92,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
  * needed to access this Jira.
  * </p>
  * <b>When adding new fields do not miss to look at readResolve method!!</b>
+ *
  * @author Kohsuke Kawaguchi
  */
 public class JiraSite extends AbstractDescribableImpl<JiraSite> {
@@ -116,6 +117,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public static final int DEFAULT_READ_TIMEOUT = 30;
 
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
+
+    public static final Integer DEFAULT_ISSUES_FROM_JQL = 100;
+
+    public static final Integer MAX_ALLOWED_ISSUES_FROM_JQL = 5000;
 
     /**
      * URL of Jira for Jenkins access, like {@code http://jira.codehaus.org/}.
@@ -150,6 +155,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * User name needed to login. Optional.
+     *
      * @deprecated use credentialsId
      */
     @Deprecated
@@ -157,6 +163,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Password needed to login. Optional.
+     *
      * @deprecated use credentialsId
      */
     @Deprecated
@@ -221,12 +228,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * response timeout for jira rest call
+     *
      * @since 3.0.3
      */
     private int readTimeout = DEFAULT_READ_TIMEOUT;
 
     /**
      * thread pool number
+     *
      * @since 3.0.3
      */
     private int threadExecutorNumber = DEFAULT_THREAD_EXECUTOR_NUMBER;
@@ -238,9 +247,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * To add scm entry change date and time in jira comments.
-     *
      */
     private boolean appendChangeTimestamp;
+
+    /**
+     * To allow configurable value of max issues from jql search via jira site global configuration.
+     */
+    private int maxIssuesFromJqlSearch = DEFAULT_ISSUES_FROM_JQL;
 
     private int ioThreadCount = Integer.getInteger(JiraSite.class.getName() + ".httpclient.options.ioThreadCount", 2);
 
@@ -502,6 +515,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Sets connect timeout (in seconds).
      * If not specified, a default timeout will be used.
+     *
      * @param timeoutSec Timeout in seconds
      */
     @DataBoundSetter
@@ -516,6 +530,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Sets read timeout (in seconds).
      * If not specified, a default timeout will be used.
+     *
      * @param readTimeout Timeout in seconds
      */
     @DataBoundSetter
@@ -646,6 +661,17 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         this.updateJiraIssueForAllStatus = updateJiraIssueForAllStatus;
     }
 
+    @DataBoundSetter
+    public void setMaxIssuesFromJqlSearch(int maxIssuesFromJqlSearch) {
+        this.maxIssuesFromJqlSearch = maxIssuesFromJqlSearch > MAX_ALLOWED_ISSUES_FROM_JQL
+                ? MAX_ALLOWED_ISSUES_FROM_JQL
+                : maxIssuesFromJqlSearch;
+    }
+
+    public int getMaxIssuesFromJqlSearch() {
+        return maxIssuesFromJqlSearch;
+    }
+
     @SuppressWarnings("unused")
     protected Object readResolve() throws FormException {
         JiraSite jiraSite;
@@ -683,7 +709,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         jiraSite.setDisableChangelogAnnotations(disableChangelogAnnotations);
         jiraSite.setDateTimePattern(dateTimePattern);
         jiraSite.setUseBearerAuth(useBearerAuth);
-
+        if (this.maxIssuesFromJqlSearch <= 0) {
+            jiraSite.setMaxIssuesFromJqlSearch(DEFAULT_ISSUES_FROM_JQL);
+        } else {
+            jiraSite.setMaxIssuesFromJqlSearch(maxIssuesFromJqlSearch);
+        }
         return jiraSite;
     }
 
@@ -760,7 +790,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * This method only supports credential matching by credentialsId.
      * Older methods are not and will not be supported as the credentials should have been migrated already.
-     * @param item can be <code>null</code> if top level
+     *
+     * @param item         can be <code>null</code> if top level
      * @param uiValidation if <code>true</code> and credentials not found at item level will not go up
      */
     private StandardUsernamePasswordCredentials resolveCredentials(Item item, boolean uiValidation) {
@@ -1132,9 +1163,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     /**
      * Returns all versions for the given project key.
-     * @deprecated use {@link JiraSession#getVersions(String)}
+     *
      * @param projectKey Project Key
      * @return A set of JiraVersions
+     * @deprecated use {@link JiraSession#getVersions(String)}
      */
     @Deprecated
     public Set<ExtendedVersion> getVersions(String projectKey) {
@@ -1148,7 +1180,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Generates release notes for a given version.
      *
-     * @param projectKey the project key
+     * @param projectKey  the project key
      * @param versionName the version
      * @param filter      Additional JQL Filter. Example: status in (Resolved,Closed)
      * @return release notes
@@ -1234,9 +1266,9 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Adds new fix version to issues matching the jql.
      *
-     * @param projectKey the project key
+     * @param projectKey  the project key
      * @param versionName the version
-     * @param query the query
+     * @param query       the query
      * @throws TimeoutException if too long
      */
     public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
@@ -1251,10 +1283,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * Progresses all issues matching the JQL search, using the given workflow action. Optionally
      * adds a comment to the issue(s) at the same time.
      *
-     * @param jqlSearch the query
+     * @param jqlSearch          the query
      * @param workflowActionName the workflowActionName
-     * @param comment the comment
-     * @param console the console
+     * @param comment            the comment
+     * @param console            the console
      * @throws TimeoutException TimeoutException if too long
      */
     public boolean progressMatchingIssues(
@@ -1521,7 +1553,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     // yes this class hierarchy can be a real big mess...
 
     /**
-     *
      * @param item the Jenkins {@link Item} can be a {@link Job} or {@link Folder}
      * @return the parent as {@link ItemGroup} which can be {@link Jenkins} or {@link Folder}
      */
@@ -1567,6 +1598,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     /**
      * Gets the effective {@link JiraSite} associated with the given project
      * and creates automatically jiraSession for each jiraSite found
+     *
      * @return <code>null</code> if no such was found.
      */
     @Nullable

@@ -40,8 +40,6 @@ import org.apache.commons.lang.StringUtils;
 public class JiraSession {
     private static final Logger LOGGER = Logger.getLogger(JiraSession.class.getName());
 
-    public static final Integer MAX_ISSUES = 100;
-
     public final JiraRestService service;
 
     /**
@@ -51,9 +49,12 @@ public class JiraSession {
 
     private final String jiraSiteName;
 
+    private final Integer maxIssuesFromJqlSearch;
+
     /* package */ JiraSession(JiraSite site, JiraRestService jiraRestService) {
         this.service = jiraRestService;
         this.jiraSiteName = site.getName();
+        this.maxIssuesFromJqlSearch = site.getMaxIssuesFromJqlSearch();
     }
 
     /**
@@ -132,7 +133,7 @@ public class JiraSession {
      * @return issues matching the JQL query
      */
     public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException {
-        return service.getIssuesFromJqlSearch(jqlSearch, MAX_ISSUES);
+        return service.getIssuesFromJqlSearch(jqlSearch, maxIssuesFromJqlSearch);
     }
 
     /**
@@ -177,10 +178,10 @@ public class JiraSession {
         if (isNotEmpty(filter)) {
             return service.getIssuesFromJqlSearch(
                     String.format("project = \"%s\" and fixVersion = \"%s\" and " + filter, projectKey, version),
-                    MAX_ISSUES);
+                    maxIssuesFromJqlSearch);
         }
         return service.getIssuesFromJqlSearch(
-                String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), MAX_ISSUES);
+                String.format("project = \"%s\" and fixVersion = \"%s\"", projectKey, version), maxIssuesFromJqlSearch);
     }
 
     /**
@@ -227,7 +228,7 @@ public class JiraSession {
         }
 
         LOGGER.fine("Fetching versions with JQL:" + query);
-        List<Issue> issues = service.getIssuesFromJqlSearch(query, MAX_ISSUES);
+        List<Issue> issues = service.getIssuesFromJqlSearch(query, maxIssuesFromJqlSearch);
         if (issues == null || issues.isEmpty()) {
             return;
         }
@@ -257,7 +258,7 @@ public class JiraSession {
         }
 
         LOGGER.fine("Fetching versions with JQL:" + query);
-        List<Issue> issues = service.getIssuesFromJqlSearch(query, MAX_ISSUES);
+        List<Issue> issues = service.getIssuesFromJqlSearch(query, maxIssuesFromJqlSearch);
         if (issues == null) {
             return;
         }
@@ -313,7 +314,7 @@ public class JiraSession {
         }
 
         LOGGER.fine("Fetching issues with JQL:" + query);
-        List<Issue> issues = service.getIssuesFromJqlSearch(query, MAX_ISSUES);
+        List<Issue> issues = service.getIssuesFromJqlSearch(query, maxIssuesFromJqlSearch);
         if (issues == null || issues.isEmpty()) {
             return;
         }

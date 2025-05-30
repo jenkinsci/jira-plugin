@@ -51,6 +51,9 @@
   <f:entry title="${%Jira comments timestamp format}" field="dateTimePattern">
     <f:textbox />
   </f:entry>
+  <f:entry title="${%Max Issues From Jql Search}" field="maxIssuesFromJqlSearch">
+    <f:number default="100" max="5000" clazz="positive-number-required" />
+  </f:entry>
   <f:entry>
     <f:validateButton title="${%Validate Settings}"
             method="validate" with="url,credentialsId,groupVisibility,roleVisibility,useHTTPAuth,alternativeUrl,timeout,readTimeout,threadExecutorNumber,useBearerAuth" />
