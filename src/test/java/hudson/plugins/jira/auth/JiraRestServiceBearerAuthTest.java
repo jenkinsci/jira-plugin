@@ -58,8 +58,6 @@ class JiraRestServiceBearerAuthTest {
     void getIssuesFromJqlSearchTimeout() throws ExecutionException, InterruptedException, TimeoutException {
         JiraRestService service = spy(new JiraRestService(JIRA_URI, client, TOKEN, JiraSite.DEFAULT_TIMEOUT));
         doThrow(new TimeoutException()).when(promise).get(Mockito.anyLong(), Mockito.any());
-        assertThrows(
-                TimeoutException.class,
-                () -> service.getIssuesFromJqlSearch("*", JiraSite.MAX_ALLOWED_ISSUES_FROM_JQL));
+        assertThrows(TimeoutException.class, () -> service.getIssuesFromJqlSearch("*", null));
     }
 }

@@ -118,7 +118,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     public static final int DEFAULT_THREAD_EXECUTOR_NUMBER = 10;
 
-    public static final int MAX_ALLOWED_ISSUES_FROM_JQL = 5000;
+    public static final Integer MAX_ALLOWED_ISSUES_FROM_JQL = 5000;
 
     /**
      * URL of Jira for Jenkins access, like {@code http://jira.codehaus.org/}.

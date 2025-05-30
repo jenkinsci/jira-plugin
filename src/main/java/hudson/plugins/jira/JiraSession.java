@@ -49,7 +49,7 @@ public class JiraSession {
 
     private final String jiraSiteName;
 
-    private final int maxIssuesFromJqlSearch;
+    private final Integer maxIssuesFromJqlSearch;
 
     /* package */ JiraSession(JiraSite site, JiraRestService jiraRestService) {
         this.service = jiraRestService;
