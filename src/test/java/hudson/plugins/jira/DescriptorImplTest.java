@@ -248,7 +248,7 @@ class DescriptorImplTest {
                 5001,
                 project);
 
-        assertEquals(Messages.JiraSite_maxIssuesFromJqlMaximumNumber("5000"), validation.getMessage());
+        assertEquals(Messages.JiraSite_maxIssuesFromJqlMaximumNumber("5,000"), validation.getMessage());
         assertEquals(FormValidation.Kind.ERROR, validation.kind);
     }
 }
