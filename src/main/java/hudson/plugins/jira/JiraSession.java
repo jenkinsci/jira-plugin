@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
@@ -267,29 +268,32 @@ public class JiraSession {
             Set<Version> newVersions = new HashSet<>();
             newVersions.add(newVersion);
 
+            Iterable<Version> issueVersions =
+                    Optional.ofNullable(issue.getFixVersions()).orElse(Collections.emptyList());
+            LOGGER.fine(String.format("[%s] current versions: %s", issue.getKey(), issueVersions));
+
             if (StringUtils.startsWith(fromVersion, "/") && StringUtils.endsWith(fromVersion, "/")) {
 
                 String regEx = StringUtils.removeStart(fromVersion, "/");
                 regEx = StringUtils.removeEnd(regEx, "/");
-
+                Pattern fromVersionPattern = Pattern.compile(regEx);
                 LOGGER.fine("Using regular expression: " + regEx);
 
-                Pattern fromVersionPattern = Pattern.compile(regEx);
-                for (Version currentVersion : issue.getFixVersions()) {
+                for (Version currentVersion : issueVersions) {
                     Matcher versionToRemove = fromVersionPattern.matcher(currentVersion.getName());
                     if (!versionToRemove.matches()) {
                         newVersions.add(currentVersion);
                     }
                 }
             } else {
-                for (Version currentVersion : issue.getFixVersions()) {
+                for (Version currentVersion : issueVersions) {
                     if (!currentVersion.getName().equals(fromVersion)) {
                         newVersions.add(currentVersion);
                     }
                 }
             }
 
-            LOGGER.fine("Replacing version in issue: " + issue.getKey());
+            LOGGER.info(String.format("Moving issues matching JQL query: \"%s\" to version %s", query, toVersion));
             service.updateIssue(issue.getKey(), new ArrayList(newVersions));
         }
     }
@@ -319,7 +323,11 @@ public class JiraSession {
         for (Issue issue : issues) {
             LOGGER.fine("Adding version: " + newVersion.getName() + " to issue: " + issue.getKey());
             List<Version> fixVersions = new ArrayList<>();
-            issue.getFixVersions().forEach(fixVersions::add);
+
+            Optional.ofNullable(issue.getFixVersions())
+                    .orElse(Collections.emptyList())
+                    .forEach(fixVersions::add);
+
             fixVersions.add(newVersion);
             service.updateIssue(issue.getKey(), fixVersions);
         }

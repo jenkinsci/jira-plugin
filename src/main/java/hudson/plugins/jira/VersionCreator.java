@@ -8,6 +8,8 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.extension.ExtendedVersion;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -35,27 +37,32 @@ class VersionCreator {
             }
 
             String finalRealVersion = realVersion;
-            JiraSite site = getSiteForProject(project);
-            Optional<ExtendedVersion> sameNamedVersion = site.getSession(project).getVersions(realProjectKey).stream()
-                    .filter(version -> version.getName().equals(finalRealVersion) && version.isReleased())
-                    .findFirst();
+            JiraSession session = getSiteForProject(project).getSession(project);
 
-            if (sameNamedVersion.isPresent()) {
+            List<ExtendedVersion> existingVersions =
+                    Optional.ofNullable(session.getVersions(realProjectKey)).orElse(Collections.emptyList());
+
+            // past logic to fail the build if the version already exists
+            if (existingVersions.stream().anyMatch(v -> v.getName().equals(finalRealVersion))) {
                 listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
-            } else {
-                listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
-                addVersion(realVersion, realProjectKey, site.getSession(project));
+                if (listener instanceof BuildListener) {
+                    ((BuildListener) listener).finished(Result.FAILURE);
+                }
+                return false;
             }
 
+            listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
+            addVersion(realVersion, realProjectKey, session);
+            return true;
         } catch (Exception e) {
             e.printStackTrace(
                     listener.fatalError("Unable to add version %s to Jira project %s", realVersion, realProjectKey, e));
-            if (listener instanceof BuildListener) {
-                ((BuildListener) listener).finished(Result.FAILURE);
-            }
-            return false;
         }
-        return true;
+
+        if (listener instanceof BuildListener) {
+            ((BuildListener) listener).finished(Result.FAILURE);
+        }
+        return false;
     }
 
     /**
