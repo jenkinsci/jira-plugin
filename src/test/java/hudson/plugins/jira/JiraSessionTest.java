@@ -60,8 +60,7 @@ class JiraSessionTest {
         ArrayList<Issue> issues = new ArrayList<>();
         issues.add(getIssue(Arrays.asList("v1.0"), 1L));
         issues.add(getIssue(Arrays.asList("v1.0", "v2.0", "v2.0.0"), 2L));
-        when(service.getIssuesFromJqlSearch(QUERY, 0))
-                .thenReturn(issues);
+        when(service.getIssuesFromJqlSearch(QUERY, 0)).thenReturn(issues);
 
         jiraSession.replaceFixVersion(PROJECT_KEY, "/v1.*/", newVersion.getName(), QUERY);
 
@@ -100,8 +99,7 @@ class JiraSessionTest {
         issues.add(getIssue(Arrays.asList("v1.0"), 1L));
         issues.add(getIssue(Arrays.asList("v1.0", "v1.0.0", "v2.0.0"), 2L));
         issues.add(getIssue(null, 3L));
-        when(service.getIssuesFromJqlSearch(QUERY, 0))
-                .thenReturn(issues);
+        when(service.getIssuesFromJqlSearch(QUERY, 0)).thenReturn(issues);
 
         jiraSession.replaceFixVersion(PROJECT_KEY, "v1.0", newVersion.getName(), QUERY);
 
@@ -185,8 +183,7 @@ class JiraSessionTest {
         List<Issue> issues = new ArrayList<>();
         issues.add(getIssue(Arrays.asList("v1.0"), 1L));
         issues.add(getIssue(Arrays.asList("v2.0", "v3.0"), 2L));
-        when(service.getIssuesFromJqlSearch(QUERY, 0))
-                .thenReturn(issues);
+        when(service.getIssuesFromJqlSearch(QUERY, 0)).thenReturn(issues);
 
         jiraSession.addFixVersion(PROJECT_KEY, newVersion.getName(), QUERY);
 
@@ -216,8 +213,7 @@ class JiraSessionTest {
         when(jiraSession.getVersions(PROJECT_KEY)).thenReturn(myVersions);
 
         List<Issue> issues = List.of(getIssue(null, 3L));
-        when(service.getIssuesFromJqlSearch(QUERY, 0))
-                .thenReturn(issues);
+        when(service.getIssuesFromJqlSearch(QUERY, 0)).thenReturn(issues);
 
         jiraSession.addFixVersion(PROJECT_KEY, newVersion.getName(), QUERY);
 
@@ -237,8 +233,7 @@ class JiraSessionTest {
         List<ExtendedVersion> myVersions = List.of(newVersion);
         when(jiraSession.getVersions(PROJECT_KEY)).thenReturn(myVersions);
 
-        when(service.getIssuesFromJqlSearch(QUERY, 0))
-                .thenReturn(new ArrayList<>());
+        when(service.getIssuesFromJqlSearch(QUERY, 0)).thenReturn(new ArrayList<>());
 
         jiraSession.addFixVersion(PROJECT_KEY, newVersion.getName(), QUERY);
 
