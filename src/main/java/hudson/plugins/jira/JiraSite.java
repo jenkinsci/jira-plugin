@@ -1472,16 +1472,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return CredentialsHelper.doCheckFillCredentialsId(item, value, url);
         }
 
-        @SuppressWarnings("unused") // used by stapler
-        public FormValidation doCheckMaxIssuesFromJqlSearch(@QueryParameter int maxIssuesFromJqlSearch) {
-            if (maxIssuesFromJqlSearch > MAX_ALLOWED_ISSUES_FROM_JQL) {
-                return FormValidation.error(String.format("Maximum number of allowed issues from jql search are %s",
-                        MAX_ALLOWED_ISSUES_FROM_JQL));
-            } else {
-                return FormValidation.ok();
-            }
-        }
-
         Builder getBuilder() {
             return new Builder();
         }
