@@ -47,7 +47,6 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jakarta.servlet.ServletException;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -78,7 +77,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.annotation.PreDestroy;
-
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -916,12 +914,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                     }
 
                     @Override
-                    public void setThreadLocalContext(Object context) {
-                    }
+                    public void setThreadLocalContext(Object context) {}
 
                     @Override
-                    public void clearThreadLocalContext() {
-                    }
+                    public void clearThreadLocalContext() {}
                 });
 
         final HttpClient httpClient = defaultHttpClientFactory.create(options);
@@ -949,20 +945,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     private static class NoOpEventPublisher implements EventPublisher {
         @Override
-        public void publish(Object o) {
-        }
+        public void publish(Object o) {}
 
         @Override
-        public void register(Object o) {
-        }
+        public void register(Object o) {}
 
         @Override
-        public void unregister(Object o) {
-        }
+        public void unregister(Object o) {}
 
         @Override
-        public void unregisterAll() {
-        }
+        public void unregisterAll() {}
     }
 
     @SuppressWarnings("deprecation")
@@ -1432,7 +1424,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 return FormValidation.error(Messages.JiraSite_readTimeoutMinimunValue("1"));
             }
             if (maxIssuesFromJqlSearch > 5000) {
-                return FormValidation.error(Messages.JiraSite_maxIssuesFromJqlMaximumNumber(MAX_ALLOWED_ISSUES_FROM_JQL));
+                return FormValidation.error(
+                        Messages.JiraSite_maxIssuesFromJqlMaximumNumber(MAX_ALLOWED_ISSUES_FROM_JQL));
             }
 
             site.setTimeout(timeout);

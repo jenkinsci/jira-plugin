@@ -56,8 +56,7 @@ public class JiraTester {
         //        restService.createIssue("TESTPROJECT", "This is a test issue created using Jira jenkins plugin. Please
         // ignore it.", "TESTUSER", components1, "test issue from Jira jenkins plugin");
 
-        final List<Issue> searchResults =
-                restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", 100);
+        final List<Issue> searchResults = restService.getIssuesFromJqlSearch("project = \"TESTPROJECT\"", 100);
         for (Issue searchResult : searchResults) {
             System.out.println("JQL search result: " + searchResult);
         }
@@ -102,8 +101,7 @@ public class JiraTester {
 
     private static void callUniq(final JiraRestService restService) throws Exception {
         long start = System.currentTimeMillis();
-        List<Issue> issues = restService.getIssuesFromJqlSearch(
-                "key in ('JENKINS-53320','JENKINS-51057')", 100);
+        List<Issue> issues = restService.getIssuesFromJqlSearch("key in ('JENKINS-53320','JENKINS-51057')", 100);
         long end = System.currentTimeMillis();
         System.out.println("time uniq " + (end - start));
     }
