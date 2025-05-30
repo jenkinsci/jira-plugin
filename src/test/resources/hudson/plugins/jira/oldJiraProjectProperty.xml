@@ -12,7 +12,6 @@
       <threadExecutorNumber>10</threadExecutorNumber>
       <dateTimePattern></dateTimePattern>
       <appendChangeTimestamp>false</appendChangeTimestamp>
-      <maxIssuesFromJqlSearch>0</maxIssuesFromJqlSearch>
     </hudson.plugins.jira.JiraSite>
   </sites>
 </hudson.plugins.jira.JiraProjectProperty_-DescriptorImpl>
