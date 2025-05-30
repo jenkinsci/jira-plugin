@@ -1374,7 +1374,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 @QueryParameter int readTimeout,
                 @QueryParameter int threadExecutorNumber,
                 @QueryParameter boolean useBearerAuth,
-                @QueryParameter int maxIssuesFromJqlSearch,
                 @AncestorInPath Item item) {
 
             if (item == null) {
@@ -1423,16 +1422,11 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             if (readTimeout < 0) {
                 return FormValidation.error(Messages.JiraSite_readTimeoutMinimunValue("1"));
             }
-            if (maxIssuesFromJqlSearch > 5000) {
-                return FormValidation.error(
-                        Messages.JiraSite_maxIssuesFromJqlMaximumNumber(MAX_ALLOWED_ISSUES_FROM_JQL));
-            }
 
             site.setTimeout(timeout);
             site.setReadTimeout(readTimeout);
             site.setThreadExecutorNumber(threadExecutorNumber);
             site.setUseBearerAuth(useBearerAuth);
-            site.setMaxIssuesFromJqlSearch(maxIssuesFromJqlSearch);
             try {
                 JiraSession session = site.getSession(item, true);
                 if (session == null) {
