@@ -68,6 +68,9 @@ class VersionComparatorTest {
         assertEquals(-1, compare("PDFREPORT-2.3.4", "x"));
         assertEquals(0, compare("PDFREPORT2-", "PDFREPORT2-"));
         assertEquals(1, compare("PDFREPORT-", "PDFREPORT2-"));
+        assertEquals(-1, compare("1.1.2-RC1", "1.1.1-RC2"));
+        assertEquals(-1, compare("2.2.2-RC1", "1.1.1-RC1"));
+        assertEquals(1, compare("FOO-1.1.1-RC1", "FOO-1.1.1-RC2"));
     }
 
     private int compare(String v1, String v2) {
