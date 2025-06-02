@@ -24,20 +24,28 @@ class VersionComparatorTest {
             "PDFREPORT-",
             "1.1.1.2",
             "VER 1.0",
-            "1.1.1.1"
+            "1.1.1.1",
+            "FOO-1.1.1-RC1",
+            "FOO-1.1.1-RC2",
+            "1.1.1-RC1",
+            "1.1.1-RC2"
         };
 
         String[] expected = {
             "9.9.9.9.9",
-            "V-5.2.3",
-            "PDFREPORT-2.3.4",
-            "PDFREPORT-2.3",
             "1.12.2.3.4",
             "1.3.4",
             "1.1.1.2",
             "1.1.1.1",
+            "1.1.1-RC2",
+            "1.1.1-RC1",
             "VER 1.0",
-            "PDFREPORT-"
+            "V-5.2.3",
+            "PDFREPORT-2.3.4",
+            "PDFREPORT-2.3",
+            "PDFREPORT-",
+            "FOO-1.1.1-RC2",
+            "FOO-1.1.1-RC1",
         };
 
         List<String> result = Arrays.asList(input).stream()
@@ -52,8 +60,8 @@ class VersionComparatorTest {
     void singleComparisonsTests() {
 
         assertEquals(0, compare("1.1.1.1", "1.1.1.1"));
-        assertEquals(-1, compare("A-1.1.1.1", "1.1.1.1"));
-        assertEquals(1, compare("1.1.1.1", "A-1.1.1.1"));
+        assertEquals(1, compare("A-1.1.1.1", "1.1.1.1"));
+        assertEquals(-1, compare("1.1.1.1", "A-1.1.1.1"));
         assertEquals(1, compare("1.1.1.1", "1.1.1.1.1"));
         assertEquals(-1, compare("1.1.1.1", "1.1.1"));
         assertEquals(1, compare("1.1.1.2", "1.1.1.3"));
@@ -63,9 +71,9 @@ class VersionComparatorTest {
         assertEquals(1, compare("2.0.5.4", "4.0"));
         assertEquals(-1, compare("1.12.1.1", "1.1.1.2"));
         assertEquals(1, compare("1.1.1-RC1", "1.1.1-RC2"));
-        assertEquals(-1, compare("PDFREPORT-2.3.4", "1.2.3"));
+        assertEquals(1, compare("PDFREPORT-2.3.4", "1.2.3"));
         assertEquals(1, compare("PDFREPORT-2.3.4", "4.5.6"));
-        assertEquals(-1, compare("PDFREPORT-2.3.4", "x"));
+        assertEquals(1, compare("PDFREPORT-2.3.4", "x"));
         assertEquals(0, compare("PDFREPORT2-", "PDFREPORT2-"));
         assertEquals(1, compare("PDFREPORT-", "PDFREPORT2-"));
         assertEquals(-1, compare("1.1.2-RC1", "1.1.1-RC2"));
@@ -77,10 +85,5 @@ class VersionComparatorTest {
         return VersionComparator.INSTANCE.compare(
                 new Version(null, null, v1, null, false, false, null),
                 new Version(null, null, v2, null, false, false, null));
-    }
-
-    @Test
-    void getNumberVersionTest() {
-        assertEquals("2.3.4", VersionComparator.INSTANCE.getNumberVersion("PDFREPORT-2.3.4"));
     }
 }
