@@ -1,18 +1,17 @@
 package hudson.plugins.jira;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.Maps;
-
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractBuild.DependencyChange;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
-import hudson.model.AbstractBuild.DependencyChange;
 import hudson.scm.ChangeLogSet;
 import hudson.scm.ChangeLogSet.Entry;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class RunScmChangeExtractor {
 
@@ -20,12 +19,14 @@ public class RunScmChangeExtractor {
     private static final String GET_CHANGESET_METHOD = "getChangeSets";
     private static final String CANNOT_ACCESS_GET_CHANGESET_METHOD = "cannot call " + GET_CHANGESET_METHOD;
 
-    private RunScmChangeExtractor() {
-    }
+    private RunScmChangeExtractor() {}
 
     public static List<ChangeLogSet<? extends Entry>> getChanges(Run<?, ?> run) {
         if (run instanceof AbstractBuild) {
-            return ((AbstractBuild<?, ?>) run).getChangeSets();
+            ChangeLogSet<? extends Entry> cs = ((AbstractBuild<?, ?>) run).getChangeSet();
+            return cs.isEmptySet()
+                    ? Collections.<ChangeLogSet<? extends ChangeLogSet.Entry>>emptyList()
+                    : Collections.<ChangeLogSet<? extends ChangeLogSet.Entry>>singletonList(cs);
         } else if (run == null) {
             throw new IllegalStateException("run cannot be null!");
         } else {
@@ -36,11 +37,11 @@ public class RunScmChangeExtractor {
     /**
      * return changeSets using java reflection api, for example for workflow
      * jobs.
-     * 
+     *
      * until JENKINS-24141
-     * 
+     *
      * @param run
-     *            - run that imlement some type with GET_CHANGESET_METHOD
+     *            - run that implements some type with GET_CHANGESET_METHOD
      * @return collection of scm ChangeLogSet entries
      */
     @SuppressWarnings("unchecked")
@@ -65,19 +66,19 @@ public class RunScmChangeExtractor {
             }
         } else {
             // if run don't have GET_CHANGESET_METHOD, we don't support it
-            throw new IllegalArgumentException("Unsupported Run type " + run.getClass().getName());
+            throw new IllegalArgumentException(
+                    "Unsupported Run type " + run.getClass().getName());
         }
     }
 
     public static Map<AbstractProject, DependencyChange> getDependencyChanges(Run<?, ?> run) {
         if (run instanceof AbstractBuild) {
-            Run<?, ?> previousBuild = run.getPreviousBuild();
+            Run<?, ?> previousBuild = run.getPreviousCompletedBuild();
             if (previousBuild instanceof AbstractBuild) {
                 return ((AbstractBuild) run).getDependencyChanges((AbstractBuild) previousBuild);
             }
         }
         // jenkins workflow plugin etc.
-        return Maps.newHashMap();
+        return new HashMap();
     }
-
 }

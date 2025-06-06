@@ -1,12 +1,10 @@
 package hudson.plugins.jira;
 
+import static java.lang.String.format;
+
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import hudson.Util;
-import hudson.model.Hudson;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -17,23 +15,28 @@ import hudson.scm.ChangeLogSet.AffectedFile;
 import hudson.scm.ChangeLogSet.Entry;
 import hudson.scm.RepositoryBrowser;
 import hudson.scm.SCM;
-import org.apache.commons.lang.StringUtils;
-
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static java.lang.String.format;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
 
 /**
- * Actual JIRA update logic.
+ * Actual Jira update logic.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -50,94 +53,96 @@ class Updater {
     public static boolean debug = false;
 
     public Updater(SCM scm) {
-        this(scm, new ArrayList<String>());
+        this(scm, new ArrayList<>());
     }
 
     public Updater(SCM scm, List<String> labels) {
         super();
         this.scm = scm;
         if (labels == null) {
-            this.labels = new ArrayList<String>();
+            this.labels = new ArrayList<>();
         } else {
             this.labels = labels;
         }
     }
 
-    boolean perform(Run<?, ?> build, TaskListener listener, AbstractIssueSelector selector) {
+    boolean perform(Run<?, ?> run, TaskListener listener, AbstractIssueSelector selector) {
         PrintStream logger = listener.getLogger();
         Set<JiraIssue> issues = null;
 
         try {
-            JiraSite site = JiraSite.get(build.getParent());
+            JiraSite site = JiraSite.get(run.getParent());
             if (site == null) {
                 logger.println(Messages.NoJiraSite());
-                build.setResult(Result.FAILURE);
+                run.setResult(Result.FAILURE);
                 return true;
             }
 
-            String rootUrl = Hudson.getInstance().getRootUrl();
+            String rootUrl = Jenkins.get().getRootUrl();
             if (rootUrl == null) {
                 logger.println(Messages.NoJenkinsUrl());
-                build.setResult(Result.FAILURE);
+                run.setResult(Result.FAILURE);
                 return true;
             }
 
-            Set<String> ids = selector.findIssueIds(build, site, listener);
+            Set<String> ids = selector.findIssueIds(run, site, listener);
 
             if (ids.isEmpty()) {
-                if (debug)
-                    logger.println("No JIRA issues found.");
-                return true;    // nothing found here.
+                if (debug) {
+                    logger.println("No Jira issues found.");
+                }
+                return true; // nothing found here.
             }
 
-            JiraSession session = null;
-            try {
-                session = site.getSession();
-            } catch (IOException e) {
-                listener.getLogger().println(Messages.FailedToConnect());
-                e.printStackTrace(listener.getLogger());
-            }
+            JiraSession session = site.getSession(run.getParent());
             if (session == null) {
                 logger.println(Messages.NoRemoteAccess());
-                build.setResult(Result.FAILURE);
+                run.setResult(Result.FAILURE);
                 return true;
             }
 
             boolean doUpdate = false;
-            //in case of workflow, it may be null
-            if (site.updateJiraIssueForAllStatus || build.getResult() == null) {
+            // in case of workflow, it may be null
+            if (site.updateJiraIssueForAllStatus || run.getResult() == null) {
                 doUpdate = true;
             } else {
-                doUpdate = build.getResult().isBetterOrEqualTo(Result.UNSTABLE);
+                doUpdate = run.getResult().isBetterOrEqualTo(Result.UNSTABLE);
             }
             boolean useWikiStyleComments = site.supportsWikiStyleComment;
 
             issues = getJiraIssues(ids, session, logger);
-            build.addAction(new JiraBuildAction(build, issues));
+            run.addAction(new JiraBuildAction(issues));
 
             if (doUpdate) {
-                submitComments(build, logger, rootUrl, issues,
-                        session, useWikiStyleComments, site.recordScmChanges, site.groupVisibility, site.roleVisibility);
+                submitComments(
+                        run,
+                        logger,
+                        rootUrl,
+                        issues,
+                        session,
+                        useWikiStyleComments,
+                        site.recordScmChanges,
+                        site.groupVisibility,
+                        site.roleVisibility);
             } else {
                 // this build didn't work, so carry forward the issues to the next build
-                build.addAction(new JiraCarryOverAction(issues));
+                run.addAction(new JiraCarryOverAction(issues));
             }
         } catch (Exception e) {
-            LOGGER.log(Level.WARNING, "Error updating JIRA issues. Saving issues for next build.", e);
-            logger.println("Error updating JIRA issues. Saving issues for next build.\n" + e);
+            LOGGER.log(Level.WARNING, "Error updating Jira issues. Saving issues for next build.", e);
+            logger.println("Error updating Jira issues. Saving issues for next build.\n" + e);
             if (issues != null && !issues.isEmpty()) {
                 // updating issues failed, so carry forward issues to the next build
-                build.addAction(new JiraCarryOverAction(issues));
+                run.addAction(new JiraCarryOverAction(issues));
             }
         }
 
         return true;
     }
 
-
     /**
      * Submits comments for the given issues.
-     * Remvoes from <code>issues</code> issues which have been successfully updated or are invalid
+     * Removes from <code>issues</code> issues which have been successfully updated or are invalid
      *
      * @param build
      * @param logger
@@ -149,12 +154,19 @@ class Updater {
      * @throws RestClientException
      */
     void submitComments(
-            Run<?, ?> build, PrintStream logger, String jenkinsRootUrl,
-            Set<JiraIssue> issues, JiraSession session,
-            boolean useWikiStyleComments, boolean recordScmChanges, String groupVisibility, String roleVisibility) throws RestClientException {
+            Run<?, ?> build,
+            PrintStream logger,
+            String jenkinsRootUrl,
+            Set<JiraIssue> issues,
+            JiraSession session,
+            boolean useWikiStyleComments,
+            boolean recordScmChanges,
+            String groupVisibility,
+            String roleVisibility)
+            throws RestClientException {
 
         // copy to prevent ConcurrentModificationException
-        Set<JiraIssue> copy = ImmutableSet.copyOf(issues);
+        Set<JiraIssue> copy = new HashSet<>(issues);
 
         for (JiraIssue issue : copy) {
             logger.println(Messages.UpdatingIssue(issue.getKey()));
@@ -163,8 +175,8 @@ class Updater {
                 session.addComment(
                         issue.getKey(),
                         createComment(build, useWikiStyleComments, jenkinsRootUrl, recordScmChanges, issue),
-                        groupVisibility, roleVisibility
-                );
+                        groupVisibility,
+                        roleVisibility);
                 if (!labels.isEmpty()) {
                     session.addLabels(issue.getKey(), labels);
                 }
@@ -172,16 +184,19 @@ class Updater {
             } catch (RestClientException e) {
 
                 if (e.getStatusCode().or(0).equals(404)) {
-                    logger.println(issue.getKey() + " - JIRA issue not found. Dropping comment from update queue.");
+                    logger.println(issue.getKey() + " - Jira issue not found. Dropping comment from update queue.");
                 }
 
                 if (e.getStatusCode().or(0).equals(403)) {
-                    logger.println(issue.getKey() + " - Jenkins JIRA user does not have permissions to comment on this issue. Preserving comment for future update.");
+                    logger.println(
+                            issue.getKey()
+                                    + " - Jenkins Jira user does not have permissions to comment on this issue. Preserving comment for future update.");
                     continue;
                 }
 
                 if (e.getStatusCode().or(0).equals(401)) {
-                    logger.println(issue.getKey() + " - Jenkins JIRA authentication problem. Preserving comment for future update.");
+                    logger.println(issue.getKey()
+                            + " - Jenkins Jira authentication problem. Preserving comment for future update.");
                     continue;
                 }
 
@@ -189,29 +204,28 @@ class Updater {
                 logger.println(e.getLocalizedMessage());
             }
 
-            // if no exception is thrown during update, remove from the list as succesfully updated
+            // if no exception is thrown during update, remove from the list as successfully updated
             issues.remove(issue);
         }
-
     }
 
-    private static Set<JiraIssue> getJiraIssues(Set<String> ids, JiraSession session, PrintStream logger) throws RemoteException {
+    private static Set<JiraIssue> getJiraIssues(Set<String> ids, JiraSession session, PrintStream logger)
+            throws RemoteException {
         Set<JiraIssue> issues = new LinkedHashSet<>(ids.size());
         for (String id : ids) {
             Issue issue = session.getIssue(id);
             if (issue == null) {
-                logger.println(id + " issue doesn't exist in JIRA");
+                logger.println(id + " issue doesn't exist in Jira");
                 continue;
             }
-            
+
             issues.add(new JiraIssue(issue));
         }
         return issues;
     }
 
-
     /**
-     * Creates a comment to be used in JIRA for the build.
+     * Creates a comment to be used in Jira for the build.
      * For example:
      * <pre>
      *  SUCCESS: Integrated in Job #nnnn (See [http://jenkins.domain/job/Job/nnnn/])\r
@@ -219,34 +233,35 @@ class Updater {
      *  [https://bitbucket.org/user/repo/changeset/9af8e4c4c909/])\r
      * </pre>
      */
-    private String createComment(Run<?, ?> build, boolean wikiStyle, String jenkinsRootUrl, boolean recordScmChanges, JiraIssue jiraIssue) {
+    private String createComment(
+            Run<?, ?> build, boolean wikiStyle, String jenkinsRootUrl, boolean recordScmChanges, JiraIssue jiraIssue) {
         Result result = build.getResult();
-        //if we run from workflow we dont known final result  
-        if(result == null)
+        // if we run from workflow we dont known final result
+        if (result == null) {
             return format(
-                    wikiStyle ?
-                            "Integrated in [%2$s|%3$s]\n%4$s" :
-                            "Integrated in Jenkins build %2$s (See [%3$s])\n%4$s",
+                    wikiStyle
+                            ? "Integrated in [%2$s|%3$s]\n%4$s"
+                            : "Integrated in Jenkins build %2$s (See [%3$s])\n%4$s",
                     jenkinsRootUrl,
-                    build,
+                    build.getFullDisplayName(),
                     Util.encode(jenkinsRootUrl + build.getUrl()),
                     getScmComments(wikiStyle, build, recordScmChanges, jiraIssue));
-        else
+        } else {
             return format(
-                wikiStyle ?
-                        "%6$s: Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n%5$s" :
-                        "%6$s: Integrated in Jenkins build %2$s (See [%4$s])\n%5$s",
-                jenkinsRootUrl,
-                build,
-                result != null ? result.color.getImage() : null,
-                Util.encode(jenkinsRootUrl + build.getUrl()),
-                getScmComments(wikiStyle, build, recordScmChanges, jiraIssue),
-                result.toString());
+                    wikiStyle
+                            ? "%6$s: Integrated in !%1$simages/16x16/%3$s! [%2$s|%4$s]\n%5$s"
+                            : "%6$s: Integrated in Jenkins build %2$s (See [%4$s])\n%5$s",
+                    jenkinsRootUrl,
+                    build.getFullDisplayName(),
+                    result.color.getImage(),
+                    Util.encode(jenkinsRootUrl + build.getUrl()),
+                    getScmComments(wikiStyle, build, recordScmChanges, jiraIssue),
+                    result.toString());
+        }
     }
 
     private String getScmComments(boolean wikiStyle, Run<?, ?> run, boolean recordScmChanges, JiraIssue jiraIssue) {
         StringBuilder comment = new StringBuilder();
-        RepositoryBrowser repoBrowser = getRepositoryBrowser(run);
         for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(run)) {
             for (Entry change : set) {
                 if (jiraIssue != null && !StringUtils.containsIgnoreCase(change.getMsg(), jiraIssue.getKey())) {
@@ -257,7 +272,7 @@ class Updater {
         }
 
         if (jiraIssue != null) {
-            final Run<?, ?> prev = run.getPreviousBuild();
+            final Run<?, ?> prev = run.getPreviousCompletedBuild();
             if (prev != null) {
                 final JiraCarryOverAction a = prev.getAction(JiraCarryOverAction.class);
                 if (a != null && a.getIDs().contains(jiraIssue.getKey())) {
@@ -269,14 +284,15 @@ class Updater {
         return comment.toString();
     }
 
-    protected String createScmChangeEntryDescription(Run<?, ?> run, Entry change, boolean wikiStyle,
-            boolean recordScmChanges) {
+    protected String createScmChangeEntryDescription(
+            Run<?, ?> run, Entry change, boolean wikiStyle, boolean recordScmChanges) {
         StringBuilder description = new StringBuilder();
         RepositoryBrowser repoBrowser = getRepositoryBrowser(run);
         JiraSite site = JiraSite.get(run.getParent());
 
-        if(change.getMsg() != null)
+        if (change.getMsg() != null) {
             description.append(change.getMsg());
+        }
         String revision = getRevision(change);
         if (revision != null) {
             description.append(" (");
@@ -305,8 +321,12 @@ class Updater {
         }
     }
 
-    protected void appendRevisionToDescription(Entry change, boolean wikiStyle, StringBuilder description,
-            RepositoryBrowser repoBrowser, String revision) {
+    protected void appendRevisionToDescription(
+            Entry change,
+            boolean wikiStyle,
+            StringBuilder description,
+            RepositoryBrowser repoBrowser,
+            String revision) {
         URL url = null;
         if (repoBrowser != null) {
             try {
@@ -334,10 +354,15 @@ class Updater {
         try {
             for (AffectedFile affectedFile : change.getAffectedFiles()) {
                 description.append("* ");
-                if(affectedFile.getEditType() != null)
-                    description.append("(").append(affectedFile.getEditType().getName()).append(") ");
-                if(affectedFile.getPath() != null)
+                if (affectedFile.getEditType() != null) {
+                    description
+                            .append("(")
+                            .append(affectedFile.getEditType().getName())
+                            .append(") ");
+                }
+                if (affectedFile.getPath() != null) {
                     description.append(affectedFile.getPath());
+                }
                 description.append("\n");
             }
         } catch (UnsupportedOperationException e) {
@@ -350,11 +375,11 @@ class Updater {
 
     protected void appendChangeTimestampToDescription(StringBuilder description, JiraSite site, long timestamp) {
         DateFormat df = null;
-        if (!Strings.isNullOrEmpty(site.getDateTimePattern())) {
-            df = new SimpleDateFormat(site.getDateTimePattern());
-        } else {
+        if (StringUtils.isBlank(site.getDateTimePattern())) {
             // default format for current locale
-            df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT, Locale.getDefault());
+            df = new SimpleDateFormat("d/M/yy hh:mm a", Locale.getDefault());
+        } else {
+            df = new SimpleDateFormat(site.getDateTimePattern());
         }
         Date changeDate = new Date(timestamp);
         String dateTimeString = df.format(changeDate);
@@ -380,12 +405,9 @@ class Updater {
         try {
             Class<?> clazz = entry.getClass();
             Method method = clazz.getMethod("getRevision", (Class[]) null);
-            if (method == null) {
-                return null;
-            }
             Object revObj = method.invoke(entry, (Object[]) null);
             return (revObj != null) ? revObj.toString() : null;
-        } catch (Exception e) {
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             return null;
         }
     }
@@ -393,5 +415,4 @@ class Updater {
     private SCM getScm() {
         return scm;
     }
-
 }

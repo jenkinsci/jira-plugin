@@ -3,27 +3,14 @@ package hudson.plugins.jira.pipeline;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.inject.Inject;
-
+import hudson.model.AbstractProject;
+import hudson.model.FreeStyleProject;
 import hudson.model.Job;
 import hudson.model.Node;
 import hudson.model.Run;
@@ -31,22 +18,33 @@ import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.pipeline.SearchIssuesStep.SearchStepExecution;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
-public class SearchIssuesStepTest {
+@WithJenkins
+class SearchIssuesStepTest {
 
-    @ClassRule
-    public static JenkinsRule jenkinsRule = new JenkinsRule();
+    private JenkinsRule jenkinsRule;
 
     @Inject
     SearchIssuesStep.DescriptorImpl descriptor;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp(JenkinsRule jenkinsRule) throws Exception {
+        this.jenkinsRule = jenkinsRule;
         jenkinsRule.getInstance().getInjector().injectMembers(this);
     }
 
     @Test
-    public void configRoundTrip() throws Exception {
+    void configRoundTrip() throws Exception {
         configRoundTrip("");
         configRoundTrip("key='EXAMPLE-1'");
     }
@@ -57,35 +55,33 @@ public class SearchIssuesStepTest {
     }
 
     @Test
-    public void testCallGetIssuesFromJqlSearch() throws Exception {
+    void callGetIssuesFromJqlSearch() throws Exception {
         JiraSession session = mock(JiraSession.class);
         String jql = "key='EXAMPLE-1'";
         Issue issue = mock(Issue.class);
         when(issue.getKey()).thenReturn("EXAMPLE-1");
 
-        final List<Issue> assertCalledList = new ArrayList<Issue>();
-        when(session.getIssuesFromJqlSearch(jql)).then(new Answer<List<Issue>>() {
-
-            @Override
-            public List<Issue> answer(InvocationOnMock invocation) throws Throwable {
-                Issue issue = mock(Issue.class);
-                when(issue.getKey()).thenReturn("EXAMPLE-1");
-                assertCalledList.add(issue);
-                return assertCalledList;
-            }
+        final List<Issue> assertCalledList = new ArrayList<>();
+        when(session.getIssuesFromJqlSearch(jql)).then(invocation -> {
+            Issue issue2 = mock(Issue.class);
+            when(issue2.getKey()).thenReturn("EXAMPLE-1");
+            assertCalledList.add(issue2);
+            return assertCalledList;
         });
-        JiraSite site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
 
+        JiraSite site = mock(JiraSite.class);
+
+        AbstractProject mockProject = mock(FreeStyleProject.class);
         Run mockRun = mock(Run.class);
         Job mockJob = mock(Job.class);
-        when(mockRun.getParent()).thenReturn(mockJob);
-
         JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
-        when(jiraProjectProperty.getSite()).thenReturn(site);
-        when(mockJob.getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
 
-        Map<String, Object> r = new HashMap<String, Object>();
+        when(jiraProjectProperty.getSite()).thenReturn(site);
+        when(site.getSession(mockProject)).thenReturn(session);
+        when(mockRun.getParent()).thenReturn(mockProject);
+        when(mockRun.getParent().getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
+
+        Map<String, Object> r = new HashMap<>();
         r.put("jql", jql);
         SearchIssuesStep step = (SearchIssuesStep) descriptor.newInstance(r);
 
@@ -100,5 +96,4 @@ public class SearchIssuesStepTest {
         assertThat(assertCalledList.iterator().next().getKey(), equalTo("EXAMPLE-1"));
         assertThat(returnedList.iterator().next(), equalTo("EXAMPLE-1"));
     }
-
 }

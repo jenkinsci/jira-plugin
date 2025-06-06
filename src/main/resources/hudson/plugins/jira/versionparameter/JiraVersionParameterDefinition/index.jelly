@@ -1,6 +1,8 @@
 <!-- this is the page fragment displayed when triggering a new build -->
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-  <f:entry title="${it.name}" description="${it.description}">
+  <j:set var="escapeEntryTitleAndDescription" value="false"/>
+  <f:entry title="${h.escape(it.name)}" description="${it.formattedDescription}">
     <!-- this div is required because of ParametersDefinitionProperty.java#117 -->
     <div name="parameter">
       <input type="hidden" name="name" value="${it.name}"/>

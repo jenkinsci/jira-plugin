@@ -15,7 +15,10 @@
  */
 package hudson.plugins.jira.listissuesparameter;
 
+import static hudson.Util.fixNull;
+
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueField;
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.model.Job;
@@ -23,31 +26,32 @@ import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
-import net.sf.json.JSONObject;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static hudson.Util.fixNull;
+import java.util.concurrent.TimeoutException;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest2;
 
 public class JiraIssueParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 3927562542249244416L;
 
     private String jiraIssueFilter;
+    private String altSummaryFields;
 
     @DataBoundConstructor
     public JiraIssueParameterDefinition(String name, String description, String jiraIssueFilter) {
         super(name, description);
-
         this.jiraIssueFilter = jiraIssueFilter;
     }
 
     @Override
-    public ParameterValue createValue(StaplerRequest req) {
+    public ParameterValue createValue(StaplerRequest2 req) {
         String[] values = req.getParameterValues(getName());
         if (values == null || values.length != 1) {
             return null;
@@ -57,9 +61,8 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     }
 
     @Override
-    public ParameterValue createValue(StaplerRequest req, JSONObject formData) {
-        JiraIssueParameterValue value = req.bindJSON(
-                JiraIssueParameterValue.class, formData);
+    public ParameterValue createValue(StaplerRequest2 req, JSONObject formData) {
+        JiraIssueParameterValue value = req.bindJSON(JiraIssueParameterValue.class, formData);
         return value;
     }
 
@@ -68,22 +71,26 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         return new JiraIssueParameterValue(getName(), value);
     }
 
-    public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException {
-        Job<?, ?> context = Stapler.getCurrentRequest().findAncestorObject(Job.class);
+    public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException, TimeoutException {
+        Job<?, ?> job = Stapler.getCurrentRequest2().findAncestorObject(Job.class);
 
-        JiraSite site = JiraSite.get(context);
-        if (site == null)
-            throw new IllegalStateException("JIRA site needs to be configured in the project " + context.getFullDisplayName());
+        JiraSite site = JiraSite.get(job);
+        if (site == null) {
+            throw new IllegalStateException(
+                    "Jira site needs to be configured in the project " + job.getFullDisplayName());
+        }
 
-        JiraSession session = site.getSession();
-        if (session == null) throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
+        JiraSession session = site.getSession(job);
+        if (session == null) {
+            throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
+        }
 
         List<Issue> issues = session.getIssuesFromJqlSearch(jiraIssueFilter);
 
-        List<Result> issueValues = new ArrayList<Result>();
+        List<Result> issueValues = new ArrayList<>();
 
         for (Issue issue : fixNull(issues)) {
-            issueValues.add(new Result(issue));
+            issueValues.add(new Result(issue, this.altSummaryFields));
         }
 
         return issueValues;
@@ -97,11 +104,21 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         this.jiraIssueFilter = jiraIssueFilter;
     }
 
+    public String getAltSummaryFields() {
+        return altSummaryFields;
+    }
+
+    @DataBoundSetter
+    public void setAltSummaryFields(String altSummaryFields) {
+        this.altSummaryFields = altSummaryFields;
+    }
+
     @Extension
+    @Symbol("jiraIssue")
     public static class DescriptorImpl extends ParameterDescriptor {
         @Override
         public String getDisplayName() {
-            return "JIRA Issue Parameter";
+            return "Jira Issue Parameter";
         }
     }
 
@@ -110,8 +127,31 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         public final String summary;
 
         public Result(final Issue issue) {
+            this(issue, null);
+        }
+
+        public Result(final Issue issue, String altSummaryFields) {
             this.key = issue.getKey();
-            this.summary = issue.getSummary();
+            if (StringUtils.isEmpty(altSummaryFields)) {
+                this.summary = issue.getSummary();
+            } else {
+                String[] fields = altSummaryFields.split(",");
+                StringBuilder sb = new StringBuilder();
+                for (String f : fields) {
+                    String fn = f.trim();
+                    if (StringUtils.isNotEmpty(fn)) {
+                        IssueField field = issue.getFieldByName(fn);
+                        if (field != null && field.getValue() != null) {
+                            String fv = field.getValue().toString();
+                            if (StringUtils.isNotEmpty(fv)) {
+                                sb.append(fv);
+                                sb.append(' ');
+                            }
+                        }
+                    }
+                }
+                this.summary = sb.toString().trim();
+            }
         }
     }
 }

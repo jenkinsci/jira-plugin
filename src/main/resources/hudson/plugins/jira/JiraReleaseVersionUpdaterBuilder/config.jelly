@@ -1,3 +1,4 @@
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
   <f:entry title="${%Jira Release}" field="jiraRelease">
         <f:textbox/>
@@ -5,4 +6,7 @@
   <f:entry title="${%Jira Project Key}" field="jiraProjectKey">
         <f:textbox/>
   </f:entry>
+  <f:entry title="${%Jira Description}" field="jiraDescription">
+          <f:textbox/>
+    </f:entry>
 </j:jelly>

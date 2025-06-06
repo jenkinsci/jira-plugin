@@ -1,13 +1,5 @@
 package hudson.plugins.jira;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.List;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import com.google.common.collect.Lists;
-
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -27,12 +19,17 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * Parses build changelog for JIRA issue IDs and then
- * updates JIRA issues accordingly.
+ * Parses build changelog for Jira issue IDs and then
+ * updates Jira issues accordingly.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -47,31 +44,35 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         super();
         this.issueSelector = issueSelector;
         this.scm = scm;
-        if(labels != null)
+        if (labels != null) {
             this.labels = labels;
-        else
-            this.labels = Lists.newArrayList();
-    }
-
-    @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        // Don't do anything for individual matrix runs.
-        if (run instanceof MatrixRun) {
-            return;
-        } else if(run instanceof AbstractBuild) {
-            AbstractBuild<?,?> abstractBuild = (AbstractBuild<?,?>) run;
-            Updater updater = new Updater(abstractBuild.getParent().getScm(), labels);
-            updater.perform(run, listener, getIssueSelector());
-        } else if(scm != null) {
-            Updater updater = new Updater(scm, labels);
-            updater.perform(run, listener, getIssueSelector());
         } else {
-            throw new IllegalArgumentException("Unsupported run type "+run.getClass().getName());
+            this.labels = new ArrayList();
         }
     }
 
+    @Override
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        // Don't do anything for individual matrix runs.
+        if (run instanceof MatrixRun) {
+            return;
+        } else if (run instanceof AbstractBuild) {
+            AbstractBuild<?, ?> abstractBuild = (AbstractBuild<?, ?>) run;
+            Updater updater = new Updater(abstractBuild.getParent().getScm(), labels);
+            updater.perform(run, listener, getIssueSelector());
+        } else if (scm != null) {
+            Updater updater = new Updater(scm, labels);
+            updater.perform(run, listener, getIssueSelector());
+        } else {
+            throw new IllegalArgumentException(
+                    "Unsupported run type " + run.getClass().getName());
+        }
+    }
+
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.NONE;
     }
 
     @Override
@@ -81,19 +82,30 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
 
     public AbstractIssueSelector getIssueSelector() {
         AbstractIssueSelector uis = this.issueSelector;
-        if (uis == null) uis = new DefaultIssueSelector();
+        if (uis == null) {
+            uis = new DefaultIssueSelector();
+        }
         return (this.issueSelector = uis);
+    }
+
+    public SCM getScm() {
+        return scm;
+    }
+
+    public List<String> getLabels() {
+        return labels;
     }
 
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
+    @Override
     public MatrixAggregator createAggregator(MatrixBuild build, Launcher launcher, BuildListener listener) {
         return new MatrixAggregator(build, launcher, listener) {
             @Override
             public boolean endBuild() throws InterruptedException, IOException {
                 PrintStream logger = listener.getLogger();
-                logger.println("End of Matrix Build. Updating JIRA.");
+                logger.println("End of Matrix Build. Updating Jira.");
                 Updater updater = new Updater(this.build.getParent().getScm(), labels);
                 return updater.perform(this.build, this.listener, getIssueSelector());
             }
@@ -109,7 +121,6 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         public String getDisplayName() {
             // Displayed in the publisher section
             return Messages.JiraIssueUpdater_DisplayName();
-
         }
 
         @Override
@@ -124,8 +135,10 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         }
 
         public boolean hasIssueSelectors() {
-            return Jenkins.getActiveInstance().getDescriptorList(AbstractIssueSelector.class).size() > 1;
+            return Jenkins.getInstance()
+                            .getDescriptorList(AbstractIssueSelector.class)
+                            .size()
+                    > 1;
         }
     }
-
 }

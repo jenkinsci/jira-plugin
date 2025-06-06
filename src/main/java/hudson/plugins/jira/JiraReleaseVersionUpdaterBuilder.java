@@ -5,7 +5,6 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
-import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
@@ -13,9 +12,7 @@ import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
-import java.io.IOException;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Created by Reda on 18/12/2014.
@@ -24,14 +21,22 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
 
     private String jiraProjectKey;
     private String jiraRelease;
+    private String jiraDescription;
 
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
-    @DataBoundConstructor
+    @Deprecated
     public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease) {
         this.jiraRelease = jiraRelease;
         this.jiraProjectKey = jiraProjectKey;
+    }
+
+    @DataBoundConstructor
+    public JiraReleaseVersionUpdaterBuilder(String jiraProjectKey, String jiraRelease, String jiraDescription) {
+        this.jiraRelease = jiraRelease;
+        this.jiraProjectKey = jiraProjectKey;
+        this.jiraDescription = jiraDescription;
     }
 
     public String getJiraRelease() {
@@ -50,13 +55,17 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
         this.jiraProjectKey = jiraProjectKey;
     }
 
-    @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
-        VersionReleaser.perform(getSiteForProject(run.getParent()), jiraProjectKey, jiraRelease, run, listener);
+    public String getJiraDescription() {
+        return jiraDescription;
     }
 
-    JiraSite getSiteForProject(Job<?, ?> project) {
-        return JiraSite.get(project);
+    public void setJiraDescription(String jiraDescription) {
+        this.jiraDescription = jiraDescription;
+    }
+
+    @Override
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) {
+        new VersionReleaser().perform(run.getParent(), jiraProjectKey, jiraRelease, jiraDescription, run, listener);
     }
 
     @Override
@@ -87,7 +96,7 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
         }
 
         @Override
-        public JiraReleaseVersionUpdaterBuilder newInstance(StaplerRequest req, JSONObject formData)
+        public JiraReleaseVersionUpdaterBuilder newInstance(StaplerRequest2 req, JSONObject formData)
                 throws FormException {
             return req.bindJSON(JiraReleaseVersionUpdaterBuilder.class, formData);
         }

@@ -3,15 +3,14 @@ package hudson.plugins.jira;
 import hudson.Util;
 import hudson.model.InvisibleAction;
 import hudson.plugins.jira.model.JiraIssue;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 /**
- * Remembers JIRA IDs that need to be updated later,
+ * Remembers Jira IDs that need to be updated later,
  * when we get a successful build.
  *
  * @author Kohsuke Kawaguchi

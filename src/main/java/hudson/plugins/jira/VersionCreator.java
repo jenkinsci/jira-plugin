@@ -1,55 +1,86 @@
 package hudson.plugins.jira;
 
-import static ch.lambdaj.Lambda.filter;
-import static hudson.plugins.jira.JiraVersionMatcher.hasName;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.hamcrest.Matchers.equalTo;
-
-import java.util.List;
 
 import hudson.model.BuildListener;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.plugins.jira.model.JiraVersion;
+import hudson.plugins.jira.extension.ExtendedVersion;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
 
 /**
- * Performs an action which creates new jira version.
+ * Performs an action which creates new Jira version.
  */
 class VersionCreator {
 
-	static boolean perform(JiraSite site, String jiraVersion, String jiraProjectKey, Run<?, ?> build, TaskListener listener) {
-		String realVersion = null;
-		String realProjectKey = null;
+    private static final Logger LOGGER = Logger.getLogger(VersionCreator.class.getName());
 
-		try {
-			realVersion = build.getEnvironment(listener).expand(jiraVersion);
-			realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
+    protected boolean perform(
+            Job<?, ?> project, String jiraVersion, String jiraProjectKey, Run<?, ?> build, TaskListener listener) {
+        String realVersion = null;
+        String realProjectKey = null;
 
-			if (isEmpty(realVersion)) {
-				throw new IllegalArgumentException("No version specified");
-			}
-			if (isEmpty(realProjectKey)) {
-				throw new IllegalArgumentException("No project specified");
-			}
+        try {
+            realVersion = build.getEnvironment(listener).expand(jiraVersion);
+            realProjectKey = build.getEnvironment(listener).expand(jiraProjectKey);
 
-			List<JiraVersion> sameNamedVersions = filter(hasName(equalTo(realVersion)),
-					site.getVersions(realProjectKey));
+            if (isEmpty(realVersion)) {
+                throw new IllegalArgumentException("No version specified");
+            }
+            if (isEmpty(realProjectKey)) {
+                throw new IllegalArgumentException("No project specified");
+            }
 
-			if (sameNamedVersions.size() == 0) {
-				listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
-				site.addVersion(realVersion, realProjectKey);
-			} else {
-				listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
-			}
+            String finalRealVersion = realVersion;
+            JiraSession session = getSiteForProject(project).getSession(project);
 
-		} catch (Exception e) {
-			e.printStackTrace(
-					listener.fatalError("Unable to add version %s to JIRA project %s", realVersion, realProjectKey, e));
-			if (listener instanceof BuildListener)
-				((BuildListener) listener).finished(Result.FAILURE);
-			return false;
-		}
-		return true;
-	}
+            List<ExtendedVersion> existingVersions =
+                    Optional.ofNullable(session.getVersions(realProjectKey)).orElse(Collections.emptyList());
+
+            // past logic to fail the build if the version already exists
+            if (existingVersions.stream().anyMatch(v -> v.getName().equals(finalRealVersion))) {
+                listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
+                if (listener instanceof BuildListener) {
+                    ((BuildListener) listener).finished(Result.FAILURE);
+                }
+                return false;
+            }
+
+            listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
+            addVersion(realVersion, realProjectKey, session);
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace(
+                    listener.fatalError("Unable to add version %s to Jira project %s", realVersion, realProjectKey, e));
+        }
+
+        if (listener instanceof BuildListener) {
+            ((BuildListener) listener).finished(Result.FAILURE);
+        }
+        return false;
+    }
+
+    /**
+     * Creates given version in given project
+     * @param version
+     * @param projectKey
+     * @param session
+     */
+    protected void addVersion(String version, String projectKey, JiraSession session) {
+        if (session == null) {
+            LOGGER.warning("Jira session could not be established");
+            return;
+        }
+
+        session.addVersion(version, projectKey);
+    }
+
+    protected JiraSite getSiteForProject(Job<?, ?> project) {
+        return JiraSite.get(project);
+    }
 }

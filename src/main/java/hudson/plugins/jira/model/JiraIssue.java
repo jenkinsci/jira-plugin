@@ -1,16 +1,15 @@
 package hudson.plugins.jira.model;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.plugins.jira.JiraSite;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import javax.annotation.Nonnull;
-
 /**
- * One JIRA issue.
+ * One Jira issue.
  * This class is used to persist crucial issue information
- * so that Jenkins can display it without talking to JIRA.
+ * so that Jenkins can display it without talking to Jira.
  *
  * @author Kohsuke Kawaguchi
  * @see JiraSite#getUrl(JiraIssue)
@@ -20,6 +19,7 @@ public final class JiraIssue implements Comparable<JiraIssue> {
 
     /** Note these fields have not been renamed for backward compatibility purposes */
     private final String id;
+
     private final String title;
 
     public JiraIssue(String key, String summary) {
@@ -28,7 +28,7 @@ public final class JiraIssue implements Comparable<JiraIssue> {
     }
 
     /**
-     * @return JIRA ID, like "MNG-1235".
+     * @return Jira ID, like "MNG-1235".
      */
     @Exported
     public String getKey() {
@@ -47,7 +47,8 @@ public final class JiraIssue implements Comparable<JiraIssue> {
         this(issue.getKey(), issue.getSummary());
     }
 
-    public int compareTo(@Nonnull JiraIssue that) {
+    @Override
+    public int compareTo(@NonNull JiraIssue that) {
         return this.id.compareTo(that.id);
     }
 

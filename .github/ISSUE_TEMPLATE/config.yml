@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Community forum
+    url: https://community.jenkins.io/
+    about: Please ask and answer questions here
+  - name: Mailing lists
+    url: https://www.jenkins.io/mailing-lists/
+    about: You can also raise a question in one of the user or developer mailing lists

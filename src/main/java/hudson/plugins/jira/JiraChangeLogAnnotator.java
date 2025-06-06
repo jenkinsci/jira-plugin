@@ -1,5 +1,13 @@
 package hudson.plugins.jira;
 
+import hudson.Extension;
+import hudson.MarkupText;
+import hudson.Util;
+import hudson.model.Job;
+import hudson.model.Run;
+import hudson.plugins.jira.model.JiraIssue;
+import hudson.scm.ChangeLogAnnotator;
+import hudson.scm.ChangeLogSet.Entry;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -9,20 +17,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import hudson.plugins.jira.model.JiraIssue;
 import org.apache.commons.lang.StringUtils;
 
-import hudson.Extension;
-import hudson.MarkupText;
-import hudson.Util;
-import hudson.model.Job;
-import hudson.model.Run;
-import hudson.scm.ChangeLogAnnotator;
-import hudson.scm.ChangeLogSet.Entry;
-
 /**
- * {@link ChangeLogAnnotator} that picks up JIRA issue IDs.
+ * {@link ChangeLogAnnotator} that picks up Jira issue IDs.
  *
  * @author Kohsuke Kawaguchi
  */
@@ -37,18 +35,23 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
     }
 
     @Override
-    public void annotate(Run<?, ?> build, Entry change, MarkupText text) {
-        JiraSite site = getSiteForProject(build.getParent());
-        
+    public void annotate(Run<?, ?> run, Entry change, MarkupText text) {
+        JiraSite site = getSiteForProject(run.getParent());
+
         if (site == null) {
-            LOGGER.fine("not configured with JIRA");
-            return;    // not configured with JIRA
+            LOGGER.fine("not configured with Jira site");
+            return; // not configured with Jira
+        }
+
+        if (site.getDisableChangelogAnnotations()) {
+            LOGGER.info("ChangeLog annotations are disabled.\n Due to this also Related Issues won't be visible.");
+            return;
         }
 
         LOGGER.log(Level.FINE, "Using site: {0}", site.getUrl());
 
         // if there's any recorded detail information, try to use that, too.
-        JiraBuildAction a = build.getAction(JiraBuildAction.class);
+        JiraBuildAction a = run.getAction(JiraBuildAction.class);
 
         Set<JiraIssue> issuesToBeSaved = new LinkedHashSet<>();
 
@@ -67,12 +70,12 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
 
                 String id = m.group(1);
 
-                if (StringUtils.isNotBlank(site.userName) && !site.existsIssue(id)) {
-                    LOGGER.log(Level.INFO, "No known JIRA project corresponding to id: ''{0}''", id);
+                if (StringUtils.isNotBlank(site.credentialsId) && !hasProjectForIssue(id, site, run)) {
+                    LOGGER.log(Level.INFO, "No known Jira project corresponding to id: ''{0}''", id);
                     continue;
                 }
 
-                LOGGER.log(Level.INFO, "Annotating JIRA id: ''{0}''", id);
+                LOGGER.log(Level.FINE, "Annotating Jira id: ''{0}''", id);
 
                 URL url, alternativeUrl;
                 try {
@@ -104,33 +107,52 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
                             issuesToBeSaved.add(issue);
                         }
                     } catch (Exception e) {
-                        LOGGER.log(Level.WARNING, "Error getting remote issue " + id, e);
+                        LOGGER.log(Level.FINE, "Error getting remote issue " + id, e);
                     }
                 }
 
                 if (issue == null) {
                     text.addMarkup(m.start(1), m.end(1), "<a href='" + url + "'>", "</a>");
                 } else {
-                    text.addMarkup(m.start(1), m.end(1),
-                            String.format("<a href='%s' tooltip='%s'>", url, Util.escape(issue.getSummary())), "</a>");
+                    text.addMarkup(
+                            m.start(1),
+                            m.end(1),
+                            String.format("<a href='%s' tooltip='%s'>", url, Util.escape(issue.getSummary())),
+                            "</a>");
                 }
 
             } else {
-                LOGGER.log(Level.WARNING, "The JIRA pattern " + pattern + " doesn't define a capturing group!");
+                LOGGER.log(Level.WARNING, "The Jira pattern ''{0}'' doesn't define a capturing group!", pattern);
             }
         }
 
         if (!issuesToBeSaved.isEmpty()) {
-            saveIssues(build, a, issuesToBeSaved);
+            saveIssues(run, a, issuesToBeSaved);
         }
     }
 
-    private void saveIssues(Run<?, ?> build, JiraBuildAction a,
-                            Set<JiraIssue> issuesToBeSaved) {
+    /**
+     * Checks if the given Jira id will be likely to exist in this issue tracker.
+     * This method checks whether the key portion is a valid key (except that
+     * it can potentially use stale data). Number portion is not checked at all.
+     *
+     * @param id String like MNG-1234
+     */
+    protected boolean hasProjectForIssue(String id, JiraSite site, Run run) {
+        int idx = id.indexOf('-');
+        if (idx == -1) {
+            return false;
+        }
+
+        Set<String> keys = site.getProjectKeys(run.getParent());
+        return keys.contains(id.substring(0, idx).toUpperCase());
+    }
+
+    private void saveIssues(Run<?, ?> build, JiraBuildAction a, Set<JiraIssue> issuesToBeSaved) {
         if (a != null) {
             a.addIssues(issuesToBeSaved);
         } else {
-            JiraBuildAction action = new JiraBuildAction(build, issuesToBeSaved);
+            JiraBuildAction action = new JiraBuildAction(issuesToBeSaved);
             build.addAction(action);
         }
 

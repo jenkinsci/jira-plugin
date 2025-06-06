@@ -1,0 +1,18 @@
+_extends: .github
+name-template: $RESOLVED_VERSION
+tag-template: jira-$RESOLVED_VERSION
+
+version-resolver:
+  major:
+    labels:
+      - 'major'
+      - 'breaking'
+  minor:
+    labels:
+      - 'minor'
+      - 'dependencies'
+  patch:
+    labels:
+      - 'bugfix'
+      - 'patch'
+  default: minor

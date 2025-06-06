@@ -16,12 +16,13 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.DataBoundConstructor;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
- * Adds JIRA related environment variables to the build
+ * Adds Jira related environment variables to the build
  */
-public class JiraEnvironmentVariableBuilder extends Builder  {
-    
+public class JiraEnvironmentVariableBuilder extends Builder {
+
     private AbstractIssueSelector issueSelector;
     private String issuesSizeVariableName;
     
@@ -30,10 +31,12 @@ public class JiraEnvironmentVariableBuilder extends Builder  {
         this.issueSelector = issueSelector;
         this.issuesSizeVariableName = issuesSizeVariableName;
     }
-    
+
     public AbstractIssueSelector getIssueSelector() {
         AbstractIssueSelector uis = this.issueSelector;
-        if (uis == null) uis = new DefaultIssueSelector();
+        if (uis == null) {
+            uis = new DefaultIssueSelector();
+        }
         return (this.issueSelector = uis);
     }
 
@@ -46,14 +49,15 @@ public class JiraEnvironmentVariableBuilder extends Builder  {
     }
 
     @Override
-    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+            throws InterruptedException, IOException {
 
         JiraSite site = getSiteForProject(build.getProject());
 
         if (site == null) {
             throw new AbortException(Messages.JiraEnvironmentVariableBuilder_NoJiraSite());
         }
-        
+
         Set<String> ids = getIssueSelector().findIssueIds(build, site, listener);
 
         String idList = StringUtils.join(ids, ",");
@@ -68,8 +72,8 @@ public class JiraEnvironmentVariableBuilder extends Builder  {
     }
 
     /**
-    * Descriptor for {@link JiraEnvironmentVariableBuilder}.
-    */
+     * Descriptor for {@link JiraEnvironmentVariableBuilder}.
+     */
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 

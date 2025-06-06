@@ -2,23 +2,21 @@ package hudson.plugins.jira.selector;
 
 import static hudson.Util.fixNull;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import hudson.Extension;
 import hudson.model.Descriptor;
-import hudson.plugins.jira.Messages;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.common.collect.Sets;
-
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.EnvironmentExpander;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeoutException;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class JqlIssueSelector extends AbstractIssueSelector {
 
@@ -30,7 +28,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
         this.jql = jql;
     }
 
-    public void setJql(String jql){
+    public void setJql(String jql) {
         this.jql = jql;
     }
 
@@ -41,21 +39,24 @@ public class JqlIssueSelector extends AbstractIssueSelector {
     @Override
     public Set<String> findIssueIds(Run<?, ?> run, JiraSite site, TaskListener listener) {
         try {
-            JiraSession session = site.getSession();
-            if (session == null)
-                throw new IllegalStateException("Remote access for JIRA isn't configured in Jenkins");
+            JiraSession session = site.getSession(run.getParent());
+            if (session == null) {
+                throw new IllegalStateException("Remote access for Jira isn't configured in Jenkins");
+            }
 
-            List<Issue> issues = session.getIssuesFromJqlSearch(jql);
+            String expandedJql = EnvironmentExpander.expandVariable(jql, run, listener);
 
-            List<String> issueKeys = new ArrayList<String>();
+            List<Issue> issues = session.getIssuesFromJqlSearch(expandedJql);
+
+            List<String> issueKeys = new ArrayList<>();
 
             for (Issue issue : fixNull(issues)) {
                 issueKeys.add(issue.getKey());
             }
 
             // deduplication
-            return Sets.newHashSet(issueKeys);
-        } catch (IOException e) {
+            return new HashSet(issueKeys);
+        } catch (TimeoutException e) {
             throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
         }
     }

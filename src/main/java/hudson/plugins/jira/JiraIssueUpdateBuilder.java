@@ -20,20 +20,19 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 import jenkins.tasks.SimpleBuildStep;
-
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
 
 /**
  * Build step that will mass-update all issues matching a JQL query, using the specified workflow
@@ -74,36 +73,44 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
         return comment;
     }
 
+    JiraSite getSiteForJob(Job<?, ?> job) {
+        return JiraSite.get(job);
+    }
+
     /**
      * Performs the actual update based on job configuration.
      */
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
         String realComment = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(comment));
         String realJql = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(jqlSearch));
-        String realWorkflowActionName = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(workflowActionName));
+        String realWorkflowActionName =
+                Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(workflowActionName));
 
-        JiraSite site = JiraSite.get(run.getParent());
+        JiraSite site = getSiteForJob(run.getParent());
 
         if (site == null) {
             listener.getLogger().println(Messages.NoJiraSite());
             run.setResult(Result.FAILURE);
+            return;
         }
 
         if (StringUtils.isNotEmpty(realWorkflowActionName)) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_UpdatingWithAction(realWorkflowActionName));
         }
 
-        listener.getLogger().println("[JIRA] JQL: " + realJql);
+        listener.getLogger().println("[Jira] JQL: " + realJql);
 
         try {
             if (!site.progressMatchingIssues(realJql, realWorkflowActionName, realComment, listener.getLogger())) {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
                 run.setResult(Result.UNSTABLE);
             }
-        } catch (IOException e) {
+        } catch (TimeoutException e) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
+            run.setResult(Result.FAILURE);
         }
     }
 
@@ -123,7 +130,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
          * @param value This parameter receives the value that the user has typed.
          * @return Indicates the outcome of the validation. This is sent to the browser.
          */
-        public FormValidation doCheckJqlSearch(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckJqlSearch(@QueryParameter String value) {
             if (value.length() == 0) {
                 return FormValidation.error(Messages.JiraIssueUpdateBuilder_NoJqlSearch());
             }
@@ -139,6 +146,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
             return FormValidation.ok();
         }
 
+        @Override
         public boolean isApplicable(Class<? extends AbstractProject> klass) {
             return true;
         }
@@ -146,6 +154,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
         /**
          * This human readable name is used in the configuration screen.
          */
+        @Override
         public String getDisplayName() {
             return Messages.JiraIssueUpdateBuilder_DisplayName();
         }

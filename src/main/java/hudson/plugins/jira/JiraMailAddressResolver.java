@@ -1,16 +1,17 @@
 package hudson.plugins.jira;
 
 import hudson.Extension;
+import hudson.model.Job;
 import hudson.model.User;
 import hudson.tasks.MailAddressResolver;
-
-import java.io.IOException;
-import java.util.logging.Level;
+import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
- * Resolve user email by searching his userId as username in JIRA.
+ * Resolve user email by searching his userId as username in Jira.
  *
  * @author Honza Brázdil jbrazdil@redhat.com
  */
@@ -20,33 +21,40 @@ public class JiraMailAddressResolver extends MailAddressResolver {
 
     /**
      * Boolean to disable the Jira mail address resolver.
-     *
+     * <p>
      * To disable set the System property "-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true"
      */
     public static boolean disabled = Boolean.getBoolean(JiraMailAddressResolver.class.getName() + ".disabled");
 
     @Override
     public String findMailAddressFor(User u) {
-        if (disabled)
+        if (disabled) {
             return null;
-
+        }
         String username = u.getId();
 
-        for (JiraSite site : JiraProjectProperty.DESCRIPTOR.getSites()) {
-            try {
-                JiraSession session = site.getSession();
-                if (session != null) {
-                    com.atlassian.jira.rest.client.api.domain.User user = session.service.getUser(username);
-                    if (user != null) {
-                        String email = user.getEmailAddress();
-                        if (email != null) {
-                            email = unmaskEmail(email);
-                            return email;
-                        }
-                    }
+        Job<?, ?> job = null;
+
+        StaplerRequest2 req = Stapler.getCurrentRequest2();
+        if (req != null) {
+            job = req.findAncestorObject(Job.class);
+        }
+
+        List<JiraSite> sites = job == null ? JiraGlobalConfiguration.get().getSites() : JiraSite.getJiraSites(job);
+
+        for (JiraSite site : sites) {
+            JiraSession session = site.getSession(job);
+            if (session == null) {
+                continue;
+            }
+
+            com.atlassian.jira.rest.client.api.domain.User user = session.service.getUser(username);
+            if (user != null) {
+                String email = user.getEmailAddress();
+                if (email != null) {
+                    email = unmaskEmail(email);
+                    return email;
                 }
-            } catch (IOException ex) {
-                LOGGER.log(Level.WARNING, "Unable to create session with " + site.getName(), ex);
             }
         }
         return null;

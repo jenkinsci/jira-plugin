@@ -1,45 +1,70 @@
 package hudson.plugins.jira;
 
-import java.net.URL;
-import java.util.Set;
-
-import com.google.common.base.Objects;
-import com.google.common.collect.Sets;
-import hudson.model.Action;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;
 import hudson.plugins.jira.model.JiraIssue;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+import jenkins.model.RunAction2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
-import javax.annotation.Nonnull;
-
 /**
- * JIRA issues related to the build.
+ * Jira issues related to the build.
  *
  * @author Kohsuke Kawaguchi
  */
 @ExportedBean
-public class JiraBuildAction implements Action {
+public class JiraBuildAction implements RunAction2 {
 
-    public final Run<?, ?> owner;
+    private final HashSet<JiraIssue> issues;
+    private transient Run<?, ?> owner;
 
-    private Set<JiraIssue> issues;
-
-    public JiraBuildAction(@Nonnull Run<?, ?> owner, @Nonnull Set<JiraIssue> issues) {
-        this.owner = owner;
-        this.issues = Sets.newHashSet(issues);
+    public JiraBuildAction(@NonNull Set<JiraIssue> issues) {
+        this.issues = new HashSet<>(issues);
     }
 
+    // Leave it in place for binary compatibility.
+    /**
+     * @deprecated use {@link #JiraBuildAction(java.util.Set)} instead
+     *
+     * @param owner the owner of this action
+     * @param issues the Jira issues
+     */
+    @Deprecated
+    public JiraBuildAction(Run<?, ?> owner, @NonNull Set<JiraIssue> issues) {
+        this(issues);
+        // the owner will be set by #onAttached(hudson.model.Run)
+    }
+
+    @Override
+    public void onAttached(Run<?, ?> r) {
+        this.owner = r;
+    }
+
+    @Override
+    public void onLoad(Run<?, ?> r) {
+        this.owner = r;
+    }
+
+    @Override
     public String getIconFileName() {
         return null;
     }
 
+    @Override
     public String getDisplayName() {
         return Messages.JiraBuildAction_DisplayName();
     }
 
+    @Override
     public String getUrlName() {
         return "jira";
+    }
+
+    public Run<?, ?> getOwner() {
+        return owner;
     }
 
     @Exported(inline = true)
@@ -56,6 +81,7 @@ public class JiraBuildAction implements Action {
 
     /**
      * Finds {@link JiraIssue} whose ID matches the given one.
+     *
      * @param issueID e.g. JENKINS-1234
      * @return JIRAIssue representing the issueID
      */

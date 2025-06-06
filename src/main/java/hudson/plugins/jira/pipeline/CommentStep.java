@@ -1,37 +1,35 @@
 package hudson.plugins.jira.pipeline;
 
-import java.io.IOException;
-
-import javax.annotation.Nonnull;
-
-import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import com.google.inject.Inject;
-
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import org.jenkinsci.plugins.workflow.steps.Step;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Simple add comment step.
  *
  * @author jan zajic
  */
-public class CommentStep extends AbstractStepImpl {
+public class CommentStep extends Step {
 
     public final String issueKey;
 
     public final String body;
 
     @DataBoundConstructor
-    public CommentStep(@Nonnull String issueKey, @Nonnull String body) {
+    public CommentStep(@NonNull String issueKey, @NonNull String body) {
         this.issueKey = issueKey;
         this.body = body;
     }
@@ -44,11 +42,19 @@ public class CommentStep extends AbstractStepImpl {
         return body;
     }
 
-    @Extension(optional = true)
-    public static final class DescriptorImpl extends AbstractStepDescriptorImpl {
+    @Override
+    public StepExecution start(StepContext context) throws Exception {
+        return new CommentStepExecution(this, context);
+    }
 
-        public DescriptorImpl() {
-            super(CommentStepExecution.class);
+    @Extension(optional = true)
+    public static final class DescriptorImpl extends StepDescriptor {
+
+        @Override
+        public Set<? extends Class<?>> getRequiredContext() {
+            Set<Class<?>> context = new HashSet<>();
+            Collections.addAll(context, Run.class, TaskListener.class);
+            return Collections.unmodifiableSet(context);
         }
 
         @Override
@@ -65,35 +71,31 @@ public class CommentStep extends AbstractStepImpl {
     /**
      * @author jan zajic
      */
-    public static class CommentStepExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
+    public static class CommentStepExecution extends SynchronousNonBlockingStepExecution<Void> {
 
         private static final long serialVersionUID = 1L;
 
-        @Inject
-        private transient CommentStep step;
+        private final transient CommentStep step;
 
-        @StepContextParameter
-        private transient TaskListener listener;
-
-        @StepContextParameter
-        private transient Run run;
+        protected CommentStepExecution(CommentStep step, @NonNull StepContext context) {
+            super(context);
+            this.step = step;
+        }
 
         @Override
         protected Void run() throws Exception {
-            JiraSite site = JiraSite.get(run.getParent());
-            JiraSession session = null;
-            try {
-                session = site.getSession();
-            } catch (IOException e) {
-                listener.getLogger().println(Messages.FailedToConnect());
-                e.printStackTrace(listener.getLogger());
+            JiraSite site = JiraSite.get(getContext().get(Run.class).getParent());
+            if (site == null) {
+                return null;
+            }
+            JiraSession session = site.getSession(getContext().get(Run.class).getParent());
+            if (session == null) {
+                getContext().get(TaskListener.class).getLogger().println(Messages.FailedToConnect());
                 return null;
             }
 
             session.addComment(step.issueKey, step.body, site.groupVisibility, site.roleVisibility);
             return null;
         }
-
     }
-
 }

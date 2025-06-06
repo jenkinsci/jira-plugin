@@ -1,38 +1,38 @@
 package hudson.plugins.jira;
 
-import static org.mockito.Mockito.mock;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.ArrayList;
-
-import hudson.plugins.jira.model.JiraIssue;
-import org.junit.Test;
-
-import hudson.model.FreeStyleBuild;
-import hudson.plugins.jira.deprecated.DeprecatedJiraBuildAction;
-import hudson.util.XStream2;
+import hudson.model.Job;
+import hudson.model.Run;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+import org.jvnet.hudson.test.recipes.LocalData;
 
 /**
- * Test if existing serialized JiraBuildAction information
- * will be loaded after upgrading jira plugin version to with
- * new JiraBuildAction class version introduced in PR-72.
+ * Place needed resources in src/test/resources
  *
  */
-public class JiraBuildActionTest {
+class JiraBuildActionTest {
 
+    /**
+     * Test if existing serialized JiraBuildAction information will be loaded after upgrading jira
+     * plugin version to with new JiraBuildAction class version introduced in PR-72.
+     */
     @Test
-    public void testBinaryCompatibility() {
-        XStream2 xStream2 = new XStream2();
+    @LocalData
+    @WithJenkins
+    void binaryCompatibility(JenkinsRule r) throws Exception {
+        assertEquals("Jenkins JiraBuildActionTest config", r.jenkins.getSystemMessage());
 
-        FreeStyleBuild b = mock(FreeStyleBuild.class);
-        DeprecatedJiraBuildAction deprecatedJiraBuildAction = new DeprecatedJiraBuildAction(b, new ArrayList<JiraIssue>());
+        Job job = r.getInstance().getItemByFullName("/project", Job.class);
+        Run run = job.getBuildByNumber(2);
+        assertEquals("job/project/2/", run.getUrl());
 
-        String xml = xStream2.toXML(deprecatedJiraBuildAction);
-        System.out.println(xml);
-        xml = xml.replaceAll("hudson.plugins.jira.deprecated.DeprecatedJiraBuildAction", "hudson.plugins.jira.JiraBuildAction");
-        Object fromXML = xStream2.fromXML(xml);
-        System.out.println(fromXML.getClass().getName());
-        JiraBuildAction jiraBuildAction = (JiraBuildAction) fromXML;
-        System.out.println(jiraBuildAction.getDisplayName());
+        JiraBuildAction jba = run.getAction(JiraBuildAction.class);
+        assertThat(jba.getOwner().getDisplayName(), is(run.getDisplayName()));
+        assertThat(jba.getIssue("JIRA-123").getSummary(), is("Issue summary"));
     }
-
 }

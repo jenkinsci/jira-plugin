@@ -1,38 +1,32 @@
 package hudson.plugins.jira.selector.perforce;
 
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.google.common.collect.Sets;
 
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.ParameterValue;
 import hudson.model.ParametersAction;
-import hudson.model.Run;
 import hudson.plugins.jira.JiraCarryOverAction;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
-import hudson.plugins.jira.selector.perforce.JobIssueSelector;
 import hudson.scm.ChangeLogSet;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import org.junit.jupiter.api.Test;
 
 public abstract class JobIssueSelectorTest {
 
+    protected abstract JobIssueSelector createJobIssueSelector();
 
-    protected abstract JobIssueSelector createJobIssueSelector(); 
     @Test
-    public void testFindsIssuesWithJiraParameters() {
+    public void findsIssuesWithJiraParameters() {
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
@@ -40,7 +34,7 @@ public abstract class JobIssueSelectorTest {
         JiraIssueParameterValue parameter = mock(JiraIssueParameterValue.class);
         JiraIssueParameterValue parameterTwo = mock(JiraIssueParameterValue.class);
         ParametersAction action = mock(ParametersAction.class);
-        List<ParameterValue> parameters = new ArrayList<ParameterValue>();
+        List<ParameterValue> parameters = new ArrayList<>();
 
         when(listener.getLogger()).thenReturn(System.out);
         when(changeLogSet.iterator()).thenReturn(Collections.EMPTY_LIST.iterator());
@@ -55,48 +49,45 @@ public abstract class JobIssueSelectorTest {
         JobIssueSelector jobIssueSelector = createJobIssueSelector();
         // Initial state contains zero parameters
         ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
-        Assert.assertTrue(ids.isEmpty());
-
+        assertTrue(ids.isEmpty());
 
         parameters.add(parameter);
         ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
-        Assert.assertEquals(1, ids.size());
-        Assert.assertEquals("JIRA-123", ids.iterator().next());
+        assertEquals(1, ids.size());
+        assertEquals("JIRA-123", ids.iterator().next());
 
         parameters.add(parameterTwo);
         ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
-        Assert.assertEquals(2, ids.size());
-        Set<String> expected = Sets.newTreeSet(Sets.newHashSet("JIRA-123", "JIRA-321"));
-        Assert.assertEquals(expected, ids);
+        assertEquals(2, ids.size());
+        Set<String> expected = new TreeSet(Arrays.asList("JIRA-123", "JIRA-321"));
+        assertEquals(expected, ids);
     }
+
     @Test
-    public void testFindsCarriedOnIssues() {
-        
+    public void findsCarriedOnIssues() {
+
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         FreeStyleBuild previousBuild = mock(FreeStyleBuild.class);
-        ArrayList<String> issues = new ArrayList<String>();
+        ArrayList<String> issues = new ArrayList<>();
         issues.add("GC-131");
         JiraCarryOverAction jiraCarryOverAction = mock(JiraCarryOverAction.class);
-        when (build.getPreviousBuild()).thenReturn(previousBuild);
-        when (previousBuild.getAction(JiraCarryOverAction.class)).thenReturn(jiraCarryOverAction);
-        when (jiraCarryOverAction.getIDs()).thenReturn(issues);
-        
+        when(build.getPreviousCompletedBuild()).thenReturn(previousBuild);
+        when(previousBuild.getAction(JiraCarryOverAction.class)).thenReturn(jiraCarryOverAction);
+        when(jiraCarryOverAction.getIDs()).thenReturn(issues);
+
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         BuildListener listener = mock(BuildListener.class);
         JiraSite jiraSite = mock(JiraSite.class);
-       
 
         when(listener.getLogger()).thenReturn(System.out);
         when(changeLogSet.iterator()).thenReturn(Collections.EMPTY_LIST.iterator());
         when(build.getChangeSet()).thenReturn(changeLogSet);
 
-        Set<String> ids;
-
         JobIssueSelector jobIssueSelector = createJobIssueSelector();
 
-        ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
-        Assert.assertEquals(1, ids.size());
-        Set<String> expected = Sets.newTreeSet(Sets.newHashSet("GC-131"));
-        Assert.assertEquals(expected, ids);
+        Set<String> ids = jobIssueSelector.findIssueIds(build, jiraSite, listener);
+        assertEquals(1, ids.size());
+        Set<String> expected = new TreeSet<>(Collections.singletonList("GC-131"));
+        assertEquals(expected, ids);
     }
 }

@@ -1,0 +1,26 @@
+version: 2
+updates:
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    ignore:
+      # we don't want to automatically bump core
+      - dependency-name: "org.jenkins-ci.main:jenkins-core"
+      # fugue comes from upstream Atlassian dependency
+      - dependency-name: "io.atlassian.fugue:fugue"
+    groups:
+      atlassian:
+        patterns:
+          - "com.atlassian.plugins:*"
+          - "com.atlassian.jira:*"
+          - "io.atlassian.util.concurrent:*"
+      jenkins:
+        patterns:
+          - "io.jenkins.tools.bom:*"
+          - "org.jenkins-ci.plugins:plugin"
+  
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"

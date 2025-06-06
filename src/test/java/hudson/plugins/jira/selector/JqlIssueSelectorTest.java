@@ -7,49 +7,60 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
-import java.util.Set;
-
-import org.junit.Before;
-import org.junit.Test;
-
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.google.common.collect.Lists;
-
+import hudson.model.AbstractProject;
+import hudson.model.Run;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.TimeoutException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-public class JqlIssueSelectorTest {
+@ExtendWith(MockitoExtension.class)
+class JqlIssueSelectorTest {
 
-    private final static String TEST_JQL = "key='EXAMPLE-1'";
+    private static final String TEST_JQL = "key='EXAMPLE-1'";
 
+    @Mock
     private JiraSite site;
+
+    @Mock
     private JiraSession session;
 
-    @Before
-    public void prepare() throws IOException {
-        session = mock(JiraSession.class);
-        site = mock(JiraSite.class);
-        when(site.getSession()).thenReturn(session);
+    @Mock
+    private AbstractProject project;
+
+    @Mock
+    private Run run;
+
+    @BeforeEach
+    void prepare() throws IOException {
+        when(run.getParent()).thenReturn(project);
+        when(site.getSession(project)).thenReturn(session);
     }
 
     @Test
-    public void testDontDependOnRunAndTaskListener() {
+    void dontDependOnRunAndTaskListener() {
         JqlIssueSelector jqlUpdaterIssueSelector = new JqlIssueSelector(TEST_JQL);
-        Set<String> findedIssueIds = jqlUpdaterIssueSelector.findIssueIds(null, site, null);
-        assertThat(findedIssueIds, empty());
+        Set<String> foundIssues = jqlUpdaterIssueSelector.findIssueIds(run, site, null);
+        assertThat(foundIssues, empty());
     }
 
     @Test
-    public void testCallGetIssuesFromJqlSearch() throws IOException {
+    void callGetIssuesFromJqlSearch() throws IOException, TimeoutException {
         Issue issue = mock(Issue.class);
         when(issue.getKey()).thenReturn("EXAMPLE-1");
-        when(session.getIssuesFromJqlSearch(TEST_JQL)).thenReturn(Lists.newArrayList(issue));
+        when(session.getIssuesFromJqlSearch(TEST_JQL)).thenReturn(Collections.singletonList(issue));
 
         JqlIssueSelector jqlUpdaterIssueSelector = new JqlIssueSelector(TEST_JQL);
-        Set<String> foundIssueIds = jqlUpdaterIssueSelector.findIssueIds(null, site, null);
+        Set<String> foundIssueIds = jqlUpdaterIssueSelector.findIssueIds(run, site, null);
         assertThat(foundIssueIds, hasSize(1));
         assertThat(foundIssueIds.iterator().next(), equalTo("EXAMPLE-1"));
     }
-
 }

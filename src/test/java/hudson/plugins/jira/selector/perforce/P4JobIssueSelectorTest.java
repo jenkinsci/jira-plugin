@@ -1,32 +1,27 @@
 package hudson.plugins.jira.selector.perforce;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
-import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
-import org.junit.Assert;
-import org.junit.Test;
-
-import com.google.common.collect.Sets;
 import com.perforce.p4java.impl.generic.core.Fix;
-
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.plugins.jira.JiraSite;
-import hudson.plugins.jira.selector.perforce.JobIssueSelector;
-import hudson.plugins.jira.selector.perforce.P4JobIssueSelector;
 import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.Entry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
+import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
+import org.junit.jupiter.api.Test;
 
-public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
+class P4JobIssueSelectorTest extends JobIssueSelectorTest {
 
     @Test
-    public void testFindsTwoP4Jobs() {
+    void findsTwoP4Jobs() {
         final String jobIdIW1231 = "IW-1231";
         final String jobIdEC3453 = "EC-3453";
 
@@ -44,7 +39,7 @@ public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
         when(listener.getLogger()).thenReturn(System.out);
         when(build.getChangeSet()).thenReturn(changeLogSet);
 
-        ArrayList<P4ChangeEntry> entries = new ArrayList<P4ChangeEntry>();
+        ArrayList<P4ChangeEntry> entries = new ArrayList<>();
 
         P4ChangeEntry entry1 = new P4ChangeEntry(perforceChangeLogSet);
         entry1.getJobs().add(fixIW1231);
@@ -55,22 +50,21 @@ public class P4JobIssueSelectorTest extends JobIssueSelectorTest {
         entries.add(entry2);
         when(changeLogSet.iterator()).thenReturn(entries.iterator());
 
-        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<ChangeLogSet<? extends Entry>>();
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
         changeSets.add(changeLogSet);
         when(build.getChangeSets()).thenReturn(changeSets);
 
-        Set<String> expected = Sets.newHashSet(jobIdEC3453, jobIdIW1231);
+        Set<String> expected = new HashSet<>(Arrays.asList(jobIdEC3453, jobIdIW1231));
 
         P4JobIssueSelector selector = new P4JobIssueSelector();
         Set<String> result = selector.findIssueIds(build, jiraSite, listener);
 
-        Assert.assertEquals(expected.size(), result.size());
-        Assert.assertEquals(expected, result);
+        assertEquals(expected.size(), result.size());
+        assertEquals(expected, result);
     }
 
     @Override
     protected JobIssueSelector createJobIssueSelector() {
         return new P4JobIssueSelector();
     }
-
 }

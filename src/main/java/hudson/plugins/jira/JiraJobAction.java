@@ -1,27 +1,26 @@
 package hudson.plugins.jira;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
 import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.plugins.jira.model.JiraIssue;
+import java.io.IOException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import jenkins.branch.MultiBranchProject;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.io.IOException;
-import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * JiraJobAction is to store a reference to the {@link JiraIssue} that represents work
@@ -53,7 +52,7 @@ public class JiraJobAction implements Action {
     }
 
     /**
-     * @return url of the JIRA server
+     * @return url of the Jira server
      */
     @Exported
     @Nullable
@@ -65,12 +64,12 @@ public class JiraJobAction implements Action {
 
     /**
      * Adds a {@link JiraJobAction} to a {@link WorkflowJob} if it belongs to a {@link MultiBranchProject}
-     * and its name contains an JIRA issue key
+     * and its name contains an Jira issue key
      * @param job to add the property to
      * @param site to fetch issue data
-     * @throws IOException if something goes wrong fetching the JIRA issue
+     * @throws IOException if something goes wrong fetching the Jira issue
      */
-    public static void setAction(@Nonnull Job<?, ?> job, @Nonnull JiraSite site) throws IOException {
+    public static void setAction(@NonNull Job job, @NonNull JiraSite site) throws IOException {
         // If there is already a action set then skip
         if (job.getAction(JiraJobAction.class) != null) {
             return;
@@ -81,21 +80,26 @@ public class JiraJobAction implements Action {
             return;
         }
 
-        // Find the first JIRA issue key in the branch name
+        // Find the first Jira issue key in the branch name
         // If it exists, create the action and set it
+        Pattern pattern = site.getIssuePattern();
+        // Pipeline will URL encode job names if the branch or PR name contains a '/' or other non-URL safe characters
+        String decodedJobName = URLDecoder.decode(job.getName(), "UTF-8");
         String issueKey = null;
-        for (String part : StringUtils.split(job.getName(), '/')) {
-            Pattern pattern = site.getIssuePattern();
-            Matcher matcher = pattern.matcher(part);
-            if (matcher.matches() && matcher.groupCount() > 0) {
-                issueKey = matcher.group();
+        Matcher m = pattern.matcher(decodedJobName);
+        while (m.find()) {
+            if (m.groupCount() >= 1) {
+                issueKey = m.group(1);
+                break;
             }
         }
 
         if (issueKey != null) {
             JiraIssue issue = site.getIssue(issueKey);
-            job.addAction(new JiraJobAction(job, issue));
-            job.save();
+            if (issue != null) {
+                job.addAction(new JiraJobAction(job, issue));
+                job.save();
+            }
         }
     }
 
@@ -106,7 +110,7 @@ public class JiraJobAction implements Action {
 
     @Override
     public String getDisplayName() {
-        return "JIRA";
+        return "Jira";
     }
 
     @Override

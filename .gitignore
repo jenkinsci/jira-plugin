@@ -1,10 +1,21 @@
 .classpath
 .project
 .settings
+.factorypath
 build
 target
 bin
+work/
+.work
+.env*
+.docker
+*.code-workspace
+
+# ignore all Idea files except for common codestyle settings
 *.iml
-.idea/
-work
+.vscode/
+.idea/*
+!.idea/checkstyle-idea.xml
+!.idea/google-java-format.xml
+
 atlassian-ide-plugin.xml

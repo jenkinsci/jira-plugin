@@ -1,16 +1,17 @@
 package hudson.plugins.jira;
 
-import hudson.EnvVars;
-import hudson.model.AbstractBuild;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class JiraEnvironmentContributingActionTest {
+import hudson.EnvVars;
+import hudson.model.AbstractBuild;
+
+class JiraEnvironmentContributingActionTest {
     private static final String JIRA_URL = "http://example.com";
     private static final String JIRA_URL_PROPERTY_NAME = "JIRA_URL";  
     private static final String ISSUES_PROPERTY_NAME = "JIRA_ISSUES";
@@ -22,19 +23,19 @@ public class JiraEnvironmentContributingActionTest {
     public void buildEnvVarsEnvIsNull() {
         JiraEnvironmentContributingAction action = new JiraEnvironmentContributingAction(ISSUES_LIST, ISSUES_SIZE, JIRA_URL, ISSUES_SIZE_PROPERTY_NAME);
         AbstractBuild build = mock(AbstractBuild.class);
-        
+
         action.buildEnvVars(build, null);
         // just expecting no exception
     }
-    
+
     @Test
     public void buildEnvVarsAddVariables() {
         JiraEnvironmentContributingAction action = new JiraEnvironmentContributingAction(ISSUES_LIST, ISSUES_SIZE, JIRA_URL, ISSUES_SIZE_PROPERTY_NAME);
         AbstractBuild build = mock(AbstractBuild.class);
         EnvVars envVars = mock(EnvVars.class);
-        
+
         action.buildEnvVars(build, envVars);
-        
+
         ArgumentCaptor<String> keys = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> values = ArgumentCaptor.forClass(String.class);
         verify(envVars, times(3)).put(keys.capture(), values.capture());

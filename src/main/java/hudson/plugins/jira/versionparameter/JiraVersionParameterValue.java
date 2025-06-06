@@ -19,7 +19,9 @@ public class JiraVersionParameterValue extends ParameterValue {
     @DataBoundConstructor
     public JiraVersionParameterValue(final String name, final String version) {
         super(name);
-        if (version == null) throw new IllegalArgumentException("Version cannot be null");
+        if (version == null) {
+            throw new IllegalArgumentException("Version cannot be null");
+        }
         this.version = version;
     }
 
@@ -30,11 +32,7 @@ public class JiraVersionParameterValue extends ParameterValue {
 
     @Override
     public VariableResolver<String> createVariableResolver(final AbstractBuild<?, ?> build) {
-        return new VariableResolver<String>() {
-            public String resolve(final String name) {
-                return JiraVersionParameterValue.this.name.equals(name) ? getVersion() : null;
-            }
-        };
+        return name -> JiraVersionParameterValue.this.name.equals(name) ? getVersion() : null;
     }
 
     public void setVersion(final String version) {
@@ -43,6 +41,11 @@ public class JiraVersionParameterValue extends ParameterValue {
 
     public String getVersion() {
         return version;
+    }
+
+    @Override
+    public Object getValue() {
+        return getVersion();
     }
 
     @Override

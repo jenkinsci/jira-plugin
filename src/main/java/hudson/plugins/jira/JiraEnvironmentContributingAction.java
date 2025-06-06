@@ -6,14 +6,14 @@ import hudson.model.EnvironmentContributingAction;
 import hudson.model.InvisibleAction;
 
 /*
- * JiraEnvironmentVariableBuilder adds an instance of this class to the build to 
+ * JiraEnvironmentVariableBuilder adds an instance of this class to the build to
  * provide the environment variables
  */
 public class JiraEnvironmentContributingAction extends InvisibleAction implements EnvironmentContributingAction {
 
     public static final String ISSUES_VARIABLE_NAME = "JIRA_ISSUES";
     public static final String JIRA_URL_VARIABLE_NAME = "JIRA_URL";
-    
+
     private final String issuesList;
 
     private final Integer issuesSize;
@@ -44,14 +44,13 @@ public class JiraEnvironmentContributingAction extends InvisibleAction implement
         this.jiraUrl = jiraUrl;
         this.issuesSizeVariableName = issuesSizeVariableName;
     }
-    
+
     @Override
     public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
-        if (ev != null){
+        if (ev != null) {
             ev.put(ISSUES_VARIABLE_NAME, issuesList);
             ev.put(getIssuesSizeVariableName(), getNumberOfIssues().toString());
             ev.put(JIRA_URL_VARIABLE_NAME, getJiraUrl());
         }
     }
-    
 }

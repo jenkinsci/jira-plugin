@@ -1,23 +1,7 @@
 package hudson.plugins.jira.pipeline;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.ServletException;
-
-import hudson.plugins.jira.JiraSession;
-import hudson.plugins.jira.JiraSite;
-import hudson.plugins.jira.Messages;
-import hudson.plugins.jira.model.JiraIssueField;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.QueryParameter;
-
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.google.common.collect.Lists;
-
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -26,17 +10,31 @@ import hudson.model.AbstractProject;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.plugins.jira.EnvironmentExpander;
+import hudson.plugins.jira.JiraSession;
+import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
+import hudson.plugins.jira.model.JiraIssueField;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
+import jakarta.servlet.ServletException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import jenkins.tasks.SimpleBuildStep;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 
 /**
  * Issue custom fields updater
- * 
+ *
  * @author Dmitry Frolov tekillaz.dev@gmail.com
- * 
+ *
  */
 public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
@@ -82,20 +80,22 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
     public String prepareFieldId(String fieldId) {
         String prepared = fieldId;
-        if (!prepared.startsWith("customfield_"))
+        if (!prepared.startsWith("customfield_")) {
             prepared = "customfield_" + prepared;
+        }
         return prepared;
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-            throws InterruptedException, IOException {
+    public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener)
+            throws IOException {
+
         PrintStream logger = listener.getLogger();
 
         AbstractIssueSelector selector = issueSelector;
         if (selector == null) {
-            logger.println("[JIRA][IssueFieldUpdateStep] No issue selector found!");
-            throw new IOException("[JIRA][IssueFieldUpdateStep] No issue selector found!");
+            logger.println("[Jira][IssueFieldUpdateStep] No issue selector found!");
+            throw new IOException("[Jira][IssueFieldUpdateStep] No issue selector found!");
         }
 
         JiraSite site = JiraSite.get(run.getParent());
@@ -105,13 +105,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
-        JiraSession session = null;
-        try {
-            session = site.getSession();
-        } catch (IOException e) {
-            listener.getLogger().println(Messages.FailedToConnect());
-            e.printStackTrace(listener.getLogger());
-        }
+        JiraSession session = site.getSession(run.getParent());
         if (session == null) {
             logger.println(Messages.NoRemoteAccess());
             run.setResult(Result.FAILURE);
@@ -120,35 +114,44 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
 
         Set<String> issues = selector.findIssueIds(run, site, listener);
         if (issues.isEmpty()) {
-            logger.println("[JIRA][IssueFieldUpdateStep] Issue list is empty!");
+            logger.println("[Jira][IssueFieldUpdateStep] Issue list is empty!");
             return;
         }
 
-        List<JiraIssueField> fields = Lists.newArrayList();
-        fields.add(new JiraIssueField(prepareFieldId(fieldId), fieldValue));
+        List<JiraIssueField> fields = Collections.singletonList(new JiraIssueField(
+                prepareFieldId(getFieldId()), EnvironmentExpander.expandVariable(getFieldValue(), env)));
 
         for (String issue : issues) {
             submitFields(session, issue, fields, logger);
         }
     }
 
+    @Override
+    @Deprecated
+    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        this.perform(run, workspace, run.getEnvironment(listener), launcher, listener);
+    }
+
+    /**
+     * @deprecated no reason for this to be exposed/public, use perform(...) instead
+     */
+    @Deprecated
     public void submitFields(JiraSession session, String issueId, List<JiraIssueField> fields, PrintStream logger) {
         try {
             session.addFields(issueId, fields);
         } catch (RestClientException e) {
 
             if (e.getStatusCode().or(0).equals(404)) {
-                logger.println(issueId + " - JIRA issue not found");
+                logger.println(issueId + " - Jira issue not found");
             }
 
             if (e.getStatusCode().or(0).equals(403)) {
-                logger.println(issueId
-                        + " - Jenkins JIRA user does not have permissions to comment on this issue");
+                logger.println(issueId + " - Jenkins Jira user does not have permissions to comment on this issue");
             }
 
             if (e.getStatusCode().or(0).equals(401)) {
-                logger.println(
-                        issueId + " - Jenkins JIRA authentication problem");
+                logger.println(issueId + " - Jenkins Jira authentication problem");
             }
 
             logger.println(Messages.FailedToUpdateIssue(issueId));
@@ -165,10 +168,12 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         public FormValidation doCheckField_id(@QueryParameter String value) throws IOException, ServletException {
-            if (Util.fixNull(value).trim().length() == 0)
+            if (Util.fixNull(value).trim().length() == 0) {
                 return FormValidation.warning(Messages.JiraIssueFieldUpdater_NoIssueFieldID());
-            if (!value.matches("\\d+"))
+            }
+            if (!value.matches("\\d+")) {
                 return FormValidation.error(Messages.JiraIssueFieldUpdater_NotAtIssueFieldID());
+            }
             return FormValidation.ok();
         }
 
@@ -182,5 +187,4 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return Messages.JiraIssueFieldUpdater_DisplayName();
         }
     }
-
 }

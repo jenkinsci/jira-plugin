@@ -11,7 +11,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Task which releases the jira version specified in the parameters when the build completes.
@@ -20,81 +20,94 @@ import org.kohsuke.stapler.StaplerRequest;
  * @deprecated Replaced by {@link JiraReleaseVersionUpdaterBuilder} which can be used as a PostBuild step with conditional triggering.<br>
  *     Kept for backward compatibility.
  */
+@Deprecated
 public class JiraReleaseVersionUpdater extends Notifier {
-	private static final long serialVersionUID = 699563338312232811L;
+    private static final long serialVersionUID = 699563338312232811L;
 
-	private String jiraProjectKey;
-	private String jiraRelease;
+    private String jiraProjectKey;
+    private String jiraRelease;
+    private String jiraDescription;
 
-	@DataBoundConstructor
-	public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease) {
-		this.jiraRelease = jiraRelease;
-		this.jiraProjectKey = jiraProjectKey;
-	}
-	
-	public String getJiraRelease() {
-		return jiraRelease;
-	}
-
-	public void setJiraRelease(String jiraRelease) {
-		this.jiraRelease = jiraRelease;
-	}
-
-	public String getJiraProjectKey() {
-		return jiraProjectKey;
-	}
-
-	public void setJiraProjectKey(String jiraProjectKey) {
-		this.jiraProjectKey = jiraProjectKey;
-	}
-	
-	@Override
-	public BuildStepDescriptor<Publisher> getDescriptor() {
-		return DESCRIPTOR;
-	}
-	
-	@Extension
-    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
-
-	@Override
-	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener) {
-		return VersionReleaser.perform(getSiteForProject(build.getProject()), jiraProjectKey, jiraRelease, build, listener);
-	}
-
-    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
-        return JiraSite.get(project);
+    @Deprecated
+    public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease) {
+        this.jiraRelease = jiraRelease;
+        this.jiraProjectKey = jiraProjectKey;
     }
 
-	public BuildStepMonitor getRequiredMonitorService() {
-		return BuildStepMonitor.BUILD;
-	}
-	
-	public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+    @DataBoundConstructor
+    public JiraReleaseVersionUpdater(String jiraProjectKey, String jiraRelease, String jiraDescription) {
+        this.jiraRelease = jiraRelease;
+        this.jiraProjectKey = jiraProjectKey;
+        this.jiraDescription = jiraDescription;
+    }
 
-		public DescriptorImpl() {
-			super(JiraReleaseVersionUpdater.class);
-		}
+    public String getJiraRelease() {
+        return jiraRelease;
+    }
 
-		@Override
-		public JiraReleaseVersionUpdater newInstance(StaplerRequest req,
-				JSONObject formData) throws FormException {
-			return req.bindJSON(JiraReleaseVersionUpdater.class, formData);
-		}
+    public void setJiraRelease(String jiraRelease) {
+        this.jiraRelease = jiraRelease;
+    }
 
-		@Override
-		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-			return true;
-		}
+    public String getJiraProjectKey() {
+        return jiraProjectKey;
+    }
 
-		@Override
-		public String getDisplayName() {
-			return Messages.JiraReleaseVersionBuilder_DisplayName();
-		}
+    public void setJiraProjectKey(String jiraProjectKey) {
+        this.jiraProjectKey = jiraProjectKey;
+    }
 
-		@Override
-		public String getHelpFile() {
-			return "/plugin/jira/help-release.html";
-		}
-	}
+    public String getJiraDescription() {
+        return jiraDescription;
+    }
+
+    public void setJiraDescription(String jiraDescription) {
+        this.jiraDescription = jiraDescription;
+    }
+
+    @Override
+    public BuildStepDescriptor<Publisher> getDescriptor() {
+        return DESCRIPTOR;
+    }
+
+    @Extension
+    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
+
+    @Override
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+        return new VersionReleaser()
+                .perform(build.getProject(), jiraProjectKey, jiraRelease, jiraDescription, build, listener);
+    }
+
+    @Override
+    public BuildStepMonitor getRequiredMonitorService() {
+        return BuildStepMonitor.NONE;
+    }
+
+    public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+
+        public DescriptorImpl() {
+            super(JiraReleaseVersionUpdater.class);
+        }
+
+        @Override
+        public JiraReleaseVersionUpdater newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
+            return req.bindJSON(JiraReleaseVersionUpdater.class, formData);
+        }
+
+        @Override
+        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return Messages.JiraReleaseVersionBuilder_DisplayName();
+        }
+
+        @Override
+        public String getHelpFile() {
+            return "/plugin/jira/help-release.html";
+        }
+    }
 }

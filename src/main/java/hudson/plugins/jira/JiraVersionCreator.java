@@ -1,8 +1,5 @@
 package hudson.plugins.jira;
 
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -13,9 +10,11 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
- * A build step which creates new JIRA version
+ * A build step which creates new Jira version
  *
  * @author Artem Koshelev artkoshelev@gmail.com
  * @deprecated Replaced by {@link JiraVersionCreatorBuilder}. Read its description to see why.
@@ -34,7 +33,7 @@ public class JiraVersionCreator extends Notifier {
 
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
-        return BuildStepMonitor.BUILD;
+        return BuildStepMonitor.NONE;
     }
 
     public String getJiraVersion() {
@@ -55,12 +54,7 @@ public class JiraVersionCreator extends Notifier {
 
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-    	JiraSite site = getSiteForProject(build.getProject());
-    	return VersionCreator.perform(site, jiraVersion, jiraProjectKey, build, listener);
-    }
-
-    JiraSite getSiteForProject(AbstractProject<?, ?> project) {
-        return JiraSite.get(project);
+        return new VersionCreator().perform(build.getProject(), jiraVersion, jiraProjectKey, build, listener);
     }
 
     @Override
@@ -83,7 +77,7 @@ public class JiraVersionCreator extends Notifier {
         }
 
         @Override
-        public JiraVersionCreator newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public JiraVersionCreator newInstance(StaplerRequest2 req, JSONObject formData) throws FormException {
             return req.bindJSON(JiraVersionCreator.class, formData);
         }
 
@@ -97,5 +91,4 @@ public class JiraVersionCreator extends Notifier {
             return "/plugin/jira/help-version-create.html";
         }
     }
-
 }
