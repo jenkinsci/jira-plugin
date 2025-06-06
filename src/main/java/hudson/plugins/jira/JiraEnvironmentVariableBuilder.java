@@ -55,7 +55,8 @@ public class JiraEnvironmentVariableBuilder extends Builder {
         JiraSite site = getSiteForProject(build.getProject());
 
         if (site == null) {
-            throw new AbortException(Messages.JiraEnvironmentVariableBuilder_NoJiraSite());
+            listener.getLogger().println(Messages.JiraEnvironmentVariableBuilder_NoJiraSite());
+            return false;
         }
 
         Set<String> ids = getIssueSelector().findIssueIds(build, site, listener);

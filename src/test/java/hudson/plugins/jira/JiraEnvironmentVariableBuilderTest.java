@@ -1,17 +1,25 @@
 package hudson.plugins.jira;
 
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -21,14 +29,6 @@ import hudson.model.BuildListener;
 import hudson.model.Node;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.plugins.jira.selector.DefaultIssueSelector;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 class JiraEnvironmentVariableBuilderTest {
 
@@ -94,11 +94,12 @@ class JiraEnvironmentVariableBuilderTest {
         assertThat(builder.getIssuesSizeVariableName(), is(ISSUES_SIZE_PROPERTY_NAME));
     }
     
-    @Test(expected = AbortException.class)
+    @Test
     public void testPerformWithNoSiteFailsBuild() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector, null));
         doReturn(null).when(builder).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
-        builder.perform(build, launcher, listener);
+        assertThat(builder.perform(build, launcher, listener), is(false));
+        verify(logger, times(1)).println(Messages.JiraEnvironmentVariableBuilder_NoJiraSite());
     }
 
     @Test
