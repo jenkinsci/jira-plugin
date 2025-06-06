@@ -22,11 +22,11 @@ public class JiraEnvironmentContributingAction extends InvisibleAction implement
 
     private final String issuesSizeVariableName;
 
-    public String getIssuesList(){
+    public String getIssuesList() {
         return issuesList;
     }
 
-    public Integer getNumberOfIssues(){
+    public Integer getNumberOfIssues() {
         return issuesSize;
     }
 
@@ -37,8 +37,9 @@ public class JiraEnvironmentContributingAction extends InvisibleAction implement
     public String getIssuesSizeVariableName() {
         return issuesSizeVariableName;
     }
-    
-    public JiraEnvironmentContributingAction(String issuesList, int issuesSize, String jiraUrl, String issuesSizeVariableName) {
+
+    public JiraEnvironmentContributingAction(
+            String issuesList, int issuesSize, String jiraUrl, String issuesSizeVariableName) {
         this.issuesList = issuesList;
         this.issuesSize = issuesSize;
         this.jiraUrl = jiraUrl;

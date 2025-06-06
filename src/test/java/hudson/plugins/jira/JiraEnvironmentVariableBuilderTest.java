@@ -1,18 +1,9 @@
 package hudson.plugins.jira;
 
-import java.io.IOException;
-import java.io.PrintStream;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -29,11 +20,19 @@ import hudson.model.BuildListener;
 import hudson.model.Node;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.plugins.jira.selector.DefaultIssueSelector;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 class JiraEnvironmentVariableBuilderTest {
 
     private static final String JIRA_URL = "http://example.com";
-    private static final String JIRA_URL_PROPERTY_NAME = "JIRA_URL";  
+    private static final String JIRA_URL_PROPERTY_NAME = "JIRA_URL";
     private static final String ISSUES_PROPERTY_NAME = "JIRA_ISSUES";
     private static final String ISSUES_SIZE_PROPERTY_NAME = "JIRA_ISSUES_SIZE";
     private static final String ISSUE_ID_1 = "ISS-1";
@@ -90,10 +89,11 @@ class JiraEnvironmentVariableBuilderTest {
 
     @Test
     public void testSetIssuesSizeVariableNamePersists() {
-        final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(issueSelector, ISSUES_SIZE_PROPERTY_NAME);
+        final JiraEnvironmentVariableBuilder builder =
+                new JiraEnvironmentVariableBuilder(issueSelector, ISSUES_SIZE_PROPERTY_NAME);
         assertThat(builder.getIssuesSizeVariableName(), is(ISSUES_SIZE_PROPERTY_NAME));
     }
-    
+
     @Test
     public void testPerformWithNoSiteFailsBuild() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector, null));
@@ -106,7 +106,7 @@ class JiraEnvironmentVariableBuilderTest {
     public void testPerformAddsAction() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector, null));
         doReturn(site).when(builder).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
-        
+
         boolean result = builder.perform(build, launcher, listener);
 
         assertThat(result, is(true));
