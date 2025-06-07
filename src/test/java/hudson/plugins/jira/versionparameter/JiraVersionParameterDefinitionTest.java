@@ -12,7 +12,7 @@ class JiraVersionParameterDefinitionTest {
     @Test
     void parameterValueMethodOverrides() throws Exception {
         ParameterDefinition definition =
-                new JiraVersionParameterDefinition("pname", "pdesc", "JIRAKEY", null, "false", "false");
+                new JiraVersionParameterDefinition("pname", "pdesc", "JIRAKEY", null, "false", "false", "false");
         CLICommand cliCommand = mock(CLICommand.class);
 
         ParameterValue value = definition.createValue(cliCommand, "Jira Version 1.2.3");

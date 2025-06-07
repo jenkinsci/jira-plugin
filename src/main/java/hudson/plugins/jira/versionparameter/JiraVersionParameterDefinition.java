@@ -10,6 +10,7 @@ import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import net.sf.json.JSONObject;
@@ -24,6 +25,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
     private String projectKey;
     private boolean showReleased = false;
     private boolean showArchived = false;
+    private boolean showOnlyReleased = false;
     private Pattern pattern = null;
 
     @DataBoundConstructor
@@ -33,12 +35,14 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
             String jiraProjectKey,
             String jiraReleasePattern,
             String jiraShowReleased,
-            String jiraShowArchived) {
+            String jiraShowArchived,
+            String jiraShowOnlyReleased) {
         super(name, description);
         setJiraProjectKey(jiraProjectKey);
         setJiraReleasePattern(jiraReleasePattern);
         setJiraShowReleased(jiraShowReleased);
         setJiraShowArchived(jiraShowArchived);
+        setShowOnlyReleased(jiraShowOnlyReleased);
     }
 
     @Override
@@ -90,17 +94,31 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
             }
         }
 
-        // Filter released versions
-        if (!showReleased && version.isReleased()) {
-            return false;
+        boolean isReleased = version.isReleased();
+        boolean isArchived = version.isArchived();
+        boolean allOptionsSelected = showReleased && showOnlyReleased && showArchived;
+
+        if (allOptionsSelected) {
+            return true;
         }
 
-        // Filter archived versions
-        if (!showArchived && version.isArchived()) {
-            return false;
+        if (showReleased && !isArchived) {
+            return true;
         }
 
-        return true;
+        if (showArchived && isArchived) {
+            return true;
+        }
+
+        if (showOnlyReleased) {
+            return isReleased;
+        }
+
+        if (!showReleased && !showArchived && !showOnlyReleased && !isReleased && !isArchived) {
+            return true;
+        }
+
+        return false;
     }
 
     public String getJiraReleasePattern() {
@@ -142,6 +160,14 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         this.showArchived = Boolean.parseBoolean(showArchived);
     }
 
+    public String getJiraShowOnlyReleased() {
+        return Boolean.toString(showOnlyReleased);
+    }
+
+    public void setShowOnlyReleased(String showOnlyReleased) {
+        this.showOnlyReleased = Boolean.parseBoolean(showOnlyReleased);
+    }
+
     @Extension
     @Symbol("jiraReleaseVersion")
     public static class DescriptorImpl extends ParameterDescriptor {
@@ -158,6 +184,13 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         public Result(final Version version) {
             this.name = version.getName();
             this.id = version.getId();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Result result = (Result) o;
+            return Objects.equals(name, result.name) && Objects.equals(id, result.id);
         }
     }
 }
