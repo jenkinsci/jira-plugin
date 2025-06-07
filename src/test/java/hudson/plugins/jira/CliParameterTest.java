@@ -40,8 +40,8 @@ class CliParameterTest {
 
     @Test
     void jiraVersionParameterViaCli() throws Exception {
-        project.addProperty(new ParametersDefinitionProperty(
-                new JiraVersionParameterDefinition("jiraversion", "description", "PROJ", "RELEASE", "true", "false")));
+        project.addProperty(new ParametersDefinitionProperty(new JiraVersionParameterDefinition(
+                "jiraversion", "description", "PROJ", "RELEASE", "true", "false", "false")));
 
         CLICommandInvoker invoker = new CLICommandInvoker(jenkins, new BuildCommand());
         CLICommandInvoker.Result result = invoker.invokeWithArgs(project.getName(), "-s", "-p", "jiraversion=1.0");
