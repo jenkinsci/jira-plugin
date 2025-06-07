@@ -63,9 +63,7 @@ public class JiraVersionParameterFilterTest {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>();
-            expected.add(r2);
-            expected.add(r1);
+            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>(List.of(r2, r1));
             assertEquals(expected, result);
         });
     }
@@ -81,8 +79,7 @@ public class JiraVersionParameterFilterTest {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>();
-            expected.add(r1);
+            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>(List.of(r1));
             assertEquals(expected, result);
         });
     }
@@ -98,8 +95,7 @@ public class JiraVersionParameterFilterTest {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>();
-            expected.add(r3);
+            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>(List.of(r3));
             assertEquals(expected, result);
         });
     }
@@ -115,8 +111,7 @@ public class JiraVersionParameterFilterTest {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>();
-            expected.add(r2);
+            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>(List.of(r2));
             assertEquals(expected, result);
         });
     }
@@ -132,10 +127,7 @@ public class JiraVersionParameterFilterTest {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>();
-            expected.add(r3);
-            expected.add(r2);
-            expected.add(r1);
+            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>(List.of(r3, r2, r1));
             assertEquals(expected, result);
         });
     }
