@@ -95,7 +95,7 @@ public class JiraVersionParameterFilterTest {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>(List.of(r3));
+            List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>(List.of(r3, r2));
             assertEquals(expected, result);
         });
     }

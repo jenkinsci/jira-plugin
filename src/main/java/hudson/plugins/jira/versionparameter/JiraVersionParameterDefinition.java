@@ -106,7 +106,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
             return true;
         }
 
-        if (showArchived && isArchived) {
+        if (showArchived && !isReleased) {
             return true;
         }
 
