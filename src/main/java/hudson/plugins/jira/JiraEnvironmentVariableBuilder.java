@@ -23,6 +23,12 @@ public class JiraEnvironmentVariableBuilder extends Builder {
     private AbstractIssueSelector issueSelector;
     private final String issuesSizeVariableName;
 
+    @Deprecated
+    public JiraEnvironmentVariableBuilder(AbstractIssueSelector issueSelector) {
+        this.issueSelector = issueSelector;
+        this.issuesSizeVariableName = JiraEnvironmentContributingAction.ISSUES_SIZE_VARIABLE_NAME;
+    }
+
     @DataBoundConstructor
     public JiraEnvironmentVariableBuilder(AbstractIssueSelector issueSelector, String issuesSizeVariableName) {
         this.issueSelector = issueSelector;
@@ -59,7 +65,7 @@ public class JiraEnvironmentVariableBuilder extends Builder {
         Set<String> ids = getIssueSelector().findIssueIds(build, site, listener);
 
         String idList = StringUtils.join(ids, ",");
-        Integer idListSize = ids != null ? ids.size() : null;
+        Integer idListSize = ids.size();
 
         listener.getLogger()
                 .println(Messages.JiraEnvironmentVariableBuilder_Updating(

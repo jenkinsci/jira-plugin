@@ -13,7 +13,8 @@ public class JiraEnvironmentContributingAction extends InvisibleAction implement
 
     public static final String ISSUES_VARIABLE_NAME = "JIRA_ISSUES";
     public static final String JIRA_URL_VARIABLE_NAME = "JIRA_URL";
-
+    public static final String ISSUES_SIZE_VARIABLE_NAME = "JIRA_ISSUES_SIZE";
+    
     private final String issuesList;
 
     private final Integer issuesSize;
