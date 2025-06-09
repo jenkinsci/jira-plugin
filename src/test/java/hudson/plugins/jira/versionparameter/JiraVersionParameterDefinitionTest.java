@@ -31,10 +31,10 @@ class JiraVersionParameterDefinitionTest {
     private JiraSite site;
     private JiraSession session;
     private StaplerRequest2 request2;
-    ExtendedVersion extReleasedVer = new ExtendedVersion(null, null, "1.0", "", false, true, null, null);
-    ExtendedVersion extUnReleasedVer = new ExtendedVersion(null, null, "1.1", "", false, false, null, null);
-    ExtendedVersion extArchivedVer = new ExtendedVersion(null, null, "1.2", "", true, false, null, null);
-    ExtendedVersion extReleasedArchivedVer = new ExtendedVersion(null, null, "1.3", "", true, true, null, null);
+    ExtendedVersion extReleasedVer = new ExtendedVersion(null, 1l, "1.0", "", false, true, null, null);
+    ExtendedVersion extUnReleasedVer = new ExtendedVersion(null, 2l, "1.1", "", false, false, null, null);
+    ExtendedVersion extArchivedVer = new ExtendedVersion(null, 3l, "1.2", "", true, false, null, null);
+    ExtendedVersion extReleasedArchivedVer = new ExtendedVersion(null, 4l, "1.3", "", true, true, null, null);
 
     @BeforeEach
     void createMocksAndVersions() {
