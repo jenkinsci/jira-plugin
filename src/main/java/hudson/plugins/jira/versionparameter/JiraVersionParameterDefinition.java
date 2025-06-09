@@ -25,7 +25,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
     private String projectKey;
     private boolean showReleased = false;
     private boolean showArchived = false;
-    private boolean showOnlyReleased = false;
+    private boolean showUnreleased = false;
     private Pattern pattern = null;
 
     @DataBoundConstructor
@@ -36,13 +36,13 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
             String jiraReleasePattern,
             String jiraShowReleased,
             String jiraShowArchived,
-            String jiraShowOnlyReleased) {
+            String jiraShowUnreleased) {
         super(name, description);
         setJiraProjectKey(jiraProjectKey);
         setJiraReleasePattern(jiraReleasePattern);
         setJiraShowReleased(jiraShowReleased);
         setJiraShowArchived(jiraShowArchived);
-        setShowOnlyReleased(jiraShowOnlyReleased);
+        setShowUnreleased(jiraShowUnreleased);
     }
 
     @Override
@@ -96,25 +96,21 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
 
         boolean isReleased = version.isReleased();
         boolean isArchived = version.isArchived();
-        boolean allOptionsSelected = showReleased && showOnlyReleased && showArchived;
+        boolean showAllVersions = !showReleased && !showUnreleased && !showArchived;
 
-        if (allOptionsSelected) {
+        if (showAllVersions) {
             return true;
         }
 
-        if (showReleased && !isArchived) {
+        if (showReleased && isReleased && !isArchived) {
             return true;
         }
 
-        if (showArchived && !isReleased) {
+        if (showArchived && isArchived) {
             return true;
         }
 
-        if (showOnlyReleased) {
-            return isReleased;
-        }
-
-        if (!showReleased && !showArchived && !showOnlyReleased && !isReleased && !isArchived) {
+        if (showUnreleased && !isReleased && !isArchived) {
             return true;
         }
 
@@ -160,12 +156,12 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         this.showArchived = Boolean.parseBoolean(showArchived);
     }
 
-    public String getJiraShowOnlyReleased() {
-        return Boolean.toString(showOnlyReleased);
+    public String getJiraShowUnreleased() {
+        return Boolean.toString(showUnreleased);
     }
 
-    public void setShowOnlyReleased(String showOnlyReleased) {
-        this.showOnlyReleased = Boolean.parseBoolean(showOnlyReleased);
+    public void setShowUnreleased(String jiraShowUnreleased) {
+        this.showUnreleased = Boolean.parseBoolean(jiraShowUnreleased);
     }
 
     @Extension
