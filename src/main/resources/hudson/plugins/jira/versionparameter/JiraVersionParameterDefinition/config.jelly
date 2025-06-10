@@ -13,6 +13,9 @@
     <f:entry title="${%Show Released Versions}" field="jiraShowReleased">
         <f:checkbox />
     </f:entry>
+    <f:entry title="${%Show Unreleased Versions}" field="jiraShowUnreleased">
+        <f:checkbox />
+    </f:entry>
 	<f:entry title="${%Show Archived Versions}" field="jiraShowArchived">
         <f:checkbox />
     </f:entry>
