@@ -188,5 +188,10 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
             Result result = (Result) o;
             return Objects.equals(name, result.name) && Objects.equals(id, result.id);
         }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, id);
+        }
     }
 }

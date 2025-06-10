@@ -207,6 +207,35 @@ class JiraVersionParameterDefinitionTest {
         assertFalse(res1.equals(extReleasedVer));
     }
 
+    @Test
+    void sameNameDiffIdResultCompare() {
+        JiraVersionParameterDefinition.Result res1 = new JiraVersionParameterDefinition.Result(extReleasedVer);
+        ExtendedVersion version = new ExtendedVersion(null, 2l, "1.0", "", false, true, null, null);
+        JiraVersionParameterDefinition.Result res2 = new JiraVersionParameterDefinition.Result(version);
+        assertFalse(res1.equals(res2));
+    }
+
+    @Test
+    void compareResultEqHashCode() {
+        JiraVersionParameterDefinition.Result res1 = new JiraVersionParameterDefinition.Result(extReleasedVer);
+        JiraVersionParameterDefinition.Result res2 = new JiraVersionParameterDefinition.Result(extReleasedVer);
+        assertEquals(res1.hashCode(), res2.hashCode());
+    }
+
+    @Test
+    void compareResultNotEqHashCode() {
+        JiraVersionParameterDefinition.Result res1 = new JiraVersionParameterDefinition.Result(extReleasedVer);
+        JiraVersionParameterDefinition.Result res2 = new JiraVersionParameterDefinition.Result(extArchivedVer);
+        assertNotEquals(res1.hashCode(), res2.hashCode());
+    }
+
+    @Test
+    void getJiraShowUnreleasedOn() {
+        JiraVersionParameterDefinition def =
+                new JiraVersionParameterDefinition("name", "desc", "PROJ", null, "false", "true", "true");
+        assertEquals("true", def.getJiraShowUnreleased());
+    }
+
     private void withJiraStaticMocks(Runnable testLogic) {
         try (MockedStatic<Stapler> staplerMock = mockStatic(Stapler.class);
                 MockedStatic<JiraSite> siteMock = mockStatic(JiraSite.class)) {
