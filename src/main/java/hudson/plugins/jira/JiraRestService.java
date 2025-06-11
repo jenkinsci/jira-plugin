@@ -230,7 +230,7 @@ public class JiraRestService {
     public List<Issue> getIssuesFromJqlSearch(String jqlSearch, Integer maxResults) throws TimeoutException {
         try {
             Set<String> neededFields =
-                    new HashSet<>(Arrays.asList("summary", "issuetype", "created", "updated", "project", "status"));
+                    new HashSet<>(Arrays.asList("summary", "issuetype", "created", "updated", "project", "status", "fixVersions"));
 
             final SearchResult searchResult = jiraRestClient
                     .getSearchClient()
