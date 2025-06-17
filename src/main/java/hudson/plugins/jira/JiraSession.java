@@ -219,7 +219,8 @@ public class JiraSession {
      * @param version    The replacement version
      * @param query      The JQL Query
      */
-    public void migrateIssuesToFixVersion(String projectKey, String version, String query) throws TimeoutException, JiraException {
+    public void migrateIssuesToFixVersion(String projectKey, String version, String query)
+            throws TimeoutException, JiraException {
 
         Version newVersion = getVersionByName(projectKey, version);
         if (newVersion == null) {

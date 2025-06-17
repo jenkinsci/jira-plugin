@@ -75,8 +75,8 @@ public class VersionReleaser {
      * @param versionName The name of the version
      * @param versionDescription The description of the version
      */
-    protected void releaseVersion(
-            String projectKey, String versionName, String versionDescription, JiraSession session) throws JiraException {
+    protected void releaseVersion(String projectKey, String versionName, String versionDescription, JiraSession session)
+            throws JiraException {
         if (session == null) {
             LOGGER.warning("Jira session could not be established");
             return;
