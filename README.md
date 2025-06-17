@@ -10,6 +10,10 @@
 
 This plugin integrates with Jenkins the [Atlassian Jira Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions). For bug reports, see [bugs](https://issues.jenkins-ci.org/issues/?filter=14761) or [all open issues](https://issues.jenkins-ci.org/issues/?filter=14956). For documentation, see [official plugin site](https://plugins.jenkins.io/jira).
 
+## i18n
+
+This plugin is using [CrowdIn platform](https://jenkins.crowdin.com/jira-plugin) as the frontend to manage translations. If you would like to contribute translation of this plugin in your language,  you're most than welcome! For details, see [jenkins.io CrowdIn introduction](https://www.jenkins.io/doc/developer/crowdin/translating-plugins/).
+
 ## Compatibility
 
 For plugin compatibility with [Pipeline plugin](https://github.com/jenkinsci/pipeline-plugin), see [COMPATIBILITY](COMPATIBILITY.md).
