@@ -251,7 +251,7 @@ public class JiraRestService {
         final URIBuilder builder =
                 new URIBuilder(uri).setPath(String.format("%s/project/%s/versions", baseApiPath, projectKey));
 
-        List<Map<String, Object>> decoded = Collections.emptyList();
+        List<Map<String, Object>> decoded;
         try {
             URI uri = builder.build();
             final Content content = buildGetRequest(uri).execute().returnContent();
@@ -259,7 +259,7 @@ public class JiraRestService {
             decoded = objectMapper.readValue(content.asString(), new TypeReference<List<Map<String, Object>>>() {});
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get versions error. cause: " + e.getMessage(), e);
-            throw new JiraException("[Jira Error] Jira REST client get versions error. cause: " + e.getMessage(), e);
+            throw new JiraException("[Jira Error] Jira REST client get versions error. cause: " + e.getMessage());
         }
 
         return decoded.stream()
