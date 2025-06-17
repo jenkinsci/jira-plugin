@@ -1,0 +1,12 @@
+---
+
+files:
+  - source: '/src/main/resources/hudson/plugins/jira/**/*.properties'
+    ignore:
+      - '/src/main/resources/hudson/plugins/jira/**/%file_name%_%two_letters_code%.properties'
+    translation: '/src/main/resources/hudson/plugins/jira/**/%file_name%_%two_letters_code%.properties'
+    escape_quotes: 0
+    escape_special_characters: 0
+
+project_id_env: CROWDIN_PROJECT_ID
+api_token_env: CROWDIN_PERSONAL_TOKEN
