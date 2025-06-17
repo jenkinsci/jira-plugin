@@ -55,6 +55,9 @@ public class VersionReleaser {
                 listener.getLogger().println(Messages.VersionReleaser_MarkingReleased(realRelease, realProjectKey));
                 releaseVersion(realProjectKey, realRelease, realDescription, site.getSession(project));
             }
+        } catch (JiraException je) {
+            listener.getLogger().println(je.getMessage());
+            return false;
         } catch (Exception e) {
             listener.fatalError("Unable to release jira version %s/%s: %s", realRelease, realProjectKey, e);
             if (listener instanceof BuildListener) {
@@ -73,7 +76,7 @@ public class VersionReleaser {
      * @param versionDescription The description of the version
      */
     protected void releaseVersion(
-            String projectKey, String versionName, String versionDescription, JiraSession session) {
+            String projectKey, String versionName, String versionDescription, JiraSession session) throws JiraException {
         if (session == null) {
             LOGGER.warning("Jira session could not be established");
             return;

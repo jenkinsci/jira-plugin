@@ -1169,7 +1169,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @deprecated use {@link JiraSession#getVersions(String)}
      */
     @Deprecated
-    public Set<ExtendedVersion> getVersions(String projectKey) {
+    public Set<ExtendedVersion> getVersions(String projectKey) throws JiraException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return Collections.emptySet();
@@ -1239,7 +1239,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException if too long
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query)
-            throws TimeoutException {
+            throws TimeoutException, JiraException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
@@ -1255,7 +1255,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param query       A JQL Query
      * @throws TimeoutException if too long
      */
-    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException {
+    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException, JiraException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
@@ -1271,7 +1271,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param query       the query
      * @throws TimeoutException if too long
      */
-    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
+    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException, JiraException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;

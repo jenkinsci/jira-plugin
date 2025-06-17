@@ -89,7 +89,7 @@ class VersionCreatorTest {
     }
 
     @Test
-    void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
+    void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException, JiraException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
 
@@ -113,7 +113,7 @@ class VersionCreatorTest {
     }
 
     @Test
-    void expandsEnvParameters() throws InterruptedException, IOException {
+    void expandsEnvParameters() throws InterruptedException, IOException, JiraException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
 
@@ -136,7 +136,7 @@ class VersionCreatorTest {
     }
 
     @Test
-    void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
+    void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException, JiraException {
         when(build.getEnvironment(listener)).thenReturn(env);
         ExtendedVersion releasedVersion =
                 new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, true, ANY_DATE, ANY_DATE);

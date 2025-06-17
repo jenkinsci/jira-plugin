@@ -50,7 +50,7 @@ class JiraSessionTest {
     }
 
     @Test
-    void replaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
+    void replaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException, JiraException {
         final ExtendedVersion newVersion =
                 new ExtendedVersion(new URI("self"), 3L, "v3.0", null, false, false, null, null);
         List<ExtendedVersion> myVersions = new ArrayList<>();
@@ -88,7 +88,7 @@ class JiraSessionTest {
     }
 
     @Test
-    void replaceFixVersion() throws URISyntaxException, TimeoutException {
+    void replaceFixVersion() throws URISyntaxException, TimeoutException, JiraException {
         final ExtendedVersion newVersion =
                 new ExtendedVersion(new URI("self"), 3L, "v3.0", null, false, false, null, null);
         List<ExtendedVersion> myVersions = new ArrayList<>();

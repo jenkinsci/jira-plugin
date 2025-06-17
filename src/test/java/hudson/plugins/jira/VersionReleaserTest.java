@@ -94,7 +94,7 @@ class VersionReleaserTest {
     }
 
     @Test
-    void callsJiraWithSpecifiedParameters() {
+    void callsJiraWithSpecifiedParameters() throws JiraException {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
         when(site.getSession(any())).thenReturn(session);
@@ -108,7 +108,7 @@ class VersionReleaserTest {
     }
 
     @Test
-    void expandsEnvParameters() {
+    void expandsEnvParameters() throws JiraException {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
         when(site.getSession(any())).thenReturn(session);
@@ -122,7 +122,7 @@ class VersionReleaserTest {
     }
 
     @Test
-    void buildDidNotFailWhenVersionExists() {
+    void buildDidNotFailWhenVersionExists() throws JiraException {
         ExtendedVersion releasedVersion =
                 new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, true, ANY_DATE, ANY_DATE);
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));

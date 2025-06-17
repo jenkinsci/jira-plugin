@@ -142,7 +142,7 @@ public class JiraSession {
      * @param projectKey The key for the project
      * @return An array of versions
      */
-    public List<ExtendedVersion> getVersions(String projectKey) {
+    public List<ExtendedVersion> getVersions(String projectKey) throws JiraException {
         LOGGER.fine("Fetching versions from project: " + projectKey);
         return service.getVersions(projectKey);
     }
@@ -154,7 +154,7 @@ public class JiraSession {
      * @param name       The version name
      * @return A RemoteVersion, or null if not found
      */
-    public ExtendedVersion getVersionByName(String projectKey, String name) {
+    public ExtendedVersion getVersionByName(String projectKey, String name) throws JiraException {
         LOGGER.fine("Fetching versions from project: " + projectKey);
         List<ExtendedVersion> versions = getVersions(projectKey);
         if (versions == null) {
@@ -219,7 +219,7 @@ public class JiraSession {
      * @param version    The replacement version
      * @param query      The JQL Query
      */
-    public void migrateIssuesToFixVersion(String projectKey, String version, String query) throws TimeoutException {
+    public void migrateIssuesToFixVersion(String projectKey, String version, String query) throws TimeoutException, JiraException {
 
         Version newVersion = getVersionByName(projectKey, version);
         if (newVersion == null) {
@@ -249,7 +249,7 @@ public class JiraSession {
      * @param query       The JQL Query
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query)
-            throws TimeoutException {
+            throws TimeoutException, JiraException {
 
         Version newVersion = getVersionByName(projectKey, toVersion);
         if (newVersion == null) {
@@ -305,7 +305,7 @@ public class JiraSession {
      * @param version    The version to add
      * @param query      The JQL Query
      */
-    public void addFixVersion(String projectKey, String version, String query) throws TimeoutException {
+    public void addFixVersion(String projectKey, String version, String query) throws TimeoutException, JiraException {
 
         Version newVersion = getVersionByName(projectKey, version);
         if (newVersion == null) {
