@@ -1,12 +1,12 @@
 package hudson.plugins.jira.versionparameter;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.Extension;
 import hudson.cli.CLICommand;
 import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
-import hudson.plugins.jira.JiraException;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import java.io.IOException;
@@ -66,7 +66,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         return new JiraVersionParameterValue(getName(), value);
     }
 
-    public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException, JiraException {
+    public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException, RestClientException {
         Job<?, ?> contextJob = Stapler.getCurrentRequest2().findAncestorObject(Job.class);
 
         JiraSite site = JiraSite.get(contextJob);

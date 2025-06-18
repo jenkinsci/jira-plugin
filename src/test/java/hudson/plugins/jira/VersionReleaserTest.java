@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -94,7 +95,7 @@ class VersionReleaserTest {
     }
 
     @Test
-    void callsJiraWithSpecifiedParameters() throws JiraException {
+    void callsJiraWithSpecifiedParameters() throws RestClientException {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
         when(site.getSession(any())).thenReturn(session);
@@ -108,7 +109,7 @@ class VersionReleaserTest {
     }
 
     @Test
-    void expandsEnvParameters() throws JiraException {
+    void expandsEnvParameters() throws RestClientException {
         when(session.getVersions(JIRA_PRJ)).thenReturn(Collections.singletonList(existingVersion));
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(existingVersion)));
         when(site.getSession(any())).thenReturn(session);
@@ -122,7 +123,7 @@ class VersionReleaserTest {
     }
 
     @Test
-    void buildDidNotFailWhenVersionExists() throws JiraException {
+    void buildDidNotFailWhenVersionExists() throws RestClientException {
         ExtendedVersion releasedVersion =
                 new ExtendedVersion(null, ANY_ID, JIRA_VER, JIRA_DES, false, true, ANY_DATE, ANY_DATE);
         when(site.getVersions(JIRA_PRJ)).thenReturn(new HashSet<>(Arrays.asList(releasedVersion)));
