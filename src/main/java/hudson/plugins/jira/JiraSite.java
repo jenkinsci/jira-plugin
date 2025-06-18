@@ -32,12 +32,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
+import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Item;
-import hudson.model.ItemGroup;
-import hudson.model.Job;
 import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
@@ -1124,6 +1120,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // process this interruption later
+            } catch (RestClientException e) {
+                return Collections.emptySet();
             }
         }
         // fall back to empty if failed to talk to the server
