@@ -112,17 +112,27 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
-        Set<String> issues = selector.findIssueIds(run, site, listener);
-        if (issues.isEmpty()) {
-            logger.println("[Jira][IssueFieldUpdateStep] Issue list is empty!");
+        Set<String> issues;
+        try {
+            issues = selector.findIssueIds(run, site, listener);
+            if (issues.isEmpty()) {
+                logger.println("[Jira][IssueFieldUpdateStep] Issue list is empty!");
+                return;
+            }
+        } catch (RestClientException e) {
+            logger.println(e.getMessage());
             return;
         }
 
         List<JiraIssueField> fields = Collections.singletonList(new JiraIssueField(
                 prepareFieldId(getFieldId()), EnvironmentExpander.expandVariable(getFieldValue(), env)));
 
-        for (String issue : issues) {
-            submitFields(session, issue, fields, logger);
+        try {
+            for (String issue : issues) {
+                submitFields(session, issue, fields, logger);
+            }
+        } catch (RestClientException e) {
+            logger.println(e.getMessage());
         }
     }
 

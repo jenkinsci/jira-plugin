@@ -17,6 +17,7 @@ package hudson.plugins.jira.listissuesparameter;
 
 import static hudson.Util.fixNull;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import hudson.Extension;
@@ -71,7 +72,8 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         return new JiraIssueParameterValue(getName(), value);
     }
 
-    public List<JiraIssueParameterDefinition.Result> getIssues() throws IOException, TimeoutException {
+    public List<JiraIssueParameterDefinition.Result> getIssues()
+            throws IOException, TimeoutException, RestClientException {
         Job<?, ?> job = Stapler.getCurrentRequest2().findAncestorObject(Job.class);
 
         JiraSite site = JiraSite.get(job);

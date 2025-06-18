@@ -15,15 +15,12 @@
  */
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.AbstractProject;
-import hudson.model.Job;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
@@ -111,6 +108,8 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
             run.setResult(Result.FAILURE);
+        } catch (RestClientException re) {
+            listener.getLogger().println(re.getMessage());
         }
     }
 

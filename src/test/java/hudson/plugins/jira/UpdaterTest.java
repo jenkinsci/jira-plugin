@@ -222,7 +222,7 @@ public class UpdaterTest {
     @Test
     @org.jvnet.hudson.test.Issue("17156")
     @WithoutJenkins
-    void issueIsRemovedFromCarryOverListAfterSubmission() throws RestClientException {
+    void issueIsRemovedFromCarryOverListAfterSubmission() {
         // mock build:
         FreeStyleBuild build = mock(FreeStyleBuild.class);
         FreeStyleProject project = mock(FreeStyleProject.class);
