@@ -1,0 +1,41 @@
+---
+name: Crowdin
+
+on:
+  schedule:
+    - cron: '0 */24 * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+
+jobs:
+  synchronize-with-crowdin:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: crowdin action
+        uses: crowdin/github-action@v2
+        with:
+          upload_translations: true
+          download_translations: true
+          skip_untranslated_files: true
+          auto_approve_imported: true
+          push_translations: true
+          export_only_approved: true
+          commit_message: 'New Crowdin translations'
+          create_pull_request: true
+          pull_request_title: 'Update localization'
+          pull_request_labels: 'localization'
+          base_url: 'https://jenkins.crowdin.com'
+          config: 'crowdin.yml'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CROWDIN_PROJECT_ID:  35
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
