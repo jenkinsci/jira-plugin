@@ -130,7 +130,7 @@ class Updater {
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error updating Jira issues. Saving issues for next build.", e);
-            logger.println("Error updating Jira issues. Saving issues for next build.\n" + e);
+            logger.println(e.getMessage());
             if (issues != null && !issues.isEmpty()) {
                 // updating issues failed, so carry forward issues to the next build
                 run.addAction(new JiraCarryOverAction(issues));
