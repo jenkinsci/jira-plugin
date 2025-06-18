@@ -4,11 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.mockStatic;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.cli.CLICommand;
 import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
-import hudson.plugins.jira.JiraException;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.extension.ExtendedVersion;
@@ -72,7 +72,7 @@ class JiraVersionParameterDefinitionTest {
             List<JiraVersionParameterDefinition.Result> result;
             try {
                 result = def.getVersions();
-            } catch (IOException | JiraException e) {
+            } catch (IOException | RestClientException e) {
                 throw new RuntimeException(e);
             }
             List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>(List.of(resReleasedVer));
@@ -88,7 +88,7 @@ class JiraVersionParameterDefinitionTest {
             List<JiraVersionParameterDefinition.Result> result;
             try {
                 result = def.getVersions();
-            } catch (IOException | JiraException e) {
+            } catch (IOException | RestClientException e) {
                 throw new RuntimeException(e);
             }
             List<JiraVersionParameterDefinition.Result> expected = new ArrayList<>(List.of(resUnreleasedVer));
@@ -104,7 +104,7 @@ class JiraVersionParameterDefinitionTest {
             List<JiraVersionParameterDefinition.Result> result;
             try {
                 result = def.getVersions();
-            } catch (IOException | JiraException e) {
+            } catch (IOException | RestClientException e) {
                 throw new RuntimeException(e);
             }
             List<JiraVersionParameterDefinition.Result> expected =
@@ -121,7 +121,7 @@ class JiraVersionParameterDefinitionTest {
             List<JiraVersionParameterDefinition.Result> result;
             try {
                 result = def.getVersions();
-            } catch (IOException | JiraException e) {
+            } catch (IOException | RestClientException e) {
                 throw new RuntimeException(e);
             }
             List<JiraVersionParameterDefinition.Result> expected =
@@ -138,7 +138,7 @@ class JiraVersionParameterDefinitionTest {
             List<JiraVersionParameterDefinition.Result> result;
             try {
                 result = def.getVersions();
-            } catch (IOException | JiraException e) {
+            } catch (IOException | RestClientException e) {
                 throw new RuntimeException(e);
             }
             List<JiraVersionParameterDefinition.Result> expected =
@@ -155,7 +155,7 @@ class JiraVersionParameterDefinitionTest {
             List<JiraVersionParameterDefinition.Result> result;
             try {
                 result = def.getVersions();
-            } catch (IOException | JiraException e) {
+            } catch (IOException | RestClientException e) {
                 throw new RuntimeException(e);
             }
             List<JiraVersionParameterDefinition.Result> expected =
@@ -172,7 +172,7 @@ class JiraVersionParameterDefinitionTest {
             List<JiraVersionParameterDefinition.Result> result;
             try {
                 result = def.getVersions();
-            } catch (IOException | JiraException e) {
+            } catch (IOException | RestClientException e) {
                 throw new RuntimeException(e);
             }
             List<JiraVersionParameterDefinition.Result> expected =

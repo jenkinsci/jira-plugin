@@ -1169,7 +1169,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @deprecated use {@link JiraSession#getVersions(String)}
      */
     @Deprecated
-    public Set<ExtendedVersion> getVersions(String projectKey) throws JiraException {
+    public Set<ExtendedVersion> getVersions(String projectKey) throws RestClientException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return Collections.emptySet();
@@ -1239,7 +1239,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException if too long
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query)
-            throws TimeoutException, JiraException {
+            throws TimeoutException, RestClientException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
@@ -1255,8 +1255,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param query       A JQL Query
      * @throws TimeoutException if too long
      */
-    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query)
-            throws TimeoutException, JiraException {
+    public void migrateIssuesToFixVersion(String projectKey, String versionName, String query) throws TimeoutException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
@@ -1273,7 +1272,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException if too long
      */
     public void addFixVersionToIssue(String projectKey, String versionName, String query)
-            throws TimeoutException, JiraException {
+            throws TimeoutException, RestClientException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
@@ -1292,7 +1291,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException TimeoutException if too long
      */
     public boolean progressMatchingIssues(
-            String jqlSearch, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
+            String jqlSearch, String workflowActionName, String comment, PrintStream console)
+            throws TimeoutException, RestClientException {
 
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");

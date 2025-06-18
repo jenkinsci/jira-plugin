@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import static org.apache.commons.lang.StringUtils.isNotEmpty;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
@@ -132,7 +133,7 @@ public class JiraSession {
      * @param jqlSearch JQL query string to execute
      * @return issues matching the JQL query
      */
-    public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException {
+    public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException, RestClientException {
         return service.getIssuesFromJqlSearch(jqlSearch, maxIssuesFromJqlSearch);
     }
 
@@ -142,7 +143,7 @@ public class JiraSession {
      * @param projectKey The key for the project
      * @return An array of versions
      */
-    public List<ExtendedVersion> getVersions(String projectKey) throws JiraException {
+    public List<ExtendedVersion> getVersions(String projectKey) {
         LOGGER.fine("Fetching versions from project: " + projectKey);
         return service.getVersions(projectKey);
     }
@@ -154,7 +155,7 @@ public class JiraSession {
      * @param name       The version name
      * @return A RemoteVersion, or null if not found
      */
-    public ExtendedVersion getVersionByName(String projectKey, String name) throws JiraException {
+    public ExtendedVersion getVersionByName(String projectKey, String name) {
         LOGGER.fine("Fetching versions from project: " + projectKey);
         List<ExtendedVersion> versions = getVersions(projectKey);
         if (versions == null) {
@@ -219,8 +220,7 @@ public class JiraSession {
      * @param version    The replacement version
      * @param query      The JQL Query
      */
-    public void migrateIssuesToFixVersion(String projectKey, String version, String query)
-            throws TimeoutException, JiraException {
+    public void migrateIssuesToFixVersion(String projectKey, String version, String query) throws TimeoutException {
 
         Version newVersion = getVersionByName(projectKey, version);
         if (newVersion == null) {
@@ -250,7 +250,7 @@ public class JiraSession {
      * @param query       The JQL Query
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query)
-            throws TimeoutException, JiraException {
+            throws TimeoutException, RestClientException {
 
         Version newVersion = getVersionByName(projectKey, toVersion);
         if (newVersion == null) {
@@ -306,7 +306,8 @@ public class JiraSession {
      * @param version    The version to add
      * @param query      The JQL Query
      */
-    public void addFixVersion(String projectKey, String version, String query) throws TimeoutException, JiraException {
+    public void addFixVersion(String projectKey, String version, String query)
+            throws TimeoutException, RestClientException {
 
         Version newVersion = getVersionByName(projectKey, version);
         if (newVersion == null) {
@@ -426,7 +427,7 @@ public class JiraSession {
     /**
      * Adds a comment to the existing issue.There is no constrains to the visibility of the comment.
      */
-    public void addCommentWithoutConstrains(String issueId, String comment) {
+    public void addCommentWithoutConstrains(String issueId, String comment) throws RestClientException {
         service.addComment(issueId, comment, null, null);
     }
 
