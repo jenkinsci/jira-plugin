@@ -145,8 +145,7 @@ public class JiraRestService {
         return builder.toString();
     }
 
-    public void addComment(String issueId, String commentBody, String groupVisibility, String roleVisibility)
-            throws RestClientException {
+    public void addComment(String issueId, String commentBody, String groupVisibility, String roleVisibility) {
         final URIBuilder builder =
                 new URIBuilder(uri).setPath(String.format("%s/issue/%s/comment", baseApiPath, issueId));
 
@@ -168,7 +167,7 @@ public class JiraRestService {
         }
     }
 
-    public Issue getIssue(String issueKey) throws RestClientException {
+    public Issue getIssue(String issueKey) {
         try {
             return jiraRestClient.getIssueClient().getIssue(issueKey).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -186,7 +185,7 @@ public class JiraRestService {
         }
     }
 
-    public List<IssueType> getIssueTypes() throws RestClientException {
+    public List<IssueType> getIssueTypes() {
         try {
             return StreamSupport.stream(
                             jiraRestClient
@@ -203,7 +202,7 @@ public class JiraRestService {
         }
     }
 
-    public List<Priority> getPriorities() throws RestClientException {
+    public List<Priority> getPriorities() {
         try {
             return StreamSupport.stream(
                             jiraRestClient
@@ -220,7 +219,7 @@ public class JiraRestService {
         }
     }
 
-    public List<String> getProjectsKeys() throws RestClientException {
+    public List<String> getProjectsKeys() {
         Iterable<BasicProject> projects = Collections.emptyList();
         try {
             projects = jiraRestClient.getProjectClient().getAllProjects().get(timeout, TimeUnit.SECONDS);
@@ -296,7 +295,7 @@ public class JiraRestService {
                 .collect(Collectors.toList());
     }
 
-    public Version addVersion(String projectKey, String versionName) throws RestClientException {
+    public Version addVersion(String projectKey, String versionName) {
         final ExtendedVersionInput versionInput =
                 new ExtendedVersionInput(projectKey, versionName, null, DateTime.now(), null, false, false);
         try {
@@ -311,7 +310,7 @@ public class JiraRestService {
         }
     }
 
-    public void releaseVersion(String projectKey, ExtendedVersion version) throws RestClientException {
+    public void releaseVersion(String projectKey, ExtendedVersion version) {
         final URIBuilder builder =
                 new URIBuilder(uri).setPath(String.format("%s/version/%s", baseApiPath, version.getId()));
 
@@ -349,8 +348,7 @@ public class JiraRestService {
             Iterable<String> components,
             String summary,
             @NonNull Long issueTypeId,
-            @Nullable Long priorityId)
-            throws RestClientException {
+            @Nullable Long priorityId) {
         IssueInputBuilder builder = new IssueInputBuilder();
         builder.setProjectKey(projectKey)
                 .setDescription(description)
@@ -391,7 +389,7 @@ public class JiraRestService {
         }
     }
 
-    public User getUser(String username) throws RestClientException {
+    public User getUser(String username) {
         try {
             return jiraRestClient.getUserClient().getUser(username).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -409,7 +407,7 @@ public class JiraRestService {
         }
     }
 
-    public void updateIssue(String issueKey, List<Version> fixVersions) throws RestClientException {
+    public void updateIssue(String issueKey, List<Version> fixVersions) {
         final IssueInput issueInput =
                 new IssueInputBuilder().setFixVersions(fixVersions).build();
         try {
@@ -421,7 +419,7 @@ public class JiraRestService {
         }
     }
 
-    public void setIssueLabels(String issueKey, List<String> labels) throws RestClientException {
+    public void setIssueLabels(String issueKey, List<String> labels) {
         final IssueInput issueInput = new IssueInputBuilder()
                 .setFieldValue(IssueFieldId.LABELS_FIELD.id, labels)
                 .build();
@@ -436,7 +434,7 @@ public class JiraRestService {
         }
     }
 
-    public void setIssueFields(String issueKey, List<JiraIssueField> fields) throws RestClientException {
+    public void setIssueFields(String issueKey, List<JiraIssueField> fields) {
         IssueInputBuilder builder = new IssueInputBuilder();
         for (JiraIssueField field : fields) {
             builder.setFieldValue(field.getId(), field.getValue());
@@ -454,7 +452,7 @@ public class JiraRestService {
         }
     }
 
-    public Issue progressWorkflowAction(String issueKey, Integer actionId) throws RestClientException {
+    public Issue progressWorkflowAction(String issueKey, Integer actionId) {
         final TransitionInput transitionInput = new TransitionInput(actionId);
 
         final Issue issue = getIssue(issueKey);
@@ -470,7 +468,7 @@ public class JiraRestService {
         return issue;
     }
 
-    public List<Transition> getAvailableActions(String issueKey) throws RestClientException {
+    public List<Transition> getAvailableActions(String issueKey) {
         final Issue issue = getIssue(issueKey);
 
         try {
@@ -485,7 +483,7 @@ public class JiraRestService {
         }
     }
 
-    public List<Status> getStatuses() throws RestClientException {
+    public List<Status> getStatuses() {
         try {
             final Iterable<Status> statuses =
                     jiraRestClient.getMetadataClient().getStatuses().get(timeout, TimeUnit.SECONDS);
@@ -497,7 +495,7 @@ public class JiraRestService {
         }
     }
 
-    public List<Component> getComponents(String projectKey) throws RestClientException {
+    public List<Component> getComponents(String projectKey) {
         final URIBuilder builder =
                 new URIBuilder(uri).setPath(String.format("%s/project/%s/components", baseApiPath, projectKey));
 
@@ -567,7 +565,7 @@ public class JiraRestService {
      * Get User's permissions
      *
      */
-    public Permissions getMyPermissions() throws RestClientException {
+    public Permissions getMyPermissions() {
         return jiraRestClient
                 .getExtendedMyPermissionsRestClient()
                 .getMyPermissions()

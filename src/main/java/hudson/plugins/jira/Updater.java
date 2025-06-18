@@ -151,7 +151,7 @@ class Updater {
      * @param useWikiStyleComments
      * @param recordScmChanges
      * @param groupVisibility
-     * @throws RestClientException
+     * @
      */
     void submitComments(
             Run<?, ?> build,
@@ -162,8 +162,7 @@ class Updater {
             boolean useWikiStyleComments,
             boolean recordScmChanges,
             String groupVisibility,
-            String roleVisibility)
-            throws RestClientException {
+            String roleVisibility) {
 
         // copy to prevent ConcurrentModificationException
         Set<JiraIssue> copy = new HashSet<>(issues);

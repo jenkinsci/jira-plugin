@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.Launcher;
@@ -49,7 +50,13 @@ public class JiraEnvironmentVariableBuilder extends Builder {
             throw new AbortException(Messages.JiraEnvironmentVariableBuilder_NoJiraSite());
         }
 
-        Set<String> ids = getIssueSelector().findIssueIds(build, site, listener);
+        Set<String> ids;
+        try {
+            ids = getIssueSelector().findIssueIds(build, site, listener);
+        } catch (RestClientException e) {
+            listener.getLogger().println(e.getMessage());
+            return false;
+        }
 
         String idList = StringUtils.join(ids, ",");
 
