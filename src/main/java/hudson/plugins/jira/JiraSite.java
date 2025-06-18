@@ -1156,7 +1156,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public boolean existsIssue(String id) {
         try {
             return getIssue(id) != null;
-        } catch (IOException e) { // restoring backward compat means even avoid exception
+        } catch (IOException | RestClientException e) { // restoring backward compat means even avoid exception
             throw new RuntimeException(e.getMessage(), e);
         }
     }

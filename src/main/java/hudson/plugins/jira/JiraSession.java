@@ -77,7 +77,8 @@ public class JiraSession {
      * Adds a comment to the existing issue. Constrains the visibility of the
      * comment the the supplied groupVisibility.
      */
-    public void addComment(String issueId, String comment, String groupVisibility, String roleVisibility) {
+    public void addComment(String issueId, String comment, String groupVisibility, String roleVisibility)
+            throws RestClientException {
         service.addComment(issueId, comment, groupVisibility, roleVisibility);
     }
 
