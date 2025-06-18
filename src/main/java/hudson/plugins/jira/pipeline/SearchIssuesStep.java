@@ -1,5 +1,6 @@
 package hudson.plugins.jira.pipeline;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
@@ -89,9 +90,13 @@ public class SearchIssuesStep extends Step {
             }
 
             List<String> resultList = new ArrayList<>();
-            List<Issue> issuesFromJqlSearch = session.getIssuesFromJqlSearch(step.jql);
-            for (Issue issue : issuesFromJqlSearch) {
-                resultList.add(issue.getKey());
+            try {
+                List<Issue> issuesFromJqlSearch = session.getIssuesFromJqlSearch(step.jql);
+                for (Issue issue : issuesFromJqlSearch) {
+                    resultList.add(issue.getKey());
+                }
+            } catch (RestClientException e) {
+                getContext().get(TaskListener.class).getLogger().println(e.getMessage());
             }
             return resultList;
         }

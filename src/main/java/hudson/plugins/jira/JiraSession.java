@@ -77,8 +77,7 @@ public class JiraSession {
      * Adds a comment to the existing issue. Constrains the visibility of the
      * comment the the supplied groupVisibility.
      */
-    public void addComment(String issueId, String comment, String groupVisibility, String roleVisibility)
-            throws RestClientException {
+    public void addComment(String issueId, String comment, String groupVisibility, String roleVisibility) {
         service.addComment(issueId, comment, groupVisibility, roleVisibility);
     }
 
@@ -428,7 +427,7 @@ public class JiraSession {
     /**
      * Adds a comment to the existing issue.There is no constrains to the visibility of the comment.
      */
-    public void addCommentWithoutConstrains(String issueId, String comment) throws RestClientException {
+    public void addCommentWithoutConstrains(String issueId, String comment) {
         service.addComment(issueId, comment, null, null);
     }
 

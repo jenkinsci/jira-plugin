@@ -400,7 +400,6 @@ public class JiraCreateIssueNotifier extends Notifier {
      * @param vars
      * @throws InterruptedException
      * @throws IOException
-     * @throws RestClientException
      */
     private void currentBuildResultSuccess(
             AbstractBuild<?, ?> build,
@@ -408,7 +407,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             Result previousBuildResult,
             String filename,
             EnvVars vars)
-            throws InterruptedException, IOException, RestClientException {
+            throws InterruptedException, IOException {
 
         if (previousBuildResult == Result.FAILURE || previousBuildResult == Result.SUCCESS) {
             String comment =

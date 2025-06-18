@@ -1167,7 +1167,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @deprecated use {@link JiraSession#getVersions(String)}
      */
     @Deprecated
-    public Set<ExtendedVersion> getVersions(String projectKey) throws RestClientException {
+    public Set<ExtendedVersion> getVersions(String projectKey) {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return Collections.emptySet();
