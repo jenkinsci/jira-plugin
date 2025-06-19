@@ -42,7 +42,7 @@ public class JiraEnvironmentContributingAction extends InvisibleAction implement
     @Override
     public void buildEnvVars(AbstractBuild<?, ?> ab, EnvVars ev) {
         if (ev != null) {
-            ev.put(ISSUES_VARIABLE_NAME, issuesList);
+            ev.put(ISSUES_VARIABLE_NAME, getIssuesList());
             ev.put(ISSUES_SIZE_VARIABLE_NAME, getNumberOfIssues().toString());
             ev.put(JIRA_URL_VARIABLE_NAME, getJiraUrl());
         }

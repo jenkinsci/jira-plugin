@@ -27,7 +27,6 @@ import java.util.LinkedHashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 class JiraEnvironmentVariableBuilderTest {
 
@@ -44,7 +43,7 @@ class JiraEnvironmentVariableBuilderTest {
     Launcher launcher;
     BuildListener listener;
     EnvVars env;
-    AbstractProject project;
+    AbstractProject<?, ?> project;
     JiraSite site;
     AbstractIssueSelector issueSelector;
     PrintStream logger;
@@ -87,7 +86,7 @@ class JiraEnvironmentVariableBuilderTest {
     @Test
     public void testPerformWithNoSiteFailsBuild() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
-        doReturn(null).when(builder).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
+        doReturn(null).when(builder).getSiteForProject(project);
         assertThat(builder.perform(build, launcher, listener), is(false));
         verify(logger, times(1)).println(Messages.JiraEnvironmentVariableBuilder_NoJiraSite());
     }
@@ -95,8 +94,7 @@ class JiraEnvironmentVariableBuilderTest {
     @Test
     public void testPerformAddsAction() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
-        doReturn(site).when(builder).getSiteForProject((AbstractProject<?, ?>) Mockito.any());
-
+        doReturn(site).when(builder).getSiteForProject(project);
         boolean result = builder.perform(build, launcher, listener);
 
         assertThat(result, is(true));
