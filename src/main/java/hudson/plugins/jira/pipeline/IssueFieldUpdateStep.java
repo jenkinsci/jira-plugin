@@ -3,8 +3,6 @@ package hudson.plugins.jira.pipeline;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.EnvVars;
 import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Result;
@@ -87,8 +85,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, EnvVars env, Launcher launcher, TaskListener listener)
-            throws IOException {
+    public void perform(Run<?, ?> run, EnvVars env, TaskListener listener) throws IOException {
 
         PrintStream logger = listener.getLogger();
 
@@ -127,10 +124,8 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
     }
 
     @Override
-    @Deprecated
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-            throws InterruptedException, IOException {
-        this.perform(run, workspace, run.getEnvironment(listener), launcher, listener);
+    public boolean requiresWorkspace() {
+        return false;
     }
 
     /**

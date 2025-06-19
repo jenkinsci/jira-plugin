@@ -1,8 +1,7 @@
 package hudson.plugins.jira;
 
+import hudson.EnvVars;
 import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Descriptor;
 import hudson.model.Run;
@@ -64,8 +63,13 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener) {
+    public void perform(Run<?, ?> run, EnvVars env, TaskListener listener) {
         new VersionReleaser().perform(run.getParent(), jiraProjectKey, jiraRelease, jiraDescription, run, listener);
+    }
+
+    @Override
+    public boolean requiresWorkspace() {
+        return false;
     }
 
     @Override

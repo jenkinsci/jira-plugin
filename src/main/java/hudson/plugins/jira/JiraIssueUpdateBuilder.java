@@ -15,9 +15,8 @@
  */
 package hudson.plugins.jira;
 
+import hudson.EnvVars;
 import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractProject;
 import hudson.model.Job;
@@ -81,8 +80,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
      * Performs the actual update based on job configuration.
      */
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-            throws InterruptedException, IOException {
+    public void perform(Run<?, ?> run, EnvVars env, TaskListener listener) throws InterruptedException, IOException {
         String realComment = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(comment));
         String realJql = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(jqlSearch));
         String realWorkflowActionName =
@@ -112,6 +110,11 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
             e.printStackTrace(listener.getLogger());
             run.setResult(Result.FAILURE);
         }
+    }
+
+    @Override
+    public boolean requiresWorkspace() {
+        return false;
     }
 
     @Override

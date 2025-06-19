@@ -1,8 +1,7 @@
 package hudson.plugins.jira;
 
+import hudson.EnvVars;
 import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -54,8 +53,13 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
     }
 
     @Override
-    public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener) {
-        new VersionCreator().perform(build.getParent(), jiraVersion, jiraProjectKey, build, listener);
+    public void perform(Run<?, ?> run, EnvVars env, TaskListener listener) {
+        new VersionCreator().perform(run.getParent(), jiraVersion, jiraProjectKey, run, listener);
+    }
+
+    @Override
+    public boolean requiresWorkspace() {
+        return false;
     }
 
     @Override
