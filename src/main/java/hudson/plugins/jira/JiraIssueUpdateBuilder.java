@@ -81,10 +81,9 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
      */
     @Override
     public void perform(Run<?, ?> run, EnvVars env, TaskListener listener) throws InterruptedException, IOException {
-        String realComment = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(comment));
-        String realJql = Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(jqlSearch));
-        String realWorkflowActionName =
-                Util.fixEmptyAndTrim(run.getEnvironment(listener).expand(workflowActionName));
+        String realComment = Util.fixEmptyAndTrim(env.expand(comment));
+        String realJql = Util.fixEmptyAndTrim(env.expand(jqlSearch));
+        String realWorkflowActionName = Util.fixEmptyAndTrim(env.expand(workflowActionName));
 
         JiraSite site = getSiteForJob(run.getParent());
 
