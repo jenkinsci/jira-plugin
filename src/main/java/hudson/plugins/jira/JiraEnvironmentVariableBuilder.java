@@ -21,18 +21,10 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class JiraEnvironmentVariableBuilder extends Builder {
 
     private AbstractIssueSelector issueSelector;
-    private final String issuesSizeVariableName;
-
-    @Deprecated
-    public JiraEnvironmentVariableBuilder(AbstractIssueSelector issueSelector) {
-        this.issueSelector = issueSelector;
-        this.issuesSizeVariableName = JiraEnvironmentContributingAction.ISSUES_SIZE_VARIABLE_NAME;
-    }
 
     @DataBoundConstructor
-    public JiraEnvironmentVariableBuilder(AbstractIssueSelector issueSelector, String issuesSizeVariableName) {
+    public JiraEnvironmentVariableBuilder(AbstractIssueSelector issueSelector) {
         this.issueSelector = issueSelector;
-        this.issuesSizeVariableName = issuesSizeVariableName;
     }
 
     public AbstractIssueSelector getIssueSelector() {
@@ -41,10 +33,6 @@ public class JiraEnvironmentVariableBuilder extends Builder {
             uis = new DefaultIssueSelector();
         }
         return (this.issueSelector = uis);
-    }
-
-    String getIssuesSizeVariableName() {
-        return issuesSizeVariableName;
     }
 
     JiraSite getSiteForProject(AbstractProject<?, ?> project) {
@@ -71,10 +59,10 @@ public class JiraEnvironmentVariableBuilder extends Builder {
                 .println(Messages.JiraEnvironmentVariableBuilder_Updating(
                         JiraEnvironmentContributingAction.ISSUES_VARIABLE_NAME, idList));
         listener.getLogger()
-                .println(Messages.JiraEnvironmentVariableBuilder_Updating(getIssuesSizeVariableName(), idListSize));
+                .println(Messages.JiraEnvironmentVariableBuilder_Updating(
+                        JiraEnvironmentContributingAction.ISSUES_SIZE_VARIABLE_NAME, idListSize));
 
-        build.addAction(
-                new JiraEnvironmentContributingAction(idList, idListSize, site.getName(), getIssuesSizeVariableName()));
+        build.addAction(new JiraEnvironmentContributingAction(idList, idListSize, site.getName()));
 
         return true;
     }

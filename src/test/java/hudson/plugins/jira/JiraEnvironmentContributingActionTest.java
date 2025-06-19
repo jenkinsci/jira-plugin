@@ -12,17 +12,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class JiraEnvironmentContributingActionTest {
-    private static final String JIRA_URL = "http://example.com";
-    private static final String JIRA_URL_PROPERTY_NAME = "JIRA_URL";
-    private static final String ISSUES_PROPERTY_NAME = "JIRA_ISSUES";
-    private static final String ISSUES_SIZE_PROPERTY_NAME = "JIRA_ISSUES_SIZE";
+    private static final String JIRA_URL = "http://example.com"; 
     private static final String ISSUES_LIST = "ISS-1,ISS-2";
     private static final Integer ISSUES_SIZE = 2;
 
     @Test
     public void buildEnvVarsEnvIsNull() {
         JiraEnvironmentContributingAction action =
-                new JiraEnvironmentContributingAction(ISSUES_LIST, ISSUES_SIZE, JIRA_URL, ISSUES_SIZE_PROPERTY_NAME);
+                new JiraEnvironmentContributingAction(ISSUES_LIST, ISSUES_SIZE, JIRA_URL);
         AbstractBuild build = mock(AbstractBuild.class);
 
         action.buildEnvVars(build, null);
@@ -32,8 +29,8 @@ class JiraEnvironmentContributingActionTest {
     @Test
     public void buildEnvVarsAddVariables() {
         JiraEnvironmentContributingAction action =
-                new JiraEnvironmentContributingAction(ISSUES_LIST, ISSUES_SIZE, JIRA_URL, ISSUES_SIZE_PROPERTY_NAME);
-        AbstractBuild build = mock(AbstractBuild.class);
+                new JiraEnvironmentContributingAction(ISSUES_LIST, ISSUES_SIZE, JIRA_URL);
+        AbstractBuild<?, ?> build = mock(AbstractBuild.class);
         EnvVars envVars = mock(EnvVars.class);
 
         action.buildEnvVars(build, envVars);
@@ -42,13 +39,13 @@ class JiraEnvironmentContributingActionTest {
         ArgumentCaptor<String> values = ArgumentCaptor.forClass(String.class);
         verify(envVars, times(3)).put(keys.capture(), values.capture());
 
-        assertThat(keys.getAllValues().get(0), is(ISSUES_PROPERTY_NAME));
+        assertThat(keys.getAllValues().get(0), is(JiraEnvironmentContributingAction.ISSUES_VARIABLE_NAME));
         assertThat(values.getAllValues().get(0), is(ISSUES_LIST));
 
-        assertThat(keys.getAllValues().get(1), is(ISSUES_SIZE_PROPERTY_NAME));
+        assertThat(keys.getAllValues().get(1), is(JiraEnvironmentContributingAction.ISSUES_SIZE_VARIABLE_NAME));
         assertThat(values.getAllValues().get(1), is(ISSUES_SIZE.toString()));
 
-        assertThat(keys.getAllValues().get(2), is(JIRA_URL_PROPERTY_NAME));
+        assertThat(keys.getAllValues().get(2), is(JiraEnvironmentContributingAction.JIRA_URL_VARIABLE_NAME));
         assertThat(values.getAllValues().get(2), is(JIRA_URL));
     }
 }
