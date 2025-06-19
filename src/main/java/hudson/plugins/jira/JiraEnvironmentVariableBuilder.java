@@ -84,7 +84,7 @@ public class JiraEnvironmentVariableBuilder extends Builder {
         }
 
         public boolean hasIssueSelectors() {
-            return Jenkins.get().getDescriptorList(AbstractIssueSelector.class).size() > 1;
+            return Jenkins.get().getDescriptorList(AbstractIssueSelector.class).size() > 0;
         }
     }
 }

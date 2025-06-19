@@ -4,6 +4,8 @@ import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -20,12 +22,18 @@ import hudson.model.BuildListener;
 import hudson.model.Node;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.plugins.jira.selector.DefaultIssueSelector;
+import hudson.plugins.jira.selector.ExplicitIssueSelector;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import jenkins.model.Jenkins;
+import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.ArgumentCaptor;
 
 class JiraEnvironmentVariableBuilderTest {
@@ -48,6 +56,9 @@ class JiraEnvironmentVariableBuilderTest {
     AbstractIssueSelector issueSelector;
     PrintStream logger;
     Node node;
+
+    @Rule
+    JenkinsRule jenkinsRule = new JenkinsRule();
 
     @BeforeEach
     void createMocks() throws IOException, InterruptedException {
@@ -72,18 +83,21 @@ class JiraEnvironmentVariableBuilderTest {
     }
 
     @Test
+    @WithoutJenkins
     public void testIssueSelectorDefaultsToDefault() {
         final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(null);
         assertThat(builder.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
     }
 
     @Test
+    @WithoutJenkins
     public void testSetIssueSelectorPersists() {
         final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(issueSelector);
         assertThat(builder.getIssueSelector(), is(issueSelector));
     }
 
     @Test
+    @WithoutJenkins
     public void testPerformWithNoSiteFailsBuild() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
         doReturn(null).when(builder).getSiteForProject(project);
@@ -92,6 +106,7 @@ class JiraEnvironmentVariableBuilderTest {
     }
 
     @Test
+    @WithoutJenkins
     public void testPerformAddsAction() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
         doReturn(site).when(builder).getSiteForProject(project);
@@ -109,5 +124,14 @@ class JiraEnvironmentVariableBuilderTest {
         assertThat(action.getJiraUrl(), is(JIRA_URL));
         assertThat(action.getIssuesList(), anyOf(is(EXPECTED_JIRA_ISSUES_1), is(EXPECTED_JIRA_ISSUES_2)));
         assertThat(action.getNumberOfIssues(), is(2));
+    }
+
+    @Test
+    @WithJenkins
+    public void testHasIssueSelectors_OneSelector(JenkinsRule r) {
+        JiraEnvironmentVariableBuilder.DescriptorImpl descriptor = new JiraEnvironmentVariableBuilder.DescriptorImpl();
+        assertFalse(descriptor.hasIssueSelectors());
+        Jenkins.get().getDescriptorList(AbstractIssueSelector.class).add(new ExplicitIssueSelector.DescriptorImpl());
+        assertTrue(descriptor.hasIssueSelectors());
     }
 }
