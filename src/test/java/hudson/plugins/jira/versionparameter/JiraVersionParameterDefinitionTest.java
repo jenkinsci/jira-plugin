@@ -6,7 +6,6 @@ import static org.mockito.Mockito.mockStatic;
 
 import hudson.cli.CLICommand;
 import hudson.model.Job;
-import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
@@ -52,15 +51,16 @@ class JiraVersionParameterDefinitionTest {
         request2 = mock(StaplerRequest2.class);
     }
 
-
     @Test
     void parameterValueMethodOverrides() throws Exception {
         JiraVersionParameterDefinition definition =
                 new JiraVersionParameterDefinition("pname", "pdesc", "JIRAKEY", null, "false", "true", "true");
 
         assertEquals("JIRAKEY", definition.getJiraProjectKey());
-        assertEquals("true", definition.getJiraShowReleased());
+        assertEquals("false", definition.getJiraShowReleased());
         assertEquals("true", definition.getJiraShowArchived());
+        assertEquals("true", definition.getJiraShowUnreleased());
+
         assertEquals("pdesc", definition.getDescription());
 
         CLICommand cliCommand = mock(CLICommand.class);
