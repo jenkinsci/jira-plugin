@@ -128,9 +128,15 @@ class JiraEnvironmentVariableBuilderTest {
 
     @Test
     @WithJenkins
-    public void testHasIssueSelectors_OneSelector(JenkinsRule r) {
+    public void testHasIssueSelectors_NoSelector(JenkinsRule r) {
         JiraEnvironmentVariableBuilder.DescriptorImpl descriptor = new JiraEnvironmentVariableBuilder.DescriptorImpl();
         assertFalse(descriptor.hasIssueSelectors());
+    }
+
+    @Test
+    @WithJenkins
+    public void testHasIssueSelectors(JenkinsRule r) {
+        JiraEnvironmentVariableBuilder.DescriptorImpl descriptor = new JiraEnvironmentVariableBuilder.DescriptorImpl();
         Jenkins.get().getDescriptorList(AbstractIssueSelector.class).add(new ExplicitIssueSelector.DescriptorImpl());
         assertTrue(descriptor.hasIssueSelectors());
     }
