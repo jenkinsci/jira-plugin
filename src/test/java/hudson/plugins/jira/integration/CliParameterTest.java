@@ -1,4 +1,4 @@
-package hudson.plugins.jira;
+package hudson.plugins.jira.integration;
 
 import static hudson.cli.CLICommandInvoker.Matcher.succeeded;
 import static org.hamcrest.MatcherAssert.assertThat;

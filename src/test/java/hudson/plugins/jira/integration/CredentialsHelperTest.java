@@ -1,4 +1,4 @@
-package hudson.plugins.jira;
+package hudson.plugins.jira.integration;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
@@ -14,6 +14,8 @@ import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Descriptor.FormException;
+import hudson.plugins.jira.CredentialsHelper;
+import hudson.plugins.jira.JiraSite;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;

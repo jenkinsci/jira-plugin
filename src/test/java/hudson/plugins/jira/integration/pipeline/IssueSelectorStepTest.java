@@ -1,4 +1,4 @@
-package hudson.plugins.jira.pipeline;
+package hudson.plugins.jira.integration.pipeline;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -16,6 +16,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraGlobalConfiguration;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.pipeline.IssueSelectorStep;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import java.io.PrintStream;
 import java.util.Collections;

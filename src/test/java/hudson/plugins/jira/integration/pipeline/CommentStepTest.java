@@ -1,4 +1,4 @@
-package hudson.plugins.jira.pipeline;
+package hudson.plugins.jira.integration.pipeline;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -15,6 +15,7 @@ import hudson.model.Run;
 import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.pipeline.CommentStep;
 import hudson.plugins.jira.pipeline.CommentStep.CommentStepExecution;
 import java.util.ArrayList;
 import java.util.Arrays;

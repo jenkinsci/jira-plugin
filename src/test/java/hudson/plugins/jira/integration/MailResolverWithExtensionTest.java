@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package hudson.plugins.jira;
+package hudson.plugins.jira.integration;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -30,6 +30,10 @@ import static org.mockito.Mockito.doReturn;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.User;
+import hudson.plugins.jira.JiraGlobalConfiguration;
+import hudson.plugins.jira.JiraRestService;
+import hudson.plugins.jira.JiraSession;
+import hudson.plugins.jira.JiraSite;
 import hudson.security.HudsonPrivateSecurityRealm;
 import java.net.URI;
 import java.util.Collections;
