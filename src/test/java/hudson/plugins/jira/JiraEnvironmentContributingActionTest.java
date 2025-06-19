@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class JiraEnvironmentContributingActionTest {
-    private static final String JIRA_URL = "http://example.com"; 
+    private static final String JIRA_URL = "http://example.com";
     private static final String ISSUES_LIST = "ISS-1,ISS-2";
     private static final Integer ISSUES_SIZE = 2;
 
