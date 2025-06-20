@@ -4,14 +4,15 @@ import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -21,20 +22,23 @@ import hudson.model.BuildListener;
 import hudson.model.Node;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.plugins.jira.selector.DefaultIssueSelector;
+import hudson.plugins.jira.selector.ExplicitIssueSelector;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
+@WithJenkins
 class JiraEnvironmentVariableBuilderTest {
 
     private static final String JIRA_URL = "http://example.com";
-    private static final String JIRA_URL_PROPERTY_NAME = "JIRA_URL";
-    private static final String ISSUES_PROPERTY_NAME = "JIRA_ISSUES";
     private static final String ISSUE_ID_1 = "ISS-1";
     private static final String ISSUE_ID_2 = "ISS-2";
 
@@ -47,11 +51,14 @@ class JiraEnvironmentVariableBuilderTest {
     Launcher launcher;
     BuildListener listener;
     EnvVars env;
-    AbstractProject project;
+    AbstractProject<?, ?> project;
     JiraSite site;
     AbstractIssueSelector issueSelector;
     PrintStream logger;
     Node node;
+
+    @Rule
+    JenkinsRule jenkinsRule = new JenkinsRule();
 
     @BeforeEach
     void createMocks() throws IOException, InterruptedException {
@@ -76,29 +83,33 @@ class JiraEnvironmentVariableBuilderTest {
     }
 
     @Test
-    void issueSelectorDefaultsToDefault() {
+    @WithoutJenkins
+    public void testIssueSelectorDefaultsToDefault() {
         final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(null);
         assertThat(builder.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
     }
 
     @Test
-    void setIssueSelectorPersists() {
+    @WithoutJenkins
+    public void testSetIssueSelectorPersists() {
         final JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(issueSelector);
         assertThat(builder.getIssueSelector(), is(issueSelector));
     }
 
     @Test
-    void performWithNoSiteFailsBuild() {
+    @WithoutJenkins
+    public void testPerformWithNoSiteFailsBuild() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
-        doReturn(null).when(builder).getSiteForProject(Mockito.any());
-        assertThrows(AbortException.class, () -> builder.perform(build, launcher, listener));
+        doReturn(null).when(builder).getSiteForProject(project);
+        assertThat(builder.perform(build, launcher, listener), is(false));
+        verify(logger, times(1)).println(Messages.JiraEnvironmentVariableBuilder_NoJiraSite());
     }
 
     @Test
-    void performAddsAction() throws InterruptedException, IOException {
+    @WithoutJenkins
+    public void testPerformAddsAction() throws InterruptedException, IOException {
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
-        doReturn(site).when(builder).getSiteForProject(Mockito.any());
-
+        doReturn(site).when(builder).getSiteForProject(project);
         boolean result = builder.perform(build, launcher, listener);
 
         assertThat(result, is(true));
@@ -112,5 +123,25 @@ class JiraEnvironmentVariableBuilderTest {
 
         assertThat(action.getJiraUrl(), is(JIRA_URL));
         assertThat(action.getIssuesList(), anyOf(is(EXPECTED_JIRA_ISSUES_1), is(EXPECTED_JIRA_ISSUES_2)));
+        assertThat(action.getNumberOfIssues(), is(2));
+    }
+
+    @Test
+    public void testHasIssueSelectors_HasDefaultSelector(JenkinsRule r) {
+        JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(null);
+        assertThat(builder.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
+        JiraEnvironmentVariableBuilder.DescriptorImpl descriptor =
+                (JiraEnvironmentVariableBuilder.DescriptorImpl) r.jenkins.getDescriptor(builder.getClass());
+        assertTrue(descriptor.hasIssueSelectors());
+    }
+
+    @Test
+    public void testHasIssueSelectors(JenkinsRule r) {
+        ExplicitIssueSelector explicitIssueSelector = new ExplicitIssueSelector();
+        JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(explicitIssueSelector);
+        assertEquals(explicitIssueSelector, builder.getIssueSelector());
+        JiraEnvironmentVariableBuilder.DescriptorImpl descriptor =
+                (JiraEnvironmentVariableBuilder.DescriptorImpl) r.jenkins.getDescriptor(builder.getClass());
+        assertTrue(descriptor.hasIssueSelectors());
     }
 }

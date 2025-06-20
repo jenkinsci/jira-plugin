@@ -37,7 +37,8 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
             String jiraShowReleased,
             String jiraShowArchived,
             String jiraShowUnreleased) {
-        super(name, description);
+        super(name);
+        setDescription(description);
         setJiraProjectKey(jiraProjectKey);
         setJiraReleasePattern(jiraReleasePattern);
         setJiraShowReleased(jiraShowReleased);
