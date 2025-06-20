@@ -4,7 +4,7 @@ import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
-import jenkins.model.Jenkins;
 import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,6 +35,7 @@ import org.jvnet.hudson.test.WithoutJenkins;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.mockito.ArgumentCaptor;
 
+@WithJenkins
 class JiraEnvironmentVariableBuilderTest {
 
     private static final String JIRA_URL = "http://example.com";
@@ -127,17 +127,21 @@ class JiraEnvironmentVariableBuilderTest {
     }
 
     @Test
-    @WithJenkins
-    public void testHasIssueSelectors_NoSelector(JenkinsRule r) {
-        JiraEnvironmentVariableBuilder.DescriptorImpl descriptor = new JiraEnvironmentVariableBuilder.DescriptorImpl();
-        assertFalse(descriptor.hasIssueSelectors());
+    public void testHasIssueSelectors_HasDefaultSelector(JenkinsRule r) {
+        JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(null);
+        assertThat(builder.getIssueSelector(), instanceOf(DefaultIssueSelector.class));
+        JiraEnvironmentVariableBuilder.DescriptorImpl descriptor =
+                (JiraEnvironmentVariableBuilder.DescriptorImpl) r.jenkins.getDescriptor(builder.getClass());
+        assertTrue(descriptor.hasIssueSelectors());
     }
 
     @Test
-    @WithJenkins
     public void testHasIssueSelectors(JenkinsRule r) {
-        JiraEnvironmentVariableBuilder.DescriptorImpl descriptor = new JiraEnvironmentVariableBuilder.DescriptorImpl();
-        Jenkins.get().getDescriptorList(AbstractIssueSelector.class).add(new ExplicitIssueSelector.DescriptorImpl());
+        ExplicitIssueSelector explicitIssueSelector = new ExplicitIssueSelector();
+        JiraEnvironmentVariableBuilder builder = new JiraEnvironmentVariableBuilder(explicitIssueSelector);
+        assertEquals(explicitIssueSelector, builder.getIssueSelector());
+        JiraEnvironmentVariableBuilder.DescriptorImpl descriptor =
+                (JiraEnvironmentVariableBuilder.DescriptorImpl) r.jenkins.getDescriptor(builder.getClass());
         assertTrue(descriptor.hasIssueSelectors());
     }
 }
