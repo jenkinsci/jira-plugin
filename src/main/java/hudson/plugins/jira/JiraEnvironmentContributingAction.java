@@ -33,7 +33,7 @@ public class JiraEnvironmentContributingAction extends InvisibleAction implement
         return jiraUrl;
     }
 
-    public JiraEnvironmentContributingAction(String issuesList, int issuesSize, String jiraUrl) {
+    public JiraEnvironmentContributingAction(String issuesList, Integer issuesSize, String jiraUrl) {
         this.issuesList = issuesList;
         this.issuesSize = issuesSize;
         this.jiraUrl = jiraUrl;
