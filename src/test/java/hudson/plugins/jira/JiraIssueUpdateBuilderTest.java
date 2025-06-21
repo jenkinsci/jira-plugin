@@ -20,9 +20,15 @@ import hudson.model.Result;
 import hudson.model.TaskListener;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.concurrent.TimeoutException;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 class JiraIssueUpdateBuilderTest {
 
@@ -95,5 +101,21 @@ class JiraIssueUpdateBuilderTest {
         doReturn(true).when(site).progressMatchingIssues(any(), any(), any(), any());
         builder.perform(build, workspace, launcher, listener);
         assertThat(result, is(Result.SUCCESS));
+    }
+
+    @WithJenkins
+    @Test
+    void testPipelineWithJiraSite(JenkinsRule r) throws Exception {
+        JiraGlobalConfiguration jiraGlobalConfiguration = JiraGlobalConfiguration.get();
+        jiraGlobalConfiguration.setSites(Collections.singletonList(site));
+        doReturn(true).when(site).progressMatchingIssues(anyString(), anyString(), anyString(), any());
+        WorkflowJob job = r.createProject(WorkflowJob.class);
+        job.setDefinition(new CpsFlowDefinition(
+                """
+                        step([$class: 'JiraIssueUpdateBuilder', jqlSearch: 'search', workflowActionName: 'action', comment: 'comment'])
+                """,
+                true));
+        WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, job);
+        r.assertLogContains("[Jira] Updating issues using workflow action action.", b);
     }
 }

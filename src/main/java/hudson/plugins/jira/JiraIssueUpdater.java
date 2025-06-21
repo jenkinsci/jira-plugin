@@ -1,7 +1,7 @@
 package hudson.plugins.jira;
 
+import hudson.EnvVars;
 import hudson.Extension;
-import hudson.FilePath;
 import hudson.Launcher;
 import hudson.matrix.MatrixAggregatable;
 import hudson.matrix.MatrixAggregator;
@@ -52,8 +52,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
     }
 
     @Override
-    public void perform(Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener)
-            throws InterruptedException, IOException {
+    public void perform(Run<?, ?> run, EnvVars env, TaskListener listener) throws InterruptedException, IOException {
         // Don't do anything for individual matrix runs.
         if (run instanceof MatrixRun) {
             return;
@@ -68,6 +67,11 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
             throw new IllegalArgumentException(
                     "Unsupported run type " + run.getClass().getName());
         }
+    }
+
+    @Override
+    public boolean requiresWorkspace() {
+        return false;
     }
 
     @Override
