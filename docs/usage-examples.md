@@ -1,19 +1,4 @@
-# Plugin Compatibility with [Pipeline](https://github.com/jenkinsci/pipeline-plugin)
-
-(formerly known as Pipeline plugin). This document captures the status of features to be compatible or incompatible.
-
-- [X] `JIRA Issue Parameter` supported
-- [X] `JIRA Version Parameter` supported
-- [X] `JiraChangeLogAnnotator` supported
-- [X] `JiraIssueUpdater` supported
-- [X] `JiraIssueUpdateBuilder` supported
-- [X] `JiraCreateReleaseNotes` supported
-- [ ] `JiraCreateIssueNotifier` never supported
-- [ ] `JiraIssueMigrator` never supported
-- [ ] `JiraReleaseVersionUpdater` never supported
-- [X] `JiraReleaseVersionUpdaterBuilder` supported
-- [ ] `JiraVersionCreator` never supported
-- [ ] `JiraEnvironmentVariableBuilder` not supported (workaround exists)
+# Usage examples
 
 ## JiraIssueUpdater usage example
 
