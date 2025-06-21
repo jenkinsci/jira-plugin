@@ -143,15 +143,16 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         } catch (RestClientException e) {
 
             if (e.getStatusCode().or(0).equals(404)) {
-                logger.println(issueId + " - Jira issue not found");
+                logger.println("[Jira] " + issueId + " - Jira issue not found");
             }
 
             if (e.getStatusCode().or(0).equals(403)) {
-                logger.println(issueId + " - Jenkins Jira user does not have permissions to comment on this issue");
+                logger.println("[Jira] " + issueId
+                        + " - Jenkins Jira user does not have permissions to comment on this issue");
             }
 
             if (e.getStatusCode().or(0).equals(401)) {
-                logger.println(issueId + " - Jenkins Jira authentication problem");
+                logger.println("[Jira] " + issueId + " - Jenkins Jira authentication problem");
             }
 
             logger.println(Messages.FailedToUpdateIssue(issueId));
