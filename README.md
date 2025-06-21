@@ -1,6 +1,6 @@
 # Jenkins Jira Plugin
 
-[![Documentation](https://img.shields.io/jenkins/plugin/v/jira.svg?label=Documentation)](https://plugins.jenkins.io/jira)
+[![Jenkins Version](https://img.shields.io/badge/Jenkins-2.479.3-green.svg?label=min.%20Jenkins)](https://jenkins.io/download/)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/jira.svg?color=blue)](https://stats.jenkins.io/pluginversions/jira.html)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/jira-plugin.svg?label=Release)](https://github.com/jenkinsci/jira-plugin/releases/latest)
 [![Jenkins CI](https://ci.jenkins.io/buildStatus/icon?job=Plugins/jira-plugin/master)](https://ci.jenkins.io/job/Plugins/job/jira-plugin/)
