@@ -53,7 +53,7 @@
     <jira-rest-client.version>6.0.2</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.479</jenkins.baseline>
+    <jenkins.baseline>2.492</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <spotless.check.skip>false</spotless.check.skip>
   </properties>
