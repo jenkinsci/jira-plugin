@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
+import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
@@ -13,7 +14,12 @@ import hudson.scm.SCM;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 class JiraIssueUpdaterTest {
 
@@ -57,5 +63,18 @@ class JiraIssueUpdaterTest {
 
         final JiraIssueUpdater updater = new JiraIssueUpdater(null, null, testLabels);
         assertThat(updater.getLabels(), is(testLabels));
+    }
+
+    @WithJenkins
+    @Test
+    void testPipeline(JenkinsRule r) throws Exception {
+        WorkflowJob job = r.createProject(WorkflowJob.class);
+        job.setDefinition(new CpsFlowDefinition(
+                """
+                        step([$class: 'JiraIssueUpdater', issueSelector: [$class: 'DefaultIssueSelector'], scm: null])
+                """,
+                true));
+        WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, job);
+        r.assertLogContains(" Unsupported run type", b);
     }
 }

@@ -13,6 +13,7 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import java.io.IOException;
 import java.util.Set;
+import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -47,7 +48,8 @@ public class JiraEnvironmentVariableBuilder extends Builder {
         JiraSite site = getSiteForProject(build.getProject());
 
         if (site == null) {
-            throw new AbortException(Messages.JiraEnvironmentVariableBuilder_NoJiraSite());
+            listener.getLogger().println(Messages.JiraEnvironmentVariableBuilder_NoJiraSite());
+            return false;
         }
 
         Set<String> ids;
@@ -59,12 +61,16 @@ public class JiraEnvironmentVariableBuilder extends Builder {
         }
 
         String idList = StringUtils.join(ids, ",");
+        Integer idListSize = ids.size();
 
         listener.getLogger()
                 .println(Messages.JiraEnvironmentVariableBuilder_Updating(
                         JiraEnvironmentContributingAction.ISSUES_VARIABLE_NAME, idList));
+        listener.getLogger()
+                .println(Messages.JiraEnvironmentVariableBuilder_Updating(
+                        JiraEnvironmentContributingAction.ISSUES_SIZE_VARIABLE_NAME, idListSize));
 
-        build.addAction(new JiraEnvironmentContributingAction(idList, site.getName()));
+        build.addAction(new JiraEnvironmentContributingAction(idList, idListSize, site.getName()));
 
         return true;
     }
@@ -83,6 +89,10 @@ public class JiraEnvironmentVariableBuilder extends Builder {
         @Override
         public String getDisplayName() {
             return Messages.JiraEnvironmentVariableBuilder_DisplayName();
+        }
+
+        public boolean hasIssueSelectors() {
+            return Jenkins.get().getDescriptorList(AbstractIssueSelector.class).size() > 0;
         }
     }
 }

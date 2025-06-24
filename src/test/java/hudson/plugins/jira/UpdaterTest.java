@@ -4,7 +4,10 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -38,7 +41,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import jenkins.model.Jenkins;
 import org.hamcrest.Matchers;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -295,12 +297,8 @@ public class UpdaterTest {
      *
      */
     @Test
-    @WithoutJenkins
-    void getChangesUsingReflectionForWorkflowJob() throws IOException {
-        Jenkins jenkins = mock(Jenkins.class);
-
-        when(jenkins.getRootDirFor(Mockito.any())).thenReturn(folder);
-        WorkflowJob workflowJob = new WorkflowJob(jenkins, "job");
+    void getChangesUsingReflectionForWorkflowJob(JenkinsRule r) throws IOException {
+        WorkflowJob workflowJob = new WorkflowJob(r.getInstance(), "job");
         WorkflowRun workflowRun = new WorkflowRun(workflowJob);
 
         ChangeLogSet.createEmpty(workflowRun);

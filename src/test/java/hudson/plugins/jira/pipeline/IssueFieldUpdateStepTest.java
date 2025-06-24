@@ -13,10 +13,7 @@ import static org.mockito.Mockito.when;
 
 import hudson.EnvVars;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Job;
+import hudson.model.*;
 import hudson.plugins.jira.JiraGlobalConfiguration;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
@@ -31,9 +28,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -68,8 +68,11 @@ class IssueFieldUpdateStepTest {
     @Mock(strictness = Mock.Strictness.LENIENT)
     Job job;
 
+    private JenkinsRule r;
+
     @BeforeEach
     void before(JenkinsConfiguredWithCodeRule r) {
+        this.r = r;
         when(build.getParent()).thenReturn(project);
         when(build.getProject()).thenReturn(project);
         when(listener.getLogger()).thenReturn(logger);
@@ -135,5 +138,20 @@ class IssueFieldUpdateStepTest {
 
         jifu.perform(build, null, env, launcher, listener);
         assertThat(fieldsAfter.get(1).getValue().toString(), containsString("build #" + randomBuildNumber.toString()));
+    }
+
+    @Test
+    void testPipeline() throws Exception {
+        WorkflowJob job = r.createProject(WorkflowJob.class);
+        job.setDefinition(new CpsFlowDefinition(
+                """
+                        step([$class: 'IssueFieldUpdateStep',
+                                issueSelector: [$class: 'hudson.plugins.jira.selector.ExplicitIssueSelector', issueKeys: "JIRA-123"],
+                                fieldId: "field",
+                                fieldValue: "value"
+                            ])
+                """,
+                true));
+        r.buildAndAssertStatus(Result.SUCCESS, job);
     }
 }
