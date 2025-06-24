@@ -2,13 +2,9 @@ package hudson.plugins.jira.pipeline;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.mockito.Mockito.doCallRealMethod;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.google.inject.Inject;
 import hudson.model.Node;
 import hudson.model.Result;
@@ -92,5 +88,21 @@ class IssueSelectorStepTest {
 
         verify(run, times(0)).setResult(Result.FAILURE);
         verify(issueSelector).findIssueIds(run, site, listener);
+    }
+
+    @Test
+    void runWithRestException() throws Exception {
+        JiraSite site = mock(JiraSite.class);
+        JiraGlobalConfiguration jiraGlobalConfiguration = JiraGlobalConfiguration.get();
+        jiraGlobalConfiguration.setSites(Collections.singletonList(site));
+        stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
+        doCallRealMethod().when(run).getParent();
+        Throwable throwable = mock(Throwable.class);
+        doThrow(new RestClientException("[Jira Error] Jira REST findIssueIds error. Cause: 401 error", throwable))
+                .when(issueSelector)
+                .findIssueIds(run, site, listener);
+        stepExecution.run();
+        verify(run, times(1)).setResult(Result.FAILURE);
+        verify(logger).println("[Jira Error] Jira REST findIssueIds error. Cause: 401 error");
     }
 }

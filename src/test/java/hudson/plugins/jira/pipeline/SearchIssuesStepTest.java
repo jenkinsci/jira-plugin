@@ -4,20 +4,17 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.inject.Inject;
-import hudson.model.AbstractProject;
-import hudson.model.FreeStyleProject;
-import hudson.model.Job;
-import hudson.model.Node;
-import hudson.model.Run;
+import hudson.model.*;
 import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.pipeline.SearchIssuesStep.SearchStepExecution;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,5 +92,45 @@ class SearchIssuesStepTest {
         assertThat(returnedList, hasSize(1));
         assertThat(assertCalledList.iterator().next().getKey(), equalTo("EXAMPLE-1"));
         assertThat(returnedList.iterator().next(), equalTo("EXAMPLE-1"));
+    }
+
+    @Test
+    void getIssuesFromJqlSearchRestException() throws Exception {
+        JiraSession session = mock(JiraSession.class);
+        String jql = "key='EXAMPLE-1'";
+        Issue issue = mock(Issue.class);
+        when(issue.getKey()).thenReturn("EXAMPLE-1");
+
+        Throwable throwable = mock(Throwable.class);
+        doThrow(new RestClientException(
+                        "[Jira Error] Jira REST getIssuesFromJqlSearch error. Cause: 401 error", throwable))
+                .when(session)
+                .getIssuesFromJqlSearch(jql);
+
+        JiraSite site = mock(JiraSite.class);
+
+        AbstractProject mockProject = mock(FreeStyleProject.class);
+        Run mockRun = mock(Run.class);
+        JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
+
+        when(jiraProjectProperty.getSite()).thenReturn(site);
+        when(site.getSession(mockProject)).thenReturn(session);
+        when(mockRun.getParent()).thenReturn(mockProject);
+        when(mockRun.getParent().getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
+
+        Map<String, Object> r = new HashMap<>();
+        r.put("jql", jql);
+        SearchIssuesStep step = (SearchIssuesStep) descriptor.newInstance(r);
+
+        StepContext ctx = mock(StepContext.class);
+        when(ctx.get(Node.class)).thenReturn(jenkinsRule.getInstance());
+        when(ctx.get(Run.class)).thenReturn(mockRun);
+        TaskListener listener = mock(TaskListener.class);
+        PrintStream logger = mock(PrintStream.class);
+        when(ctx.get(TaskListener.class)).thenReturn(listener);
+        when(listener.getLogger()).thenReturn(logger);
+        SearchStepExecution start = (SearchStepExecution) step.start(ctx);
+        start.run();
+        verify(logger).println("[Jira Error] Jira REST getIssuesFromJqlSearch error. Cause: 401 error");
     }
 }

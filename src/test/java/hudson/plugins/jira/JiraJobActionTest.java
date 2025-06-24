@@ -1,16 +1,22 @@
 package hudson.plugins.jira;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.*;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
+import hudson.model.TaskListener;
 import hudson.plugins.jira.model.JiraIssue;
+import java.io.PrintStream;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 @WithJenkins
 class JiraJobActionTest {
@@ -73,5 +79,27 @@ class JiraJobActionTest {
         JiraJobAction.setAction(job, site);
         JiraJobAction action = job.getAction(JiraJobAction.class);
         assertNull(action);
+    }
+
+    @Test
+    @WithoutJenkins
+    void testJobActionRestException() {
+        Throwable throwable = mock(Throwable.class);
+        PrintStream logger = mock(PrintStream.class);
+        TaskListener listener = mock(TaskListener.class);
+        WorkflowRun run = mock(WorkflowRun.class);
+        WorkflowJob parent = mock(WorkflowJob.class);
+        when(listener.getLogger()).thenReturn(logger);
+        when(run.getParent()).thenReturn(parent);
+        try (MockedStatic<JiraJobAction> jobActionMockedStatic = Mockito.mockStatic(JiraJobAction.class);
+                MockedStatic<JiraSite> jiraSiteMockedStatic = Mockito.mockStatic(JiraSite.class)) {
+            jiraSiteMockedStatic.when(() -> JiraSite.get(parent)).thenReturn(site);
+            jobActionMockedStatic
+                    .when(() -> JiraJobAction.setAction(parent, site))
+                    .thenThrow(new RestClientException(
+                            "[Jira Error] Jira REST setAction error. Cause: 401 error", throwable));
+            JiraJobAction.RunListenerImpl.fireStarted(run, listener);
+            verify(logger).println("[Jira Error] Jira REST setAction error. Cause: 401 error");
+        }
     }
 }

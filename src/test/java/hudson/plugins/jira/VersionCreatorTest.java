@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -89,7 +90,7 @@ class VersionCreatorTest {
     }
 
     @Test
-    void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
+    void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException, RestClientException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
 
@@ -113,7 +114,7 @@ class VersionCreatorTest {
     }
 
     @Test
-    void expandsEnvParameters() throws InterruptedException, IOException {
+    void expandsEnvParameters() throws InterruptedException, IOException, RestClientException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
 
@@ -136,7 +137,7 @@ class VersionCreatorTest {
     }
 
     @Test
-    void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
+    void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException, RestClientException {
         when(build.getEnvironment(listener)).thenReturn(env);
         ExtendedVersion releasedVersion =
                 new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, true, ANY_DATE, ANY_DATE);

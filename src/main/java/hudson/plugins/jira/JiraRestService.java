@@ -162,6 +162,8 @@ public class JiraRestService {
             jiraRestClient.getIssueClient().addComment(builder.build(), comment).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client add comment error. cause: " + e.getMessage(), e);
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client add comment error. cause: " + e.getMessage(), e.getCause());
         }
     }
 
@@ -174,10 +176,12 @@ public class JiraRestService {
                     && ((RestClientException) e.getCause()).getStatusCode().isPresent()
                     && ((RestClientException) e.getCause()).getStatusCode().get() == 404) {
                 LOGGER.log(INFO, "Issue '" + issueKey + "' not found in Jira.");
+                throw new RestClientException("[Jira Error] Issue '" + issueKey + "' not found in Jira.", e.getCause());
             } else {
                 LOGGER.log(WARNING, "Jira REST client get issue error. cause: " + e.getMessage(), e);
+                throw new RestClientException(
+                        "[Jira Error] Jira REST client get issue error. cause: " + e.getMessage(), e.getCause());
             }
-            return null;
         }
     }
 
@@ -193,7 +197,8 @@ public class JiraRestService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get issue types error. cause: " + e.getMessage(), e);
-            return Collections.emptyList();
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client get issue types error. cause: " + e.getMessage(), e.getCause());
         }
     }
 
@@ -209,7 +214,8 @@ public class JiraRestService {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get priorities error. cause: " + e.getMessage(), e);
-            return Collections.emptyList();
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client get priorities error. cause: " + e.getMessage(), e.getCause());
         }
     }
 
@@ -219,6 +225,8 @@ public class JiraRestService {
             projects = jiraRestClient.getProjectClient().getAllProjects().get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get project keys error. cause: " + e.getMessage(), e);
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client get project keys error. cause: " + e.getMessage(), e.getCause());
         }
         final List<String> keys = new ArrayList<>();
         for (BasicProject project : projects) {
@@ -227,7 +235,8 @@ public class JiraRestService {
         return keys;
     }
 
-    public List<Issue> getIssuesFromJqlSearch(String jqlSearch, Integer maxResults) throws TimeoutException {
+    public List<Issue> getIssuesFromJqlSearch(String jqlSearch, Integer maxResults)
+            throws TimeoutException, RestClientException {
         try {
             Set<String> neededFields = new HashSet<>(
                     Arrays.asList("summary", "issuetype", "created", "updated", "project", "status", "fixVersions"));
@@ -243,7 +252,9 @@ public class JiraRestService {
             throw e;
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get issue from jql search error. cause: " + e.getMessage(), e);
-            return Collections.emptyList();
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client get issue from jql search error. cause: " + e.getMessage(),
+                    e.getCause());
         }
     }
 
@@ -251,7 +262,7 @@ public class JiraRestService {
         final URIBuilder builder =
                 new URIBuilder(uri).setPath(String.format("%s/project/%s/versions", baseApiPath, projectKey));
 
-        List<Map<String, Object>> decoded = Collections.emptyList();
+        List<Map<String, Object>> decoded;
         try {
             URI uri = builder.build();
             final Content content = buildGetRequest(uri).execute().returnContent();
@@ -259,6 +270,8 @@ public class JiraRestService {
             decoded = objectMapper.readValue(content.asString(), new TypeReference<List<Map<String, Object>>>() {});
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get versions error. cause: " + e.getMessage(), e);
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client get versions error. cause: " + e.getMessage(), e.getCause());
         }
 
         return decoded.stream()
@@ -292,7 +305,8 @@ public class JiraRestService {
                     .get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client add version error. cause: " + e.getMessage(), e);
-            return null;
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client add version error. cause: " + e.getMessage(), e.getCause());
         }
     }
 
@@ -316,6 +330,8 @@ public class JiraRestService {
                     .get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client release version error. cause: " + e.getMessage(), e);
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client release version error. cause: " + e.getMessage(), e.getCause());
         }
     }
 
@@ -368,7 +384,8 @@ public class JiraRestService {
             return jiraRestClient.getIssueClient().createIssue(issueInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST createIssue error: " + e.getMessage(), e);
-            return null;
+            throw new RestClientException(
+                    "[Jira Error] Jira REST createIssue error. cause: " + e.getMessage(), e.getCause());
         }
     }
 
@@ -381,10 +398,12 @@ public class JiraRestService {
                     && ((RestClientException) e.getCause()).getStatusCode().isPresent()
                     && ((RestClientException) e.getCause()).getStatusCode().get() == 404) {
                 LOGGER.log(INFO, "User '" + username + "' not found in Jira.");
+                throw new RestClientException("[Jira Error] User '" + username + "' not found in Jira.", e.getCause());
             } else {
                 LOGGER.log(WARNING, "Jira REST client get user error. cause: " + e.getMessage(), e);
+                throw new RestClientException(
+                        "[Jira Error] Jira REST client get user error. cause: " + e.getMessage(), e.getCause());
             }
-            return null;
         }
     }
 
@@ -395,6 +414,8 @@ public class JiraRestService {
             jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client update issue error. cause: " + e.getMessage(), e);
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client update issue error. cause: " + e.getMessage(), e.getCause());
         }
     }
 
@@ -406,6 +427,10 @@ public class JiraRestService {
             jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client update labels error for issue " + issueKey, e);
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client update labels error for issue: " + issueKey + ". cause: "
+                            + e.getMessage(),
+                    e.getCause());
         }
     }
 
@@ -420,6 +445,10 @@ public class JiraRestService {
             jiraRestClient.getIssueClient().updateIssue(issueKey, issueInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client update fields error for issue " + issueKey, e);
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client update fields error for issue: " + issueKey + ". cause: "
+                            + e.getMessage(),
+                    e.getCause());
         }
     }
 
@@ -432,6 +461,9 @@ public class JiraRestService {
             jiraRestClient.getIssueClient().transition(issue, transitionInput).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client process workflow action error. cause: " + e.getMessage(), e);
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client process workflow action error. cause: " + e.getMessage(),
+                    e.getCause());
         }
         return issue;
     }
@@ -445,7 +477,9 @@ public class JiraRestService {
             return StreamSupport.stream(transitions.spliterator(), false).collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get available actions error. cause: " + e.getMessage(), e);
-            return Collections.emptyList();
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client get available actions error. cause: " + e.getMessage(),
+                    e.getCause());
         }
     }
 
@@ -456,7 +490,8 @@ public class JiraRestService {
             return StreamSupport.stream(statuses.spliterator(), false).collect(Collectors.toList());
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client get statuses error. cause: " + e.getMessage(), e);
-            return Collections.emptyList();
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client get statuses error. cause: " + e.getMessage(), e.getCause());
         }
     }
 
@@ -492,7 +527,9 @@ public class JiraRestService {
             return components;
         } catch (Exception e) {
             LOGGER.log(WARNING, "Jira REST client process workflow action error. cause: " + e.getMessage(), e);
-            return Collections.emptyList();
+            throw new RestClientException(
+                    "[Jira Error] Jira REST client process workflow action error. cause: " + e.getMessage(),
+                    e.getCause());
         }
     }
 
@@ -528,7 +565,7 @@ public class JiraRestService {
      * Get User's permissions
      *
      */
-    public Permissions getMyPermissions() throws RestClientException {
+    public Permissions getMyPermissions() {
         return jiraRestClient
                 .getExtendedMyPermissionsRestClient()
                 .getMyPermissions()
