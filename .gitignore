@@ -12,6 +12,7 @@ work/
 *.code-workspace
 
 # ignore all Idea files except for common codestyle settings
+.DS_Store
 *.iml
 .vscode/
 .idea/*
