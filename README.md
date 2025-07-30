@@ -10,7 +10,6 @@ See plugin documentation at [https://jenkinsci.github.io/jira-plugin/](https://j
 
 ## i18n
 
-This plugin uses [CrowdIn platform](https://jenkins.crowdin.com/jira-plugin) as the frontend to manage translations. If you would like to contribute translation of this plugin in your language,  you're most than welcome! For details, see [jenkins.io CrowdIn introduction](https://www.jenkins.io/doc/developer/crowdin/translating-plugins/).
 
 [![da translation](https://img.shields.io/badge/dynamic/json?color=blue&label=da&style=flat&logo=crowdin&query=%24.progress.0.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200016380-35.json)](https://jenkins.crowdin.com/jira-plugin)
 [![de translation](https://img.shields.io/badge/dynamic/json?color=blue&label=de&style=flat&logo=crowdin&query=%24.progress.1.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200016380-35.json)](https://jenkins.crowdin.com/jira-plugin)
@@ -20,6 +19,8 @@ This plugin uses [CrowdIn platform](https://jenkins.crowdin.com/jira-plugin) as 
 [![it translation](https://img.shields.io/badge/dynamic/json?color=blue&label=it&style=flat&logo=crowdin&query=%24.progress.5.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200016380-35.json)](https://jenkins.crowdin.com/jira-plugin)
 [![ja translation](https://img.shields.io/badge/dynamic/json?color=blue&label=ja&style=flat&logo=crowdin&query=%24.progress.6.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200016380-35.json)](https://jenkins.crowdin.com/jira-plugin)
 [![pl translation](https://img.shields.io/badge/dynamic/json?color=blue&label=pl&style=flat&logo=crowdin&query=%24.progress.7.data.translationProgress&url=https%3A%2F%2Fbadges.awesome-crowdin.com%2Fstats-200016380-35.json)](https://jenkins.crowdin.com/jira-plugin)
+
+This plugin uses [CrowdIn platform](https://jenkins.crowdin.com/jira-plugin) as the frontend to manage translations. If you would like to contribute translation of this plugin in your language,  you're most welcome! For details, see [jenkins.io CrowdIn introduction](https://www.jenkins.io/doc/developer/crowdin/translating-plugins/).
 
 ## Contributing
 
