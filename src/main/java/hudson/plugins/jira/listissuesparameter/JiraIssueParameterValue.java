@@ -36,7 +36,8 @@ public class JiraIssueParameterValue extends ParameterValue {
 
     @Override
     public void buildEnvironment(final Run<?, ?> run, final EnvVars env) {
-        env.put(getName(), getValue().toString());
+        Object paramValue = getValue();
+        env.put(getName(), paramValue != null ? paramValue.toString() : "");
     }
 
     @Override
@@ -44,9 +45,11 @@ public class JiraIssueParameterValue extends ParameterValue {
         return new VariableResolver<String>() {
             @Override
             public String resolve(final String name) {
-                return JiraIssueParameterValue.this.name.equals(name)
-                        ? getValue().toString()
-                        : null;
+                if (JiraIssueParameterValue.this.name.equals(name)) {
+                    Object paramValue = getValue();
+                    return paramValue != null ? paramValue.toString() : "";
+                }
+                return null;
             }
         };
     }

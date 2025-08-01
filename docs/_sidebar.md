@@ -3,4 +3,4 @@
 * [System Properties](system-properties.md)
 * [Usage Examples](usage-examples.md)
 * [Troubleshooting](troubleshooting.md)
-
+* [Changelog](changelog.md)
