@@ -1,5 +1,6 @@
 name: "📝 Documentation"
 labels: ["documentation"]
+type: "Task"
 description: "Let us know if any documentation is missing or could be improved"
 
 body:
