@@ -6,7 +6,7 @@
 [![Jenkins CI](https://ci.jenkins.io/buildStatus/icon?job=Plugins/jira-plugin/master)](https://ci.jenkins.io/job/Plugins/job/jira-plugin/)
 [![Contributors](https://img.shields.io/github/contributors/jenkinsci/jira-plugin.svg)](https://github.com/jenkinsci/jira-plugin/graphs/contributors)
 
-See plugin documentation at [https://jenkinsci.github.io/jira-plugin/](https://jenkinsci.github.io/jira-plugin/)
+See user documentation at [https://jenkinsci.github.io/jira-plugin/](https://jenkinsci.github.io/jira-plugin/)
 
 ## i18n
 
