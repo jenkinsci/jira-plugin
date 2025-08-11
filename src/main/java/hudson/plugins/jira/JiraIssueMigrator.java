@@ -110,6 +110,8 @@ public class JiraIssueMigrator extends Notifier {
                 throw new IllegalArgumentException("JQL query is Empty");
             }
 
+            listener.getLogger().printf("[Jira] Adding fixVersion %s for issues found from JQL `%s`", realRelease, realQuery);
+
             JiraSite site = getJiraSiteForProject(build.getProject());
 
             if (addRelease == true) {
@@ -123,7 +125,7 @@ public class JiraIssueMigrator extends Notifier {
             }
         } catch (Exception e) {
             e.printStackTrace(
-                    listener.fatalError("Unable to release jira version %s/%s: %s", realRelease, realProjectKey, e));
+                    listener.fatalError("[Jira] Unable to perform Jira operations (%s/%s): %s", realRelease, realProjectKey, e));
             listener.finished(Result.FAILURE);
             return false;
         }
