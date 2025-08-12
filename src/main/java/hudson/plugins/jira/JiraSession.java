@@ -133,7 +133,7 @@ public class JiraSession {
      * @param jqlSearch JQL query string to execute
      * @return issues matching the JQL query
      */
-    public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException, RestClientException {
+    public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws RestClientException {
         return service.getIssuesFromJqlSearch(jqlSearch, maxIssuesFromJqlSearch);
     }
 

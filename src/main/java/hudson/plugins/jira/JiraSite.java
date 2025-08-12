@@ -1290,7 +1290,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     public boolean progressMatchingIssues(
             String jqlSearch, String workflowActionName, String comment, PrintStream console)
-            throws TimeoutException, RestClientException {
+            throws RestClientException {
 
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");

@@ -24,7 +24,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -101,12 +100,10 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
                 listener.getLogger().println(Messages.JiraIssueUpdateBuilder_SomeIssuesFailed());
                 run.setResult(Result.UNSTABLE);
             }
-        } catch (TimeoutException e) {
+        } catch (RestClientException e) {
             listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
             e.printStackTrace(listener.getLogger());
             run.setResult(Result.FAILURE);
-        } catch (RestClientException re) {
-            listener.getLogger().println(re.getMessage());
         }
     }
 
