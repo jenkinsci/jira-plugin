@@ -128,9 +128,8 @@ public class JiraJobAction implements Action {
             if (site != null) {
                 try {
                     setAction(parent, site);
-                } catch (IOException e) {
+                } catch (IOException | RestClientException e) {
                     LOGGER.log(Level.WARNING, "Could not set JiraJobAction for <" + parent.getFullName() + ">", e);
-                } catch (RestClientException e) {
                     listener.getLogger().println(e.getMessage());
                 }
             }
