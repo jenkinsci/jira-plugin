@@ -71,7 +71,7 @@ class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    void performTimeout() throws InterruptedException, IOException, TimeoutException {
+    void validateFailureResult() throws InterruptedException, IOException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         Throwable throwable = mock(Throwable.class);
         doReturn(site).when(builder).getSiteForJob(any());
@@ -81,7 +81,7 @@ class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    void performProgressFails() throws InterruptedException, IOException, TimeoutException {
+    void performProgressFails() throws InterruptedException, IOException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(site).when(builder).getSiteForJob(any());
         doReturn(false).when(site).progressMatchingIssues(anyString(), anyString(), anyString(), any());
@@ -90,7 +90,7 @@ class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    void performProgressOK() throws InterruptedException, IOException, TimeoutException {
+    void performProgressOK() throws InterruptedException, IOException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(site).when(builder).getSiteForJob(any());
         doReturn(true).when(site).progressMatchingIssues(any(), any(), any(), any());

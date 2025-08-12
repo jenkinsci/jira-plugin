@@ -10,6 +10,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
@@ -54,10 +55,11 @@ class JiraRestServiceTest {
     }
 
     @Test
-    void getIssuesFromJqlSearchTimeout() throws InterruptedException, ExecutionException, TimeoutException {
+    void getIssuesFromJqlSearchRestException() throws InterruptedException, ExecutionException, TimeoutException {
+        Throwable throwable = mock(Throwable.class);
         JiraRestService service =
                 spy(new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT));
-        doThrow(new TimeoutException()).when(promise).get(Mockito.anyLong(), Mockito.any());
-        assertThrows(TimeoutException.class, () -> service.getIssuesFromJqlSearch("*", null));
+        doThrow(new RestClientException("Verify Rest client exception", throwable)).when(promise).get(Mockito.anyLong(), Mockito.any());
+        assertThrows(RestClientException.class, () -> service.getIssuesFromJqlSearch("*", null));
     }
 }
