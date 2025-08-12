@@ -1286,7 +1286,6 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param workflowActionName the workflowActionName
      * @param comment            the comment
      * @param console            the console
-     * @throws TimeoutException TimeoutException if too long
      */
     public boolean progressMatchingIssues(
             String jqlSearch, String workflowActionName, String comment, PrintStream console)
