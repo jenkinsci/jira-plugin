@@ -183,11 +183,11 @@ class IssueFieldUpdateStepTest {
                 .addFields(anyString(), anyList());
 
         IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(issueSelector, beforeFieldid, beforeFieldValue));
-        doThrow(new RestClientException("[Jira Error] Jira REST findIssueIds error. Cause: 401 error", throwable))
+        doThrow(new RestClientException("[Jira] Jira REST findIssueIds error. Cause: 401 error", throwable))
                 .when(issueSelector)
                 .findIssueIds(build, site, listener);
         jifu.perform(build, null, launcher, listener);
-        verify(logger).println("[Jira Error] Jira REST findIssueIds error. Cause: 401 error");
+        verify(logger).println("[Jira] Jira REST findIssueIds error. Cause: 401 error");
     }
 
     @Test
@@ -219,10 +219,10 @@ class IssueFieldUpdateStepTest {
                 .addFields(anyString(), anyList());
 
         IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(issueSelector, beforeFieldid, beforeFieldValue));
-        doThrow(new RestClientException("[Jira Error] Jira REST submitFields error. Cause: 401 error", throwable))
+        doThrow(new RestClientException("[Jira] Jira REST submitFields error. Cause: 401 error", throwable))
                 .when(jifu)
                 .submitFields(any(JiraSession.class), anyString(), anyList(), any(PrintStream.class));
         jifu.perform(build, null, launcher, listener);
-        verify(logger).println("[Jira Error] Jira REST submitFields error. Cause: 401 error");
+        verify(logger).println("[Jira] Jira REST submitFields error. Cause: 401 error");
     }
 }

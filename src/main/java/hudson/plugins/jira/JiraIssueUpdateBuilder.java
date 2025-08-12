@@ -101,8 +101,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
                 run.setResult(Result.UNSTABLE);
             }
         } catch (RestClientException e) {
-            listener.getLogger().println(Messages.JiraIssueUpdateBuilder_Failed());
-            e.printStackTrace(listener.getLogger());
+            listener.getLogger().println(e.getMessage());
             run.setResult(Result.FAILURE);
         }
     }

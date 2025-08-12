@@ -103,7 +103,7 @@ class SearchIssuesStepTest {
 
         Throwable throwable = mock(Throwable.class);
         doThrow(new RestClientException(
-                        "[Jira Error] Jira REST getIssuesFromJqlSearch error. Cause: 401 error", throwable))
+                        "[Jira] Jira REST getIssuesFromJqlSearch error. Cause: 401 error", throwable))
                 .when(session)
                 .getIssuesFromJqlSearch(jql);
 
@@ -131,6 +131,6 @@ class SearchIssuesStepTest {
         when(listener.getLogger()).thenReturn(logger);
         SearchStepExecution start = (SearchStepExecution) step.start(ctx);
         start.run();
-        verify(logger).println("[Jira Error] Jira REST getIssuesFromJqlSearch error. Cause: 401 error");
+        verify(logger).println("[Jira] Jira REST getIssuesFromJqlSearch error. Cause: 401 error");
     }
 }

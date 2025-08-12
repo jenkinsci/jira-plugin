@@ -73,8 +73,9 @@ class JiraIssueUpdateBuilderTest {
     @Test
     void performTimeout() throws InterruptedException, IOException, TimeoutException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
+        Throwable throwable = mock(Throwable.class);
         doReturn(site).when(builder).getSiteForJob(any());
-        doThrow(new TimeoutException()).when(site).progressMatchingIssues(any(), any(), any(), any());
+        doThrow(new RestClientException("Verify failure result", throwable)).when(site).progressMatchingIssues(any(), any(), any(), any());
         builder.perform(build, workspace, launcher, listener);
         assertThat(result, is(Result.FAILURE));
     }
@@ -114,17 +115,17 @@ class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    void testIssueUpdateBuilderRestException() throws InterruptedException, IOException, TimeoutException {
+    void testIssueUpdateBuilderRestException() throws InterruptedException, IOException {
         Throwable throwable = mock(Throwable.class);
         PrintStream logger = mock(PrintStream.class);
         when(listener.getLogger()).thenReturn(logger);
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(site).when(builder).getSiteForJob(any());
         doThrow(new RestClientException(
-                        "[Jira Error] Jira REST progressMatchingIssues error. Cause: 401 error", throwable))
+                        "[Jira] Jira REST progressMatchingIssues error. Cause: 401 error", throwable))
                 .when(site)
                 .progressMatchingIssues(any(), any(), any(), any());
         builder.perform(build, workspace, launcher, listener);
-        verify(logger).println("[Jira Error] Jira REST progressMatchingIssues error. Cause: 401 error");
+        verify(logger).println("[Jira] Jira REST progressMatchingIssues error. Cause: 401 error");
     }
 }

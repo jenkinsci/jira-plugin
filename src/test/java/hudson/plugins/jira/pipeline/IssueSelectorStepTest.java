@@ -98,11 +98,11 @@ class IssueSelectorStepTest {
         stepExecution = spy((IssueSelectorStep.IssueSelectorStepExecution) subject.start(stepContext));
         doCallRealMethod().when(run).getParent();
         Throwable throwable = mock(Throwable.class);
-        doThrow(new RestClientException("[Jira Error] Jira REST findIssueIds error. Cause: 401 error", throwable))
+        doThrow(new RestClientException("[Jira] Jira REST findIssueIds error. Cause: 401 error", throwable))
                 .when(issueSelector)
                 .findIssueIds(run, site, listener);
         stepExecution.run();
         verify(run, times(1)).setResult(Result.FAILURE);
-        verify(logger).println("[Jira Error] Jira REST findIssueIds error. Cause: 401 error");
+        verify(logger).println("[Jira] Jira REST findIssueIds error. Cause: 401 error");
     }
 }

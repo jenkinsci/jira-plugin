@@ -123,7 +123,7 @@ class CommentStepTest {
         Throwable throwable = mock(Throwable.class);
         PrintStream logger = mock(PrintStream.class);
         TaskListener listener = mock(TaskListener.class);
-        Mockito.doThrow(new RestClientException("[Jira Error] Jira REST addComment error. Cause: 401 error", throwable))
+        Mockito.doThrow(new RestClientException("[Jira] Jira REST addComment error. Cause: 401 error", throwable))
                 .when(session)
                 .addComment(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
 
@@ -141,6 +141,6 @@ class CommentStepTest {
 
         CommentStepExecution start = (CommentStepExecution) step.start(ctx);
         start.run();
-        verify(logger).println("[Jira Error] Jira REST addComment error. Cause: 401 error");
+        verify(logger).println("[Jira] Jira REST addComment error. Cause: 401 error");
     }
 }

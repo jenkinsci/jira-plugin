@@ -438,7 +438,7 @@ public class JiraCreateIssueNotifierTest {
         JiraCreateIssueNotifier notifier =
                 spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION_PARAM, "", "", 1L, 1L, 1));
         doReturn(site).when(notifier).getSiteForProject(Mockito.any());
-        doThrow(new RestClientException("[Jira Error] Jira REST createIssue error. Cause: 401 error", throwable))
+        doThrow(new RestClientException("[Jira] Jira REST createIssue error. Cause: 401 error", throwable))
                 .when(session)
                 .createIssue(
                         Mockito.anyString(),
@@ -450,7 +450,7 @@ public class JiraCreateIssueNotifierTest {
                         Mockito.anyLong());
 
         notifier.perform(currentBuild, launcher, buildListener);
-        verify(logger).println("[Jira Error] Jira REST createIssue error. Cause: 401 error");
+        verify(logger).println("[Jira] Jira REST createIssue error. Cause: 401 error");
     }
 
     private static File newFolder(File root, String... subDirs) throws IOException {
