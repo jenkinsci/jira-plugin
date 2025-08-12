@@ -15,7 +15,6 @@ import hudson.model.TaskListener;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collections;
-import java.util.concurrent.TimeoutException;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -75,7 +74,9 @@ class JiraIssueUpdateBuilderTest {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         Throwable throwable = mock(Throwable.class);
         doReturn(site).when(builder).getSiteForJob(any());
-        doThrow(new RestClientException("Verify failure result", throwable)).when(site).progressMatchingIssues(any(), any(), any(), any());
+        doThrow(new RestClientException("Verify failure result", throwable))
+                .when(site)
+                .progressMatchingIssues(any(), any(), any(), any());
         builder.perform(build, workspace, launcher, listener);
         assertThat(result, is(Result.FAILURE));
     }
@@ -121,8 +122,7 @@ class JiraIssueUpdateBuilderTest {
         when(listener.getLogger()).thenReturn(logger);
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(site).when(builder).getSiteForJob(any());
-        doThrow(new RestClientException(
-                        "[Jira] Jira REST progressMatchingIssues error. Cause: 401 error", throwable))
+        doThrow(new RestClientException("[Jira] Jira REST progressMatchingIssues error. Cause: 401 error", throwable))
                 .when(site)
                 .progressMatchingIssues(any(), any(), any(), any());
         builder.perform(build, workspace, launcher, listener);

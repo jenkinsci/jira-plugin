@@ -59,7 +59,9 @@ class JiraRestServiceTest {
         Throwable throwable = mock(Throwable.class);
         JiraRestService service =
                 spy(new JiraRestService(JIRA_URI, client, USERNAME, PASSWORD, JiraSite.DEFAULT_TIMEOUT));
-        doThrow(new RestClientException("Verify Rest client exception", throwable)).when(promise).get(Mockito.anyLong(), Mockito.any());
+        doThrow(new RestClientException("Verify Rest client exception", throwable))
+                .when(promise)
+                .get(Mockito.anyLong(), Mockito.any());
         assertThrows(RestClientException.class, () -> service.getIssuesFromJqlSearch("*", null));
     }
 }

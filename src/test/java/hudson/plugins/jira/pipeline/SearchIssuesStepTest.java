@@ -102,8 +102,7 @@ class SearchIssuesStepTest {
         when(issue.getKey()).thenReturn("EXAMPLE-1");
 
         Throwable throwable = mock(Throwable.class);
-        doThrow(new RestClientException(
-                        "[Jira] Jira REST getIssuesFromJqlSearch error. Cause: 401 error", throwable))
+        doThrow(new RestClientException("[Jira] Jira REST getIssuesFromJqlSearch error. Cause: 401 error", throwable))
                 .when(session)
                 .getIssuesFromJqlSearch(jql);
 

@@ -96,8 +96,8 @@ class JiraJobActionTest {
             jiraSiteMockedStatic.when(() -> JiraSite.get(parent)).thenReturn(site);
             jobActionMockedStatic
                     .when(() -> JiraJobAction.setAction(parent, site))
-                    .thenThrow(new RestClientException(
-                            "[Jira] Jira REST setAction error. Cause: 401 error", throwable));
+                    .thenThrow(
+                            new RestClientException("[Jira] Jira REST setAction error. Cause: 401 error", throwable));
             JiraJobAction.RunListenerImpl.fireStarted(run, listener);
             verify(logger).println("[Jira] Jira REST setAction error. Cause: 401 error");
         }
