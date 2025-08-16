@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.plugins.jira.extension.ExtendedVersion;
@@ -50,7 +51,7 @@ class JiraSessionTest {
     }
 
     @Test
-    void replaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException {
+    void replaceWithFixVersionByRegex() throws URISyntaxException, TimeoutException, RestClientException {
         final ExtendedVersion newVersion =
                 new ExtendedVersion(new URI("self"), 3L, "v3.0", null, false, false, null, null);
         List<ExtendedVersion> myVersions = new ArrayList<>();
@@ -88,7 +89,7 @@ class JiraSessionTest {
     }
 
     @Test
-    void replaceFixVersion() throws URISyntaxException, TimeoutException {
+    void replaceFixVersion() throws URISyntaxException, TimeoutException, RestClientException {
         final ExtendedVersion newVersion =
                 new ExtendedVersion(new URI("self"), 3L, "v3.0", null, false, false, null, null);
         List<ExtendedVersion> myVersions = new ArrayList<>();
