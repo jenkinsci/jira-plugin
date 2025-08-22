@@ -28,7 +28,7 @@ public class JiraEnvironmentContributingAction extends InvisibleAction implement
     }
 
     public Integer getNumberOfIssues() {
-        return issuesSize == null ? 0 : issuesSize;
+        return issuesSize == null ? Integer.valueOf(0): issuesSize;
     }
 
     @Nullable
