@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.EnvironmentContributingAction;
@@ -21,14 +22,16 @@ public class JiraEnvironmentContributingAction extends InvisibleAction implement
 
     private final String jiraUrl;
 
+    @Nullable
     public String getIssuesList() {
         return issuesList;
     }
 
     public Integer getNumberOfIssues() {
-        return issuesSize;
+        return issuesSize == null ? 0 : issuesSize;
     }
 
+    @Nullable
     public String getJiraUrl() {
         return jiraUrl;
     }
