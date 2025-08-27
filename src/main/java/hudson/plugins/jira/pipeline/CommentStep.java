@@ -1,5 +1,6 @@
 package hudson.plugins.jira.pipeline;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Run;
@@ -94,7 +95,11 @@ public class CommentStep extends Step {
                 return null;
             }
 
-            session.addComment(step.issueKey, step.body, site.groupVisibility, site.roleVisibility);
+            try {
+                session.addComment(step.issueKey, step.body, site.groupVisibility, site.roleVisibility);
+            } catch (RestClientException e) {
+                getContext().get(TaskListener.class).getLogger().println(e.getMessage());
+            }
             return null;
         }
     }
