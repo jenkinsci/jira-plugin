@@ -84,7 +84,7 @@ public class JiraRestService {
      * Base URI path for a REST API call. It must be relative to site's base
      * URI.
      */
-    public static final String BASE_API_PATH = "rest/api/2";
+    public static final String BASE_API_PATH = "rest/api/3";
 
     static final long BUG_ISSUE_TYPE_ID = 1L;
 
