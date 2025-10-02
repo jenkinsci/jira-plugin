@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.StatusCategory;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
@@ -425,6 +426,31 @@ public class JiraCreateIssueNotifierTest {
             assertTrue(options.get(1).name.contains("type-2"));
             assertTrue(options.get(1).name.contains("https://pale-ale.com.au"));
         }
+    }
+
+    @Test
+    @WithoutJenkins
+    void testCreateIssueNotifierExceptionLogging() throws Exception {
+        when(previousBuild.getResult()).thenReturn(Result.SUCCESS);
+        when(currentBuild.getResult()).thenReturn(Result.FAILURE);
+        Throwable throwable = mock(Throwable.class);
+        when(buildListener.getLogger()).thenReturn(logger);
+        JiraCreateIssueNotifier notifier =
+                spy(new JiraCreateIssueNotifier(JIRA_PROJECT, DESCRIPTION_PARAM, "", "", 1L, 1L, 1));
+        doReturn(site).when(notifier).getSiteForProject(Mockito.any());
+        doThrow(new RestClientException("[Jira] Jira REST createIssue error. Cause: 401 error", throwable))
+                .when(session)
+                .createIssue(
+                        Mockito.anyString(),
+                        contains(DESCRIPTION),
+                        Mockito.anyString(),
+                        Mockito.anyIterable(),
+                        Mockito.anyString(),
+                        Mockito.anyLong(),
+                        Mockito.anyLong());
+
+        notifier.perform(currentBuild, launcher, buildListener);
+        verify(logger).println("[Jira] Jira REST createIssue error. Cause: 401 error");
     }
 
     private static File newFolder(File root, String... subDirs) throws IOException {
