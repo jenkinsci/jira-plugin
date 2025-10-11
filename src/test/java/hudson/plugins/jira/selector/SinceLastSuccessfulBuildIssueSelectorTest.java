@@ -80,20 +80,20 @@ class SinceLastSuccessfulBuildIssueSelectorTest {
     void setUp() {
         selector = new SinceLastSuccessfulBuildIssueSelector();
         when(listener.getLogger()).thenReturn(logger);
-        
+
         // Mock JiraSite with default issue pattern
         when(site.getIssuePattern()).thenReturn(JiraSite.DEFAULT_ISSUE_PATTERN);
-        
+
         // Mock empty change sets by default (can be overridden in individual tests)
         when(changeLogSet.iterator()).thenReturn(Collections.emptyIterator());
         when(changeLogSet.isEmptySet()).thenReturn(true);
-        
+
         // Mock getChangeSet() for AbstractBuild compatibility
         when(currentRun.getChangeSet()).thenReturn(changeLogSet);
         when(previousSuccessfulRun.getChangeSet()).thenReturn(changeLogSet);
         when(intermediateRun1.getChangeSet()).thenReturn(changeLogSet);
         when(intermediateRun2.getChangeSet()).thenReturn(changeLogSet);
-        
+
         // Mock getChangeSets() for reflection-based extraction
         when(currentRun.getChangeSets()).thenReturn(Collections.singletonList(changeLogSet));
         when(previousSuccessfulRun.getChangeSets()).thenReturn(Collections.singletonList(changeLogSet));
@@ -187,13 +187,9 @@ class SinceLastSuccessfulBuildIssueSelectorTest {
         when(currentRun.getPreviousBuild()).thenReturn(intermediateRun1);
         when(intermediateRun1.getPreviousBuild()).thenReturn(previousSuccessfulRun);
 
-        Set<? extends Entry> currentRunEntries = new HashSet<>(Arrays.asList(
-                new MockEntry("Fixed JIRA-123"),
-                new MockEntry("Updated ABC-456")
-        ));
-        Set<? extends Entry> intermediateRunEntries = new HashSet<>(Arrays.asList(
-                new MockEntry("Fixed DEF-789")
-        ));
+        Set<? extends Entry> currentRunEntries =
+                new HashSet<>(Arrays.asList(new MockEntry("Fixed JIRA-123"), new MockEntry("Updated ABC-456")));
+        Set<? extends Entry> intermediateRunEntries = new HashSet<>(Arrays.asList(new MockEntry("Fixed DEF-789")));
 
         // Create separate ChangeLogSet mocks for each build
         ChangeLogSet currentRunChangeLogSet = mock(ChangeLogSet.class);
@@ -222,10 +218,8 @@ class SinceLastSuccessfulBuildIssueSelectorTest {
         // No previous successful build, but current build has issues
         when(currentRun.getPreviousSuccessfulBuild()).thenReturn(null);
 
-        Set<? extends Entry> currentRunEntries = new HashSet<>(Arrays.asList(
-                new MockEntry("Fixed JIRA-999"),
-                new MockEntry("Updated XYZ-111")
-        ));
+        Set<? extends Entry> currentRunEntries =
+                new HashSet<>(Arrays.asList(new MockEntry("Fixed JIRA-999"), new MockEntry("Updated XYZ-111")));
 
         ChangeLogSet currentRunChangeLogSet = mock(ChangeLogSet.class);
         when(currentRunChangeLogSet.iterator()).thenReturn(currentRunEntries.iterator());

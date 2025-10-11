@@ -1,10 +1,5 @@
 package hudson.plugins.jira.selector;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -12,6 +7,9 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * Selects JIRA issues from the current build and all builds
@@ -35,9 +33,8 @@ public class SinceLastSuccessfulBuildIssueSelector extends AbstractIssueSelector
             return issueIds;
         }
 
-        listener.getLogger().println(
-                "Collecting JIRA issues since last successful build #" + 
-                lastSuccessfulBuild.getNumber());
+        listener.getLogger()
+                .println("Collecting JIRA issues since last successful build #" + lastSuccessfulBuild.getNumber());
 
         Run<?, ?> build = run;
         int buildsProcessed = 0;
@@ -49,9 +46,8 @@ public class SinceLastSuccessfulBuildIssueSelector extends AbstractIssueSelector
             build = build.getPreviousBuild();
         }
 
-        listener.getLogger().println(
-                "Found " + issueIds.size() + " JIRA issue(s) across " + 
-                buildsProcessed + " build(s)");
+        listener.getLogger()
+                .println("Found " + issueIds.size() + " JIRA issue(s) across " + buildsProcessed + " build(s)");
 
         return issueIds;
     }
