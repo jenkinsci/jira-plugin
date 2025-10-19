@@ -3,6 +3,7 @@ package hudson.plugins.jira.selector;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import hudson.model.BuildListener;
@@ -232,5 +233,92 @@ class DefaultIssueSelectorTest {
         Set<String> ids = new LinkedHashSet<>();
         DefaultIssueSelector.findIssues(build, ids, JiraSite.DEFAULT_ISSUE_PATTERN, null);
         assertEquals(0, ids.size());
+    }
+
+    /**
+     * Tests that non-JiraIssueParameterValue parameters are ignored.
+     * when ParameterValue is NOT instanceof JiraIssueParameterValue
+     */
+    @Test
+    void testNonJiraIssueParameterValueIgnored() {
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+        BuildListener listener = mock(BuildListener.class);
+        JiraSite site = mock(JiraSite.class);
+
+        when(site.getIssuePattern()).thenReturn(JiraSite.DEFAULT_ISSUE_PATTERN);
+        when(changeLogSet.iterator()).thenReturn(Collections.EMPTY_LIST.iterator());
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+
+        // Create ParametersAction with non-JiraIssueParameterValue
+        ParametersAction action = mock(ParametersAction.class);
+        List<ParameterValue> parameters = new ArrayList<>();
+        ParameterValue nonJiraParam = mock(ParameterValue.class);
+        parameters.add(nonJiraParam);
+
+        when(build.getAction(ParametersAction.class)).thenReturn(action);
+        when(action.getParameters()).thenReturn(parameters);
+
+        Set<String> ids = new DefaultIssueSelector().findIssueIds(build, site, listener);
+        assertTrue(ids.isEmpty());
+    }
+
+    @Test
+    void testDuplicateIssueIdsNotAddedTwice() {
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+        BuildListener listener = mock(BuildListener.class);
+        JiraSite site = mock(JiraSite.class);
+
+        when(site.getIssuePattern()).thenReturn(JiraSite.DEFAULT_ISSUE_PATTERN);
+        when(changeLogSet.iterator()).thenReturn(Collections.EMPTY_LIST.iterator());
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+
+        // Create ParametersAction with duplicate JiraIssueParameterValue
+        ParametersAction action = mock(ParametersAction.class);
+        List<ParameterValue> parameters = new ArrayList<>();
+        JiraIssueParameterValue parameter1 = mock(JiraIssueParameterValue.class);
+        JiraIssueParameterValue parameter2 = mock(JiraIssueParameterValue.class);
+
+        when(parameter1.getValue()).thenReturn("JIRA-123");
+        when(parameter2.getValue()).thenReturn("JIRA-123"); // Same issue ID
+
+        parameters.add(parameter1);
+        parameters.add(parameter2);
+
+        when(build.getAction(ParametersAction.class)).thenReturn(action);
+        when(action.getParameters()).thenReturn(parameters);
+
+        Set<String> ids = new DefaultIssueSelector().findIssueIds(build, site, listener);
+        assertEquals(1, ids.size());
+        assertEquals("JIRA-123", ids.iterator().next());
+    }
+
+    @Test
+    void testPatternWithoutCapturingGroupTriggersWarning() {
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+        BuildListener listener = mock(BuildListener.class);
+        java.io.PrintStream printStream = mock(java.io.PrintStream.class);
+
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+        when(listener.getLogger()).thenReturn(printStream);
+
+        // Create entry with text that matches pattern but pattern has no capturing group
+        Set<? extends Entry> entries = new HashSet(Arrays.asList(new MockEntry("Fixed ABC-123")));
+        when(changeLogSet.iterator()).thenReturn(entries.iterator());
+
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
+
+        Set<String> ids = new LinkedHashSet<>();
+        // Pattern without capturing group - just matches but doesn't capture
+        Pattern patternWithoutGroup = Pattern.compile("ABC-\\d+");
+        DefaultIssueSelector.findIssues(build, ids, patternWithoutGroup, listener);
+
+        assertEquals(0, ids.size());
+        verify(printStream)
+                .println("Warning: The Jira pattern " + patternWithoutGroup + " doesn't define a capturing group!");
     }
 }
