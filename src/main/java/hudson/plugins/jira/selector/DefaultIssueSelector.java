@@ -5,26 +5,19 @@ import hudson.Extension;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractBuild.DependencyChange;
 import hudson.model.Descriptor;
-import hudson.model.ParameterValue;
-import hudson.model.ParametersAction;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraCarryOverAction;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
 import hudson.plugins.jira.RunScmChangeExtractor;
-import hudson.plugins.jira.listissuesparameter.JiraIssueParameterValue;
-import hudson.scm.ChangeLogSet;
-import hudson.scm.ChangeLogSet.Entry;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class DefaultIssueSelector extends AbstractIssueSelector {
@@ -59,41 +52,6 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     }
 
     /**
-     * Finds the strings that match Jira issue ID patterns. This method returns
-     * all likely candidates and doesn't check if such ID actually exists or
-     * not. We don't want to use {@link JiraSite#existsIssue(String)} here so
-     * that new projects in Jira can be detected.
-     *
-     */
-    protected static void findIssues(Run<?, ?> build, Set<String> issueIds, Pattern pattern, TaskListener listener) {
-        for (ChangeLogSet<? extends Entry> set : RunScmChangeExtractor.getChanges(build)) {
-            for (Entry change : set) {
-                LOGGER.fine("Looking for Jira ID in " + change.getMsg());
-                Matcher m = pattern.matcher(change.getMsg());
-
-                while (m.find()) {
-                    if (m.groupCount() >= 1) {
-                        String content = StringUtils.upperCase(m.group(1));
-                        issueIds.add(content);
-                    } else {
-                        listener.getLogger()
-                                .println("Warning: The Jira pattern " + pattern + " doesn't define a capturing group!");
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Calls {@link #findIssues(Run, Set, Pattern, TaskListener)} with
-     * {@link JiraSite#getIssuePattern()} as pattern
-     */
-    protected void addIssuesFromChangeLog(Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
-        Pattern pattern = site.getIssuePattern();
-        findIssues(build, issueIds, pattern, listener);
-    }
-
-    /**
      * Adds issues to issueIds. Adds issues carried over from previous build,
      * issues from current build and from dependent builds
      * {@link #addIssuesCarriedOverFromPreviousBuild(Run, JiraSite, TaskListener, Set)}
@@ -104,18 +62,6 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
         addIssuesCarriedOverFromPreviousBuild(build, site, listener, issuesIds);
         addIssuesFromCurrentBuild(build, site, listener, issuesIds);
         addIssuesFromDependentBuilds(build, site, listener, issuesIds);
-    }
-
-    /**
-     * Adds issues to issueIds from the current build. Issues from parameters
-     * are added as well as issues matching pattern
-     * {@link #addIssuesFromChangeLog(Run, JiraSite, TaskListener, Set)}
-     * {@link #addIssuesFromParameters(Run, JiraSite, TaskListener, Set)}
-     */
-    protected void addIssuesFromCurrentBuild(
-            Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
-        addIssuesFromChangeLog(build, site, listener, issueIds);
-        addIssuesFromParameters(build, site, listener, issueIds);
     }
 
     /**
@@ -135,27 +81,6 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
                 // Fix JENKINS-44989
                 // The original code before refactoring just called "findIssues", not "findIssueIdsRecursive"
                 findIssues(b, issueIds, pattern, listener);
-            }
-        }
-    }
-
-    /**
-     * Adds issues to issueIds from parameters
-     */
-    protected void addIssuesFromParameters(
-            Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
-        // Now look for any JiraIssueParameterValue's set in the build
-        // Implements JENKINS-12312
-        ParametersAction parameters = build.getAction(ParametersAction.class);
-
-        if (parameters != null) {
-            for (ParameterValue val : parameters.getParameters()) {
-                if (val instanceof JiraIssueParameterValue) {
-                    String issueId = ((JiraIssueParameterValue) val).getValue().toString();
-                    if (issueIds.add(issueId)) {
-                        getLogger().finer("Added perforce issue " + issueId + " from build " + build);
-                    }
-                }
             }
         }
     }
