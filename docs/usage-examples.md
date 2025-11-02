@@ -6,13 +6,14 @@ These examples assume you have already configured a JIRA site in the Jenkins Sys
 
 ---
 
-## 1. Transitioning a JIRA Issue to 'Resolved' on Success
+## Transition Jira issues to _Resolved_ status on successful build
 
 This is the most frequent use case: automatically updating the status of the associated JIRA issue once a build succeeds.
 
 This pipeline assumes the JIRA issue key (e.g., PROJ-123) is extracted automatically from the commit message, which is the default behavior when the "Issue Pattern" is correctly configured in Jenkins.
 
-### Declarative Pipeline example
+### JiraIssueTransition usage example
+
 ```groovy
 pipeline {
     agent any
@@ -40,7 +41,11 @@ pipeline {
         }
     }
 }
+```
 
+### JiraAddComment usage example
+
+```groovy
 pipeline {
     agent any
 
@@ -60,7 +65,11 @@ pipeline {
         }
     }
 }
+```
 
+### JiraNewIssue  creation usage example
+
+```groovy
 node {
     stage('Health Check') {
         try {
