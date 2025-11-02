@@ -104,14 +104,6 @@
       <artifactId>jira-rest-java-client-core</artifactId>
       <version>${jira-rest-client.version}</version>
       <exclusions>
-        <exclusion>
-          <groupId>com.atlassian.httpclient</groupId>
-          <artifactId>atlassian-httpclient-library</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.atlassian.httpclient</groupId>
-          <artifactId>atlassian-httpclient-plugin</artifactId>
-        </exclusion>
         <!-- Deprecated and not needed at runtime -->
         <exclusion>
           <groupId>com.google.code.findbugs</groupId>
@@ -135,35 +127,6 @@
         <exclusion>
           <groupId>org.apache.commons</groupId>
           <artifactId>commons-lang3</artifactId>
-        </exclusion>
-        <!-- Provided by apache-httpcomponents-client-4-api plugin -->
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpasyncclient</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpasyncclient-cache</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpclient-cache</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpcore</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpcore-nio</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.httpcomponents</groupId>
-          <artifactId>httpmime</artifactId>
         </exclusion>
         <!-- Provided by Jersey 2 API plugin -->
         <exclusion>
