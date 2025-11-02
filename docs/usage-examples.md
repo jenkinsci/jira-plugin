@@ -6,7 +6,7 @@ These examples assume you have already configured a JIRA site in the Jenkins Sys
 
 ---
 
-## 1. Transitioning a JIRA Issue to 'Resolved' on Success
+## Transition Jira issues to _Resolved_ status on successful build
 
 This is the most frequent use case: automatically updating the status of the associated JIRA issue once a build succeeds.
 
