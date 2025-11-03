@@ -15,6 +15,7 @@
  */
 package hudson.plugins.jira;
 
+import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 import static java.util.logging.Level.WARNING;
 
@@ -166,6 +167,7 @@ public class JiraRestService {
     }
 
     public Issue getIssue(String issueKey) {
+        LOGGER.log(FINE, "[Jira] Fetching issue {0}", issueKey);
         try {
             return jiraRestClient.getIssueClient().getIssue(issueKey).get(timeout, TimeUnit.SECONDS);
         } catch (Exception e) {
@@ -228,6 +230,7 @@ public class JiraRestService {
     }
 
     public List<Issue> getIssuesFromJqlSearch(String jqlSearch, Integer maxResults) throws TimeoutException {
+        LOGGER.log(FINE, "[Jira] Executing JQL: {0}", jqlSearch);
         try {
             Set<String> neededFields = new HashSet<>(
                     Arrays.asList("summary", "issuetype", "created", "updated", "project", "status", "fixVersions"));
