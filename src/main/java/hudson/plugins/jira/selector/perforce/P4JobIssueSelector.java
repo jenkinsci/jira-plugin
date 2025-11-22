@@ -28,7 +28,7 @@ public class P4JobIssueSelector extends JobIssueSelector {
     private static final Logger LOGGER = Logger.getLogger(P4JobIssueSelector.class.getName());
 
     @Extension(optional = true)
-    @Symbol("matchChangesP4")
+    @Symbol("P4Selector")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
 
         @Override

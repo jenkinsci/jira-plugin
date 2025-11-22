@@ -126,7 +126,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
      * Descriptor for {@link JiraIssueUpdateBuilder}.
      */
     @Extension
-    @Symbol("jiraWorkflowUpdateIssues")
+    @Symbol("jiraExecuteWorkflow")
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         /**
          * Performs on-the-fly validation of the form field 'Jql'.

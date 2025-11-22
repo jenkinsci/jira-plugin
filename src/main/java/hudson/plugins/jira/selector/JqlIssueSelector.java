@@ -63,7 +63,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
     }
 
     @Extension
-    @Symbol("matchJql")
+    @Symbol("JqlSelector")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
         @Override
         public String getDisplayName() {

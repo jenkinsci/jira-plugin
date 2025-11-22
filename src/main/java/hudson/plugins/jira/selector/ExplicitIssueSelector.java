@@ -64,7 +64,7 @@ public class ExplicitIssueSelector extends AbstractIssueSelector {
     }
 
     @Extension
-    @Symbol("matchKey")
+    @Symbol("ExplicitSelector")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
         @Override
         public String getDisplayName() {

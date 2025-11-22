@@ -47,7 +47,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     }
 
     @Extension
-    @Symbol("matchChanges")
+    @Symbol("DefaultSelector")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
 
         @Override
