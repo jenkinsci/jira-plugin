@@ -19,11 +19,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import jenkins.tasks.SimpleBuildWrapper;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class JiraCreateReleaseNotes extends SimpleBuildWrapper {
 
     @Extension
+    @Symbol("jiraCreateVersion")
     public static final class Descriptor extends BuildWrapperDescriptor {
 
         @Override

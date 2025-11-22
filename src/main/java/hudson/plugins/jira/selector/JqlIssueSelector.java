@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class JqlIssueSelector extends AbstractIssueSelector {
@@ -55,13 +56,14 @@ public class JqlIssueSelector extends AbstractIssueSelector {
             }
 
             // deduplication
-            return new HashSet(issueKeys);
+            return new HashSet<>(issueKeys);
         } catch (TimeoutException e) {
             throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
         }
     }
 
     @Extension
+    @Symbol("matchJql")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
         @Override
         public String getDisplayName() {

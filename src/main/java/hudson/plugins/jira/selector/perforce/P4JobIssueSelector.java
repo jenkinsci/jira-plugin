@@ -14,6 +14,7 @@ import hudson.scm.ChangeLogSet.Entry;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -27,6 +28,7 @@ public class P4JobIssueSelector extends JobIssueSelector {
     private static final Logger LOGGER = Logger.getLogger(P4JobIssueSelector.class.getName());
 
     @Extension(optional = true)
+    @Symbol("matchChangesP4")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
 
         @Override

@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import jenkins.tasks.SimpleBuildStep;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -161,6 +162,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
     }
 
     @Extension
+    @Symbol("jiraUpdateIssueField")
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         public FormValidation doCheckField_id(@QueryParameter String value) throws IOException, ServletException {
