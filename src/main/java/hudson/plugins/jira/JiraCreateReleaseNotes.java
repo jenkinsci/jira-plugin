@@ -25,7 +25,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class JiraCreateReleaseNotes extends SimpleBuildWrapper {
 
     @Extension
-    @Symbol("jiraCreateVersion")
+    @Symbol("jiraCreateReleaseNotes")
     public static final class Descriptor extends BuildWrapperDescriptor {
 
         @Override
