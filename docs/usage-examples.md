@@ -1,6 +1,6 @@
 # Usage examples
 
-## JiraIssueUpdater usage example
+## jiraCommentIssues usage example
 
 You need keep reference to used scm.
 As an example, you can write a flow:
@@ -9,9 +9,9 @@ As an example, you can write a flow:
 node {
     def gitScm = git url: 'git@github.com:jenkinsci/jira-plugin.git', branch: 'master'
     sh 'make something'
-    step([$class: 'hudson.plugins.jira.JiraIssueUpdater', 
-            issueSelector: [$class: 'hudson.plugins.jira.selector.DefaultIssueSelector'], 
-            scm: gitScm])            
+    jiraCommentIssues( 
+            issueSelector: DefaultSelector(), 
+            scm: gitScm)            
     gitScm = null
 }
 ```
@@ -21,42 +21,56 @@ Note that a pointer to scm class should be better cleared to not serialize scm o
 You can add some labels to issue in jira:
 
 ```groovy
-    step([$class: 'hudson.plugins.jira.JiraIssueUpdater', 
-            issueSelector: [$class: 'hudson.plugins.jira.selector.DefaultIssueSelector'], 
+    jiraCommentIssues( 
+            issueSelector: DefaultSelector(), 
             scm: gitScm,
-            labels: [ "$version", "jenkins" ]])            
+            labels: [ "$version", "jenkins" ])            
 ```
 
-## JiraIssueUpdateBuilder  usage example
+## jiraExecuteWorkflow  usage example
 
 ```groovy
 node {
-    step([$class: 'hudson.plugins.jira.JiraIssueUpdateBuilder', 
+    jiraExecuteWorkflow(
             jqlSearch: "project = EX and labels = 'jenkins' and labels = '${version}'",
             workflowActionName: 'Resolve Issue',
-            comment: 'comment'])
+            comment: 'comment')
+}
 ```
 
-## JiraCreateReleaseNotes usage example
+## jiraCreateReleaseNotes usage example
 
 ```groovy
 node {
-    wrap([$class: 'hudson.plugins.jira.JiraCreateReleaseNotes', jiraProjectKey: 'TST', 
-    jiraRelease: '1.1.1', jiraEnvironmentVariable: 'notes', jiraFilter: 'status in (Resolved, Closed)']) 
-    {
-        //do some useful here
-        //release notes can be found in environment variable jiraEnvironmentVariable
-        print env.notes
-    }
+    jiraCreateReleaseNotes(jiraProjectKey: 'TST',
+            jiraRelease: '1.1.1', jiraEnvironmentVariable: 'notes', jiraFilter: 'status in (Resolved, Closed)')
+            {
+                //do some useful here
+                //release notes can be found in environment variable jiraEnvironmentVariable
+                print env.notes
+            }
+}
 ```
 
-## JiraReleaseVersionUpdaterBuilder usage example
+## jiraMarkVersionReleased usage example
 
 ```groovy
 node {
-    step([$class: 'hudson.plugins.jira.JiraReleaseVersionUpdaterBuilder', 
+    jiraMarkVersionReleased( 
             jiraProjectKey: 'TEST', 
-            jiraRelease: '1.1.1'])            
+            jiraRelease: '1.1.1')
+}
+```
+
+## jiraUpdateIssueField usage example
+
+```groovy
+node {
+    jiraUpdateIssueField(
+            issueSelector: ExplicitSelector("JIRA-123"),
+            fieldId: "10001",
+            fieldValue: "value"
+    )
 }
 ```
 
@@ -78,7 +92,7 @@ Interface for Pipeline job types that simply want to post a comment e.g.:
 
 ```groovy
 node {
-    jiraComment(issueKey: "EX-111", body: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) builded. Please go to ${env.BUILD_URL}.")
+    jiraComment(issueKey: "EX-111", body: "Job '${env.JOB_NAME}' (${env.BUILD_NUMBER}) built. Please go to ${env.BUILD_URL}.")
 }
 ```
 

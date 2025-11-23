@@ -71,7 +71,7 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
-    @Symbol("jiraVersionCreate")
+    @Symbol("jiraCreateVersion")
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         public DescriptorImpl() {

@@ -78,7 +78,7 @@ public class JiraReleaseVersionUpdaterBuilder extends Builder implements SimpleB
         return DESCRIPTOR;
     }
 
-    @Symbol("jiraVersionRelease")
+    @Symbol("jiraMarkVersionReleased")
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         private DescriptorImpl() {

@@ -112,7 +112,7 @@ class JiraIssueUpdateBuilderTest {
         WorkflowJob job = r.createProject(WorkflowJob.class);
         job.setDefinition(new CpsFlowDefinition(
                 """
-                        step([$class: 'JiraIssueUpdateBuilder', jqlSearch: 'search', workflowActionName: 'action', comment: 'comment'])
+                        jiraExecuteWorkflow(jqlSearch: 'search', workflowActionName: 'action', comment: 'comment')
                 """,
                 true));
         WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, job);

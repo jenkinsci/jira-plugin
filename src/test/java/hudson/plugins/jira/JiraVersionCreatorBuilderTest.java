@@ -34,7 +34,7 @@ class JiraVersionCreatorBuilderTest {
         WorkflowJob job = r.createProject(WorkflowJob.class);
         job.setDefinition(new CpsFlowDefinition(
                 """
-                        step([$class: 'JiraVersionCreatorBuilder', jiraVersion: 'Version', jiraProjectKey: 'project-key'])
+                        jiraCreateVersion(jiraVersion: 'Version', jiraProjectKey: 'project-key')
                 """,
                 true));
         WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, job);
