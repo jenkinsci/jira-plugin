@@ -71,7 +71,7 @@ class JiraIssueUpdaterTest {
         WorkflowJob job = r.createProject(WorkflowJob.class);
         job.setDefinition(new CpsFlowDefinition(
                 """
-                        step([$class: 'JiraIssueUpdater', issueSelector: [$class: 'DefaultIssueSelector'], scm: null])
+                        jiraCommentIssues(issueSelector: DefaultSelector(), scm: null)
                 """,
                 true));
         WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, job);

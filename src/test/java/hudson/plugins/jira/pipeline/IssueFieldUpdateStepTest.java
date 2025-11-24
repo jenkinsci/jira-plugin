@@ -145,11 +145,11 @@ class IssueFieldUpdateStepTest {
         WorkflowJob job = r.createProject(WorkflowJob.class);
         job.setDefinition(new CpsFlowDefinition(
                 """
-                        step([$class: 'IssueFieldUpdateStep',
-                                issueSelector: [$class: 'hudson.plugins.jira.selector.ExplicitIssueSelector', issueKeys: "JIRA-123"],
+                        jiraUpdateIssueField(
+                                issueSelector: ExplicitSelector("JIRA-123"),
                                 fieldId: "field",
                                 fieldValue: "value"
-                            ])
+                            )
                 """,
                 true));
         r.buildAndAssertStatus(Result.SUCCESS, job);

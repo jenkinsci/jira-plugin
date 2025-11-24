@@ -29,7 +29,7 @@ class JiraReleaseVersionUpdateBuilderTest {
         WorkflowJob job = r.createProject(WorkflowJob.class);
         job.setDefinition(new CpsFlowDefinition(
                 """
-                        step([$class: 'JiraReleaseVersionUpdaterBuilder', jiraProjectKey: 'PROJECT', jiraRelease: 'release', jiraDescription: 'description'])
+                        jiraMarkVersionReleased(jiraProjectKey: 'PROJECT', jiraRelease: 'release', jiraDescription: 'description')
                 """,
                 true));
         WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, job);

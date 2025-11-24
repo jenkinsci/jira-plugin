@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class DefaultIssueSelector extends AbstractIssueSelector {
@@ -46,6 +47,7 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
     }
 
     @Extension
+    @Symbol("DefaultSelector")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
 
         @Override
