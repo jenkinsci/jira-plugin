@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>jira</artifactId>
-  <version>3.20</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Jenkins Jira plugin</name>
   <description>Integrates Jenkins to Jira</description>
@@ -47,7 +47,7 @@
   </issueManagement>
 
   <properties>
-    <revision>3.20</revision>
+    <revision>3.21</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <jira-rest-client.version>6.0.2</jira-rest-client.version>
