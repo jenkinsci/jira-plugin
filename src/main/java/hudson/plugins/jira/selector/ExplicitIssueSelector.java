@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class ExplicitIssueSelector extends AbstractIssueSelector {
@@ -63,6 +64,7 @@ public class ExplicitIssueSelector extends AbstractIssueSelector {
     }
 
     @Extension
+    @Symbol("ExplicitSelector")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
         @Override
         public String getDisplayName() {

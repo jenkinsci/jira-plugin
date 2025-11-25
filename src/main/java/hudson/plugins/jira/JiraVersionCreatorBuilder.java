@@ -10,6 +10,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest2;
 
@@ -70,6 +71,7 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
     @Extension
     public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();
 
+    @Symbol("jiraCreateVersion")
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         public DescriptorImpl() {

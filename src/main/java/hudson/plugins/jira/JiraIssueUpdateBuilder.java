@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -125,6 +126,7 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
      * Descriptor for {@link JiraIssueUpdateBuilder}.
      */
     @Extension
+    @Symbol("jiraExecuteWorkflow")
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
         /**
          * Performs on-the-fly validation of the form field 'Jql'.
