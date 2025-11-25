@@ -32,12 +32,8 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
+import hudson.model.*;
 import hudson.model.Descriptor.FormException;
-import hudson.model.Item;
-import hudson.model.ItemGroup;
-import hudson.model.Job;
 import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
@@ -1124,6 +1120,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt(); // process this interruption later
+            } catch (RestClientException e) {
+                return Collections.emptySet();
             }
         }
         // fall back to empty if failed to talk to the server
@@ -1156,7 +1154,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public boolean existsIssue(String id) {
         try {
             return getIssue(id) != null;
-        } catch (IOException e) { // restoring backward compat means even avoid exception
+        } catch (IOException | RestClientException e) { // restoring backward compat means even avoid exception
             throw new RuntimeException(e.getMessage(), e);
         }
     }
@@ -1239,7 +1237,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @throws TimeoutException if too long
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query)
-            throws TimeoutException {
+            throws TimeoutException, RestClientException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
@@ -1271,7 +1269,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param query       the query
      * @throws TimeoutException if too long
      */
-    public void addFixVersionToIssue(String projectKey, String versionName, String query) throws TimeoutException {
+    public void addFixVersionToIssue(String projectKey, String versionName, String query)
+            throws TimeoutException, RestClientException {
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");
             return;
@@ -1287,10 +1286,10 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param workflowActionName the workflowActionName
      * @param comment            the comment
      * @param console            the console
-     * @throws TimeoutException TimeoutException if too long
      */
     public boolean progressMatchingIssues(
-            String jqlSearch, String workflowActionName, String comment, PrintStream console) throws TimeoutException {
+            String jqlSearch, String workflowActionName, String comment, PrintStream console)
+            throws RestClientException {
 
         if (this.jiraSession == null) {
             LOGGER.warning("Jira session could not be established");

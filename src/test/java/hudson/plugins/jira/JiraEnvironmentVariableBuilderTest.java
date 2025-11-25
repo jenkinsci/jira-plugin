@@ -6,13 +6,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -139,5 +135,20 @@ class JiraEnvironmentVariableBuilderTest {
         JiraEnvironmentVariableBuilder.DescriptorImpl descriptor =
                 (JiraEnvironmentVariableBuilder.DescriptorImpl) r.jenkins.getDescriptor(builder.getClass());
         assertTrue(descriptor.hasIssueSelectors());
+    }
+
+    @Test
+    @WithoutJenkins
+    public void testEnvBuilderExceptionLogging(JenkinsRule r) throws IOException, InterruptedException {
+        Throwable throwable = mock(Throwable.class);
+        PrintStream logger = mock(PrintStream.class);
+        when(listener.getLogger()).thenReturn(logger);
+        doThrow(new RestClientException("[Jira] Jira REST findIsusueIds error. Cause: 401 error", throwable))
+                .when(issueSelector)
+                .findIssueIds(build, site, listener);
+        JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
+        doReturn(site).when(builder).getSiteForProject(project);
+        assertThat(builder.perform(build, launcher, listener), is(false));
+        verify(logger).println("[Jira] Jira REST findIsusueIds error. Cause: 401 error");
     }
 }

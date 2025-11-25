@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.Extension;
@@ -127,8 +128,9 @@ public class JiraJobAction implements Action {
             if (site != null) {
                 try {
                     setAction(parent, site);
-                } catch (IOException e) {
+                } catch (IOException | RestClientException e) {
                     LOGGER.log(Level.WARNING, "Could not set JiraJobAction for <" + parent.getFullName() + ">", e);
+                    listener.getLogger().println(e.getMessage());
                 }
             }
         }

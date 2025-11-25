@@ -4,18 +4,16 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.google.inject.Inject;
-import hudson.model.AbstractProject;
-import hudson.model.FreeStyleProject;
-import hudson.model.Node;
-import hudson.model.Run;
+import hudson.model.*;
 import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.pipeline.CommentStep.CommentStepExecution;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -102,5 +100,47 @@ class CommentStepTest {
         start.run();
 
         assertThat(assertCalledParams, hasSize(4));
+    }
+
+    @Test
+    void addCommentRestException() throws Exception {
+        JiraSession session = mock(JiraSession.class);
+        final String issueKey = "KEY";
+        final String body = "dsgsags";
+
+        AbstractProject mockProject = mock(FreeStyleProject.class);
+        Run mockRun = mock(Run.class);
+        JiraProjectProperty jiraProjectProperty = mock(JiraProjectProperty.class);
+        JiraSite site = mock(JiraSite.class);
+
+        when(jiraProjectProperty.getSite()).thenReturn(site);
+        when(site.getSession(mockProject)).thenReturn(session);
+        when(mockRun.getParent()).thenReturn(mockProject);
+        when(mockRun.getParent().getProperty(JiraProjectProperty.class)).thenReturn(jiraProjectProperty);
+
+        final List<Object> assertCalledParams = new ArrayList<>();
+
+        Throwable throwable = mock(Throwable.class);
+        PrintStream logger = mock(PrintStream.class);
+        TaskListener listener = mock(TaskListener.class);
+        Mockito.doThrow(new RestClientException("[Jira] Jira REST addComment error. Cause: 401 error", throwable))
+                .when(session)
+                .addComment(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
+
+        Map<String, Object> r = new HashMap<>();
+        r.put("issueKey", issueKey);
+        r.put("body", body);
+        CommentStep step = (CommentStep) descriptor.newInstance(r);
+
+        StepContext ctx = mock(StepContext.class);
+        when(ctx.get(Node.class)).thenReturn(jenkinsRule.getInstance());
+        when(ctx.get(Run.class)).thenReturn(mockRun);
+        when(ctx.get(TaskListener.class)).thenReturn(listener);
+        when(listener.getLogger()).thenReturn(logger);
+        assertThat(assertCalledParams, hasSize(0));
+
+        CommentStepExecution start = (CommentStepExecution) step.start(ctx);
+        start.run();
+        verify(logger).println("[Jira] Jira REST addComment error. Cause: 401 error");
     }
 }
