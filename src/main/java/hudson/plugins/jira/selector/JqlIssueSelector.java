@@ -2,6 +2,7 @@ package hudson.plugins.jira.selector;
 
 import static hudson.Util.fixNull;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -15,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeoutException;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -57,7 +57,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
 
             // deduplication
             return new HashSet<>(issueKeys);
-        } catch (TimeoutException e) {
+        } catch (RestClientException e) {
             throw new IllegalStateException("Can't open rest session to Jira site " + site, e);
         }
     }
@@ -65,6 +65,7 @@ public class JqlIssueSelector extends AbstractIssueSelector {
     @Extension
     @Symbol("JqlSelector")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
+
         @Override
         public String getDisplayName() {
             return Messages.IssueSelector_JqlIssueSelector_DisplayName();

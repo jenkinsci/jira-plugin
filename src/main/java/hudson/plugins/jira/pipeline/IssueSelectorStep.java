@@ -1,5 +1,6 @@
 package hudson.plugins.jira.pipeline;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -89,13 +90,19 @@ public class IssueSelectorStep extends Step {
         protected Set<String> run() throws Exception {
             TaskListener listener = getContext().get(TaskListener.class);
             Run run = getContext().get(Run.class);
-            return Optional.ofNullable(JiraSite.get(run.getParent()))
-                    .map(site -> step.getIssueSelector().findIssueIds(run, site, listener))
-                    .orElseGet(() -> {
-                        listener.getLogger().println(Messages.NoJiraSite());
-                        run.setResult(Result.FAILURE);
-                        return new HashSet<>();
-                    });
+            try {
+                return Optional.ofNullable(JiraSite.get(run.getParent()))
+                        .map(site -> step.getIssueSelector().findIssueIds(run, site, listener))
+                        .orElseGet(() -> {
+                            listener.getLogger().println(Messages.NoJiraSite());
+                            run.setResult(Result.FAILURE);
+                            return new HashSet<>();
+                        });
+            } catch (RestClientException e) {
+                listener.getLogger().println(e.getMessage());
+                run.setResult(Result.FAILURE);
+                return new HashSet<>();
+            }
         }
     }
 }

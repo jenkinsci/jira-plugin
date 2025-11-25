@@ -6,11 +6,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.*;
@@ -151,5 +150,77 @@ class IssueFieldUpdateStepTest {
                             )
                 """, true));
         r.buildAndAssertStatus(Result.SUCCESS, job);
+    }
+
+    @Test
+    void issueFieldFindIssueIdsRestException() throws IOException, InterruptedException {
+        Random random = new Random();
+        Integer randomBuildNumber = random.nextInt(85) + 15; // random number 15 < r < 99
+        String issueId = "ISSUE-" + random.nextInt(1000) + 999;
+        String beforeFieldid = "field" + random.nextInt(100) + 99;
+        String beforeFieldValue = "Some comment, build #${BUILD_NUMBER}";
+
+        EnvVars env = new EnvVars();
+        env.put("BUILD_NUMBER", randomBuildNumber.toString());
+        when(build.getEnvironment(listener)).thenReturn(env);
+
+        final ExplicitIssueSelector issueSelector = spy(new ExplicitIssueSelector(issueId));
+        Throwable throwable = mock(Throwable.class);
+        PrintStream logger = mock(PrintStream.class);
+        when(listener.getLogger()).thenReturn(logger);
+        final List<String> issuesAfter = new ArrayList<String>();
+        final List<JiraIssueField> fieldsAfter = new ArrayList<JiraIssueField>();
+        doAnswer(invocation -> {
+                    String id = (String) invocation.getArguments()[0];
+                    List<JiraIssueField> jif = (List<JiraIssueField>) invocation.getArguments()[1];
+                    issuesAfter.add(id);
+                    fieldsAfter.addAll(jif);
+                    return null;
+                })
+                .when(session)
+                .addFields(anyString(), anyList());
+
+        IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(issueSelector, beforeFieldid, beforeFieldValue));
+        doThrow(new RestClientException("[Jira] Jira REST findIssueIds error. Cause: 401 error", throwable))
+                .when(issueSelector)
+                .findIssueIds(build, site, listener);
+        jifu.perform(build, null, launcher, listener);
+        verify(logger).println("[Jira] Jira REST findIssueIds error. Cause: 401 error");
+    }
+
+    @Test
+    void issueFieldSubmitFieldsRestException() throws IOException, InterruptedException {
+        Random random = new Random();
+        Integer randomBuildNumber = random.nextInt(85) + 15; // random number 15 < r < 99
+        String issueId = "ISSUE-" + random.nextInt(1000) + 999;
+        String beforeFieldid = "field" + random.nextInt(100) + 99;
+        String beforeFieldValue = "Some comment, build #${BUILD_NUMBER}";
+
+        EnvVars env = new EnvVars();
+        env.put("BUILD_NUMBER", randomBuildNumber.toString());
+        when(build.getEnvironment(listener)).thenReturn(env);
+
+        final ExplicitIssueSelector issueSelector = new ExplicitIssueSelector(issueId);
+        Throwable throwable = mock(Throwable.class);
+        PrintStream logger = mock(PrintStream.class);
+        when(listener.getLogger()).thenReturn(logger);
+        final List<String> issuesAfter = new ArrayList<String>();
+        final List<JiraIssueField> fieldsAfter = new ArrayList<JiraIssueField>();
+        doAnswer(invocation -> {
+                    String id = (String) invocation.getArguments()[0];
+                    List<JiraIssueField> jif = (List<JiraIssueField>) invocation.getArguments()[1];
+                    issuesAfter.add(id);
+                    fieldsAfter.addAll(jif);
+                    return null;
+                })
+                .when(session)
+                .addFields(anyString(), anyList());
+
+        IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(issueSelector, beforeFieldid, beforeFieldValue));
+        doThrow(new RestClientException("[Jira] Jira REST submitFields error. Cause: 401 error", throwable))
+                .when(jifu)
+                .submitFields(any(JiraSession.class), anyString(), anyList(), any(PrintStream.class));
+        jifu.perform(build, null, launcher, listener);
+        verify(logger).println("[Jira] Jira REST submitFields error. Cause: 401 error");
     }
 }

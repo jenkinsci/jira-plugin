@@ -2,15 +2,9 @@ package hudson.plugins.jira;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.EnvVars;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -21,7 +15,6 @@ import hudson.model.TaskListener;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collections;
-import java.util.concurrent.TimeoutException;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -77,16 +70,19 @@ class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    void performTimeout() throws InterruptedException, IOException, TimeoutException {
+    void validateFailureResult() throws InterruptedException, IOException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
+        Throwable throwable = mock(Throwable.class);
         doReturn(site).when(builder).getSiteForJob(any());
-        doThrow(new TimeoutException()).when(site).progressMatchingIssues(any(), any(), any(), any());
+        doThrow(new RestClientException("Verify failure result", throwable))
+                .when(site)
+                .progressMatchingIssues(any(), any(), any(), any());
         builder.perform(build, workspace, launcher, listener);
         assertThat(result, is(Result.FAILURE));
     }
 
     @Test
-    void performProgressFails() throws InterruptedException, IOException, TimeoutException {
+    void performProgressFails() throws InterruptedException, IOException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(site).when(builder).getSiteForJob(any());
         doReturn(false).when(site).progressMatchingIssues(anyString(), anyString(), anyString(), any());
@@ -95,7 +91,7 @@ class JiraIssueUpdateBuilderTest {
     }
 
     @Test
-    void performProgressOK() throws InterruptedException, IOException, TimeoutException {
+    void performProgressOK() throws InterruptedException, IOException {
         JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
         doReturn(site).when(builder).getSiteForJob(any());
         doReturn(true).when(site).progressMatchingIssues(any(), any(), any(), any());
@@ -115,5 +111,19 @@ class JiraIssueUpdateBuilderTest {
                 """, true));
         WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, job);
         r.assertLogContains("[Jira] Updating issues using workflow action action.", b);
+    }
+
+    @Test
+    void testIssueUpdateBuilderRestException() throws InterruptedException, IOException {
+        Throwable throwable = mock(Throwable.class);
+        PrintStream logger = mock(PrintStream.class);
+        when(listener.getLogger()).thenReturn(logger);
+        JiraIssueUpdateBuilder builder = spy(new JiraIssueUpdateBuilder(null, null, null));
+        doReturn(site).when(builder).getSiteForJob(any());
+        doThrow(new RestClientException("[Jira] Jira REST progressMatchingIssues error. Cause: 401 error", throwable))
+                .when(site)
+                .progressMatchingIssues(any(), any(), any(), any());
+        builder.perform(build, workspace, launcher, listener);
+        verify(logger).println("[Jira] Jira REST progressMatchingIssues error. Cause: 401 error");
     }
 }

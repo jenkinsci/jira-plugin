@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.EnvVars;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -53,7 +54,7 @@ class JiraIssueMigratorTest {
     }
 
     @Test
-    void addingVersion() throws IOException, TimeoutException {
+    void addingVersion() throws IOException, TimeoutException, RestClientException {
         boolean addRelease = true;
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, addRelease));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
@@ -65,7 +66,7 @@ class JiraIssueMigratorTest {
     }
 
     @Test
-    void migratingToVersion() throws IOException, TimeoutException {
+    void migratingToVersion() throws IOException, TimeoutException, RestClientException {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, null, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);
@@ -76,7 +77,7 @@ class JiraIssueMigratorTest {
     }
 
     @Test
-    void replacingVersion() throws IOException, TimeoutException {
+    void replacingVersion() throws IOException, TimeoutException, RestClientException {
         jiraIssueMigrator = spy(new JiraIssueMigrator(PROJECT_KEY, RELEASE, QUERY, RELEASE_TO_REPLACE, false));
         doReturn(jiraSite).when(jiraIssueMigrator).getJiraSiteForProject(project);
         boolean result = jiraIssueMigrator.perform(build, launcher, listener);

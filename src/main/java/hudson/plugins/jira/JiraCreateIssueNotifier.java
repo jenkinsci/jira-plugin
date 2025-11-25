@@ -2,6 +2,7 @@ package hudson.plugins.jira;
 
 import static hudson.plugins.jira.JiraRestService.BUG_ISSUE_TYPE_ID;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.StatusCategory;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
@@ -164,12 +165,16 @@ public class JiraCreateIssueNotifier extends Notifier {
         }
 
         if (currentBuildResult != Result.ABORTED && previousBuild != null) {
-            if (currentBuildResult == Result.FAILURE) {
-                currentBuildResultFailure(build, listener, previousBuildResult, filename, vars);
-            }
+            try {
+                if (currentBuildResult == Result.FAILURE) {
+                    currentBuildResultFailure(build, listener, previousBuildResult, filename, vars);
+                }
 
-            if (currentBuildResult == Result.SUCCESS) {
-                currentBuildResultSuccess(build, listener, previousBuildResult, filename, vars);
+                if (currentBuildResult == Result.SUCCESS) {
+                    currentBuildResultSuccess(build, listener, previousBuildResult, filename, vars);
+                }
+            } catch (RestClientException e) {
+                listener.getLogger().println(e.getMessage());
             }
         }
         return true;
@@ -342,7 +347,7 @@ public class JiraCreateIssueNotifier extends Notifier {
             Result previousBuildResult,
             String filename,
             EnvVars vars)
-            throws InterruptedException, IOException {
+            throws InterruptedException, IOException, RestClientException {
 
         if (previousBuildResult == Result.FAILURE) {
             String comment = String.format("Build is still failing.%nFailed run: %s", getBuildDetailsString(vars));
