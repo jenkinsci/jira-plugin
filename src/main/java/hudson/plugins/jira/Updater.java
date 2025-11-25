@@ -151,7 +151,7 @@ class Updater {
      * @param useWikiStyleComments
      * @param recordScmChanges
      * @param groupVisibility
-
+     *
      */
     void submitComments(
             Run<?, ?> build,
