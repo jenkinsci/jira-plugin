@@ -106,11 +106,9 @@ class JiraIssueUpdateBuilderTest {
         jiraGlobalConfiguration.setSites(Collections.singletonList(site));
         doReturn(true).when(site).progressMatchingIssues(anyString(), anyString(), anyString(), any());
         WorkflowJob job = r.createProject(WorkflowJob.class);
-        job.setDefinition(new CpsFlowDefinition(
-                """
+        job.setDefinition(new CpsFlowDefinition("""
                         jiraExecuteWorkflow(jqlSearch: 'search', workflowActionName: 'action', comment: 'comment')
-                """,
-                true));
+                """, true));
         WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, job);
         r.assertLogContains("[Jira] Updating issues using workflow action action.", b);
     }
