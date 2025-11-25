@@ -155,7 +155,7 @@ class IssueFieldUpdateStepTest {
     @Test
     void issueFieldFindIssueIdsRestException() throws IOException, InterruptedException {
         Random random = new Random();
-        Integer randomBuildNumber = random.nextInt(85) + 15; // random number 15 < r < 99
+        int randomBuildNumber = random.nextInt(85) + 15; // random number 15 < r < 99
         String issueId = "ISSUE-" + random.nextInt(1000) + 999;
         String beforeFieldid = "field" + random.nextInt(100) + 99;
         String beforeFieldValue = "Some comment, build #${BUILD_NUMBER}";

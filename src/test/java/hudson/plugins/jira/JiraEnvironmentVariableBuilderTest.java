@@ -143,12 +143,12 @@ class JiraEnvironmentVariableBuilderTest {
         Throwable throwable = mock(Throwable.class);
         PrintStream logger = mock(PrintStream.class);
         when(listener.getLogger()).thenReturn(logger);
-        doThrow(new RestClientException("[Jira] Jira REST findIsusueIds error. Cause: 401 error", throwable))
+        doThrow(new RestClientException("[Jira] Jira REST findIssueIds error. Cause: 401 error", throwable))
                 .when(issueSelector)
                 .findIssueIds(build, site, listener);
         JiraEnvironmentVariableBuilder builder = spy(new JiraEnvironmentVariableBuilder(issueSelector));
         doReturn(site).when(builder).getSiteForProject(project);
         assertThat(builder.perform(build, launcher, listener), is(false));
-        verify(logger).println("[Jira] Jira REST findIsusueIds error. Cause: 401 error");
+        verify(logger).println("[Jira] Jira REST findIssueIds error. Cause: 401 error");
     }
 }
