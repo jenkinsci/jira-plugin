@@ -27,11 +27,9 @@ class JiraReleaseVersionUpdateBuilderTest {
         JiraGlobalConfiguration jiraGlobalConfiguration = JiraGlobalConfiguration.get();
         jiraGlobalConfiguration.setSites(Collections.singletonList(site));
         WorkflowJob job = r.createProject(WorkflowJob.class);
-        job.setDefinition(new CpsFlowDefinition(
-                """
+        job.setDefinition(new CpsFlowDefinition("""
                         jiraMarkVersionReleased(jiraProjectKey: 'PROJECT', jiraRelease: 'release', jiraDescription: 'description')
-                """,
-                true));
+                """, true));
         WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, job);
         r.assertLogContains("[Jira] Marking version release in project PROJECT as released.", b);
     }
