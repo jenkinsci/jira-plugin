@@ -32,11 +32,9 @@ class JiraVersionCreatorBuilderTest {
         jiraGlobalConfiguration.setSites(Collections.singletonList(site));
         doReturn(session).when(site).getSession(any());
         WorkflowJob job = r.createProject(WorkflowJob.class);
-        job.setDefinition(new CpsFlowDefinition(
-                """
+        job.setDefinition(new CpsFlowDefinition("""
                         jiraCreateVersion(jiraVersion: 'Version', jiraProjectKey: 'project-key')
-                """,
-                true));
+                """, true));
         WorkflowRun b = r.buildAndAssertStatus(Result.SUCCESS, job);
         r.assertLogContains("[Jira] Creating version Version in project project-key.", b);
     }

@@ -69,11 +69,9 @@ class JiraIssueUpdaterTest {
     @Test
     void testPipeline(JenkinsRule r) throws Exception {
         WorkflowJob job = r.createProject(WorkflowJob.class);
-        job.setDefinition(new CpsFlowDefinition(
-                """
+        job.setDefinition(new CpsFlowDefinition("""
                         jiraCommentIssues(issueSelector: DefaultSelector(), scm: null)
-                """,
-                true));
+                """, true));
         WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, job);
         r.assertLogContains(" Unsupported run type", b);
     }
