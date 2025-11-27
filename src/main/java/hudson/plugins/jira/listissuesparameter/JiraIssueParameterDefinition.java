@@ -29,6 +29,7 @@ import hudson.model.ParameterValue;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -60,7 +61,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     @Override
     public ParameterValue createValue(StaplerRequest2 req) {
         String[] values = req.getParameterValues(getName());
-        if (values == null || values.length != 1) {
+        if (values == null || values.length != 1 || values[0].isEmpty()) {
             return null;
         }
 
@@ -84,7 +85,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         return getIssues(job);
     }
 
-    public List<JiraIssueParameterDefinition.Result> getIssues(Job<?, ?> job) {
+    List<JiraIssueParameterDefinition.Result> getIssues(Job<?, ?> job) {
         JiraSite site = JiraSite.get(job);
         if (site == null) {
             throw new IllegalStateException(
@@ -141,9 +142,12 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
                     ParameterDefinition def = prop.getParameterDefinition(name);
                     if (def instanceof JiraIssueParameterDefinition jiraIssueDef) {
                         List<Result> issueValues = jiraIssueDef.getIssues(job);
-                        issueValues.forEach(it -> items.add(it.summary, it.key));
+                        issueValues.forEach(it -> items.add(it.key + ": " + it.summary, it.key));
                     }
                 }
+            }
+            if (items.isEmpty()) {
+                items.add(Messages.JiraIssueParameterDefinition_NoIssueMatchedSearch(), "");
             }
             return items;
         }

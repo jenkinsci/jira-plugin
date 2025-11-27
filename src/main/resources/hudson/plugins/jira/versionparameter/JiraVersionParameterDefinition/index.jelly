@@ -2,7 +2,6 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
     <j:set var="escapeEntryTitleAndDescription" value="false"/>
-    <j:set var="instance" value="${it}"/>
     <j:set var="descriptor" value="${it.descriptor}"/>
     <f:entry field="version" title="${h.escape(it.name)}" description="${it.formattedDescription}">
         <div name="parameter">

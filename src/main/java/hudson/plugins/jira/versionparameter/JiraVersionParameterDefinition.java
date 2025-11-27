@@ -4,9 +4,14 @@ import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.Extension;
 import hudson.cli.CLICommand;
-import hudson.model.*;
+import hudson.model.Item;
+import hudson.model.Job;
+import hudson.model.ParameterDefinition;
+import hudson.model.ParameterValue;
+import hudson.model.ParametersDefinitionProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.util.List;
@@ -15,7 +20,11 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 public class JiraVersionParameterDefinition extends ParameterDefinition {
@@ -48,7 +57,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
     @Override
     public ParameterValue createValue(StaplerRequest2 req) {
         String[] values = req.getParameterValues(getName());
-        if (values == null || values.length != 1) {
+        if (values == null || values.length != 1 || values[0].isEmpty()) {
             return null;
         }
         return new JiraVersionParameterValue(getName(), values[0]);
@@ -70,7 +79,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         return getVersions(contextJob);
     }
 
-    public List<JiraVersionParameterDefinition.Result> getVersions(Job<?, ?> contextJob) {
+    List<JiraVersionParameterDefinition.Result> getVersions(Job<?, ?> contextJob) {
         JiraSite site = JiraSite.get(contextJob);
         if (site == null) {
             throw new IllegalStateException(
@@ -187,6 +196,9 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
                         issueValues.forEach(it -> items.add(it.name));
                     }
                 }
+            }
+            if (items.isEmpty()) {
+                items.add(Messages.JiraVersionParameterDefinition_NoIssueMatchedSearch(), "");
             }
             return items;
         }

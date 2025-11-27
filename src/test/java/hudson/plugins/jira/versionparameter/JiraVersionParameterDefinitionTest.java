@@ -14,15 +14,21 @@ import hudson.model.ParameterValue;
 import hudson.model.ParametersDefinitionProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.mockito.Mock;
@@ -78,6 +84,41 @@ class JiraVersionParameterDefinitionTest {
         ParameterValue value = definition.createValue(cliCommand, "Jira Version 1.2.3");
         assertEquals(definition.getName(), value.getName());
         assertEquals("Jira Version 1.2.3", value.getValue());
+    }
+
+    static Stream<Arguments> createValueInvalidParameters() {
+        return Stream.of(
+                Arguments.of((Object) new String[] {}),
+                Arguments.of((Object) new String[] {"a", "b"}),
+                Arguments.of((Object) new String[] {""}));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @MethodSource("createValueInvalidParameters")
+    void shouldCreateNullParameterForInvalidValues(String[] values) {
+        JiraVersionParameterDefinition definition =
+                new JiraVersionParameterDefinition("pname", "pdesc", "JIRAKEY", null, "false", "true", "true");
+
+        when(request2.getParameterValues(any())).thenReturn(values);
+
+        ParameterValue result = definition.createValue(request2);
+
+        assertNull(result);
+    }
+
+    @Test
+    void shouldCreateValue() {
+        JiraVersionParameterDefinition definition =
+                new JiraVersionParameterDefinition("pname", "pdesc", "JIRAKEY", null, "false", "true", "true");
+
+        when(request2.getParameterValues(any())).thenReturn(new String[] {"value"});
+
+        ParameterValue result = definition.createValue(request2);
+
+        assertNotNull(result);
+        assertEquals("pname", result.getName());
+        assertEquals("value", result.getValue());
     }
 
     @Test
@@ -300,9 +341,29 @@ class JiraVersionParameterDefinitionTest {
         void shouldNotFillVersionsItemsIfPermissionMissing(@Mock Job<?, ?> job) {
             ListBoxModel result = uut.doFillVersionItems(job, "PARAM_NAME");
 
-            assertThat(result, hasSize(0));
+            assertThat(result, hasSize(1));
+            ListBoxModel.Option option = result.get(0);
+            assertEquals("", option.value);
+            assertEquals(Messages.JiraVersionParameterDefinition_NoIssueMatchedSearch(), option.name);
             verify(job).hasPermission(Item.BUILD);
-            verifyNoMoreInteractions(job);
+        }
+
+        @Test
+        void shouldHaveNoSearchMatchesItemIfSearchMatchesNoItem(
+                @Mock Job<?, ?> job,
+                @Mock ParametersDefinitionProperty propertyDef,
+                @Mock JiraVersionParameterDefinition paramDef) {
+            when(job.hasPermission(Item.BUILD)).thenReturn(true);
+            when(job.getProperty(ParametersDefinitionProperty.class)).thenReturn(propertyDef);
+            when(propertyDef.getParameterDefinition("PARAM_NAME")).thenReturn(paramDef);
+
+            ListBoxModel result = uut.doFillVersionItems(job, "PARAM_NAME");
+
+            assertThat(result, hasSize(1));
+            ListBoxModel.Option option = result.get(0);
+            assertEquals("", option.value);
+            assertEquals(Messages.JiraVersionParameterDefinition_NoIssueMatchedSearch(), option.name);
+            verify(job).hasPermission(Item.BUILD);
         }
     }
 }
