@@ -4,11 +4,10 @@ import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.Extension;
 import hudson.cli.CLICommand;
-import hudson.model.Job;
-import hudson.model.ParameterDefinition;
-import hudson.model.ParameterValue;
+import hudson.model.*;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -16,9 +15,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 public class JiraVersionParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 4232979892748310160L;
@@ -69,7 +67,10 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
 
     public List<JiraVersionParameterDefinition.Result> getVersions() throws IOException, RestClientException {
         Job<?, ?> contextJob = Stapler.getCurrentRequest2().findAncestorObject(Job.class);
+        return getVersions(contextJob);
+    }
 
+    public List<JiraVersionParameterDefinition.Result> getVersions(Job<?, ?> contextJob) {
         JiraSite site = JiraSite.get(contextJob);
         if (site == null) {
             throw new IllegalStateException(
@@ -172,6 +173,22 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
         @Override
         public String getDisplayName() {
             return "Jira Release Version Parameter";
+        }
+
+        @RequirePOST
+        public ListBoxModel doFillVersionItems(@AncestorInPath Job<?, ?> job, @QueryParameter String name) {
+            ListBoxModel items = new ListBoxModel();
+            if (job.hasPermission(Item.BUILD)) {
+                ParametersDefinitionProperty prop = job.getProperty(ParametersDefinitionProperty.class);
+                if (prop != null) {
+                    ParameterDefinition def = prop.getParameterDefinition(name);
+                    if (def instanceof JiraVersionParameterDefinition jiraVersionDef) {
+                        List<JiraVersionParameterDefinition.Result> issueValues = jiraVersionDef.getVersions(job);
+                        issueValues.forEach(it -> items.add(it.name));
+                    }
+                }
+            }
+            return items;
         }
     }
 

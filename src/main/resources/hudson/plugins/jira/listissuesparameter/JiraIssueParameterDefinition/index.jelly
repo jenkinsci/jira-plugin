@@ -16,26 +16,13 @@ limitations under the License.
 <!-- this is the page fragment displayed when triggering a new build -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-  <j:set var="escapeEntryTitleAndDescription" value="false"/>
-  <f:entry title="${h.escape(it.name)}" description="${it.formattedDescription}">
-    <!-- this div is required because of ParametersDefinitionProperty.java#117 -->
-    <div name="parameter">
-      <input type="hidden" name="name" value="${it.name}"/>
-      <j:choose>
-        <j:when test="${it.issues == null or it.issues.size() == 0}">
-          <!-- no tags at all -->
-          ${%No issues matched the search.}<br/>
-          ${%If you trigger the build, it will likely fail.}
-        </j:when>
-        <j:otherwise>
-          <!-- everything is fine, we can display the drop-down list to the user -->
-          <select name="value">
-            <j:forEach var="issue" items="${it.issues}">
-              <option value="${issue.key}">${issue.key}: ${issue.summary}</option>
-            </j:forEach>
-          </select>
-        </j:otherwise>
-      </j:choose>
-    </div>
-  </f:entry>
+    <j:set var="escapeEntryTitleAndDescription" value="false"/>
+    <j:set var="instance" value="${it}"/>
+    <j:set var="descriptor" value="${it.descriptor}"/>
+    <f:entry field="value" title="${h.escape(it.name)}" description="${it.formattedDescription}">
+        <div name="parameter">
+            <input type="hidden" name="name" value="${it.name}"/>
+            <f:select/>
+        </div>
+    </f:entry>
 </j:jelly>
