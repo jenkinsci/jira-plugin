@@ -36,9 +36,8 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
     }
 
     /**
-     * @deprecated use {@link #setSites(List)} instead
-     *
      * @param site the Jira site
+     * @deprecated use {@link #setSites(List)} instead
      */
     @Deprecated
     public void setSites(JiraSite site) {

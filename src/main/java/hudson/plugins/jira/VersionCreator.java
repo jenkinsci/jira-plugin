@@ -67,9 +67,9 @@ class VersionCreator {
 
     /**
      * Creates given version in given project
-     * @param version
-     * @param projectKey
-     * @param session
+     * @param version version name
+     * @param projectKey project key
+     * @param session session
      */
     protected void addVersion(String version, String projectKey, JiraSession session) {
         if (session == null) {

@@ -16,10 +16,10 @@ import java.util.Set;
  */
 public abstract class JobIssueSelector extends DefaultIssueSelector {
 
-    @Override
     /**
      * See {@link #addJobIdsFromChangeLog(Run, JiraSite, TaskListener, Set)}
      */
+    @Override
     protected void addIssuesFromChangeLog(Run<?, ?> build, JiraSite site, TaskListener listener, Set<String> issueIds) {
         addJobIdsFromChangeLog(build, site, listener, issueIds);
     }

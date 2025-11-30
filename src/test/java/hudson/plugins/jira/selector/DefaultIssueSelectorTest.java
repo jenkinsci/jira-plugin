@@ -33,7 +33,7 @@ class DefaultIssueSelectorTest {
 
         private final String msg;
 
-        public MockEntry(String msg) {
+        MockEntry(String msg) {
             this.msg = msg;
         }
 

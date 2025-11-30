@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Test unmasking email. Eg: <code>john dot doe at example dot com</code> to <code>john.doe@example.com</code>
  *
- * @author Honza Brázdil <jbrazdil@redhat.com>
+ * @author Honza Brázdil (jbrazdil@redhat.com)
  */
 class UnmaskMailTest {
 

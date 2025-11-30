@@ -185,11 +185,11 @@ public class JiraCreateIssueNotifier extends Notifier {
      * assignee,components and summary.
      * The created issue ID is saved to the file at "filename".
      *
-     * @param build
-     * @param filename
+     * @param build build
+     * @param filename filename
      * @return issue id
-     * @throws IOException
-     * @throws InterruptedException
+     * @throws IOException if IO fails
+     * @throws InterruptedException if thread is interrupted
      */
     private Issue createJiraIssue(AbstractBuild<?, ?> build, String filename) throws IOException, InterruptedException {
 
@@ -227,10 +227,10 @@ public class JiraCreateIssueNotifier extends Notifier {
     /**
      * Returns the status of the issue.
      *
-     * @param build
-     * @param id
+     * @param build build
+     * @param id issue key
      * @return Status of the issue
-     * @throws IOException
+     * @throws IOException if IO fails
      */
     private Status getStatus(AbstractBuild<?, ?> build, String id) throws IOException {
 
@@ -242,11 +242,11 @@ public class JiraCreateIssueNotifier extends Notifier {
     /**
      * Adds a comment to the existing issue.
      *
-     * @param build
-     * @param listener
-     * @param id
-     * @param comment
-     * @throws IOException
+     * @param build build
+     * @param listener listener
+     * @param id issue key
+     * @param comment comment text
+     * @throws IOException if IO fails
      */
     private void addComment(AbstractBuild<?, ?> build, BuildListener listener, String id, String comment)
             throws IOException {
@@ -258,10 +258,10 @@ public class JiraCreateIssueNotifier extends Notifier {
     /**
      * Returns the issue id
      *
-     * @param filename
-     * @return
-     * @throws IOException
-     * @throws InterruptedException
+     * @param filename file from which to read the issue name
+     * @return issue ID
+     * @throws IOException if IO fails
+     * @throws InterruptedException if thread is interrupted
      */
     private String getIssue(String filename) throws IOException, InterruptedException {
         String issueId = "";
@@ -288,9 +288,9 @@ public class JiraCreateIssueNotifier extends Notifier {
     /**
      * Returns the jira session.
      *
-     * @param build
+     * @param build build
      * @return JiraSession
-     * @throws IOException
+     * @throws IOException if IO fails
      */
     private JiraSession getJiraSession(AbstractBuild<?, ?> build) throws IOException {
 
@@ -310,7 +310,7 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     /**
-     * @param filename
+     * @param filename filename
      */
     private void deleteFile(String filename) {
         File file = new File(filename);
@@ -320,11 +320,11 @@ public class JiraCreateIssueNotifier extends Notifier {
     }
 
     /**
-     * write's the issue id in the file, which is stored in the Job's directory
+     * Writes the issue id in the file, which is stored in the Job's directory.
      *
-     * @param filename
-     * @param issue
-     * @throws FileNotFoundException
+     * @param filename filenam
+     * @param issue issue
+     * @throws FileNotFoundException if file not found
      */
     private void writeInFile(String filename, Issue issue) throws IOException {
         // olamy really weird to write an empty file especially with null
@@ -394,12 +394,12 @@ public class JiraCreateIssueNotifier extends Notifier {
      * it checks for the previous build's result and adds comment until the
      * previously created issue is closed.
      *
-     * @param build
-     * @param previousBuildResult
-     * @param filename
-     * @param vars
-     * @throws InterruptedException
-     * @throws IOException
+     * @param build build
+     * @param previousBuildResult previous build result
+     * @param filename filename
+     * @param vars variables
+     * @throws InterruptedException if thread isinterrupted
+     * @throws IOException if IO fails
      */
     private void currentBuildResultSuccess(
             AbstractBuild<?, ?> build,
@@ -463,8 +463,8 @@ public class JiraCreateIssueNotifier extends Notifier {
     /**
      * Returns build details string in wiki format, with hyperlinks.
      *
-     * @param vars
-     * @return
+     * @param vars environment variables
+     * @return build details string
      */
     private String getBuildDetailsString(EnvVars vars) {
         final String buildURL = vars.get("BUILD_URL");
@@ -474,8 +474,8 @@ public class JiraCreateIssueNotifier extends Notifier {
     /**
      * Returns build name in format BUILD#10
      *
-     * @param vars
-     * @return String
+     * @param vars environment variables
+     * @return String build name
      */
     private String getBuildName(EnvVars vars) {
         final String jobName = vars.get("JOB_NAME");

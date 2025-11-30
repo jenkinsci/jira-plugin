@@ -18,7 +18,7 @@ import org.kohsuke.stapler.StaplerRequest2;
  *
  * @author Artem Koshelev artkoshelev@gmail.com
  * @deprecated Replaced by {@link JiraVersionCreatorBuilder}. Read its description to see why.
- * 	Kept for backward compatibility.
+ * Kept for backward compatibility.
  */
 @Deprecated
 public class JiraVersionCreator extends Notifier {

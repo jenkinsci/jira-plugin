@@ -112,7 +112,7 @@ public class JiraIssueMigrator extends Notifier {
 
             JiraSite site = getJiraSiteForProject(build.getProject());
 
-            if (addRelease == true) {
+            if (addRelease) {
                 site.addFixVersionToIssue(realProjectKey, realRelease, realQuery);
             } else {
                 if (realReplace == null || realReplace.isEmpty()) {
