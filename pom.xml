@@ -50,7 +50,7 @@
     <revision>3.21</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jira-rest-client.version>6.0.2</jira-rest-client.version>
+    <jira-rest-client.version>7.0.1</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.492</jenkins.baseline>
@@ -71,7 +71,7 @@
       <dependency>
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-core</artifactId>
-        <version>8.2.1</version>
+        <version>9.2.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
