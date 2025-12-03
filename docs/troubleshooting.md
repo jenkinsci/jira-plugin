@@ -3,6 +3,7 @@
 ## Adding a custom Log Recorder
 
 To help debug any issues with this plugin, it's useful to look at more detailed logs. To enable them, create a [custom Log Recorder](https://www.jenkins.io/doc/book/system-administration/viewing-logs/#logs-in-jenkins) for Logger `hudson.plugins.jira` and Log Level `FINE`. 
+See also [Jenkins core: Debugging Tips & Tricks](https://www.jenkins.io/doc/developer/views/#debugging-tips-and-tricks).
 
 ## Jenkins <---> Jira SSL connectivity problems
 
