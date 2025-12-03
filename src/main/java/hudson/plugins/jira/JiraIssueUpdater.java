@@ -42,7 +42,6 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
 
     @DataBoundConstructor
     public JiraIssueUpdater(AbstractIssueSelector issueSelector, SCM scm, List<String> labels) {
-        super();
         this.issueSelector = issueSelector;
         this.scm = scm;
         if (labels != null) {

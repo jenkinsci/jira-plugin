@@ -52,12 +52,11 @@ class Updater {
      */
     public static boolean debug = false;
 
-    public Updater(SCM scm) {
+    Updater(SCM scm) {
         this(scm, new ArrayList<>());
     }
 
-    public Updater(SCM scm, List<String> labels) {
-        super();
+    Updater(SCM scm, List<String> labels) {
         this.scm = scm;
         if (labels == null) {
             this.labels = new ArrayList<>();
@@ -144,14 +143,14 @@ class Updater {
      * Submits comments for the given issues.
      * Removes from <code>issues</code> issues which have been successfully updated or are invalid
      *
-     * @param build
-     * @param logger
-     * @param jenkinsRootUrl
-     * @param session
-     * @param useWikiStyleComments
-     * @param recordScmChanges
-     * @param groupVisibility
-     *
+     * @param build build
+     * @param logger logger
+     * @param jenkinsRootUrl jenkins root URL
+     * @param session session
+     * @param useWikiStyleComments whether to use wiki style comments
+     * @param recordScmChanges whether to record SCM changes
+     * @param groupVisibility group visibility
+     * @throws RestClientException when HTTP request fails
      */
     void submitComments(
             Run<?, ?> build,

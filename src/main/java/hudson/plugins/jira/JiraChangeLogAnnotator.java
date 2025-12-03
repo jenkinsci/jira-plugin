@@ -30,7 +30,6 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
     private static final Logger LOGGER = Logger.getLogger(JiraChangeLogAnnotator.class.getName());
 
     public JiraChangeLogAnnotator() {
-        super();
         LOGGER.fine("JiraChangeLogAnnotator created");
     }
 

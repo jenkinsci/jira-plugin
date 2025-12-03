@@ -404,6 +404,8 @@ public class JiraSession {
      * Returns issue-id of the created issue
      *
      * @return The issue id
+     *
+     * @deprecated use {@link #createIssue(String, String, String, Iterable, String, Long, Long)}
      */
     @Deprecated
     public Issue createIssue(

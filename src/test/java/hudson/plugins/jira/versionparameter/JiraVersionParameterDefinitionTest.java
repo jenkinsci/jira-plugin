@@ -30,10 +30,10 @@ class JiraVersionParameterDefinitionTest {
     private JiraSite site;
     private JiraSession session;
     private StaplerRequest2 request2;
-    ExtendedVersion extReleasedVer = new ExtendedVersion(null, 1l, "1.0", "", false, true, null, null);
-    ExtendedVersion extUnReleasedVer = new ExtendedVersion(null, 2l, "1.1", "", false, false, null, null);
-    ExtendedVersion extArchivedVer = new ExtendedVersion(null, 3l, "1.2", "", true, false, null, null);
-    ExtendedVersion extReleasedArchivedVer = new ExtendedVersion(null, 4l, "1.3", "", true, true, null, null);
+    ExtendedVersion extReleasedVer = new ExtendedVersion(null, 1L, "1.0", "", false, true, null, null);
+    ExtendedVersion extUnReleasedVer = new ExtendedVersion(null, 2L, "1.1", "", false, false, null, null);
+    ExtendedVersion extArchivedVer = new ExtendedVersion(null, 3L, "1.2", "", true, false, null, null);
+    ExtendedVersion extReleasedArchivedVer = new ExtendedVersion(null, 4L, "1.3", "", true, true, null, null);
 
     @BeforeEach
     void createMocksAndVersions() {
@@ -217,7 +217,7 @@ class JiraVersionParameterDefinitionTest {
     @Test
     void sameNameDiffIdResultCompare() {
         JiraVersionParameterDefinition.Result res1 = new JiraVersionParameterDefinition.Result(extReleasedVer);
-        ExtendedVersion version = new ExtendedVersion(null, 2l, "1.0", "", false, true, null, null);
+        ExtendedVersion version = new ExtendedVersion(null, 2L, "1.0", "", false, true, null, null);
         JiraVersionParameterDefinition.Result res2 = new JiraVersionParameterDefinition.Result(version);
         assertFalse(res1.equals(res2));
     }

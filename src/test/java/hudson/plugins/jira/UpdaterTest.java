@@ -68,7 +68,7 @@ public class UpdaterTest {
 
         private final String msg;
 
-        public MockEntry(String msg) {
+        MockEntry(String msg) {
             this.msg = msg;
         }
 
@@ -341,7 +341,6 @@ public class UpdaterTest {
     @Test
     void dateTimeInChangeDescription(JenkinsRule rule) {
         rule.getInstance();
-        Updater updater = new Updater(null);
         Calendar calendar = Calendar.getInstance();
         calendar.set(2016, 0, 1, 0, 0, 0);
         JiraSite site = mock(JiraSite.class);
@@ -362,6 +361,7 @@ public class UpdaterTest {
         when(mockAuthor.getId()).thenReturn("jenkins-user");
         when(entry.getAuthor()).thenReturn(mockAuthor);
 
+        Updater updater = new Updater(null);
         String description = updater.createScmChangeEntryDescription(r, entry, false, false);
         System.out.println(description);
         assertThat(description, containsString("2016-01-01 00:00:00"));
@@ -427,7 +427,6 @@ public class UpdaterTest {
     @Test
     void tesDescriptionWithAffectedFiles(JenkinsRule rule) {
         rule.getInstance();
-        Updater updater = new Updater(null);
         Calendar calendar = Calendar.getInstance();
         calendar.set(2016, 0, 1, 0, 0, 0);
         JiraSite site = mock(JiraSite.class);
@@ -466,6 +465,7 @@ public class UpdaterTest {
         affectedFiles.add(affectedFile3);
         doReturn(affectedFiles).when(entry).getAffectedFiles();
 
+        Updater updater = new Updater(null);
         String description = updater.createScmChangeEntryDescription(r, entry, true, true);
         System.out.println(description);
         assertThat(

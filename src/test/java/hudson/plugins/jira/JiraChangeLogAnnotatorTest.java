@@ -245,8 +245,6 @@ class JiraChangeLogAnnotatorTest {
     /**
      * Tests that setting the "alternative Url" property actually
      * changes the link also.
-     *
-     * @throws Exception
      */
     @Test
     void alternativeURLAnnotate() throws Exception {

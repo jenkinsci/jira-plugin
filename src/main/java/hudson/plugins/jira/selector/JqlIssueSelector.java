@@ -25,7 +25,6 @@ public class JqlIssueSelector extends AbstractIssueSelector {
 
     @DataBoundConstructor
     public JqlIssueSelector(String jql) {
-        super();
         this.jql = jql;
     }
 
