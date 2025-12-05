@@ -198,7 +198,7 @@ public class JiraVersionParameterDefinition extends ParameterDefinition {
                 }
             }
             if (items.isEmpty()) {
-                items.add(Messages.JiraVersionParameterDefinition_NoIssueMatchedSearch(), "");
+                items.add(Messages.JiraVersionParameterDefinition_NoVersionsMatchedSearch(), "");
             }
             return items;
         }

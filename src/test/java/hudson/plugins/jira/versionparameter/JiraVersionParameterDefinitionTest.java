@@ -344,7 +344,7 @@ class JiraVersionParameterDefinitionTest {
             assertThat(result, hasSize(1));
             ListBoxModel.Option option = result.get(0);
             assertEquals("", option.value);
-            assertEquals(Messages.JiraVersionParameterDefinition_NoIssueMatchedSearch(), option.name);
+            assertEquals(Messages.JiraVersionParameterDefinition_NoVersionsMatchedSearch(), option.name);
             verify(job).hasPermission(Item.BUILD);
         }
 
@@ -362,7 +362,7 @@ class JiraVersionParameterDefinitionTest {
             assertThat(result, hasSize(1));
             ListBoxModel.Option option = result.get(0);
             assertEquals("", option.value);
-            assertEquals(Messages.JiraVersionParameterDefinition_NoIssueMatchedSearch(), option.name);
+            assertEquals(Messages.JiraVersionParameterDefinition_NoVersionsMatchedSearch(), option.name);
             verify(job).hasPermission(Item.BUILD);
         }
     }
