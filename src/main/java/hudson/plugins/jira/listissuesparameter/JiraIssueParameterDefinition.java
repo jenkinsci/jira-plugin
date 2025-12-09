@@ -23,11 +23,15 @@ import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.IssueField;
 import hudson.Extension;
 import hudson.cli.CLICommand;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.ParameterDefinition;
 import hudson.model.ParameterValue;
+import hudson.model.ParametersDefinitionProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
+import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,10 +39,13 @@ import java.util.concurrent.TimeoutException;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 public class JiraIssueParameterDefinition extends ParameterDefinition {
     private static final long serialVersionUID = 3927562542249244416L;
@@ -55,7 +62,7 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     @Override
     public ParameterValue createValue(StaplerRequest2 req) {
         String[] values = req.getParameterValues(getName());
-        if (values == null || values.length != 1) {
+        if (values == null || values.length != 1 || values[0].isEmpty()) {
             return null;
         }
 
@@ -76,7 +83,10 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
     public List<JiraIssueParameterDefinition.Result> getIssues()
             throws IOException, TimeoutException, RestClientException {
         Job<?, ?> job = Stapler.getCurrentRequest2().findAncestorObject(Job.class);
+        return getIssues(job);
+    }
 
+    List<JiraIssueParameterDefinition.Result> getIssues(Job<?, ?> job) {
         JiraSite site = JiraSite.get(job);
         if (site == null) {
             throw new IllegalStateException(
@@ -122,6 +132,25 @@ public class JiraIssueParameterDefinition extends ParameterDefinition {
         @Override
         public String getDisplayName() {
             return "Jira Issue Parameter";
+        }
+
+        @RequirePOST
+        public ListBoxModel doFillValueItems(@AncestorInPath Job<?, ?> job, @QueryParameter String name) {
+            ListBoxModel items = new ListBoxModel();
+            if (job.hasPermission(Item.BUILD)) {
+                ParametersDefinitionProperty prop = job.getProperty(ParametersDefinitionProperty.class);
+                if (prop != null) {
+                    ParameterDefinition def = prop.getParameterDefinition(name);
+                    if (def instanceof JiraIssueParameterDefinition jiraIssueDef) {
+                        List<Result> issueValues = jiraIssueDef.getIssues(job);
+                        issueValues.forEach(it -> items.add(it.key + ": " + it.summary, it.key));
+                    }
+                }
+            }
+            if (items.isEmpty()) {
+                items.add(Messages.JiraIssueParameterDefinition_NoIssueMatchedSearch(), "");
+            }
+            return items;
         }
     }
 

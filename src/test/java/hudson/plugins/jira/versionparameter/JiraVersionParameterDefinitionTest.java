@@ -1,23 +1,39 @@
 package hudson.plugins.jira.versionparameter;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.mockStatic;
 
+import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.cli.CLICommand;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.ParameterValue;
+import hudson.model.ParametersDefinitionProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
 import hudson.plugins.jira.extension.ExtendedVersion;
+import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest2;
+import org.mockito.Mock;
 import org.mockito.MockedStatic;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 class JiraVersionParameterDefinitionTest {
 
@@ -68,6 +84,41 @@ class JiraVersionParameterDefinitionTest {
         ParameterValue value = definition.createValue(cliCommand, "Jira Version 1.2.3");
         assertEquals(definition.getName(), value.getName());
         assertEquals("Jira Version 1.2.3", value.getValue());
+    }
+
+    static Stream<Arguments> createValueInvalidParameters() {
+        return Stream.of(
+                Arguments.of((Object) new String[] {}),
+                Arguments.of((Object) new String[] {"a", "b"}),
+                Arguments.of((Object) new String[] {""}));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @MethodSource("createValueInvalidParameters")
+    void shouldCreateNullParameterForInvalidValues(String[] values) {
+        JiraVersionParameterDefinition definition =
+                new JiraVersionParameterDefinition("pname", "pdesc", "JIRAKEY", null, "false", "true", "true");
+
+        when(request2.getParameterValues(any())).thenReturn(values);
+
+        ParameterValue result = definition.createValue(request2);
+
+        assertNull(result);
+    }
+
+    @Test
+    void shouldCreateValue() {
+        JiraVersionParameterDefinition definition =
+                new JiraVersionParameterDefinition("pname", "pdesc", "JIRAKEY", null, "false", "true", "true");
+
+        when(request2.getParameterValues(any())).thenReturn(new String[] {"value"});
+
+        ParameterValue result = definition.createValue(request2);
+
+        assertNotNull(result);
+        assertEquals("pname", result.getName());
+        assertEquals("value", result.getValue());
     }
 
     @Test
@@ -256,6 +307,63 @@ class JiraVersionParameterDefinitionTest {
             testLogic.run();
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Nested
+    @ExtendWith(MockitoExtension.class)
+    class DescriptorImplTest {
+
+        private JiraVersionParameterDefinition.DescriptorImpl uut = new JiraVersionParameterDefinition.DescriptorImpl();
+
+        @Test
+        void shouldFillVersionItems(
+                @Mock Job<?, ?> job,
+                @Mock ParametersDefinitionProperty propertyDef,
+                @Mock JiraVersionParameterDefinition paramDef) {
+            when(job.hasPermission(Item.BUILD)).thenReturn(true);
+            when(job.getProperty(ParametersDefinitionProperty.class)).thenReturn(propertyDef);
+            when(propertyDef.getParameterDefinition("PARAM_NAME")).thenReturn(paramDef);
+            Version version = new Version(null, 1L, "1.0.0", "", false, false, null);
+            JiraVersionParameterDefinition.Result item = new JiraVersionParameterDefinition.Result(version);
+            when(paramDef.getVersions(any())).thenReturn(List.of(item));
+
+            ListBoxModel result = uut.doFillVersionItems(job, "PARAM_NAME");
+
+            assertThat(result, hasSize(1));
+            ListBoxModel.Option option = result.get(0);
+            assertEquals("1.0.0", option.value);
+            assertEquals("1.0.0", option.name);
+            verify(job).hasPermission(Item.BUILD);
+        }
+
+        @Test
+        void shouldNotFillVersionsItemsIfPermissionMissing(@Mock Job<?, ?> job) {
+            ListBoxModel result = uut.doFillVersionItems(job, "PARAM_NAME");
+
+            assertThat(result, hasSize(1));
+            ListBoxModel.Option option = result.get(0);
+            assertEquals("", option.value);
+            assertEquals(Messages.JiraVersionParameterDefinition_NoVersionsMatchedSearch(), option.name);
+            verify(job).hasPermission(Item.BUILD);
+        }
+
+        @Test
+        void shouldHaveNoSearchMatchesItemIfSearchMatchesNoItem(
+                @Mock Job<?, ?> job,
+                @Mock ParametersDefinitionProperty propertyDef,
+                @Mock JiraVersionParameterDefinition paramDef) {
+            when(job.hasPermission(Item.BUILD)).thenReturn(true);
+            when(job.getProperty(ParametersDefinitionProperty.class)).thenReturn(propertyDef);
+            when(propertyDef.getParameterDefinition("PARAM_NAME")).thenReturn(paramDef);
+
+            ListBoxModel result = uut.doFillVersionItems(job, "PARAM_NAME");
+
+            assertThat(result, hasSize(1));
+            ListBoxModel.Option option = result.get(0);
+            assertEquals("", option.value);
+            assertEquals(Messages.JiraVersionParameterDefinition_NoVersionsMatchedSearch(), option.name);
+            verify(job).hasPermission(Item.BUILD);
         }
     }
 }
