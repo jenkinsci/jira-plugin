@@ -147,4 +147,26 @@ class VersionCreatorTest {
         versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
         verify(session, times(0)).addVersion(any(), any());
     }
+
+    @Test
+    void buildDoesNotFailWhenVersionExistsAndFailIfAlreadyExistsIsFalse()
+            throws IOException, InterruptedException, RestClientException {
+        when(build.getEnvironment(listener)).thenReturn(env);
+        when(site.getSession(any())).thenReturn(session);
+        when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
+
+        // Set failIfAlreadyExists to false
+        versionCreator.setFailIfAlreadyExists(false);
+
+        boolean result = versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
+
+        // Verify that addVersion is not called (because version already exists)
+        verify(session, times(0)).addVersion(any(), any());
+        // Verify the message is logged
+        verify(logger, times(1)).println(Messages.JiraVersionCreator_VersionExists(JIRA_VER, JIRA_PRJ));
+        // Verify build is NOT failed
+        verify(listener, times(0)).finished(Result.FAILURE);
+        // Verify the perform method returns true
+        assertThat(result, is(true));
+    }
 }

@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
+import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Performs an action which creates new Jira version.
@@ -19,6 +20,17 @@ import java.util.logging.Logger;
 class VersionCreator {
 
     private static final Logger LOGGER = Logger.getLogger(VersionCreator.class.getName());
+
+    private boolean failIfAlreadyExists = true;
+
+    @DataBoundSetter
+    public void setFailIfAlreadyExists(boolean failIfAlreadyExists) {
+        this.failIfAlreadyExists = failIfAlreadyExists;
+    }
+
+    public boolean isFailIfAlreadyExists() {
+        return failIfAlreadyExists;
+    }
 
     protected boolean perform(
             Job<?, ?> project, String jiraVersion, String jiraProjectKey, Run<?, ?> build, TaskListener listener) {
@@ -42,13 +54,17 @@ class VersionCreator {
             List<ExtendedVersion> existingVersions =
                     Optional.ofNullable(session.getVersions(realProjectKey)).orElse(Collections.emptyList());
 
-            // past logic to fail the build if the version already exists
+            // check if version already exists
             if (existingVersions.stream().anyMatch(v -> v.getName().equals(finalRealVersion))) {
                 listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
-                if (listener instanceof BuildListener) {
-                    ((BuildListener) listener).finished(Result.FAILURE);
+                if (failIfAlreadyExists) {
+                    if (listener instanceof BuildListener) {
+                        ((BuildListener) listener).finished(Result.FAILURE);
+                    }
+                    return false;
                 }
-                return false;
+                // version exists but we don't fail the build
+                return true;
             }
 
             listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));

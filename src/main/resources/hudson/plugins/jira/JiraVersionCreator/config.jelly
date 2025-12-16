@@ -6,4 +6,7 @@
   <f:entry title="${%Jira Project Key}" field="jiraProjectKey">
         <f:textbox/>
   </f:entry>
+  <f:entry title="${%Fail if version already exists}" field="failIfAlreadyExists">
+        <f:checkbox default="true"/>
+  </f:entry>
 </j:jelly>

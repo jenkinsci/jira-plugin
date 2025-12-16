@@ -11,6 +11,7 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
 
 /**
@@ -24,6 +25,7 @@ import org.kohsuke.stapler.StaplerRequest2;
 public class JiraVersionCreator extends Notifier {
     private String jiraVersion;
     private String jiraProjectKey;
+    private boolean failIfAlreadyExists = true;
 
     @DataBoundConstructor
     public JiraVersionCreator(String jiraVersion, String jiraProjectKey) {
@@ -52,9 +54,20 @@ public class JiraVersionCreator extends Notifier {
         this.jiraProjectKey = jiraProjectKey;
     }
 
+    public boolean isFailIfAlreadyExists() {
+        return failIfAlreadyExists;
+    }
+
+    @DataBoundSetter
+    public void setFailIfAlreadyExists(boolean failIfAlreadyExists) {
+        this.failIfAlreadyExists = failIfAlreadyExists;
+    }
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-        return new VersionCreator().perform(build.getProject(), jiraVersion, jiraProjectKey, build, listener);
+        VersionCreator versionCreator = new VersionCreator();
+        versionCreator.setFailIfAlreadyExists(failIfAlreadyExists);
+        return versionCreator.perform(build.getProject(), jiraVersion, jiraProjectKey, build, listener);
     }
 
     @Override

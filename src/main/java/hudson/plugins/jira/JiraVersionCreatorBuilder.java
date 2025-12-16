@@ -12,6 +12,7 @@ import jenkins.tasks.SimpleBuildStep;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
 
 /**
@@ -25,6 +26,7 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
 
     private String jiraVersion;
     private String jiraProjectKey;
+    private boolean failIfAlreadyExists = true;
 
     @DataBoundConstructor
     public JiraVersionCreatorBuilder(String jiraVersion, String jiraProjectKey) {
@@ -53,9 +55,20 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
         this.jiraProjectKey = jiraProjectKey;
     }
 
+    public boolean isFailIfAlreadyExists() {
+        return failIfAlreadyExists;
+    }
+
+    @DataBoundSetter
+    public void setFailIfAlreadyExists(boolean failIfAlreadyExists) {
+        this.failIfAlreadyExists = failIfAlreadyExists;
+    }
+
     @Override
     public void perform(Run<?, ?> run, EnvVars env, TaskListener listener) {
-        new VersionCreator().perform(run.getParent(), jiraVersion, jiraProjectKey, run, listener);
+        VersionCreator versionCreator = new VersionCreator();
+        versionCreator.setFailIfAlreadyExists(failIfAlreadyExists);
+        versionCreator.perform(run.getParent(), jiraVersion, jiraProjectKey, run, listener);
     }
 
     @Override
