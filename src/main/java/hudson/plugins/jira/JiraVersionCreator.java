@@ -11,19 +11,22 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * A build step which creates new Jira version
  *
  * @author Artem Koshelev artkoshelev@gmail.com
- * @deprecated Replaced by {@link JiraVersionCreatorBuilder}. Read its description to see why.
- * Kept for backward compatibility.
+ * @deprecated Replaced by {@link JiraVersionCreatorBuilder}. Read its
+ * description to see why. Kept for backward compatibility.
  */
 @Deprecated
 public class JiraVersionCreator extends Notifier {
+
     private String jiraVersion;
     private String jiraProjectKey;
+    private Boolean failIfAlreadyExists = true;
 
     @DataBoundConstructor
     public JiraVersionCreator(String jiraVersion, String jiraProjectKey) {
@@ -52,14 +55,35 @@ public class JiraVersionCreator extends Notifier {
         this.jiraProjectKey = jiraProjectKey;
     }
 
+    public boolean isFailIfAlreadyExists() {
+        return failIfAlreadyExists;
+    }
+
+    @DataBoundSetter
+    public void setFailIfAlreadyExists(boolean failIfAlreadyExists) {
+        this.failIfAlreadyExists = failIfAlreadyExists;
+    }
+
     @Override
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
-        return new VersionCreator().perform(build.getProject(), jiraVersion, jiraProjectKey, build, listener);
+        VersionCreator versionCreator = new VersionCreator();
+        versionCreator.setFailIfAlreadyExists(failIfAlreadyExists);
+        versionCreator.setJiraVersion(jiraVersion);
+        versionCreator.setJiraProjectKey(jiraProjectKey);
+        return versionCreator.perform(build.getProject(), build, listener);
     }
 
     @Override
     public BuildStepDescriptor<Publisher> getDescriptor() {
         return DESCRIPTOR;
+    }
+
+    protected Object readResolve() {
+        if (failIfAlreadyExists == null) {
+            setFailIfAlreadyExists(true);
+        }
+
+        return this;
     }
 
     @Extension

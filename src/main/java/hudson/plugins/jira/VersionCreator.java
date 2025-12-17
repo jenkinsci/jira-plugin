@@ -20,8 +20,28 @@ class VersionCreator {
 
     private static final Logger LOGGER = Logger.getLogger(VersionCreator.class.getName());
 
-    protected boolean perform(
-            Job<?, ?> project, String jiraVersion, String jiraProjectKey, Run<?, ?> build, TaskListener listener) {
+    private boolean failIfAlreadyExists = true;
+
+    private String jiraVersion;
+
+    private String jiraProjectKey;
+
+    public VersionCreator setFailIfAlreadyExists(boolean failIfAlreadyExists) {
+        this.failIfAlreadyExists = failIfAlreadyExists;
+        return this;
+    }
+
+    public VersionCreator setJiraVersion(String jiraVersion) {
+        this.jiraVersion = jiraVersion;
+        return this;
+    }
+
+    public VersionCreator setJiraProjectKey(String jiraProjectKey) {
+        this.jiraProjectKey = jiraProjectKey;
+        return this;
+    }
+
+    protected boolean perform(Job<?, ?> project, Run<?, ?> build, TaskListener listener) {
         String realVersion = null;
         String realProjectKey = null;
 
@@ -42,13 +62,17 @@ class VersionCreator {
             List<ExtendedVersion> existingVersions =
                     Optional.ofNullable(session.getVersions(realProjectKey)).orElse(Collections.emptyList());
 
-            // past logic to fail the build if the version already exists
+            // check if version already exists
             if (existingVersions.stream().anyMatch(v -> v.getName().equals(finalRealVersion))) {
                 listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
-                if (listener instanceof BuildListener) {
-                    ((BuildListener) listener).finished(Result.FAILURE);
+                if (failIfAlreadyExists) {
+                    if (listener instanceof BuildListener) {
+                        ((BuildListener) listener).finished(Result.FAILURE);
+                    }
+                    return false;
                 }
-                return false;
+                // version exists but we don't fail the build
+                return true;
             }
 
             listener.getLogger().println(Messages.JiraVersionCreator_CreatingVersion(realVersion, realProjectKey));
@@ -59,9 +83,6 @@ class VersionCreator {
                     listener.fatalError("Unable to add version %s to Jira project %s", realVersion, realProjectKey, e));
         }
 
-        if (listener instanceof BuildListener) {
-            ((BuildListener) listener).finished(Result.FAILURE);
-        }
         return false;
     }
 
