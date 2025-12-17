@@ -26,7 +26,7 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
 
     private String jiraVersion;
     private String jiraProjectKey;
-    private boolean failIfAlreadyExists = true;
+    private Boolean failIfAlreadyExists = true;
 
     @DataBoundConstructor
     public JiraVersionCreatorBuilder(String jiraVersion, String jiraProjectKey) {
@@ -59,6 +59,14 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
         return failIfAlreadyExists;
     }
 
+    protected Object readResolve() {
+        if (failIfAlreadyExists == null) {
+            setFailIfAlreadyExists(true);
+        }
+        
+        return this;
+    }
+
     @DataBoundSetter
     public void setFailIfAlreadyExists(boolean failIfAlreadyExists) {
         this.failIfAlreadyExists = failIfAlreadyExists;
@@ -68,7 +76,9 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
     public void perform(Run<?, ?> run, EnvVars env, TaskListener listener) {
         VersionCreator versionCreator = new VersionCreator();
         versionCreator.setFailIfAlreadyExists(failIfAlreadyExists);
-        versionCreator.perform(run.getParent(), jiraVersion, jiraProjectKey, run, listener);
+        versionCreator.setJiraVersion(jiraVersion);
+        versionCreator.setJiraProjectKey(jiraProjectKey);
+        versionCreator.perform(run.getParent(), run, listener);
     }
 
     @Override

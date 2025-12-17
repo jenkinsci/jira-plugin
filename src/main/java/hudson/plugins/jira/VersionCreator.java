@@ -1,5 +1,10 @@
 package hudson.plugins.jira;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
+
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import hudson.model.BuildListener;
@@ -8,11 +13,6 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.extension.ExtendedVersion;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Logger;
-import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Performs an action which creates new Jira version.
@@ -23,17 +23,27 @@ class VersionCreator {
 
     private boolean failIfAlreadyExists = true;
 
-    @DataBoundSetter
-    public void setFailIfAlreadyExists(boolean failIfAlreadyExists) {
+    private String jiraVersion;
+
+    private String jiraProjectKey;
+    
+    public VersionCreator setFailIfAlreadyExists(boolean failIfAlreadyExists) {
         this.failIfAlreadyExists = failIfAlreadyExists;
+        return this;
     }
 
-    public boolean isFailIfAlreadyExists() {
-        return failIfAlreadyExists;
+    public VersionCreator setJiraVersion(String jiraVersion) {
+        this.jiraVersion = jiraVersion;
+        return this;
+    }
+
+    public VersionCreator setJiraProjectKey(String jiraProjectKey) {
+        this.jiraProjectKey = jiraProjectKey;
+        return this;
     }
 
     protected boolean perform(
-            Job<?, ?> project, String jiraVersion, String jiraProjectKey, Run<?, ?> build, TaskListener listener) {
+            Job<?, ?> project, Run<?, ?> build, TaskListener listener) {
         String realVersion = null;
         String realProjectKey = null;
 
@@ -75,9 +85,6 @@ class VersionCreator {
                     listener.fatalError("Unable to add version %s to Jira project %s", realVersion, realProjectKey, e));
         }
 
-        if (listener instanceof BuildListener) {
-            ((BuildListener) listener).finished(Result.FAILURE);
-        }
         return false;
     }
 

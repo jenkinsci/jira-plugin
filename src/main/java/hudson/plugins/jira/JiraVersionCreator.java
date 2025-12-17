@@ -18,14 +18,15 @@ import org.kohsuke.stapler.StaplerRequest2;
  * A build step which creates new Jira version
  *
  * @author Artem Koshelev artkoshelev@gmail.com
- * @deprecated Replaced by {@link JiraVersionCreatorBuilder}. Read its description to see why.
- * Kept for backward compatibility.
+ * @deprecated Replaced by {@link JiraVersionCreatorBuilder}. Read its
+ * description to see why. Kept for backward compatibility.
  */
 @Deprecated
 public class JiraVersionCreator extends Notifier {
+
     private String jiraVersion;
     private String jiraProjectKey;
-    private boolean failIfAlreadyExists = true;
+    private Boolean failIfAlreadyExists = true;
 
     @DataBoundConstructor
     public JiraVersionCreator(String jiraVersion, String jiraProjectKey) {
@@ -67,12 +68,22 @@ public class JiraVersionCreator extends Notifier {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
         VersionCreator versionCreator = new VersionCreator();
         versionCreator.setFailIfAlreadyExists(failIfAlreadyExists);
-        return versionCreator.perform(build.getProject(), jiraVersion, jiraProjectKey, build, listener);
+        versionCreator.setJiraVersion(jiraVersion);
+        versionCreator.setJiraProjectKey(jiraProjectKey);
+        return versionCreator.perform(build.getProject(), build, listener);
     }
 
     @Override
     public BuildStepDescriptor<Publisher> getDescriptor() {
         return DESCRIPTOR;
+    }
+
+    protected Object readResolve() {
+        if (failIfAlreadyExists == null) {
+            setFailIfAlreadyExists(true);
+        }
+        
+        return this;
     }
 
     @Extension
@@ -103,5 +114,6 @@ public class JiraVersionCreator extends Notifier {
         public String getHelpFile() {
             return "/plugin/jira/help-version-create.html";
         }
+
     }
 }
