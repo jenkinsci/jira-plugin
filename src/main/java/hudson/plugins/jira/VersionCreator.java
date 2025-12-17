@@ -1,10 +1,5 @@
 package hudson.plugins.jira;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.logging.Logger;
-
 import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import hudson.model.BuildListener;
@@ -13,6 +8,10 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.extension.ExtendedVersion;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.logging.Logger;
 
 /**
  * Performs an action which creates new Jira version.
@@ -26,7 +25,7 @@ class VersionCreator {
     private String jiraVersion;
 
     private String jiraProjectKey;
-    
+
     public VersionCreator setFailIfAlreadyExists(boolean failIfAlreadyExists) {
         this.failIfAlreadyExists = failIfAlreadyExists;
         return this;
@@ -42,8 +41,7 @@ class VersionCreator {
         return this;
     }
 
-    protected boolean perform(
-            Job<?, ?> project, Run<?, ?> build, TaskListener listener) {
+    protected boolean perform(Job<?, ?> project, Run<?, ?> build, TaskListener listener) {
         String realVersion = null;
         String realProjectKey = null;
 

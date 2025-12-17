@@ -63,7 +63,7 @@ public class JiraVersionCreatorBuilder extends Builder implements SimpleBuildSte
         if (failIfAlreadyExists == null) {
             setFailIfAlreadyExists(true);
         }
-        
+
         return this;
     }
 

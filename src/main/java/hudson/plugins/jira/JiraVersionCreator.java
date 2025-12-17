@@ -82,7 +82,7 @@ public class JiraVersionCreator extends Notifier {
         if (failIfAlreadyExists == null) {
             setFailIfAlreadyExists(true);
         }
-        
+
         return this;
     }
 
@@ -114,6 +114,5 @@ public class JiraVersionCreator extends Notifier {
         public String getHelpFile() {
             return "/plugin/jira/help-version-create.html";
         }
-
     }
 }
