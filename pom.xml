@@ -242,10 +242,11 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>json-api</artifactId>
     </dependency>
+    <!-- required for VersionComparator -->
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
-      <version>3.9.11</version>
+      <version>3.9.12</version>
       <exclusions>
         <!-- Provided by commons-lang3-api plugin -->
         <exclusion>
