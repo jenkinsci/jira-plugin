@@ -71,7 +71,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import jenkins.model.Jenkins;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
