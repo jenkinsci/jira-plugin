@@ -1,7 +1,7 @@
 package hudson.plugins.jira;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.httpclient.apache.httpcomponents.DefaultHttpClientFactory;
