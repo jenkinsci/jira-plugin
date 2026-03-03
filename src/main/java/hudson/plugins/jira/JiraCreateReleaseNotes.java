@@ -1,7 +1,7 @@
 package hudson.plugins.jira;
 
-import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import hudson.EnvVars;
 import hudson.Extension;

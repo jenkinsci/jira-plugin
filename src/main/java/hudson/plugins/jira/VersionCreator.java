@@ -1,6 +1,6 @@
 package hudson.plugins.jira;
 
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import hudson.model.BuildListener;
 import hudson.model.Job;
