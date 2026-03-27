@@ -1,0 +1,32 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>jenkinsci/renovate-config"
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["maven"],
+      "matchPackageNames": [
+        "io.atlassian.fugue:fugue"
+      ],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["maven"],
+      "groupName": "atlassian",
+      "matchPackagePatterns": [
+        "^com\\.atlassian\\.plugins:.*$",
+        "^com\\.atlassian\\.jira:.*$",
+        "^io\\.atlassian\\.util\\.concurrent:.*$"
+      ]
+    },
+    {
+      "matchManagers": ["maven"],
+      "groupName": "jenkins",
+      "matchPackagePatterns": [
+        "^io\\.jenkins\\.tools\\.bom:.*$",
+        "^org\\.jenkins-ci\\.plugins:plugin$"
+      ]
+    }
+  ]
+}
