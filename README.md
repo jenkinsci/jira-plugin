@@ -5,6 +5,10 @@
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/jira-plugin.svg?label=Release)](https://github.com/jenkinsci/jira-plugin/releases/latest)
 [![Jenkins CI](https://ci.jenkins.io/buildStatus/icon?job=Plugins/jira-plugin/master)](https://ci.jenkins.io/job/Plugins/job/jira-plugin/)
 [![Contributors](https://img.shields.io/github/contributors/jenkinsci/jira-plugin.svg)](https://github.com/jenkinsci/jira-plugin/graphs/contributors)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jenkinsci_jira-plugin&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jenkinsci_jira-plugin)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jenkinsci_jira-plugin&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jenkinsci_jira-plugin)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=jenkinsci_jira-plugin&metric=coverage)](https://sonarcloud.io/summary/new_code?id=jenkinsci_jira-plugin)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jenkinsci_jira-plugin&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jenkinsci_jira-plugin)
 
 1. See user documentation at [https://jenkinsci.github.io/jira-plugin/](https://jenkinsci.github.io/jira-plugin/).
 1. Use [Declarative pipelines](https://www.jenkins.io/doc/book/pipeline/#declarative-versus-scripted-pipeline-syntax).
