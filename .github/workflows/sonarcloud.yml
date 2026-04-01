@@ -22,6 +22,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
       - uses: actions/setup-java@v5
         with:
           java-version: '21'
@@ -29,13 +30,7 @@ jobs:
           cache: 'maven'
 
       - name: Run the Maven verify phase
-        run: mvn --batch-mode -Penable-jacoco test jacoco:report
-
-      - name: Analyze with SonarCloud
-        uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
-        env:
-          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-        with:
-          args:
-            -Dsonar.projectKey=jenkinsci_jira-plugin
-            -Dsonar.organization=jenkinsci
+        run: mvn --batch-mode \
+              -Penable-jacoco \
+              -Dsonar.organization=jenkinsci -Dsonar.projectKey=jenkinsci_jira-plugin \
+              test jacoco:report org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356
