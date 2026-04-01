@@ -36,5 +36,6 @@ jobs:
            mvn --batch-mode -Penable-jacoco
            -Dsonar.organization=jenkinsci
            -Dsonar.projectKey=jenkinsci_jira-plugin
+           -Dsonar.qualitygate.wait
            test jacoco:report org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
 
