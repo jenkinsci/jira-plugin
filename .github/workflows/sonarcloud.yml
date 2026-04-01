@@ -30,11 +30,11 @@ jobs:
           cache: 'maven'
 
       - name: Run the Maven verify phase
-        run: mvn --batch-mode test jacoco:report org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          MAVEN_CONFIG: >
-              -Penable-jacoco
-              -Dsonar.organization=jenkinsci
-              -Dsonar.projectKey=jenkinsci_jira-plugin
+        run: >
+           mvn --batch-mode -Penable-jacoco
+           -Dsonar.organization=jenkinsci
+           -Dsonar.projectKey=jenkinsci_jira-plugin
+           test jacoco:report org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
 
