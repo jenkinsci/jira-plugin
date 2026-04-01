@@ -42,8 +42,8 @@
   </scm>
 
   <issueManagement>
-    <system>JIRA</system>
-    <url>https://issues.jenkins-ci.org/browse/JENKINS</url>
+    <system>Github</system>
+    <url>https://github.com/jenkinsci/jira-plugin/issues</url>
   </issueManagement>
 
   <properties>
