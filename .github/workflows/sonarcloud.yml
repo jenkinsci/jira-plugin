@@ -1,0 +1,40 @@
+name: SonarCloud analysis
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+  tags:
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read 
+
+jobs:
+  Analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
+
+      - name: Run the Maven verify phase
+        run: mvn --batch-mode -Penable-jacoco test jacoco:report
+
+      - name: Analyze with SonarCloud
+        uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
+        env:
+          SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
+        with:
+          args:
+            -Dsonar.projectKey=jenkinsci_jira-plugin
+            -Dsonar.organization=jenkinsci
