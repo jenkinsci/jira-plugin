@@ -3,9 +3,10 @@ name: SonarCloud analysis
 on:
   push:
     branches: [ "master" ]
+    tags:
+      - 'jira*'
   pull_request:
     branches: [ "master" ]
-  tags:
   workflow_dispatch:
 
 permissions:
