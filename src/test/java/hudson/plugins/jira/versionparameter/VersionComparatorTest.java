@@ -28,7 +28,7 @@ class VersionComparatorTest {
             "FOO-1.1.1-RC1",
             "FOO-1.1.1-RC2",
             "1.1.1-RC1",
-            "1.1.1-RC2"
+            "1.1.1-RC2",
         };
 
         String[] expected = {

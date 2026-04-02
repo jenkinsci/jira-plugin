@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * {@link ChangeLogAnnotator} that picks up Jira issue IDs.
@@ -30,7 +30,6 @@ public class JiraChangeLogAnnotator extends ChangeLogAnnotator {
     private static final Logger LOGGER = Logger.getLogger(JiraChangeLogAnnotator.class.getName());
 
     public JiraChangeLogAnnotator() {
-        super();
         LOGGER.fine("JiraChangeLogAnnotator created");
     }
 

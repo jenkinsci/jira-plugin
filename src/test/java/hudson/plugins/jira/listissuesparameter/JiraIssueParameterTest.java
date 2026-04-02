@@ -25,14 +25,12 @@ class JiraIssueParameterTest {
     @Test
     void scriptedPipeline(JenkinsRule r) throws Exception {
         WorkflowJob p = r.createProject(WorkflowJob.class);
-        p.setDefinition(new CpsFlowDefinition(
-                """
+        p.setDefinition(new CpsFlowDefinition("""
                 properties([
                   parameters([
                     jiraIssue(name: 'JIRA_ISSUE', description: 'Jira Test Description', jiraIssueFilter: 'project=PRJ')
                   ])
-                ])""",
-                true));
+                ])""", true));
         r.buildAndAssertSuccess(p);
 
         ParametersDefinitionProperty parameters = p.getProperty(ParametersDefinitionProperty.class);

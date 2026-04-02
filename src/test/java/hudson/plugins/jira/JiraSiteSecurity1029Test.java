@@ -265,7 +265,7 @@ public class JiraSiteSecurity1029Test {
 
         private String pwdCollected;
 
-        public FakeJiraServlet(JenkinsRule jenkinsRule) {
+        FakeJiraServlet(JenkinsRule jenkinsRule) {
             this.jenkinsRule = jenkinsRule;
         }
 

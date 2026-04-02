@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import jenkins.tasks.SimpleBuildStep;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -109,17 +110,27 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
-        Set<String> issues = selector.findIssueIds(run, site, listener);
-        if (issues.isEmpty()) {
-            logger.println("[Jira][IssueFieldUpdateStep] Issue list is empty!");
+        Set<String> issues;
+        try {
+            issues = selector.findIssueIds(run, site, listener);
+            if (issues.isEmpty()) {
+                logger.println("[Jira][IssueFieldUpdateStep] Issue list is empty!");
+                return;
+            }
+        } catch (RestClientException e) {
+            logger.println(e.getMessage());
             return;
         }
 
         List<JiraIssueField> fields = Collections.singletonList(new JiraIssueField(
                 prepareFieldId(getFieldId()), EnvironmentExpander.expandVariable(getFieldValue(), env)));
 
-        for (String issue : issues) {
-            submitFields(session, issue, fields, logger);
+        try {
+            for (String issue : issues) {
+                submitFields(session, issue, fields, logger);
+            }
+        } catch (RestClientException e) {
+            logger.println(e.getMessage());
         }
     }
 
@@ -161,6 +172,7 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
     }
 
     @Extension
+    @Symbol("jiraUpdateIssueField")
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         public FormValidation doCheckField_id(@QueryParameter String value) throws IOException, ServletException {

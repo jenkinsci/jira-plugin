@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -89,13 +90,15 @@ class VersionCreatorTest {
     }
 
     @Test
-    void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException {
+    void callsJiraWithSpecifiedParameters() throws InterruptedException, IOException, RestClientException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
 
         // for new version, verify the addVersion method is called
         when(session.getVersions(JIRA_PRJ)).thenReturn(null);
-        boolean result = versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
+        versionCreator.setJiraProjectKey(JIRA_PRJ);
+        versionCreator.setJiraVersion(JIRA_VER);
+        boolean result = versionCreator.perform(project, build, listener);
         verify(session, times(1)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue(), is(JIRA_VER));
@@ -105,7 +108,9 @@ class VersionCreatorTest {
         // for existing version, verify the addVersion method is not called
         reset(session);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
-        result = versionCreator.perform(project, JIRA_VER, JIRA_PRJ, build, listener);
+        versionCreator.setJiraProjectKey(JIRA_PRJ);
+        versionCreator.setJiraVersion(JIRA_VER);
+        result = versionCreator.perform(project, build, listener);
         verify(session, times(0)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         verify(logger, times(1)).println(Messages.JiraVersionCreator_VersionExists(JIRA_VER, JIRA_PRJ));
         verify(listener).finished(Result.FAILURE);
@@ -113,13 +118,15 @@ class VersionCreatorTest {
     }
 
     @Test
-    void expandsEnvParameters() throws InterruptedException, IOException {
+    void expandsEnvParameters() throws InterruptedException, IOException, RestClientException {
         when(build.getEnvironment(listener)).thenReturn(env);
         when(site.getSession(any())).thenReturn(session);
 
         // for new version, verify the addVersion method is called
         when(session.getVersions(JIRA_PRJ)).thenReturn(null);
-        boolean result = versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
+        versionCreator.setJiraProjectKey(JIRA_PRJ_PARAM);
+        versionCreator.setJiraVersion(JIRA_VER_PARAM);
+        boolean result = versionCreator.perform(project, build, listener);
         verify(session, times(1)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         assertThat(projectCaptor.getValue(), is(JIRA_PRJ));
         assertThat(versionCaptor.getValue(), is(JIRA_VER));
@@ -128,7 +135,9 @@ class VersionCreatorTest {
         // for existing version, verify the addVersion method is called
         reset(session);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
-        result = versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
+        versionCreator.setJiraProjectKey(JIRA_PRJ_PARAM);
+        versionCreator.setJiraVersion(JIRA_VER_PARAM);
+        result = versionCreator.perform(project, build, listener);
         verify(session, times(0)).addVersion(versionCaptor.capture(), projectCaptor.capture());
         verify(logger, times(1)).println(Messages.JiraVersionCreator_VersionExists(JIRA_VER, JIRA_PRJ));
         verify(listener).finished(Result.FAILURE);
@@ -136,14 +145,38 @@ class VersionCreatorTest {
     }
 
     @Test
-    void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException {
+    void buildDidNotFailWhenVersionExists() throws IOException, InterruptedException, RestClientException {
         when(build.getEnvironment(listener)).thenReturn(env);
         ExtendedVersion releasedVersion =
                 new ExtendedVersion(null, ANY_ID, JIRA_VER, null, false, true, ANY_DATE, ANY_DATE);
         when(site.getSession(any())).thenReturn(session);
         when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(releasedVersion));
-
-        versionCreator.perform(project, JIRA_VER_PARAM, JIRA_PRJ_PARAM, build, listener);
+        versionCreator.setJiraProjectKey(JIRA_PRJ_PARAM);
+        versionCreator.setJiraVersion(JIRA_VER_PARAM);
+        versionCreator.perform(project, build, listener);
         verify(session, times(0)).addVersion(any(), any());
+    }
+
+    @Test
+    void buildDoesNotFailWhenVersionExistsAndFailIfAlreadyExistsIsFalse()
+            throws IOException, InterruptedException, RestClientException {
+        when(build.getEnvironment(listener)).thenReturn(env);
+        when(site.getSession(any())).thenReturn(session);
+        when(session.getVersions(JIRA_PRJ)).thenReturn(Arrays.asList(existingVersion));
+
+        // Set failIfAlreadyExists to false
+        versionCreator.setFailIfAlreadyExists(false);
+        versionCreator.setJiraProjectKey(JIRA_PRJ);
+        versionCreator.setJiraVersion(JIRA_VER);
+        boolean result = versionCreator.perform(project, build, listener);
+
+        // Verify that addVersion is not called (because version already exists)
+        verify(session, times(0)).addVersion(any(), any());
+        // Verify the message is logged
+        verify(logger, times(1)).println(Messages.JiraVersionCreator_VersionExists(JIRA_VER, JIRA_PRJ));
+        // Verify build is NOT failed
+        verify(listener, times(0)).finished(Result.FAILURE);
+        // Verify the perform method returns true
+        assertThat(result, is(true));
     }
 }

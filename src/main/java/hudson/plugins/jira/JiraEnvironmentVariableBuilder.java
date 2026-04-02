@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -12,7 +13,7 @@ import hudson.tasks.Builder;
 import java.io.IOException;
 import java.util.Set;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -50,7 +51,13 @@ public class JiraEnvironmentVariableBuilder extends Builder {
             return false;
         }
 
-        Set<String> ids = getIssueSelector().findIssueIds(build, site, listener);
+        Set<String> ids;
+        try {
+            ids = getIssueSelector().findIssueIds(build, site, listener);
+        } catch (RestClientException e) {
+            listener.getLogger().println(e.getMessage());
+            return false;
+        }
 
         String idList = StringUtils.join(ids, ",");
         Integer idListSize = ids.size();

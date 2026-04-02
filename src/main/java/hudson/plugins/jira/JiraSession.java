@@ -1,7 +1,8 @@
 package hudson.plugins.jira;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
@@ -27,7 +28,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Connection to Jira.
@@ -132,7 +133,7 @@ public class JiraSession {
      * @param jqlSearch JQL query string to execute
      * @return issues matching the JQL query
      */
-    public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws TimeoutException {
+    public List<Issue> getIssuesFromJqlSearch(final String jqlSearch) throws RestClientException {
         return service.getIssuesFromJqlSearch(jqlSearch, maxIssuesFromJqlSearch);
     }
 
@@ -249,7 +250,7 @@ public class JiraSession {
      * @param query       The JQL Query
      */
     public void replaceFixVersion(String projectKey, String fromVersion, String toVersion, String query)
-            throws TimeoutException {
+            throws TimeoutException, RestClientException {
 
         Version newVersion = getVersionByName(projectKey, toVersion);
         if (newVersion == null) {
@@ -305,7 +306,8 @@ public class JiraSession {
      * @param version    The version to add
      * @param query      The JQL Query
      */
-    public void addFixVersion(String projectKey, String version, String query) throws TimeoutException {
+    public void addFixVersion(String projectKey, String version, String query)
+            throws TimeoutException, RestClientException {
 
         Version newVersion = getVersionByName(projectKey, version);
         if (newVersion == null) {
@@ -402,6 +404,8 @@ public class JiraSession {
      * Returns issue-id of the created issue
      *
      * @return The issue id
+     *
+     * @deprecated use {@link #createIssue(String, String, String, Iterable, String, Long, Long)}
      */
     @Deprecated
     public Issue createIssue(

@@ -85,9 +85,9 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         }
 
         /**
-         * @deprecated use {@link JiraGlobalConfiguration#setSites(List)} instead
-         *
          * @param site the Jira site
+         *
+         * @deprecated use {@link JiraGlobalConfiguration#setSites(List)} instead
          */
         @Deprecated
         public void setSites(JiraSite site) {
@@ -95,9 +95,9 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
         }
 
         /**
-         * @deprecated use {@link JiraGlobalConfiguration#getSites()} instead
-         *
          * @return array of sites
+         *
+         * @deprecated use {@link JiraGlobalConfiguration#getSites()} instead
          */
         @Deprecated
         public JiraSite[] getSites() {

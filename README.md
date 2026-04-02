@@ -5,8 +5,14 @@
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/jira-plugin.svg?label=Release)](https://github.com/jenkinsci/jira-plugin/releases/latest)
 [![Jenkins CI](https://ci.jenkins.io/buildStatus/icon?job=Plugins/jira-plugin/master)](https://ci.jenkins.io/job/Plugins/job/jira-plugin/)
 [![Contributors](https://img.shields.io/github/contributors/jenkinsci/jira-plugin.svg)](https://github.com/jenkinsci/jira-plugin/graphs/contributors)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=jenkinsci_jira-plugin&metric=bugs)](https://sonarcloud.io/summary/new_code?id=jenkinsci_jira-plugin)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=jenkinsci_jira-plugin&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=jenkinsci_jira-plugin)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=jenkinsci_jira-plugin&metric=coverage)](https://sonarcloud.io/summary/new_code?id=jenkinsci_jira-plugin)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=jenkinsci_jira-plugin&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=jenkinsci_jira-plugin)
 
-See user documentation at [https://jenkinsci.github.io/jira-plugin/](https://jenkinsci.github.io/jira-plugin/)
+1. See user documentation at [https://jenkinsci.github.io/jira-plugin/](https://jenkinsci.github.io/jira-plugin/).
+1. Use [Declarative pipelines](https://www.jenkins.io/doc/book/pipeline/#declarative-versus-scripted-pipeline-syntax).
+1. Check [jira plugin steps reference](https://www.jenkins.io/doc/pipeline/steps/jira/).
 
 ## i18n
 
@@ -22,10 +28,3 @@ See user documentation at [https://jenkinsci.github.io/jira-plugin/](https://jen
 
 This plugin uses [CrowdIn platform](https://jenkins.crowdin.com/jira-plugin) as the frontend to manage translations. If you would like to contribute translation of this plugin in your language,  you're most welcome! For details, see [jenkins.io CrowdIn introduction](https://www.jenkins.io/doc/developer/crowdin/translating-plugins/).
 
-## Contributing
-
-There have been many developers involved in the development of this plugin and there are many downstream users who depend on it. Tests help us assure that we're delivering a reliable plugin and that we've communicated our intent to other developers in a way that they can detect when they run tests.
-
-- each change should be covered by appropriate unit tests
-- in case it is not testable via a unit test, it should be tested against a real Jira instance - possibly both Jira Server and Jira Cloud. There is a [Jira Cloud test instance](https://jenkins-jira-plugin.atlassian.net/) that we are using for testing the plugin releases - let us know in the Pull Request in case you need access for testing
- 

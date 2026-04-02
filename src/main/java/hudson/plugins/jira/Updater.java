@@ -33,7 +33,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Actual Jira update logic.
@@ -52,12 +52,11 @@ class Updater {
      */
     public static boolean debug = false;
 
-    public Updater(SCM scm) {
+    Updater(SCM scm) {
         this(scm, new ArrayList<>());
     }
 
-    public Updater(SCM scm, List<String> labels) {
-        super();
+    Updater(SCM scm, List<String> labels) {
         this.scm = scm;
         if (labels == null) {
             this.labels = new ArrayList<>();
@@ -130,7 +129,7 @@ class Updater {
             }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "Error updating Jira issues. Saving issues for next build.", e);
-            logger.println("Error updating Jira issues. Saving issues for next build.\n" + e);
+            logger.println(e.getMessage());
             if (issues != null && !issues.isEmpty()) {
                 // updating issues failed, so carry forward issues to the next build
                 run.addAction(new JiraCarryOverAction(issues));
@@ -144,14 +143,14 @@ class Updater {
      * Submits comments for the given issues.
      * Removes from <code>issues</code> issues which have been successfully updated or are invalid
      *
-     * @param build
-     * @param logger
-     * @param jenkinsRootUrl
-     * @param session
-     * @param useWikiStyleComments
-     * @param recordScmChanges
-     * @param groupVisibility
-     * @throws RestClientException
+     * @param build build
+     * @param logger logger
+     * @param jenkinsRootUrl jenkins root URL
+     * @param session session
+     * @param useWikiStyleComments whether to use wiki style comments
+     * @param recordScmChanges whether to record SCM changes
+     * @param groupVisibility group visibility
+     * @throws RestClientException when HTTP request fails
      */
     void submitComments(
             Run<?, ?> build,
@@ -162,8 +161,7 @@ class Updater {
             boolean useWikiStyleComments,
             boolean recordScmChanges,
             String groupVisibility,
-            String roleVisibility)
-            throws RestClientException {
+            String roleVisibility) {
 
         // copy to prevent ConcurrentModificationException
         Set<JiraIssue> copy = new HashSet<>(issues);

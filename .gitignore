@@ -16,7 +16,5 @@ work/
 *.iml
 .vscode/
 .idea/*
-!.idea/checkstyle-idea.xml
-!.idea/google-java-format.xml
 
 atlassian-ide-plugin.xml

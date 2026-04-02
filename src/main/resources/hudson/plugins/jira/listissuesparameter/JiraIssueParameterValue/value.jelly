@@ -17,6 +17,7 @@ limitations under the License.
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
   <j:set var="escapeEntryTitleAndDescription" value="false"/>
   <f:entry title="${h.escape(it.name)}">
-    <f:textbox name="${it.name}" value="${it.issue}" />
+    <j:set var="readOnlyMode" value="true"/>
+    <f:textbox name="${it.name}" value="${it.value}"/>
   </f:entry>
 </j:jelly>

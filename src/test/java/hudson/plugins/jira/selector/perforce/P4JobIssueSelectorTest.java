@@ -29,7 +29,6 @@ class P4JobIssueSelectorTest extends JobIssueSelectorTest {
         BuildListener listener = mock(BuildListener.class);
         ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
         P4ChangeSet perforceChangeLogSet = mock(P4ChangeSet.class);
-        JiraSite jiraSite = mock(JiraSite.class);
         Fix fixIW1231 = mock(Fix.class);
         Fix fixEC3453 = mock(Fix.class);
 
@@ -57,6 +56,7 @@ class P4JobIssueSelectorTest extends JobIssueSelectorTest {
         Set<String> expected = new HashSet<>(Arrays.asList(jobIdEC3453, jobIdIW1231));
 
         P4JobIssueSelector selector = new P4JobIssueSelector();
+        JiraSite jiraSite = mock(JiraSite.class);
         Set<String> result = selector.findIssueIds(build, jiraSite, listener);
 
         assertEquals(expected.size(), result.size());

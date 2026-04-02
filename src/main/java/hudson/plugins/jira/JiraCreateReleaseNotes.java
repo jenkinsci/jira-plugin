@@ -1,7 +1,7 @@
 package hudson.plugins.jira;
 
-import static org.apache.commons.lang.StringUtils.defaultIfEmpty;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import hudson.EnvVars;
 import hudson.Extension;
@@ -19,11 +19,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import jenkins.tasks.SimpleBuildWrapper;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 public class JiraCreateReleaseNotes extends SimpleBuildWrapper {
 
     @Extension
+    @Symbol("jiraCreateReleaseNotes")
     public static final class Descriptor extends BuildWrapperDescriptor {
 
         @Override

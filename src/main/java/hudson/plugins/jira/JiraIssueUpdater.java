@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import jenkins.model.Jenkins;
 import jenkins.tasks.SimpleBuildStep;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -41,7 +42,6 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
 
     @DataBoundConstructor
     public JiraIssueUpdater(AbstractIssueSelector issueSelector, SCM scm, List<String> labels) {
-        super();
         this.issueSelector = issueSelector;
         this.scm = scm;
         if (labels != null) {
@@ -116,6 +116,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         };
     }
 
+    @Symbol("jiraCommentIssues")
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         private DescriptorImpl() {
             super(JiraIssueUpdater.class);

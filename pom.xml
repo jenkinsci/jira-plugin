@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.26</version>
+    <version>6.2138.v03274d462c13</version>
     <relativePath />
   </parent>
 
@@ -37,19 +37,21 @@
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
-    <tag>jira-3.19</tag>
+    <tag>jira-3.20</tag>
     <url>https://github.com/${gitHubRepo}</url>
   </scm>
 
   <issueManagement>
-    <system>JIRA</system>
-    <url>https://issues.jenkins-ci.org/browse/JENKINS</url>
+    <system>Github</system>
+    <url>https://github.com/jenkinsci/jira-plugin/issues</url>
   </issueManagement>
 
   <properties>
-    <revision>3.20</revision>
+    <revision>3.22</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
+    <hpi.bundledArtifacts>atlassian-event,atlassian-httpclient-api,atlassian-util-concurrent,fugue,jira-rest-java-client-api,jira-rest-java-client-core,maven-artifact,plexus-utils,sal-api</hpi.bundledArtifacts>
+    <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <jira-rest-client.version>6.0.2</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
@@ -57,6 +59,7 @@
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <spotless.check.skip>false</spotless.check.skip>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
+    <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
   </properties>
 
   <dependencyManagement>
@@ -240,10 +243,11 @@
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>json-api</artifactId>
     </dependency>
+    <!-- required for VersionComparator -->
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
-      <version>3.9.11</version>
+      <version>3.9.14</version>
       <exclusions>
         <!-- Provided by commons-lang3-api plugin -->
         <exclusion>

@@ -16,14 +16,12 @@ class JiraReleaseVersionParameterTest {
     @Test
     void scriptedPipeline(JenkinsRule r) throws Exception {
         WorkflowJob p = r.createProject(WorkflowJob.class);
-        p.setDefinition(new CpsFlowDefinition(
-                """
+        p.setDefinition(new CpsFlowDefinition("""
                 properties([
                   parameters([
                     jiraReleaseVersion(name: 'JIRA', description: 'Jira Test Description', jiraProjectKey: 'PRJ', jiraReleasePattern: 'v[0-9]+', jiraShowReleased: 'true', jiraShowArchived: 'true')
                   ])
-                ])""",
-                true));
+                ])""", true));
         r.buildAndAssertSuccess(p);
 
         ParametersDefinitionProperty parameters = p.getProperty(ParametersDefinitionProperty.class);

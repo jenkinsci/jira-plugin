@@ -27,10 +27,10 @@ public class JiraBuildAction implements RunAction2 {
 
     // Leave it in place for binary compatibility.
     /**
-     * @deprecated use {@link #JiraBuildAction(java.util.Set)} instead
-     *
      * @param owner the owner of this action
      * @param issues the Jira issues
+     *
+     * @deprecated use {@link #JiraBuildAction(java.util.Set)} instead
      */
     @Deprecated
     public JiraBuildAction(Run<?, ?> owner, @NonNull Set<JiraIssue> issues) {
