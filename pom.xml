@@ -216,7 +216,7 @@
     <dependency>
       <groupId>io.atlassian.util.concurrent</groupId>
       <artifactId>atlassian-util-concurrent</artifactId>
-      <version>4.1.0</version>
+      <version>4.2.1</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
