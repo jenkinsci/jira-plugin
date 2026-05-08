@@ -1,4 +1,4 @@
-_extends: .github
+_extends: github:jenkinsci/.github:/.github/release-drafter.yml
 name-template: $RESOLVED_VERSION
 tag-template: jira-$RESOLVED_VERSION
 
