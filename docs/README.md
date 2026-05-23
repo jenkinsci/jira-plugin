@@ -6,6 +6,12 @@ This plugin integrates with Jenkins the [Atlassian Jira Software](http://www.atl
 
 !> **Jira Cloud** does not support Bearer Authentication
 
+
+!> **Jira Cloud URL Warning:** 
+!> When configuring the Jira URL in Jenkins, you must use the API endpoint format `https://api.atlassian.com/ex/jira/{cloudId}/` instead of your standard `https://yourcompany.atlassian.net/` address. Using the standard address can trigger automated CAPTCHA security checks, which will block Jenkins and cause the connection to fail.
+
+
+
 To integrate Jenkins with Atlassian Jira Cloud, you need to use an API token as a _service user_. Jira Cloud requires an email address for all users, so you cannot create a user without one.
 
 ### Steps
