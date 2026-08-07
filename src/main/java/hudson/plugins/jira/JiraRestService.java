@@ -213,6 +213,33 @@ public class JiraRestService {
         }
     }
 
+    /**
+     * Returns the issue types enabled for the given project, as opposed to {@link #getIssueTypes()}
+     * which returns every issue type defined in the whole Jira instance.
+     */
+    public List<IssueType> getIssueTypes(String projectKey) {
+        try {
+            return StreamSupport.stream(
+                            jiraRestClient
+                                    .getProjectClient()
+                                    .getProject(projectKey)
+                                    .get(timeout, TimeUnit.SECONDS)
+                                    .getIssueTypes()
+                                    .spliterator(),
+                            false)
+                    .collect(Collectors.toList());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.log(WARNING, e, () -> "Jira REST client get project issue types error. cause: " + e.getMessage());
+            throw new RestClientException(
+                    "[Jira] Jira REST client get project issue types error. cause: " + e.getMessage(), e.getCause());
+        } catch (RestClientException | ExecutionException | TimeoutException e) {
+            LOGGER.log(WARNING, e, () -> "Jira REST client get project issue types error. cause: " + e.getMessage());
+            throw new RestClientException(
+                    "[Jira] Jira REST client get project issue types error. cause: " + e.getMessage(), e.getCause());
+        }
+    }
+
     public List<Priority> getPriorities() {
         try {
             return StreamSupport.stream(
