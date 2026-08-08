@@ -84,6 +84,12 @@ jobs:
           ref: ${{ env.HEAD_SHA }}
           fetch-depth: 0
           persist-credentials: false
+          # actions/checkout refuses fork-PR checkouts inside workflow_run jobs
+          # by default (the "pwn request" guard). We accept the risk here: this
+          # job never executes the checked-out code (no mvn/npm/scripts run
+          # against it) - sonar-scanner only reads the source text and the
+          # pre-built target/classes + jacoco.xml from the untrusted build job.
+          allow-unsafe-pr-checkout: true
 
       - name: Download build output
         uses: actions/github-script@v8
@@ -129,23 +135,3 @@ jobs:
             -Dsonar.pullrequest.base=${{ env.BASE_REF }}
             -Dsonar.scm.revision=${{ env.HEAD_SHA }}
             -Dsonar.qualitygate.wait=true
-
-      - name: Delete transient artifacts
-        if: always()
-        uses: actions/github-script@v8
-        with:
-          script: |
-            const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.payload.workflow_run.id,
-            });
-            for (const artifact of artifacts.data.artifacts) {
-              if (artifact.name.startsWith('pr-info-') || artifact.name.startsWith('sonar-data-')) {
-                await github.rest.actions.deleteArtifact({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  artifact_id: artifact.id,
-                });
-              }
-            }
