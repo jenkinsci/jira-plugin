@@ -60,5 +60,6 @@ jobs:
           name: sonar-data-${{ github.event.pull_request.number }}
           path: |
             target/classes
+            target/test-classes
             target/site/jacoco/jacoco.xml
           retention-days: 1
