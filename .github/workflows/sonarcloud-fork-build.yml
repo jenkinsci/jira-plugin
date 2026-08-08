@@ -32,6 +32,20 @@ jobs:
       - name: Build and test
         run: mvn --batch-mode -Penable-jacoco test jacoco:report
 
+      - name: Copy dependency jars for analysis classpath
+        # sonar-scanner (trusted job) has no dependency jars of its own to
+        # resolve types against - only the compiled classes above. Copy the
+        # full test-scope classpath (superset of compile scope) so it can be
+        # shipped as a build artifact and referenced by sonar.java.libraries
+        # / sonar.java.test.libraries.
+        run: >
+          mvn --batch-mode dependency:copy-dependencies
+          -DincludeScope=test
+          -DoutputDirectory=target/dependency
+          -DoverWriteReleases=false
+          -DoverWriteSnapshots=false
+          -DoverWriteIfNewer=true
+
       - name: Save PR information
         env:
           HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
@@ -61,5 +75,6 @@ jobs:
           path: |
             target/classes
             target/test-classes
+            target/dependency
             target/site/jacoco/jacoco.xml
           retention-days: 1

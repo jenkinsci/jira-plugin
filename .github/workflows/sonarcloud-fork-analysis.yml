@@ -130,8 +130,9 @@ jobs:
       - name: Extract build output onto checked-out sources
         # actions/upload-artifact@v4 strips the common ancestor ("target/")
         # shared by the uploaded paths, so the zip's top-level entries are
-        # classes/, test-classes/ and site/jacoco/jacoco.xml. Extract into
-        # target/ to restore the target/classes, target/test-classes and
+        # classes/, test-classes/, dependency/ and site/jacoco/jacoco.xml.
+        # Extract into target/ to restore the target/classes,
+        # target/test-classes, target/dependency and
         # target/site/jacoco/jacoco.xml layout the scanner args expect.
         run: unzip -q "$RUNNER_TEMP/sonar-data/sonar-data.zip" -d target
 
@@ -147,6 +148,8 @@ jobs:
             -Dsonar.tests=src/test
             -Dsonar.java.binaries=target/classes
             -Dsonar.java.test.binaries=target/test-classes
+            -Dsonar.java.libraries=target/dependency/*.jar
+            -Dsonar.java.test.libraries=target/dependency/*.jar
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
             -Dsonar.pullrequest.key=${{ env.PR_NUMBER }}
             -Dsonar.pullrequest.branch=${{ env.HEAD_REF }}
