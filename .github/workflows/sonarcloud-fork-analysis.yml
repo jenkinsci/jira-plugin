@@ -103,23 +103,6 @@ jobs:
         # real, current base branch from the trusted (non-fork) repository.
         run: git fetch --no-tags --force "https://github.com/${{ github.repository }}" "$BASE_REF:$BASE_REF"
 
-      - name: Restore Maven dependency cache
-        # Populated by the untrusted build job's own actions/setup-java step
-        # (same cache key: keyed on this exact commit's pom.xml, via `mvn
-        # test`). Without it the scanner only has target/classes and
-        # target/test-classes on its classpath and no dependency jars, so it
-        # can't resolve most third-party types - degrading analysis
-        # precision. This only reads the cache (no `mvn` invocation against
-        # the fork's pom.xml).
-        uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'corretto'
-          cache: 'maven'
-
-      - name: Resolve local Maven repository path
-        run: echo "M2_REPO=$HOME/.m2/repository" >> "$GITHUB_ENV"
-
       - name: Download build output
         uses: actions/github-script@v8
         with:
@@ -164,8 +147,6 @@ jobs:
             -Dsonar.tests=src/test
             -Dsonar.java.binaries=target/classes
             -Dsonar.java.test.binaries=target/test-classes
-            -Dsonar.java.libraries=${{ env.M2_REPO }}/**/*.jar
-            -Dsonar.java.test.libraries=${{ env.M2_REPO }}/**/*.jar
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
             -Dsonar.pullrequest.key=${{ env.PR_NUMBER }}
             -Dsonar.pullrequest.branch=${{ env.HEAD_REF }}
