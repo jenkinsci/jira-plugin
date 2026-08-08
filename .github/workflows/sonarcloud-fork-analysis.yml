@@ -91,6 +91,18 @@ jobs:
           # pre-built target/classes + jacoco.xml from the untrusted build job.
           allow-unsafe-pr-checkout: true
 
+      - name: Fetch base branch from this repository
+        # The checkout above points "origin" at the fork (HEAD_REPO), so the
+        # local ref named after BASE_REF (e.g. "master") is whatever stale
+        # copy of it the fork happens to have - potentially months behind.
+        # sonar.pullrequest.base resolves against the local ref, and a stale
+        # base makes the scanner treat everything changed upstream since the
+        # fork diverged as "new code", spuriously failing new-code quality
+        # gate conditions (e.g. new_reliability_rating) on pre-existing
+        # issues in files this PR never touched. Force the local ref to the
+        # real, current base branch from the trusted (non-fork) repository.
+        run: git fetch --no-tags --force "https://github.com/${{ github.repository }}" "$BASE_REF:$BASE_REF"
+
       - name: Download build output
         uses: actions/github-script@v8
         with:
