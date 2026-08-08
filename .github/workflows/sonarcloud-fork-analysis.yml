@@ -113,7 +113,7 @@ jobs:
         run: unzip -q "$RUNNER_TEMP/sonar-data/sonar-data.zip" -d .
 
       - name: Run SonarCloud analysis
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
