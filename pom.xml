@@ -54,6 +54,7 @@
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <jira-rest-client.version>6.0.2</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
+    <wiremock.version>3.13.1</wiremock.version>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.555</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
@@ -305,6 +306,16 @@
       <artifactId>workflow-step-api</artifactId>
       <optional>true</optional>
     </dependency>
+    <!-- core-only: the -wiremock/-wiremock-junit5 adapter modules pull in
+         com.github.tomakehurst:wiremock-jre8 (WireMock 2.x, unshaded), which
+         collides with wiremock-standalone (WireMock 3.x) under the same
+         com.github.tomakehurst.wiremock.* package namespace -->
+    <dependency>
+      <groupId>com.atlassian.oai</groupId>
+      <artifactId>swagger-request-validator-core</artifactId>
+      <version>2.44.9</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>io.jenkins.configuration-as-code</groupId>
       <artifactId>test-harness</artifactId>
@@ -346,6 +357,15 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- standalone shades its own Jetty/Jackson, avoiding clashes with
+         jersey2-api/jackson2-api/apache-httpcomponents-client-4-api already
+         on the test classpath via jira-rest-java-client-core -->
+    <dependency>
+      <groupId>org.wiremock</groupId>
+      <artifactId>wiremock-standalone</artifactId>
+      <version>${wiremock.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -422,6 +442,9 @@
           <!-- fix issues in test when trying to serialize some mocks and to run some tests within your IDE you will need this -->
           <systemPropertyVariables>
             <hudson.remoting.ClassFilter>hudson.plugins.jira.JiraFolderProperty,hudson.plugins.jira.JiraSite,hudson.plugins.jira.JiraJobAction,com.atlassian.jira.rest.client.api.domain.IssueType</hudson.remoting.ClassFilter>
+            <!-- quiets jenkins-test-harness's own INFO-level boot/teardown logging so it
+                 doesn't drown out actual test failures on the console; see the file itself -->
+            <java.util.logging.config.file>${project.build.testOutputDirectory}/logging.properties</java.util.logging.config.file>
           </systemPropertyVariables>
         </configuration>
       </plugin>

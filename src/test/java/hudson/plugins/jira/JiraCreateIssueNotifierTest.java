@@ -40,6 +40,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.WithoutJenkins;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 @WithJenkins
@@ -117,6 +118,29 @@ public class JiraCreateIssueNotifierTest {
                 .thenReturn(issue);
 
         assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+
+        // Loose any*() matchers above only control the stubbed return value - they don't verify
+        // what was actually sent to Jira, so capture the real call and check it matches the
+        // notifier's configuration (empty assignee/components here).
+        ArgumentCaptor<String> projectKeyCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> assigneeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Iterable<String>> componentsCaptor = ArgumentCaptor.forClass(Iterable.class);
+        ArgumentCaptor<Long> typeCaptor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<Long> priorityCaptor = ArgumentCaptor.forClass(Long.class);
+        verify(session)
+                .createIssue(
+                        projectKeyCaptor.capture(),
+                        Mockito.anyString(),
+                        assigneeCaptor.capture(),
+                        componentsCaptor.capture(),
+                        Mockito.anyString(),
+                        typeCaptor.capture(),
+                        priorityCaptor.capture());
+        assertEquals(JIRA_PROJECT, projectKeyCaptor.getValue());
+        assertEquals("", assigneeCaptor.getValue());
+        assertFalse(componentsCaptor.getValue().iterator().hasNext());
+        assertEquals(1L, typeCaptor.getValue());
+        assertEquals(1L, priorityCaptor.getValue());
     }
 
     @Test
@@ -141,6 +165,30 @@ public class JiraCreateIssueNotifierTest {
                 .thenReturn(issue);
 
         assertTrue(notifier.perform(currentBuild, launcher, buildListener));
+
+        ArgumentCaptor<String> projectKeyCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> assigneeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Iterable<String>> componentsCaptor = ArgumentCaptor.forClass(Iterable.class);
+        ArgumentCaptor<Long> typeCaptor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<Long> priorityCaptor = ArgumentCaptor.forClass(Long.class);
+        verify(session)
+                .createIssue(
+                        projectKeyCaptor.capture(),
+                        descriptionCaptor.capture(),
+                        assigneeCaptor.capture(),
+                        componentsCaptor.capture(),
+                        Mockito.anyString(),
+                        typeCaptor.capture(),
+                        priorityCaptor.capture());
+        assertEquals(JIRA_PROJECT, projectKeyCaptor.getValue());
+        // ${DESCRIPTION} must actually get expanded, not passed through literally.
+        assertThat(descriptionCaptor.getValue(), Matchers.containsString(DESCRIPTION));
+        assertThat(descriptionCaptor.getValue(), Matchers.not(Matchers.containsString(DESCRIPTION_PARAM)));
+        assertEquals("", assigneeCaptor.getValue());
+        assertFalse(componentsCaptor.getValue().iterator().hasNext());
+        assertEquals(1L, typeCaptor.getValue());
+        assertEquals(1L, priorityCaptor.getValue());
     }
 
     @Test
@@ -172,6 +220,29 @@ public class JiraCreateIssueNotifierTest {
         assertTrue(notifier.perform(currentBuild, launcher, buildListener));
 
         assertEquals(1, temporaryDirectory.list().length);
+
+        // Only this first perform() call creates an issue (the later ones just comment on or
+        // reopen it), so this is the one point where a single createIssue invocation can be
+        // captured and checked against the notifier's real assignee/component configuration.
+        ArgumentCaptor<String> projectKeyCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> assigneeCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Iterable<String>> componentsCaptor = ArgumentCaptor.forClass(Iterable.class);
+        ArgumentCaptor<Long> typeCaptor = ArgumentCaptor.forClass(Long.class);
+        ArgumentCaptor<Long> priorityCaptor = ArgumentCaptor.forClass(Long.class);
+        verify(session)
+                .createIssue(
+                        projectKeyCaptor.capture(),
+                        Mockito.contains(DESCRIPTION),
+                        assigneeCaptor.capture(),
+                        componentsCaptor.capture(),
+                        Mockito.anyString(),
+                        typeCaptor.capture(),
+                        priorityCaptor.capture());
+        assertEquals(JIRA_PROJECT, projectKeyCaptor.getValue());
+        assertEquals(ASSIGNEE, assigneeCaptor.getValue());
+        assertThat(componentsCaptor.getValue(), Matchers.containsInAnyOrder("some", "componentA"));
+        assertEquals(1L, typeCaptor.getValue());
+        assertEquals(1L, priorityCaptor.getValue());
 
         when(previousBuild.getResult()).thenReturn(Result.FAILURE);
         when(currentBuild.getResult()).thenReturn(Result.FAILURE);
