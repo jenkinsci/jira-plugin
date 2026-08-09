@@ -4,10 +4,11 @@ repos:
     hooks:
       - id: check-yaml
       - id: check-added-large-files
-  - repo: https://github.com/ORCID/pre-commit-spotless
-    rev: v1.0.0
+  - repo: local
     hooks:
-      - id: spotless-check
-        types_or: [java]
       - id: spotless-apply
+        name: Spotless Java formatter
+        entry: mvn spotless:apply
+        language: system
         types_or: [java]
+        pass_filenames: false

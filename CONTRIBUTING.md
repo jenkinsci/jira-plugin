@@ -11,7 +11,7 @@ General rules:
 
 ### Install pre-commit hooks
 
-The [pre-commit](https://pre-commit.com/#install) hooks run various checks to make sure no unwanted files are committed and that the submitted change follows the code style and formatting rules:
+The [pre-commit](https://pre-commit.com/#install) hooks run various checks to make sure no unwanted files are committed and that the submitted change follows the code style and formatting rules — including running `mvn spotless:apply` to auto-format Java code, so a JDK and Maven need to be on your `PATH`:
 
 ```sh
 brew install pre-commit && pre-commit install --install-hooks
