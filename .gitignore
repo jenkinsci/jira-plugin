@@ -9,6 +9,7 @@ work/
 .work
 .env*
 .docker
+secrets/
 *.code-workspace
 
 # ignore all Idea files except for common codestyle settings
