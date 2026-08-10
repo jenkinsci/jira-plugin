@@ -54,7 +54,7 @@
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <jira-rest-client.version>6.0.2</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
-    <wiremock.version>3.13.1</wiremock.version>
+    <wiremock.version>3.13.2</wiremock.version>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.555</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
