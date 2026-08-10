@@ -327,6 +327,32 @@
       <artifactId>workflow-multibranch</artifactId>
       <scope>test</scope>
     </dependency>
+    <!--
+      p4's non-optional dependency on com.mig82:folder-properties (not excluded above since it
+      isn't under org.jenkins-ci.plugins) pulls in pipeline-model-definition/-extensions, which
+      need these plugins to start. See upstream discussion:
+      https://github.com/jenkinsci/p4-plugin/commit/fb70a9a8b1212c39853e7470fb80895f4189ac85#r163726092
+    -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>credentials-binding</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>pipeline-stage-step</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>variant</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>pipeline-input-step</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins.workflow</groupId>
       <artifactId>workflow-scm-step</artifactId>
