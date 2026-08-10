@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Download PR information
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
@@ -104,7 +104,7 @@ jobs:
         run: git fetch --no-tags --force "https://github.com/${{ github.repository }}" "$BASE_REF:$BASE_REF"
 
       - name: Download build output
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           script: |
             const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
