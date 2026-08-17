@@ -1,68 +1,65 @@
 # Jenkins Jira plugin features
 
-### Using Jira REST API
+Once the plugin is [configured](configuration.md), here's what it can do.
 
-This plugin has an optional feature to update Jira issues with a back pointer to Jenkins build pages. This allows the submitter and watchers to quickly find out which build they need to pick up to get the fix.
+## Link builds back to Jira issues
+
+The plugin can update Jira issues with a back pointer to the Jenkins build page, so the reporter
+and watchers can quickly find the build that picked up the fix.
 
 ![plugin-configuration](images/Plugin_Configuration.png)
 
-### Jira Issue links in build Changelog
-
-When you configure your Jira site in Jenkins, the plugin will automatically hyperlink all matching issue names to Jira.
-
-If you have additionally provided username/password to Jira, the hyperlinks will also contain tooltips with the issue summary.
+Once a Jira site is configured, the plugin also automatically hyperlinks matching issue keys in the
+build changelog. If you've additionally supplied Jira credentials, those links get tooltips with the
+issue summary.
 
 ![example-annotated-changelog](images/example_annotated_changelog.png)
 
-### Updating Jira issues with back pointers
+## Comment on issues from a build
 
-If you also want to use this feature, you need to supply a valid user id/password. If you need the comment only to be visible to a certain Jira group, e.g. _Software Development_, enter the groupname.
-
-Now you also need to configure jobs. I figured you might not always have write access to the Jira (say you have a Jenkins build for one of the Apache commons project that you depend on), so that's why this is optional.  
-
-The following screen shows how a Jira issue is updated:
+To post comments back to Jira, supply a valid Jira user/API token — this is optional, since you
+won't always have write access to every Jira project your build touches (e.g. a Jenkins build for
+an upstream OSS dependency). If comments should only be visible to a specific Jira group (e.g.
+*Software Development*), set the group name too.
 
 ![jira-comments](images/Jira_Comments.jpg)
 
-By taking advantages of Jenkins' [fingerprint](https://wiki.jenkins.io/display/JENKINS/Fingerprint) feature, when your other projects that depend on this project pick up a build with a fix, those build numbers can also be recorded in Jira.
+This also works across projects: using Jenkins' [fingerprint](https://wiki.jenkins.io/display/JENKINS/Fingerprint)
+feature, when a downstream build picks up a fix, that build number is recorded on the original Jira
+issue too — useful when a bug is reported against one component but fixed in a dependency. See
+[this thread](http://jenkins.361315.n4.nabble.com/How-can-does-Hudson-Jira-integration-works-td374680.html)
+for how it works under the hood.
 
-This is quite handy when a bug is fixed in one of the libraries, yet the submitter wants a fix in a different project. This happens often in my work, where a bug is reported against JAX-WS but the fix is in JAXB.
+## Manage releases
 
-For curious mind, see [this thread for how this works behind the scene](http://jenkins.361315.n4.nabble.com/How-can-does-Hudson-Jira-integration-works-td374680.html).
+Pull a Jira Release Version directly into your build with the Jira Release Version Parameter — handy
+for generating release notes or triggering a parameterized build.
 
-### Referencing Jira Release version
-
-To reference Jira Release versions in your build, you can pull these
-releases directly from Jira by adding the Jira Release Version
-Parameter.
-
-This can be useful for generating release notes, trigerring
-parameterized build, etc.  
 ![version-parameters](images/version_parameters.png)
 
-### Generating Release Notes
+Generate release notes during the build and read them back from an environment variable. See the
+[Maven Project Plugin](https://wiki.jenkins.io/display/JENKINS/Maven+Project+Plugin) docs for the
+environment variables available from the POM.
 
-You can also generate release notes to be used during your build. These notes can be retrieved from an environment variable. See the [Maven Project Plugin](https://wiki.jenkins.io/display/JENKINS/Maven+Project+Plugin) for
-the environment variables found within the POM.  
 ![release-notes](images/release_notes.png)
 
-After your build has run, you can also have the plugin mark a release as resolved. This typically will be a release you specified in your Build Parameters.  
-![marking-as-resolved](images/mark_as_resolved.png)
+After the build runs, the plugin can also:
 
-The plugin can also move certain issues matching a JQL query to a new release version.  
-![moving-issues](images/move_issues.png)
+- mark a release as resolved (typically one you specified as a Build Parameter)
+  ![marking-as-resolved](images/mark_as_resolved.png)
+- move issues matching a JQL query into a new release version
+  ![moving-issues](images/move_issues.png)
 
-Sample usage of generated Release Notes:
+Sample usage of generated release notes:
 ![release-notes-config](images/release_notes_config.png)
 
-### Jira Authentication & Permissions required
+## Pipeline support
 
-**Note:** As a rule of thumb, **you should be always using a service account** (instead of a personal account) to integrate Jenkins with Jira.
+Most features above are also available as Pipeline steps — see [Usage Examples](usage-examples.md).
+A few (mainly notifiers) aren't yet supported in Pipeline; use the `catchError` step and call the
+Jira step manually as a workaround.
 
-Make sure that the Jira user used by Jenkins has enough permissions to execute its actions. You can do that via Jira Permission Helper tool.
+## Before you rely on any of this
 
-- For creating Jira issues, the user has to be able to Create Issues in the specified project
-- If you additionally enter assignee or component field values, make sure that:
-      - both of the fields are assigned to the corresponding Jira Screen
-      - the Jira user is Assignable in the project
-      - the Jenkins Jira user can Assign issues
+The Jira user Jenkins connects as needs enough permissions for whatever it's asked to do — see
+[Required Jira permissions](configuration.md#required-jira-permissions) in Configuration.
