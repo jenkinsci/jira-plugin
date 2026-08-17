@@ -41,7 +41,7 @@ hack. Neither is true, which is what this ADR exists to record.
 
 * Fix a live production breakage in a patch-level 3.x release, with a small, reviewable diff.
 * No new dependency, no dependency bump on the critical path — the HTTP stack work (see
-  [0006](0006-http-client-lifecycle-and-jenkins-60536.md)) has to settle before JRJC moves.
+  [0006](adr/0006-http-client-lifecycle-and-jenkins-60536.md)) has to settle before JRJC moves.
 * Users behind vanity domains, gateways or reverse proxies must not be at the mercy of a hostname
   heuristic; they need an escape hatch.
 * Do not shadow third-party classes. A same-FQCN override in `src/main/java` is invisible at the call
@@ -58,7 +58,7 @@ hack. Neither is true, which is what this ADR exists to record.
    (PR [#754](https://github.com/jenkinsci/jira-plugin/pull/754)). Smallest possible diff. Rejected:
    classpath-order-dependent, undiscoverable from the call site, and it adds a second vendored-upstream
    tree to maintain on top of the one we already carry (see
-   [0003](0003-future-of-the-vendored-atlassian-http-client.md)).
+   [0003](adr/0003-future-of-the-vendored-atlassian-http-client.md)).
 3. **Wait for the upstream fix**, then bump JRJC. Rejected on evidence: the 8.0.0 sources were decompiled
    and checked, and `CLOUD_DOMAINS` is *still* `["atlassian.net", "jira.com"]` there. There is nothing to
    wait for. This also removes the argument for rushing Renovate PR
