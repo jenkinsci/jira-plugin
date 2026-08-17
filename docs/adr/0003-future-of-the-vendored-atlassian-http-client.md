@@ -40,11 +40,11 @@ So: what happens to the fork?
 * Never regress Jenkins proxy support. It is the fork's whole reason for existing and it is exercised by a
   test that would keep passing only because the test would be deleted alongside the code.
 * A modernisation programme that has to fix real correctness bugs in this tree (see
-  [0006](0006-http-client-lifecycle-and-jenkins-60536.md)) cannot also be blocked on replacing it.
+  [0006](adr/0006-http-client-lifecycle-and-jenkins-60536.md)) cannot also be blocked on replacing it.
 * Deprecated HC4 TLS APIs and an unanalysed, untested 1888-line tree are not an acceptable end state.
   "Keep the fork" must not mean "keep ignoring the fork".
 * Breaking changes belong in 4.0, not in a 3.x patch — see
-  [0005](0005-staged-deprecation-removal.md).
+  [0005](adr/0005-staged-deprecation-removal.md).
 
 ## Considered Options
 
@@ -61,8 +61,8 @@ So: what happens to the fork?
 4. **Migrate straight to `apache-httpcomponents-client-5-api` now.** The right destination, wrong moment.
    HC5 changes the async API shape (`SimpleHttpRequest`, `HttpAsyncRequester`, reactor lifecycle), so it is a
    rewrite of the transport layer — landing it in the middle of the Cloud-search fix
-   ([0002](0002-jira-cloud-detection-and-search-api-routing.md)) and the client-lifecycle fix
-   ([0006](0006-http-client-lifecycle-and-jenkins-60536.md)) would make all three unreviewable at once.
+   ([0002](adr/0002-jira-cloud-detection-and-search-api-routing.md)) and the client-lifecycle fix
+   ([0006](adr/0006-http-client-lifecycle-and-jenkins-60536.md)) would make all three unreviewable at once.
 
 ## Decision Outcome
 
@@ -95,7 +95,7 @@ Implementation:
 ### Consequences
 
 * Proxy support is preserved, and for the first time it is documented as load-bearing rather than incidental.
-* The correctness work in [0006](0006-http-client-lifecycle-and-jenkins-60536.md) is unblocked immediately.
+* The correctness work in [0006](adr/0006-http-client-lifecycle-and-jenkins-60536.md) is unblocked immediately.
 * The tree enters static analysis, so its findings become visible instead of theoretical. Expect an initial
   batch — that is the point.
 * We keep maintaining ~1888 lines of third-party code for at least one more major version, including its

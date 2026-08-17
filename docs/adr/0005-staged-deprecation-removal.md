@@ -24,9 +24,9 @@ The plugin has accumulated a substantial deprecated surface that nothing removes
 * The `@Extension`-on-static-field descriptor pattern in six classes.
 
 Meanwhile there is urgent work that must ship soon: a live production breakage against Jira Cloud
-([0002](0002-jira-cloud-detection-and-search-api-routing.md)) and correctness bugs in the HTTP stack
-([0003](0003-future-of-the-vendored-atlassian-http-client.md),
-[0006](0006-http-client-lifecycle-and-jenkins-60536.md)).
+([0002](adr/0002-jira-cloud-detection-and-search-api-routing.md)) and correctness bugs in the HTTP stack
+([0003](adr/0003-future-of-the-vendored-atlassian-http-client.md),
+[0006](adr/0006-http-client-lifecycle-and-jenkins-60536.md)).
 
 With ~28,400 installs on a declining trend, the failure mode to avoid is obvious: a release that fixes the
 Cloud breakage *and* removes API in the same breath, so upgrading to get the fix means also absorbing
@@ -64,7 +64,7 @@ Implementation:
 
 * **3.x carries**: the Cloud search fix, the HTTP-stack correctness work, `JiraSite` decomposition,
   session/cache correctness, the Java 21 idiom pass, pipeline gaps, fork convergence, and CI/CD
-  ([0004](0004-continuous-delivery-and-version-numbering.md)). Behaviour changes and internal refactors,
+  ([0004](adr/0004-continuous-delivery-and-version-numbering.md)). Behaviour changes and internal refactors,
   no removals.
 * **3.x also prepares**: anything destined for removal gets `@Deprecated` with a Javadoc `@deprecated` note
   naming 4.0 as the removal release, and dead UI knobs are hidden before they are deleted. Users get at least
@@ -77,7 +77,7 @@ Implementation:
   * `useHTTPAuth`, keeping the XStream field ignored rather than read, so old configs still load;
   * the `@Extension`-on-static-field descriptor pattern;
   * the ungated `JiraProjectProperty` migration;
-  * the HttpClient 5 migration from [0003](0003-future-of-the-vendored-atlassian-http-client.md), and with it
+  * the HttpClient 5 migration from [0003](adr/0003-future-of-the-vendored-atlassian-http-client.md), and with it
     fugue, jettison and the pre-Jakarta `javax.ws.rs` usage.
 * **`JiraFolderProperty.setSites(JiraSite)` is the exception and may be fixed or removed in 3.x.** It throws
   unconditionally, so it has no working callers to break. Removing something nobody can be using is not a

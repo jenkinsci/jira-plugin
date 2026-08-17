@@ -1,6 +1,6 @@
 # HTTP client lifecycle: why a client is built per request (JENKINS-60536)
 
-* Status: accepted
+* Status: proposed
 * Date: 2026-08-17
 
 ## Context and Problem Statement
@@ -78,7 +78,7 @@ Implementation:
 * If (1) proves open-ended, take option 3 (pooled client per `JiraSite` with idle eviction) rather than
   leaving the per-request build permanent.
 * Bringing the vendored tree under SpotBugs (see
-  [0003](0003-future-of-the-vendored-atlassian-http-client.md)) will flag this method. Suppress it with a
+  [0003](adr/0003-future-of-the-vendored-atlassian-http-client.md)) will flag this method. Suppress it with a
   pointer to this ADR rather than "fixing" it, until the exit condition is met.
 
 ### Consequences

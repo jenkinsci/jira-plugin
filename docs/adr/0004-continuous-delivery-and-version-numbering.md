@@ -1,6 +1,6 @@
 # Continuous delivery and version numbering
 
-* Status: proposed
+* Status: accepted
 * Date: 2026-08-17
 
 ## Context and Problem Statement
@@ -27,7 +27,7 @@ since 2022 anyway, for two reasons that are about policy, not plumbing:
 * The default CD version scheme *increments the major component* on every release
   (`3.x` → `4.x` → `5.x` …), which throws away the signal a major version is supposed to carry — and this
   project has a real 4.0 planned with real breaking changes (see
-  [0005](0005-staged-deprecation-removal.md)). Two things cannot both own the number "4".
+  [0005](adr/0005-staged-deprecation-removal.md)). Two things cannot both own the number "4".
 * A maintainer is **-0 on the whole idea**, on the grounds that something as important as releasing should
   not depend on external concurrent tooling.
 
@@ -57,7 +57,7 @@ Any decision that ignores either objection will not stick.
    is not the situation here.
 4. **Stay fully manual.** Honest about the "-0", and today's behaviour. Rejected: nine months for three
    releases is the status quo being argued against, and it leaves the shipped fix for a live production
-   breakage ([0002](0002-jira-cloud-detection-and-search-api-routing.md)) waiting on calendar time.
+   breakage ([0002](adr/0002-jira-cloud-detection-and-search-api-routing.md)) waiting on calendar time.
 5. **Automate only the release notes** (keep `release-drafter`, keep manual `mvn release`). Rejected as
    already the status quo — release-drafter is wired and the toil that remains is the part it does not cover.
 
@@ -75,7 +75,7 @@ Implementation:
   *mechanics* of cutting a release, not the *decision* to cut one.
 * Set the manually controlled prefix to `3` so releases read `3.<incremental>.v<sha>`, keeping the `3.x`
   line intact and leaving `4.0` free for the breaking release in
-  [0005](0005-staged-deprecation-removal.md). When 4.0 arrives, the prefix moves to `4` — one property
+  [0005](adr/0005-staged-deprecation-removal.md). When 4.0 arrives, the prefix moves to `4` — one property
   change, not a scheme change.
 * Add `MAINTAINERS` listing the maintainers authorised to release.
 * Fix `<scm><tag>` to track reality, and stop hand-maintaining it once CD owns it.
