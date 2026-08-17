@@ -37,6 +37,19 @@ the `mise exec --` prefix from every command below.
 - Adding a new field on a persisted class (`JiraSite`, build steps, notifiers, ...)? Read
   [backward compatibility](https://www.jenkins.io/doc/developer/persistence/backward-compatibility/)
   and add a test for the old-data-loading path.
+- **Update the docs in the same PR.** Every PR that changes behaviour, adds or renames a step
+  parameter, or changes what a step does needs a matching Markdown change under
+  [`docs/`](docs/) — in practice
+  [`docs/usage-examples.md`](docs/usage-examples.md), keeping the relevant
+  [Declarative Pipeline](https://www.jenkins.io/doc/book/pipeline/syntax/) example correct and
+  runnable. Prefer Declarative (`pipeline { ... }`) for new and updated examples; the older scripted
+  (`node { ... }`) snippets are being converted as they are touched. Also update
+  [`docs/features.md`](docs/features.md), [`docs/system-properties.md`](docs/system-properties.md) or
+  [`docs/troubleshooting.md`](docs/troubleshooting.md) when they are the relevant page. Docs-only and
+  pure-refactoring PRs are the obvious exceptions — say so in the description.
+- Making a decision that will look wrong to someone without the history, or rejecting a reasonable
+  alternative for a reason worth keeping? Add an ADR under [`.github/adr/`](.github/adr/) — see
+  [the index and template](.github/adr/README.md).
 - Open the PR as a **draft** first, let CI run, then mark it ready for review once checks are
   green.
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)

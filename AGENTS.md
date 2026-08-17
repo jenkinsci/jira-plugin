@@ -125,6 +125,12 @@ Enforced by the build, not optional:
 - Prefer reusing existing utilities/patterns over introducing new ones — this codebase has a
   fairly small, consistent surface area (see Project overview above); check for an existing
   equivalent before adding a new helper.
+- **Check `.github/adr/` before "fixing" code that looks wrong.** Architecture decisions are recorded
+  there in MADR format (`.github/adr/README.md` has the index and template). Some of this code looks
+  like a plain bug and is not — `ApacheAsyncHttpClient` building an HTTP client per request is the
+  standing example (ADR 0006: it is the shipped fix for JENKINS-60536, and reverting it reintroduces a
+  build hang). If you make a decision worth keeping, or reject a reasonable alternative for a
+  non-obvious reason, add a record.
 - New `catch` blocks around Jira REST calls should re-interrupt on `InterruptedException` and log
   via a deferred `Supplier`, not eager string concatenation (see SonarCloud section below for why):
   ```java
@@ -163,6 +169,15 @@ for the actual failing conditions, use the SonarQube MCP tools
 - Title format: Conventional Commits — `<type>(<scope>): <subject>`, where type is one of
   `feat|fix|docs|style|refactor|test|chore|perf`.
 - Always run `mvn spotless:apply` and `mvn clean test` before committing/opening a PR.
+- **Every PR ships a documentation change too.** If the change is user-visible — new behaviour, a new
+  or renamed step parameter, a changed default, a changed failure mode — update the relevant
+  **Declarative Pipeline** example in `docs/usage-examples.md` in the same PR, and `docs/features.md`,
+  `docs/system-properties.md` or `docs/troubleshooting.md` when one of those is the right page. Write
+  new and updated examples in Declarative form (`pipeline { agent any; stages { ... } }`); the file
+  still contains older scripted (`node { ... }`) snippets, which are converted opportunistically as
+  they are touched — don't add new ones. A step's example must stay runnable: if you add a required
+  parameter, every example using that step needs it. Docs-only and pure-refactoring PRs are the
+  exception; state that in the PR description rather than silently skipping.
 - Write issue and PR descriptions, and comments, in **GitHub-flavored Markdown** — headings,
   fenced code blocks with a language tag, bullet/numbered lists, tables, and task lists
   (`- [ ]`) — rather than dense unformatted paragraphs. It renders far more legibly on GitHub
