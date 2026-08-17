@@ -1,33 +1,36 @@
 # Usage examples
 
-## jiraCommentIssues usage example
+Once the plugin is [configured](configuration.md), here are Pipeline snippets for each step it
+provides. See the [jira plugin steps reference](https://www.jenkins.io/doc/pipeline/steps/jira/)
+for the full parameter list of each step.
 
-You need keep reference to used scm.
-As an example, you can write a flow:
+## jiraCommentIssues
+
+Keep a reference to the SCM you used:
 
 ```groovy
 node {
     def gitScm = git url: 'git@github.com:jenkinsci/jira-plugin.git', branch: 'master'
     sh 'make something'
-    jiraCommentIssues( 
-            issueSelector: DefaultSelector(), 
-            scm: gitScm)            
+    jiraCommentIssues(
+            issueSelector: DefaultSelector(),
+            scm: gitScm)
     gitScm = null
 }
 ```
 
-Note that a pointer to scm class should be better cleared to not serialize scm object between steps.
+Clear the `scm` reference once you're done with it, so it isn't serialized between steps.
 
-You can add some labels to issue in jira:
+You can also add labels to the Jira issue:
 
 ```groovy
-    jiraCommentIssues( 
-            issueSelector: DefaultSelector(), 
+    jiraCommentIssues(
+            issueSelector: DefaultSelector(),
             scm: gitScm,
-            labels: [ "$version", "jenkins" ])            
+            labels: [ "$version", "jenkins" ])
 ```
 
-## jiraExecuteWorkflow  usage example
+## jiraExecuteWorkflow
 
 ```groovy
 node {
@@ -38,31 +41,31 @@ node {
 }
 ```
 
-## jiraCreateReleaseNotes usage example
+## jiraCreateReleaseNotes
 
 ```groovy
 node {
     jiraCreateReleaseNotes(jiraProjectKey: 'TST',
             jiraRelease: '1.1.1', jiraEnvironmentVariable: 'notes', jiraFilter: 'status in (Resolved, Closed)')
             {
-                //do some useful here
-                //release notes can be found in environment variable jiraEnvironmentVariable
+                // do something useful here —
+                // release notes are available in the environment variable named by jiraEnvironmentVariable
                 print env.notes
             }
 }
 ```
 
-## jiraMarkVersionReleased usage example
+## jiraMarkVersionReleased
 
 ```groovy
 node {
-    jiraMarkVersionReleased( 
-            jiraProjectKey: 'TEST', 
+    jiraMarkVersionReleased(
+            jiraProjectKey: 'TEST',
             jiraRelease: '1.1.1')
 }
 ```
 
-## jiraUpdateIssueField usage example
+## jiraUpdateIssueField
 
 ```groovy
 node {
@@ -74,21 +77,20 @@ node {
 }
 ```
 
-## SearchIssuesStep
+## jiraSearch (SearchIssuesStep)
 
-Custom pipeline step (see [step-api](https://github.com/jenkinsci/workflow-plugin/blob/master/step-api/README.md)) that allow to search by jql query directly from workflow.
-
-usage:
+Custom Pipeline step (see [step-api](https://github.com/jenkinsci/workflow-plugin/blob/master/step-api/README.md))
+that searches Jira by JQL query directly from a workflow:
 
 ```groovy
 node {
-    List<String> issueKeys = jiraSearch(jql: "project = EX and labels = 'jenkins' and labels = '${version}'")	
+    List<String> issueKeys = jiraSearch(jql: "project = EX and labels = 'jenkins' and labels = '${version}'")
 }
 ```
 
-## CommentStep
+## jiraComment (CommentStep)
 
-Interface for Pipeline job types that simply want to post a comment e.g.:
+For jobs that just want to post a single comment:
 
 ```groovy
 node {
@@ -98,36 +100,37 @@ node {
 
 ## JiraEnvironmentVariableBuilder
 
-Not supported in Pipeline. You can get current jira url (if you are not using the Groovy sandbox):
+Not supported in Pipeline. Outside the Groovy sandbox, you can read the current Jira URL directly:
 
 ```groovy
 import hudson.plugins.jira.JiraSite;
 
 node {
-    String jiraUrl = JiraSite.get(currentBuild.rawBuild).name    	
+    String jiraUrl = JiraSite.get(currentBuild.rawBuild).name
     env.JIRA_URL = jiraUrl
 }
 ```
 
-To replace JIRA_ISSUES env variable, you can use pipeline step jiraIssueSelector:
+To populate the `JIRA_ISSUES` environment variable, use the `jiraIssueSelector` step:
 
 ```groovy
     List<String> issueKeys = jiraIssueSelector()
 ```
 
-or if you use custom issue selector:
+or, with a custom issue selector:
 
 ```groovy
     List<String> issueKeys = jiraIssueSelector(new CustomIssueSelector())
 ```
 
-## Other features
+## What isn't supported in Pipeline yet
 
-Some features are currently not supported in pipeline.
-If you are adding new features please make sure that they support Jenkins pipeline Plugin.
-See [here](https://github.com/jenkinsci/workflow-plugin/blob/master/COMPATIBILITY.md) for some information.
-See [here](https://github.com/jenkinsci/workflow-plugin/blob/master/basic-steps/CORE-STEPS.md) for more information how core jenkins steps integrate with workflow jobs.
+Notifiers aren't implemented for Pipeline: a running flow has no build status yet (unlike a
+freestyle project, whose status is known before its notifier runs), so there's nothing meaningful
+for a notifier to react to. Use the `catchError` step and call the relevant Jira step manually
+instead.
 
-Running a notifiers is trickier since normally a flow in progress has no status yet, unlike a freestyle project whose status is determined before the notifier is called (never supported).
-So notifiers will never be implemented as you can use the catchError step and run jira action manually.
-I'm going to create a special pipeline steps to replace this notifiers in future.
+If you're adding a new feature, make sure it also works as a Pipeline step — see the workflow
+plugin's [compatibility notes](https://github.com/jenkinsci/workflow-plugin/blob/master/COMPATIBILITY.md)
+and [core steps reference](https://github.com/jenkinsci/workflow-plugin/blob/master/basic-steps/CORE-STEPS.md)
+for how Jenkins core steps integrate with Pipeline jobs.

@@ -187,3 +187,4 @@ for the actual failing conditions, use the SonarQube MCP tools
   (`- [ ]`) — rather than dense unformatted paragraphs. It renders far more legibly on GitHub
   and is easier for both humans and agents to scan.
 - Confirm the SonarCloud quality gate (above) passes before considering a PR done.
+- Commit message length max 79 chars.
