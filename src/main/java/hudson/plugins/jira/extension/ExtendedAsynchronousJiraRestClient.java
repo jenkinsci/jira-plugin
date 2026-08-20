@@ -3,18 +3,39 @@ package hudson.plugins.jira.extension;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import java.net.URI;
+import java.util.List;
+import java.util.Locale;
 import javax.ws.rs.core.UriBuilder;
 
 public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClient implements ExtendedJiraRestClient {
+
+    // jira-rest-java-client's own Cloud auto-detection (UriUtil.isURICloud) doesn't know about
+    // api.atlassian.com, the API-gateway URL form Atlassian's own docs recommend, so it routes
+    // JQL searches on such a site to the removed /search endpoint and gets a 410. This mirrors
+    // that heuristic with the missing domain added, and is passed explicitly to the superclass
+    // instead of relying on its own detection.
+    private static final List<String> CLOUD_DOMAINS = List.of("atlassian.net", "jira.com", "api.atlassian.com");
+    private static final List<String> DATA_CENTER_DOMAINS = List.of("localhost");
+
     private final ExtendedVersionRestClient extendedVersionRestClient;
     private final ExtendedMyPermissionsRestClient extendedMyPermissionsRestClient;
 
     public ExtendedAsynchronousJiraRestClient(URI serverUri, DisposableHttpClient httpClient) {
-        super(serverUri, httpClient);
+        this(serverUri, httpClient, isCloudUri(serverUri));
+    }
+
+    public ExtendedAsynchronousJiraRestClient(URI serverUri, DisposableHttpClient httpClient, boolean cloud) {
+        super(serverUri, httpClient, cloud);
         final URI baseUri =
                 UriBuilder.fromUri(serverUri).path("/rest/api/latest").build();
         extendedVersionRestClient = new ExtendedAsynchronousVersionRestClient(baseUri, httpClient);
         extendedMyPermissionsRestClient = new ExtendedAsynchronousMyPermissionsRestClient(baseUri, httpClient);
+    }
+
+    static boolean isCloudUri(URI uri) {
+        String host = uri.getHost().toLowerCase(Locale.ROOT);
+        return CLOUD_DOMAINS.stream().anyMatch(host::contains)
+                && DATA_CENTER_DOMAINS.stream().noneMatch(host::contains);
     }
 
     @Override

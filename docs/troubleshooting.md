@@ -4,6 +4,22 @@
 
 To help debug any issues with this plugin, it's useful to look at more detailed logs. To enable them, create a [custom Log Recorder](https://www.jenkins.io/doc/book/system-administration/viewing-logs/#logs-in-jenkins) for Logger `hudson.plugins.jira` and Log Level `FINE`. 
 
+## JQL steps fail with `410 Gone` against `api.atlassian.com` Cloud sites
+
+If your Jira site URL is configured using the API-gateway form recommended to avoid CAPTCHA
+errors — `https://api.atlassian.com/ex/jira/{cloudId}/` — and any JQL-based step (`jiraSearch`,
+issue selectors, "Move issues matching JQL to a version", etc.) fails with:
+
+```stacktrace
+RestClientException{statusCode=Optional.of(410), errorCollections=[ErrorCollection{status=410, errors={}, errorMessages=[The requested API has been removed. Please migrate to the /rest/api/3/search/jql API. ...]}]}
+```
+
+this is fixed as of this release: the plugin now recognizes `api.atlassian.com` as a Cloud
+domain explicitly, instead of relying on `jira-rest-java-client`'s own detection (which only
+knew about `*.atlassian.net` and `*.jira.com`, so it routed the search to the removed
+Data Center-only `/search` endpoint). Upgrade the plugin to pick up the fix; no configuration
+change is needed.
+
 ## Jenkins <---> Jira SSL connectivity problems
 
 If you encounter stacktrace like this:
