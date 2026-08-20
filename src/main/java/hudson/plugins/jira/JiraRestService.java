@@ -213,12 +213,10 @@ public class JiraRestService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.log(WARNING, e, () -> "Jira REST client get issue types error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client get issue types error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client get issue types error. cause: " + e.getMessage(), e);
         } catch (RestClientException | ExecutionException | TimeoutException e) {
             LOGGER.log(WARNING, e, () -> "Jira REST client get issue types error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client get issue types error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client get issue types error. cause: " + e.getMessage(), e);
         }
     }
 
@@ -262,12 +260,10 @@ public class JiraRestService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.log(WARNING, e, () -> "Jira REST client get priorities error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client get priorities error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client get priorities error. cause: " + e.getMessage(), e);
         } catch (RestClientException | ExecutionException | TimeoutException e) {
             LOGGER.log(WARNING, e, () -> "Jira REST client get priorities error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client get priorities error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client get priorities error. cause: " + e.getMessage(), e);
         }
     }
 
@@ -328,8 +324,7 @@ public class JiraRestService {
             decoded = objectMapper.readValue(content.asString(), new TypeReference<List<Map<String, Object>>>() {});
         } catch (URISyntaxException | IOException e) {
             LOGGER.log(WARNING, e, () -> "Jira REST client get versions error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client get versions error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client get versions error. cause: " + e.getMessage(), e);
         }
 
         return decoded.stream()
@@ -392,12 +387,10 @@ public class JiraRestService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.log(WARNING, e, () -> "Jira REST client release version error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client release version error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client release version error. cause: " + e.getMessage(), e);
         } catch (RestClientException | URISyntaxException | ExecutionException | TimeoutException e) {
             LOGGER.log(WARNING, e, () -> "Jira REST client release version error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client release version error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client release version error. cause: " + e.getMessage(), e);
         }
     }
 
@@ -489,12 +482,10 @@ public class JiraRestService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.log(WARNING, e, () -> "Jira REST client update issue error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client update issue error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client update issue error. cause: " + e.getMessage(), e);
         } catch (RestClientException | ExecutionException | TimeoutException e) {
             LOGGER.log(WARNING, e, () -> "Jira REST client update issue error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client update issue error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client update issue error. cause: " + e.getMessage(), e);
         }
     }
 
@@ -588,12 +579,10 @@ public class JiraRestService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             LOGGER.log(WARNING, e, () -> "Jira REST client get statuses error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client get statuses error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client get statuses error. cause: " + e.getMessage(), e);
         } catch (RestClientException | ExecutionException | TimeoutException e) {
             LOGGER.log(WARNING, e, () -> "Jira REST client get statuses error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client get statuses error. cause: " + e.getMessage(), e);
+            throw new RestClientException("[Jira] Jira REST client get statuses error. cause: " + e.getMessage(), e);
         }
     }
 
