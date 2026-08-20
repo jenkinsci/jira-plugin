@@ -468,4 +468,11 @@ public class JiraSession {
     public Permissions getMyPermissions() {
         return service.getMyPermissions();
     }
+
+    /**
+     * Verifies the configured credentials are accepted by Jira, throwing if they are not.
+     */
+    public void getMyself() {
+        service.getMyself();
+    }
 }
