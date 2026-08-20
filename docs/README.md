@@ -1,56 +1,32 @@
 # Jenkins Jira plugin
 
-This plugin integrates with Jenkins the [Atlassian Jira Software](http://www.atlassian.com/software/jira/) (both Cloud and Server versions). 
+Integrates Jenkins with [Atlassian Jira](http://www.atlassian.com/software/jira/) — link builds
+back to issues, comment on issues from a build, and manage releases — for both **Jira Cloud** and
+**Jira Server/Data Center**, in freestyle jobs and Pipelines.
 
-## Configuration
+## Getting started
 
-!> **Jira Cloud** does not support Bearer Authentication
+```mermaid
+flowchart LR
+    A[Install the plugin] --> B[Create a Jira API token]
+    B --> C[Add a Jenkins credential]
+    C --> D[Configure your Jira site]
+    D --> E[Validate the connection]
+```
 
-
-> [!WARNING]
-> **Jira Cloud URL Configuration**
-> When configuring the Jira URL in Jenkins, you must use the API endpoint format `https://api.atlassian.com/ex/jira/{cloudId}/` instead of your standard `https://yourcompany.atlassian.net/` address. Using the standard address can trigger automated CAPTCHA security checks, which will block Jenkins and cause the connection to fail.
-
-
-To integrate Jenkins with Atlassian Jira Cloud, you need to use an API token as a _service user_. Jira Cloud requires an email address for all users, so you cannot create a user without one.
-
-### Steps
-
-1. **Create an API Token**
-
-    Follow the [Atlassian API tokens documentation](https://confluence.atlassian.com/cloud/api-tokens-938839638.html) to generate a new API token.
-
-2. **Add a Global Jenkins Credential**
-
-    - **Username:** Your Atlassian ID email address
-    - **Password:** The API token you created
-
-3. **Test Your API Token**
-
-    Verify your API token by running the following command (replace `<email>`, `<API token>`, `<YourCloudInstanceName>`, and `TEST-1` with your details):
-
-    ```bash
-    curl -X GET -u <email>:<API token> -H "Content-Type: application/json" \
-      https://<YourCloudInstanceName>.atlassian.net/rest/api/latest/issue/TEST-1
-    ```
-
-    A successful response returns the issue details in JSON format.
-
-4. **Check for CAPTCHA**
-
-    Ensure that CAPTCHA is **not** triggered for your user, as this will prevent the API token from working. For more information, see the [CAPTCHA section in Atlassian REST API documentation](https://developer.atlassian.com/cloud/jira/platform/jira-rest-api-basic-authentication/).
-
-5. **Test Connection**
-    
-    Finally, use the **Validate Settings** button on the plugin configuration page, to see if it can connect to the Jira instance.
-
-![plugin-configuration](images/Plugin_Configuration.png)
-
+1. Install **Jira Integration** from *Manage Jenkins → Plugins*.
+2. Skim [Features](features.md) to see what the plugin can do.
+3. Follow [Configuration](configuration.md) to connect Jenkins to your Jira instance — it also
+   covers [Usage Examples](usage-examples.md) (ready-to-copy Pipeline snippets) and
+   [System Properties](system-properties.md) (settings not exposed in the UI).
 
 ## Something doesn't work?
 
-First, check [Github Issues](https://github.com/jenkinsci/jira-plugin/issues) for already reported bugs.
+Check the [Troubleshooting](troubleshooting.md) page and
+[existing GitHub issues](https://github.com/jenkinsci/jira-plugin/issues) first.
 
-Then, Contribute or Sponsor!
-
-We all love Open Source, but... Open Source Software relies on contributions of fellow developers. Please contribute by [opening Pull Requests](#contributing) or if you are not a developer, consider sponsoring one of the maintainers - see ["Sponsor this project" section.](https://github.com/jenkinsci/jira-plugin)
+Still stuck, or found a bug? [Open an issue](https://github.com/jenkinsci/jira-plugin/issues/new).
+Open Source Software relies on contributions from fellow developers — see
+[Contributing](CONTRIBUTING.md) to send a pull request, or consider sponsoring a maintainer (see the
+"Sponsor this project" section on the [GitHub repo](https://github.com/jenkinsci/jira-plugin)) if
+you're not a developer.
