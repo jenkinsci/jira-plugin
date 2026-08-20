@@ -5,9 +5,12 @@ import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Logger;
 import javax.ws.rs.core.UriBuilder;
 
 public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClient implements ExtendedJiraRestClient {
+
+    private static final Logger LOGGER = Logger.getLogger(ExtendedAsynchronousJiraRestClient.class.getName());
 
     // jira-rest-java-client's own Cloud auto-detection (UriUtil.isURICloud) doesn't know about
     // api.atlassian.com, the API-gateway URL form Atlassian's own docs recommend, so it routes
@@ -26,6 +29,8 @@ public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClie
 
     public ExtendedAsynchronousJiraRestClient(URI serverUri, DisposableHttpClient httpClient, boolean cloud) {
         super(serverUri, httpClient, cloud);
+        LOGGER.fine(() -> "Jira site " + serverUri + " classified as " + (cloud ? "Cloud" : "Server/Data Center")
+                + ", JQL search will use " + (cloud ? "/search/jql" : "/search"));
         final URI baseUri =
                 UriBuilder.fromUri(serverUri).path("/rest/api/latest").build();
         extendedVersionRestClient = new ExtendedAsynchronousVersionRestClient(baseUri, httpClient);
