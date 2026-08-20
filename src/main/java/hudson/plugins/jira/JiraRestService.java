@@ -84,6 +84,9 @@ public class JiraRestService {
 
     private static final Logger LOGGER = Logger.getLogger(JiraRestService.class.getName());
 
+    private static final String PROCESS_WORKFLOW_ACTION_ERROR =
+            "Jira REST client process workflow action error. cause: ";
+
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormat.forPattern("yyyy-MM-dd");
 
     /**
@@ -193,7 +196,7 @@ public class JiraRestService {
                 && e.getCause() instanceof RestClientException
                 && ((RestClientException) e.getCause()).getStatusCode().isPresent()
                 && ((RestClientException) e.getCause()).getStatusCode().get() == 404) {
-            LOGGER.log(INFO, "Issue '" + issueKey + "' not found in Jira.");
+            LOGGER.log(INFO, "Issue ''{0}'' not found in Jira.", issueKey);
             return new RestClientException("[Jira] Issue '" + issueKey + "' not found in Jira.", e.getCause());
         }
         LOGGER.log(WARNING, e, () -> "Jira REST client get issue error. cause: " + e.getMessage());
@@ -467,7 +470,7 @@ public class JiraRestService {
                 && e.getCause() instanceof RestClientException
                 && ((RestClientException) e.getCause()).getStatusCode().isPresent()
                 && ((RestClientException) e.getCause()).getStatusCode().get() == 404) {
-            LOGGER.log(INFO, "User '" + username + "' not found in Jira.");
+            LOGGER.log(INFO, "User ''{0}'' not found in Jira.", username);
             return new RestClientException("[Jira] User '" + username + "' not found in Jira.", e.getCause());
         }
         LOGGER.log(WARNING, e, () -> "Jira REST client get user error. cause: " + e.getMessage());
@@ -541,13 +544,11 @@ public class JiraRestService {
             jiraRestClient.getIssueClient().transition(issue, transitionInput).get(timeout, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            LOGGER.log(WARNING, e, () -> "Jira REST client process workflow action error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client process workflow action error. cause: " + e.getMessage(), e);
+            LOGGER.log(WARNING, e, () -> PROCESS_WORKFLOW_ACTION_ERROR + e.getMessage());
+            throw new RestClientException("[Jira] " + PROCESS_WORKFLOW_ACTION_ERROR + e.getMessage(), e);
         } catch (RestClientException | ExecutionException | TimeoutException e) {
-            LOGGER.log(WARNING, e, () -> "Jira REST client process workflow action error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client process workflow action error. cause: " + e.getMessage(), e);
+            LOGGER.log(WARNING, e, () -> PROCESS_WORKFLOW_ACTION_ERROR + e.getMessage());
+            throw new RestClientException("[Jira] " + PROCESS_WORKFLOW_ACTION_ERROR + e.getMessage(), e);
         }
         return issue;
     }
@@ -617,9 +618,8 @@ public class JiraRestService {
 
             return components;
         } catch (URISyntaxException | IOException e) {
-            LOGGER.log(WARNING, e, () -> "Jira REST client process workflow action error. cause: " + e.getMessage());
-            throw new RestClientException(
-                    "[Jira] Jira REST client process workflow action error. cause: " + e.getMessage(), e);
+            LOGGER.log(WARNING, e, () -> PROCESS_WORKFLOW_ACTION_ERROR + e.getMessage());
+            throw new RestClientException("[Jira] " + PROCESS_WORKFLOW_ACTION_ERROR + e.getMessage(), e);
         }
     }
 
