@@ -1,7 +1,9 @@
 package hudson.plugins.jira.extension;
 
+import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+import io.atlassian.util.concurrent.Promise;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
@@ -22,6 +24,7 @@ public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClie
 
     private final ExtendedVersionRestClient extendedVersionRestClient;
     private final ExtendedMyPermissionsRestClient extendedMyPermissionsRestClient;
+    private final ExtendedAsynchronousProjectRestClient extendedProjectRestClient;
 
     public ExtendedAsynchronousJiraRestClient(URI serverUri, DisposableHttpClient httpClient) {
         this(serverUri, httpClient, isCloudUri(serverUri));
@@ -35,6 +38,7 @@ public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClie
                 UriBuilder.fromUri(serverUri).path("/rest/api/latest").build();
         extendedVersionRestClient = new ExtendedAsynchronousVersionRestClient(baseUri, httpClient);
         extendedMyPermissionsRestClient = new ExtendedAsynchronousMyPermissionsRestClient(baseUri, httpClient);
+        extendedProjectRestClient = new ExtendedAsynchronousProjectRestClient(httpClient);
     }
 
     static boolean isCloudUri(URI uri) {
@@ -51,5 +55,15 @@ public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClie
     @Override
     public ExtendedMyPermissionsRestClient getExtendedMyPermissionsRestClient() {
         return extendedMyPermissionsRestClient;
+    }
+
+    @Override
+    public Promise<Iterable<ExtendedVersion>> getVersionsForProject(URI uri) {
+        return extendedProjectRestClient.getVersionsForProject(uri);
+    }
+
+    @Override
+    public Promise<Iterable<Component>> getComponentsForProject(URI uri) {
+        return extendedProjectRestClient.getComponentsForProject(uri);
     }
 }

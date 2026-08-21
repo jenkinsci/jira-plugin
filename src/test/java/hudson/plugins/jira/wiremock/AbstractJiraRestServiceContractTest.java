@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -61,6 +62,9 @@ abstract class AbstractJiraRestServiceContractTest {
 
     /** Prepares whatever's needed for {@code releaseVersion(projectKey(), version)} to succeed. */
     protected abstract void prepareReleaseVersion(ExtendedVersion version) throws Exception;
+
+    /** Prepares a project-components response; a real Jira backend needs no setup. */
+    protected abstract void prepareGetComponents() throws Exception;
 
     /** Verifies the comment sent by {@link #addCommentSendsExpectedRequest()} actually reached the issue. */
     protected abstract void assertCommentWasSent(String issueKey, String commentBody) throws Exception;
@@ -131,6 +135,21 @@ abstract class AbstractJiraRestServiceContractTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Created version not found in getVersions(): " + versionName));
         assertFalse(found.isReleased());
+        assertNotNull(found.getStartDate());
+    }
+
+    @Test
+    void getComponentsParsesRealResponseShape() throws Exception {
+        prepareGetComponents();
+
+        List<Component> components = session.service.getComponents(projectKey());
+
+        assertNotNull(components);
+        for (Component component : components) {
+            assertNotNull(component.getSelf());
+            assertNotNull(component.getId());
+            assertNotNull(component.getName());
+        }
     }
 
     @Test

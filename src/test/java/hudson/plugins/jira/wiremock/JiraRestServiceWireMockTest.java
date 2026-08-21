@@ -167,7 +167,8 @@ class JiraRestServiceWireMockTest extends AbstractJiraRestServiceContractTest {
                     "name": "%s",
                     "description": "An excellent version",
                     "archived": false,
-                    "released": false
+                    "released": false,
+                    "startDate": "2024-01-01"
                   }
                 ]
                 """.formatted(versionName);
@@ -198,6 +199,25 @@ class JiraRestServiceWireMockTest extends AbstractJiraRestServiceContractTest {
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(releasedVersionJson)));
+    }
+
+    @Override
+    protected void prepareGetComponents() {
+        // Derived from: GET /rest/api/3/project/{projectIdOrKey}/components response example.
+        String componentsJson = """
+                [
+                  {
+                    "self": "%s/rest/api/2/component/10000",
+                    "id": "10000",
+                    "name": "Backend",
+                    "description": "Backend services"
+                  }
+                ]
+                """.formatted(wireMock.baseUrl());
+        OpenApiSpecConformance.assertConformsToSpec(
+                "/rest/api/3/project/{projectIdOrKey}/components", Request.Method.GET, 200, componentsJson);
+        wireMock.stubFor(
+                get(urlPathEqualTo("/rest/api/2/project/TEST/components")).willReturn(okJson(componentsJson)));
     }
 
     @Override
