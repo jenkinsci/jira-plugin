@@ -2,6 +2,7 @@ package hudson.plugins.jira.wiremock;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.atlassian.jira.rest.client.api.domain.Issue;
@@ -111,11 +112,17 @@ abstract class AbstractJiraRestServiceContractTest {
     @Test
     void progressWorkflowActionTransitionsIssue() throws Exception {
         String issueKey = givenIssue("Issue for transition contract test");
+        String statusBeforeTransition =
+                session.service.getIssue(issueKey).getStatus().getName();
         int actionId = givenTransition(issueKey);
 
         Issue issue = session.service.progressWorkflowAction(issueKey, actionId);
 
         assertEquals(issueKey, issue.getKey());
+        // The transitions endpoint returns 204 with no body, so a correct implementation must
+        // re-fetch the issue afterwards to report its actual new status rather than the
+        // pre-transition snapshot it started from.
+        assertNotEquals(statusBeforeTransition, issue.getStatus().getName());
     }
 
     @Test

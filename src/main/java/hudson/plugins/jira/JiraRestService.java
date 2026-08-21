@@ -550,7 +550,10 @@ public class JiraRestService {
             LOGGER.log(WARNING, e, () -> PROCESS_WORKFLOW_ACTION_ERROR + e.getMessage());
             throw new RestClientException("[Jira] " + PROCESS_WORKFLOW_ACTION_ERROR + e.getMessage(), e);
         }
-        return issue;
+        // The transitions endpoint returns 204 with no body, so `issue` above is still the
+        // pre-transition snapshot fetched before the transition was requested. Re-fetch to
+        // report the status the issue actually ended up in.
+        return getIssue(issueKey);
     }
 
     public List<Transition> getAvailableActions(String issueKey) {
