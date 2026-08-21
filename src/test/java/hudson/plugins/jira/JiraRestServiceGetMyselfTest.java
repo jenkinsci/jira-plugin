@@ -45,7 +45,8 @@ class JiraRestServiceGetMyselfTest {
         wireMock.stubFor(
                 get(urlPathEqualTo("/rest/api/2/myself")).willReturn(aResponse().withStatus(401)));
 
-        assertThrows(RestClientException.class, () -> service().getMyself());
+        JiraRestService service = service();
+        assertThrows(RestClientException.class, service::getMyself);
     }
 
     private JiraRestService service() {

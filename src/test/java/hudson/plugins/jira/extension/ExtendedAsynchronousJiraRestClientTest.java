@@ -17,7 +17,12 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import hudson.plugins.jira.JiraRestService;
 import hudson.plugins.jira.JiraSite;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -92,6 +97,38 @@ class ExtendedAsynchronousJiraRestClientTest {
     void isCloudUriRejectsDataCenterAndLocalDomains() {
         assertFalse(ExtendedAsynchronousJiraRestClient.isCloudUri(URI.create("https://jira.mycompany.internal/")));
         assertFalse(ExtendedAsynchronousJiraRestClient.isCloudUri(URI.create("http://localhost:8080/")));
+    }
+
+    @Test
+    void logsCloudClassificationAtFineLevel(JenkinsRule r) throws Exception {
+        Logger logger = Logger.getLogger(ExtendedAsynchronousJiraRestClient.class.getName());
+        Level originalLevel = logger.getLevel();
+        List<LogRecord> records = new ArrayList<>();
+        Handler handler = new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                records.add(record);
+            }
+
+            @Override
+            public void flush() {}
+
+            @Override
+            public void close() {}
+        };
+        logger.addHandler(handler);
+        logger.setLevel(Level.FINE);
+        try {
+            URI serverUri = URI.create("https://mycompany.atlassian.net/");
+            DisposableHttpClient httpClient =
+                    new AsynchronousHttpClientFactory().createClient(serverUri, new AnonymousAuthenticationHandler());
+            new ExtendedAsynchronousJiraRestClient(serverUri, httpClient, true);
+        } finally {
+            logger.removeHandler(handler);
+            logger.setLevel(originalLevel);
+        }
+
+        assertTrue(records.stream().anyMatch(record -> record.getMessage().contains("classified as Cloud")));
     }
 
     private List<Issue> search(boolean cloud, String jql) throws Exception {

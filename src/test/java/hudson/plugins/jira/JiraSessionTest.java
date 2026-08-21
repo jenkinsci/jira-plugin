@@ -250,4 +250,11 @@ class JiraSessionTest {
         verify(service, times(0)).getIssuesFromJqlSearch(anyString(), anyInt());
         verify(service, times(0)).updateIssue(anyString(), anyList());
     }
+
+    @Test
+    void getMyselfDelegatesToService() {
+        jiraSession.getMyself();
+
+        verify(service).getMyself();
+    }
 }
