@@ -52,7 +52,7 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <hpi.bundledArtifacts>atlassian-event,atlassian-httpclient-api,atlassian-util-concurrent,fugue,jira-rest-java-client-api,jira-rest-java-client-core,maven-artifact,plexus-utils,sal-api</hpi.bundledArtifacts>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
-    <jira-rest-client.version>6.0.2</jira-rest-client.version>
+    <jira-rest-client.version>6.0.4</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <wiremock.version>3.13.2</wiremock.version>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
@@ -217,7 +217,7 @@
     <dependency>
       <groupId>io.atlassian.util.concurrent</groupId>
       <artifactId>atlassian-util-concurrent</artifactId>
-      <version>4.1.0</version>
+      <version>4.2.1</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
