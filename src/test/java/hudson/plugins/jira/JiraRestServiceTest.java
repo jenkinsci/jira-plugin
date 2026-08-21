@@ -21,6 +21,7 @@ import com.atlassian.jira.rest.client.api.UserRestClient;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
+import hudson.plugins.jira.extension.ExtendedMyPermissionsRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import hudson.plugins.jira.extension.ExtendedVersionRestClient;
 import io.atlassian.util.concurrent.Promise;
@@ -51,6 +52,7 @@ class JiraRestServiceTest {
     private SearchRestClient searchRestClient;
     private UserRestClient userClient;
     private ExtendedVersionRestClient extendedVersionRestClient;
+    private ExtendedMyPermissionsRestClient myPermissionsRestClient;
 
     private JiraRestService service;
 
@@ -63,6 +65,7 @@ class JiraRestServiceTest {
         searchRestClient = mock(SearchRestClient.class);
         userClient = mock(UserRestClient.class);
         extendedVersionRestClient = mock(ExtendedVersionRestClient.class);
+        myPermissionsRestClient = mock(ExtendedMyPermissionsRestClient.class);
 
         doReturn(issueClient).when(client).getIssueClient();
         doReturn(metadataClient).when(client).getMetadataClient();
@@ -70,6 +73,7 @@ class JiraRestServiceTest {
         doReturn(searchRestClient).when(client).getSearchClient();
         doReturn(userClient).when(client).getUserClient();
         doReturn(extendedVersionRestClient).when(client).getExtendedVersionRestClient();
+        doReturn(myPermissionsRestClient).when(client).getExtendedMyPermissionsRestClient();
 
         // getIssue() succeeds by default; tests that exercise progressWorkflowAction() and
         // getAvailableActions() rely on it, since both call getIssue() before their own REST call.
@@ -252,6 +256,14 @@ class JiraRestServiceTest {
         doReturn(promise).when(metadataClient).getStatuses();
 
         assertPreservesCauseAndInterruptFlag(promise, () -> service.getStatuses());
+    }
+
+    @Test
+    void getMyPermissionsPreservesCauseAndInterruptFlag() throws Exception {
+        Promise promise = mock(Promise.class);
+        doReturn(promise).when(myPermissionsRestClient).getMyPermissions();
+
+        assertPreservesCauseAndInterruptFlag(promise, () -> service.getMyPermissions());
     }
 
     /**

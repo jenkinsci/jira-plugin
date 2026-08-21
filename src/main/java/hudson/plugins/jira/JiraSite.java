@@ -1439,7 +1439,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 if (session == null) {
                     return FormValidation.error("Cannot validate configuration");
                 }
-                session.getMyPermissions();
+                session.getMyself();
                 return FormValidation.ok("Success");
             } catch (RestClientException e) {
                 LOGGER.log(Level.WARNING, "Failed to login to Jira at " + url, e);

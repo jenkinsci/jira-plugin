@@ -4,13 +4,14 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.domain.Permissions;
 import com.cloudbees.plugins.credentials.CredentialsNameProvider;
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -125,7 +126,7 @@ class DescriptorImplTest {
         when(builder.build()).thenReturn(site);
         when(build.getParent()).thenReturn(project);
         when(site.getSession(project, true)).thenReturn(session);
-        when(session.getMyPermissions()).thenThrow(RestClientException.class);
+        doThrow(RestClientException.class).when(session).getMyself();
 
         FormValidation validation = descriptor.doValidate(
                 "http://localhost:8080",
@@ -200,7 +201,7 @@ class DescriptorImplTest {
         when(descriptor.getBuilder()).thenReturn(builder);
         when(builder.build()).thenReturn(site);
         when(site.getSession(project, true)).thenReturn(session);
-        when(session.getMyPermissions()).thenReturn(mock(Permissions.class));
+        doNothing().when(session).getMyself();
 
         FormValidation validation = descriptor.doValidate(
                 "http://localhost:8080",

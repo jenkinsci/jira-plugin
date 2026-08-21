@@ -9,7 +9,7 @@
   <f:invisibleEntry>
     <f:checkbox title="${%Use HTTP authentication instead of normal login}" field="useHTTPAuth" />
   </f:invisibleEntry>
-  <f:entry description="${%site.useBearerAuth}">
+  <f:entry description="Note: required for Jira Server/Data Center Personal Access Tokens, and for Jira Cloud only when authenticating with an OAuth 2.0 access token via api.atlassian.com. Leave unchecked for Jira Cloud API tokens (Basic authentication) against the direct *.atlassian.net URL.">
     <f:checkbox title="${%Use Bearer authentication instead of Basic authentication}" field="useBearerAuth" />
   </f:entry>
   <f:entry>

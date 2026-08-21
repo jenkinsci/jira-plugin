@@ -4,6 +4,13 @@
 
 To help debug any issues with this plugin, it's useful to look at more detailed logs. To enable them, create a [custom Log Recorder](https://www.jenkins.io/doc/book/system-administration/viewing-logs/#logs-in-jenkins) for Logger `hudson.plugins.jira` and Log Level `FINE`. 
 
+If that's not enough detail and you need to see the raw HTTP request/response actually sent to Jira (method, URL, headers), add these two loggers to the same Log Recorder at `ALL`/finest level as well:
+
+- `org.apache.http.wire`
+- `org.apache.http.headers`
+
+These come from the Apache HttpComponents library the plugin's HTTP client is built on, and log every outgoing request line and header, and every response line and header, for each call. Handy for telling apart a routing/URL problem from an authentication problem (e.g. a `401` coming back with no `Authorization` header actually sent), but keep in mind the Authorization header value is only Base64-encoded, not encrypted, so treat that log output as containing your credentials in the clear.
+
 ## Jenkins <---> Jira SSL connectivity problems
 
 If you encounter stacktrace like this:
