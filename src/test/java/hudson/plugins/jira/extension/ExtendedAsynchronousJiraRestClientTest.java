@@ -106,15 +106,19 @@ class ExtendedAsynchronousJiraRestClientTest {
         List<LogRecord> records = new ArrayList<>();
         Handler handler = new Handler() {
             @Override
-            public void publish(LogRecord record) {
-                records.add(record);
+            public void publish(LogRecord logRecord) {
+                records.add(logRecord);
             }
 
             @Override
-            public void flush() {}
+            public void flush() {
+                // no buffering to flush
+            }
 
             @Override
-            public void close() {}
+            public void close() {
+                // no resources to release
+            }
         };
         logger.addHandler(handler);
         logger.setLevel(Level.FINE);
@@ -128,7 +132,7 @@ class ExtendedAsynchronousJiraRestClientTest {
             logger.setLevel(originalLevel);
         }
 
-        assertTrue(records.stream().anyMatch(record -> record.getMessage().contains("classified as Cloud")));
+        assertTrue(records.stream().anyMatch(logRecord -> logRecord.getMessage().contains("classified as Cloud")));
     }
 
     private List<Issue> search(boolean cloud, String jql) throws Exception {
