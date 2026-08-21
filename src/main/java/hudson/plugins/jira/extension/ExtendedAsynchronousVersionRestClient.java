@@ -3,8 +3,8 @@ package hudson.plugins.jira.extension;
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousVersionRestClient;
 import io.atlassian.util.concurrent.Promise;
+import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
-import javax.ws.rs.core.UriBuilder;
 
 public class ExtendedAsynchronousVersionRestClient extends AsynchronousVersionRestClient
         implements ExtendedVersionRestClient {

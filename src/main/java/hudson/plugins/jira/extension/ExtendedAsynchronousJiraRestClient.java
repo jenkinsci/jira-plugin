@@ -2,11 +2,11 @@ package hudson.plugins.jira.extension;
 
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClient;
 import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
+import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
-import javax.ws.rs.core.UriBuilder;
 
 public class ExtendedAsynchronousJiraRestClient extends AsynchronousJiraRestClient implements ExtendedJiraRestClient {
 
