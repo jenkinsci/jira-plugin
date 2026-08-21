@@ -66,8 +66,8 @@ class JiraRestServiceWireMockTest extends AbstractJiraRestServiceContractTest {
               "baseUrl": "https://your-domain.atlassian.net",
               "version": "1001.0.0-SNAPSHOT",
               "buildNumber": 100000,
-              "buildDate": "2024-01-01T00:00:00.000+0000",
-              "serverTime": "2024-01-01T00:00:00.000+0000",
+              "buildDate": "2024-01-01T00:00:00.000+00:00",
+              "serverTime": "2024-01-01T00:00:00.000+00:00",
               "scmInfo": "unknown",
               "serverTitle": "Jira"
             }
@@ -103,8 +103,8 @@ class JiraRestServiceWireMockTest extends AbstractJiraRestServiceContractTest {
                     "issuetype": { "self": "%s/type", "id": 1, "name": "Bug", "subtask": false },
                     "status": { "self": "%s/status", "name": "Open", "description": "", "iconUrl": "%s/icon", "id": 1 },
                     "project": { "self": "%s/project", "id": 10000, "key": "TEST", "name": "Example" },
-                    "created": "2024-01-01T10:00:00.000+0000",
-                    "updated": "2024-01-02T11:30:00.000+0000"
+                    "created": "2024-01-01T10:00:00.000+00:00",
+                    "updated": "2024-01-02T11:30:00.000+00:00"
                   },
                   "names": {},
                   "schema": {}
