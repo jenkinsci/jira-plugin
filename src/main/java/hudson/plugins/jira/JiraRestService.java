@@ -655,10 +655,19 @@ public class JiraRestService {
      * Get User's permissions
      */
     public Permissions getMyPermissions() {
-        return jiraRestClient
-                .getExtendedMyPermissionsRestClient()
-                .getMyPermissions()
-                .claim();
+        try {
+            return jiraRestClient
+                    .getExtendedMyPermissionsRestClient()
+                    .getMyPermissions()
+                    .get(timeout, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            LOGGER.log(WARNING, e, () -> "Jira REST client get permissions error. cause: " + e.getMessage());
+            throw new RestClientException("[Jira] Jira REST client get permissions error. cause: " + e.getMessage(), e);
+        } catch (RestClientException | ExecutionException | TimeoutException e) {
+            LOGGER.log(WARNING, e, () -> "Jira REST client get permissions error. cause: " + e.getMessage());
+            throw new RestClientException("[Jira] Jira REST client get permissions error. cause: " + e.getMessage(), e);
+        }
     }
 
     /**
