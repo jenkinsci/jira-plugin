@@ -88,9 +88,13 @@ mvn test -Dtest='JiraRestServiceWireMockTest,LiveJiraCloudE2ETest' -DfailIfNoTes
   Adding coverage for another `JiraRestService` method means adding one test method to the
   abstract class and implementing its hooks in both subclasses — don't duplicate test bodies
   between the two subclasses.
-  - WireMock fixture bodies are checked against Atlassian's real OpenAPI spec at test time via
-    `OpenApiSpecConformance` (`com.atlassian.oai:swagger-request-validator-core`). If you add a
+  - WireMock fixture bodies are checked against Atlassian's Jira Cloud OpenAPI spec at test time via
+    `OpenApiSpecConformance` (`com.atlassian.oai:openapi-request-validator-core`). If you add a
     new fixture, call `OpenApiSpecConformance.assertConformsToSpec(...)` on it before stubbing.
+    The spec is a trimmed copy checked in under `src/test/resources/hudson/plugins/jira/wiremock/`,
+    not a download, so this suite runs offline. If your fixture needs a path the copy doesn't carry,
+    add it to `KEPT_PATHS` in `tools/trim-jira-openapi-spec.mjs` and re-run that script — the test
+    tells you so rather than validating against nothing.
   - Do **not** add `com.atlassian.oai:swagger-request-validator-wiremock*` — those pull in
     `com.github.tomakehurst:wiremock-jre8` (WireMock 2.x), which collides with this project's
     `org.wiremock:wiremock-standalone` (WireMock 3.x) under the same package namespace.
