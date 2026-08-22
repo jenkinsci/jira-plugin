@@ -255,6 +255,13 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private int ioThreadCount = Integer.getInteger(JiraSite.class.getName() + ".httpclient.options.ioThreadCount", 2);
 
     /**
+     * Upper bound on {@link #issueCache}. It used to be unbounded, so every issue key ever seen by the
+     * changelog annotator stayed resident.
+     */
+    private static final int ISSUE_CACHE_MAX_SIZE =
+            Integer.getInteger(JiraSite.class.getName() + ".issueCache.maxSize", 1000);
+
+    /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
      * last time we checked. Copy on write semantics.
      */
@@ -734,7 +741,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     protected static Cache<String, Optional<Issue>> makeIssueCache() {
-        return Caffeine.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).build();
+        // expireAfterWrite, not expireAfterAccess: the changelog annotator re-reads the same keys on every
+        // page render, which under expireAfterAccess kept renewing entries instead of letting them age out.
+        return Caffeine.newBuilder()
+                .maximumSize(ISSUE_CACHE_MAX_SIZE)
+                .expireAfterWrite(2, TimeUnit.MINUTES)
+                .build();
     }
 
     public String getName() {
@@ -1202,12 +1214,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     @CheckForNull
     public JiraIssue getIssue(final String id) throws IOException {
-        Optional<Issue> issue = issueCache.get(id, s -> {
-            if (this.jiraSession == null) {
-                return Optional.empty();
-            }
-            return Optional.ofNullable(this.jiraSession.getIssue(id));
-        });
+        JiraSession session = this.jiraSession;
+        if (session == null) {
+            // Not having a session is not the same as the issue not existing. This used to be written into
+            // the cache as Optional.empty(), so one transient outage made the plugin report every issue it
+            // was asked about as missing - and the annotator's own re-reads kept the lie alive.
+            return null;
+        }
+
+        Optional<Issue> issue = issueCache.get(id, s -> Optional.ofNullable(session.getIssue(id)));
 
         if (issue == null || !issue.isPresent()) {
             return null;

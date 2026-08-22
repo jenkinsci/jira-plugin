@@ -5,6 +5,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -536,6 +538,30 @@ class JiraSiteTest {
         assertNull(jiraSite.getSession(null));
         JiraIssue issue = jiraSite.getIssue("JIRA-1235");
         assertNull(issue);
+    }
+
+    @Test
+    @WithoutJenkins
+    void aMissingSessionIsNotRememberedAsAMissingIssue() throws Exception {
+        JiraSite jiraSite = spy(new JiraSite(new URL("https://foo.org/").toExternalForm()));
+
+        // No session yet - this must not be written into the issue cache as "no such issue".
+        assertNull(jiraSite.getIssue("JIRA-1235"));
+
+        com.atlassian.jira.rest.client.api.domain.Issue remoteIssue =
+                mock(com.atlassian.jira.rest.client.api.domain.Issue.class);
+        when(remoteIssue.getKey()).thenReturn("JIRA-1235");
+        when(remoteIssue.getSummary()).thenReturn("a real issue");
+        JiraSession session = mock(JiraSession.class);
+        when(session.getIssue("JIRA-1235")).thenReturn(remoteIssue);
+        doReturn(session).when(jiraSite).createSession(any(), anyBoolean());
+        assertNotNull(jiraSite.getSession(null));
+
+        JiraIssue found = jiraSite.getIssue("JIRA-1235");
+
+        // Used to stay null for the whole cache TTL, renewed on every read.
+        assertNotNull(found);
+        assertEquals("JIRA-1235", found.getKey());
     }
 
     @Test
