@@ -20,17 +20,20 @@ import hudson.util.FormValidation;
 import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import jenkins.tasks.SimpleBuildStep;
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 /**
- * Issue custom fields updater
+ * Issue field updater
  *
  * @author Dmitry Frolov tekillaz.dev@gmail.com
  *
@@ -77,12 +80,45 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         this.fieldValue = fieldValue;
     }
 
+    /**
+     * Jira field ids that take a JSON array of plain strings rather than a scalar.
+     *
+     * <p>Deliberately just {@code labels}: the other multi-valued built-ins ({@code components},
+     * {@code fixVersions}, {@code versions}) need arrays of objects, which is the structured-value
+     * work tracked separately.
+     */
+    private static final Set<String> MULTI_VALUE_BUILT_IN_FIELDS = Set.of("labels");
+
+    /**
+     * Turns what the user typed into a Jira field id.
+     *
+     * <p>A bare number is the long-standing shorthand for a custom field, so it keeps getting the
+     * {@code customfield_} prefix. Everything else is passed through: this used to prefix
+     * unconditionally, which meant {@code labels} was sent as {@code customfield_labels} and every
+     * built-in field was unreachable from the step.
+     */
     public String prepareFieldId(String fieldId) {
-        String prepared = fieldId;
-        if (!prepared.startsWith("customfield_")) {
+        if (fieldId == null) {
+            return null;
+        }
+        String prepared = fieldId.trim();
+        if (prepared.matches("\\d+")) {
             prepared = "customfield_" + prepared;
         }
         return prepared;
+    }
+
+    /**
+     * Turns what the user typed into a value Jira will accept for {@code fieldId}.
+     */
+    private Object prepareFieldValue(String fieldId, String expandedValue) {
+        if (!MULTI_VALUE_BUILT_IN_FIELDS.contains(fieldId)) {
+            return expandedValue;
+        }
+        return Arrays.stream(StringUtils.defaultString(expandedValue).split(","))
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -122,8 +158,10 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
             return;
         }
 
+        String preparedFieldId = prepareFieldId(getFieldId());
         List<JiraIssueField> fields = Collections.singletonList(new JiraIssueField(
-                prepareFieldId(getFieldId()), EnvironmentExpander.expandVariable(getFieldValue(), env)));
+                preparedFieldId,
+                prepareFieldValue(preparedFieldId, EnvironmentExpander.expandVariable(getFieldValue(), env))));
 
         try {
             for (String issue : issues) {
@@ -175,11 +213,15 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
     @Symbol("jiraUpdateIssueField")
     public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
-        public FormValidation doCheckField_id(@QueryParameter String value) throws IOException, ServletException {
-            if (Util.fixNull(value).trim().length() == 0) {
+        // Named for the field it validates: the config form binds field="fieldId", so Stapler looks for
+        // doCheckFieldId and the old doCheckField_id was never called. Its digits-only rule would have
+        // rejected every built-in field name had it been, so both are fixed together.
+        public FormValidation doCheckFieldId(@QueryParameter String value) throws IOException, ServletException {
+            String fieldId = Util.fixNull(value).trim();
+            if (fieldId.isEmpty()) {
                 return FormValidation.warning(Messages.JiraIssueFieldUpdater_NoIssueFieldID());
             }
-            if (!value.matches("\\d+")) {
+            if (!fieldId.matches("[A-Za-z0-9_]+")) {
                 return FormValidation.error(Messages.JiraIssueFieldUpdater_NotAtIssueFieldID());
             }
             return FormValidation.ok();
