@@ -10,6 +10,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import com.cloudbees.hudson.plugins.folder.Folder;
@@ -33,6 +34,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -314,6 +316,20 @@ class JiraSiteTest {
         JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
         jiraSite.setCredentialsId("");
         assertNull(jiraSite.getCredentialsId());
+    }
+
+    @Test
+    @WithoutJenkins
+    @Issue("215")
+    void httpClientOptionsApplyConnectAndReadTimeouts() {
+        JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
+        jiraSite.setTimeout(7);
+        jiraSite.setReadTimeout(42);
+
+        HttpClientOptions options = jiraSite.getHttpClientOptions();
+
+        assertEquals(TimeUnit.SECONDS.toMillis(7), options.getConnectionTimeout());
+        assertEquals(TimeUnit.SECONDS.toMillis(42), options.getSocketTimeout());
     }
 
     @Test
