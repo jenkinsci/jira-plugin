@@ -119,6 +119,11 @@ public class ChangingWorkflowTest {
         site.getSession(mockItem);
 
         when(mockSession.getIssuesFromJqlSearch(anyString())).thenReturn(Arrays.asList(mock(Issue.class)));
+        // progressMatchingIssues fetches the issue once and reuses it for the action lookup and the
+        // transition, rather than letting each of those fetch the same issue independently.
+        Issue fullIssue = mock(Issue.class);
+        when(mockSession.getIssue(any())).thenReturn(fullIssue);
+        when(mockSession.getActionIdForIssue(eq(fullIssue), anyString())).thenReturn(1);
 
         when(site.progressMatchingIssues(anyString(), any(), anyString(), any(PrintStream.class)))
                 .thenCallRealMethod();
@@ -126,7 +131,8 @@ public class ChangingWorkflowTest {
                 ISSUE_JQL, NON_EMPTY_WORKFLOW_LOWERCASE, NON_EMPTY_COMMENT, mock(PrintStream.class));
 
         verify(mockSession, times(1)).addComment(any(), eq(NON_EMPTY_COMMENT), isNull(), isNull());
-        verify(mockSession, times(1)).progressWorkflowAction(any(), anyInt());
+        verify(mockSession, times(1)).getIssue(any());
+        verify(mockSession, times(1)).progressWorkflowAction(eq(fullIssue), anyInt());
     }
 
     @Test
