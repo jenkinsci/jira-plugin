@@ -152,4 +152,17 @@ Apache-licensed.
 
 ### Releasing the plugin
 
-See [releasing Jenkins plugins](https://www.jenkins.io/doc/developer/publishing/releasing-manually/).
+Releases are published via the [`cd.yaml`](.github/workflows/cd.yaml) GitHub Actions workflow
+(JEP-229 continuous delivery) — no more local `mvn release:prepare`/`release:perform`.
+
+From the Actions tab, run the "cd" workflow manually (`workflow_dispatch`) on `master` when it's
+in a releasable state — merging alone never publishes. The workflow deploys whatever `<revision>`
+in `pom.xml` currently is, with a short commit-hash suffix appended for traceability (e.g.
+`3.23-abc123def456`), publishes the GitHub release, then automatically bumps `<revision>` to the
+next value and pushes that to `master` — the direct (non-maven-release-plugin) replacement for the
+old "prepare for next development iteration" commit. There's no manual version-bump step to
+remember.
+
+See [releasing Jenkins plugins with CD](https://www.jenkins.io/doc/developer/publishing/releasing-cd/).
+The manual process remains documented as a fallback: see
+[releasing Jenkins plugins manually](https://www.jenkins.io/doc/developer/publishing/releasing-manually/).
