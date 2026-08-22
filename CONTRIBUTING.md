@@ -103,9 +103,17 @@ sync by hand.
 WireMock's stub response bodies are derived from Atlassian's official
 [Jira Cloud platform OpenAPI spec](https://developer.atlassian.com/cloud/jira/platform/swagger-v3.v3.json),
 trimmed to the fields the bundled `jira-rest-java-client-core` actually parses. `OpenApiSpecConformance`
-checks every fixture body against the real spec at test time (via
-`com.atlassian.oai:swagger-request-validator-core`), so a fixture that drifts from the documented
+checks every fixture body against that spec at test time (via
+`com.atlassian.oai:openapi-request-validator-core`), so a fixture that drifts from the documented
 contract fails the test that defines it instead of silently going stale.
+
+The spec is **not downloaded**. A trimmed copy carrying only the paths these tests validate lives in
+`src/test/resources/hudson/plugins/jira/wiremock/jira-cloud-platform-openapi-trimmed.json`, so the
+suite really does run offline. Regenerate it with:
+
+```sh
+node tools/trim-jira-openapi-spec.mjs
+```
 
 **Adding coverage for another `JiraRestService` method:**
 
@@ -113,6 +121,9 @@ contract fails the test that defines it instead of silently going stale.
 2. Implement its `given*`/`prepare*`/`assert*` hooks in both subclasses.
 3. Call `OpenApiSpecConformance.assertConformsToSpec(...)` on the new WireMock fixture body before
    stubbing it.
+4. If the fixture validates against a path the trimmed spec doesn't carry yet, add it to `KEPT_PATHS`
+   in `tools/trim-jira-openapi-spec.mjs` and re-run the script — the test fails with that instruction
+   rather than silently validating against nothing.
 
 ## Running Jenkins locally
 
