@@ -72,16 +72,23 @@ public class CredentialsHelper {
         // Create new credentials with the principal and secret if we couldn't find any existing credentials
         StandardUsernamePasswordCredentials newCredentials = new UsernamePasswordCredentialsImpl(
                 CredentialsScope.SYSTEM, null, "Migrated by Jira Plugin", username, password);
-        SystemCredentialsProvider.getInstance().getCredentials().add(newCredentials);
+        SystemCredentialsProvider provider = SystemCredentialsProvider.getInstance();
+        provider.getCredentials().add(newCredentials);
         try {
-            SystemCredentialsProvider.getInstance().save();
-            LOGGER.log(
-                    Level.INFO,
-                    "Provided username and password were successfully migrated and stored as {0}",
-                    newCredentials.getId());
+            provider.save();
         } catch (IOException e) {
+            // The credential exists in memory only at this point. Returning it anyway - which is what
+            // this used to do - makes the caller store its id on the Jira site while the legacy username
+            // and password are dropped, so the site works until the next restart and is then permanently
+            // broken with nothing but an old warning to explain it.
+            provider.getCredentials().remove(newCredentials);
             LOGGER.log(Level.WARNING, "Unable to store migrated credentials", e);
+            throw new FormException(e, "credentialsId");
         }
+        LOGGER.log(
+                Level.INFO,
+                "Provided username and password were successfully migrated and stored as {0}",
+                newCredentials.getId());
 
         return newCredentials;
     }
