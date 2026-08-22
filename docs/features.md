@@ -24,7 +24,7 @@ that touched them.
 - [Comment on issues found in a build](#comment-on-issues-found-in-a-build) — `jiraCommentIssues`
 - [Search issues by JQL](#search-issues-by-jql) — `jiraSearch`
 - [Select issues with a reusable selector](#select-issues-with-a-reusable-selector) — `jiraIssueSelector`
-- [Update a custom field on issues](#update-a-custom-field-on-issues) — `jiraUpdateIssueField`
+- [Update a field on issues](#update-a-field-on-issues) — `jiraUpdateIssueField`
 - [Execute a workflow transition on issues](#execute-a-workflow-transition-on-issues) — `jiraExecuteWorkflow`
 - [Create a release version](#create-a-release-version) — `jiraCreateVersion`
 - [Mark a release version as released](#mark-a-release-version-as-released) — `jiraMarkVersionReleased`
@@ -167,28 +167,51 @@ pipeline {
 }
 ```
 
-## Update a custom field on issues
+## Update a field on issues
 
 **Pipeline step:** `jiraUpdateIssueField`
 
-Sets a custom field's value on every issue found by an issue selector. `fieldId` is the numeric
-custom field ID (the `customfield_` prefix is added automatically if you leave it off):
+Sets a field's value on every issue found by an issue selector. `fieldId` takes either a built-in
+Jira field name (`labels`, `duedate`, `description`, `environment`) or a custom field, given as its
+bare number (the `customfield_` prefix is added for you) or in full:
 
 ```groovy
 pipeline {
     agent any
     stages {
-        stage('Update field') {
+        stage('Update fields') {
             steps {
+                // custom field, by number
                 jiraUpdateIssueField(
                         issueSelector: ExplicitSelector('EX-111'),
                         fieldId: '10001',
                         fieldValue: 'value')
+
+                // custom field, by full ID
+                jiraUpdateIssueField(
+                        issueSelector: ExplicitSelector('EX-111'),
+                        fieldId: 'customfield_10001',
+                        fieldValue: 'value')
+
+                // built-in field
+                jiraUpdateIssueField(
+                        issueSelector: ExplicitSelector('EX-111'),
+                        fieldId: 'duedate',
+                        fieldValue: '2026-12-24')
+
+                // labels take a comma-separated list
+                jiraUpdateIssueField(
+                        issueSelector: ExplicitSelector('EX-111'),
+                        fieldId: 'labels',
+                        fieldValue: 'alpha, beta')
             }
         }
     }
 }
 ```
+
+`components`, `fixVersions` and `versions` aren't supported yet: Jira expects arrays of objects for
+those, and the step only sends plain strings.
 
 ## Execute a workflow transition on issues
 
