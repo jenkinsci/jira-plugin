@@ -10,7 +10,10 @@ import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.MetadataRestClient;
@@ -20,6 +23,8 @@ import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.jira.rest.client.api.UserRestClient;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.domain.Transition;
+import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedMyPermissionsRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
@@ -232,6 +237,24 @@ class JiraRestServiceTest {
         doReturn(promise).when(issueClient).updateIssue(anyString(), any());
 
         assertPreservesCauseAndInterruptFlag(promise, () -> service.setIssueFields("KEY-1", Collections.emptyList()));
+    }
+
+    @Test
+    void passingAFetchedIssueAvoidsRefetchingIt() throws Exception {
+        Issue issue = mock(Issue.class);
+        doReturn("KEY-1").when(issue).getKey();
+
+        Promise<Iterable<Transition>> transitionsPromise = mock(Promise.class);
+        doReturn(Collections.emptyList()).when(transitionsPromise).get(anyLong(), any());
+        doReturn(transitionsPromise).when(issueClient).getTransitions(issue);
+        doReturn(mock(Promise.class)).when(issueClient).transition(eq(issue), any(TransitionInput.class));
+
+        service.getAvailableActions(issue);
+        service.progressWorkflowAction(issue, 5);
+
+        // Each key-taking overload starts with its own GET of the issue, so a caller that needed both
+        // used to fetch the same issue twice. Only the deliberate post-transition re-fetch is left.
+        verify(issueClient, times(1)).getIssue("KEY-1");
     }
 
     @Test

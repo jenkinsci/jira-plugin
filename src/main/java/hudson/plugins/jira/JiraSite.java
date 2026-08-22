@@ -1438,7 +1438,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 continue;
             }
 
-            Integer actionId = this.jiraSession.getActionIdForIssue(issueKey, workflowActionName);
+            // Fetch the issue once and reuse it for both the lookup and the transition. The issue from
+            // the JQL search above cannot be reused - the search only asks for a handful of fields and
+            // does not include the transitions link - but the two calls below used to fetch the very same
+            // issue independently, one immediately after the other.
+            Issue fullIssue = this.jiraSession.getIssue(issueKey);
+            Integer actionId = this.jiraSession.getActionIdForIssue(fullIssue, workflowActionName);
 
             if (actionId == null) {
                 LOGGER.fine(String.format(
@@ -1449,7 +1454,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 continue;
             }
 
-            String newStatus = this.jiraSession.progressWorkflowAction(issueKey, actionId);
+            String newStatus = this.jiraSession.progressWorkflowAction(fullIssue, actionId);
 
             console.println(String.format(
                     "[Jira] Issue %s transitioned to \"%s\" due to action \"%s\".",
