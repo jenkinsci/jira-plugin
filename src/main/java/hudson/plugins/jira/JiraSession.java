@@ -74,6 +74,16 @@ public class JiraSession {
     }
 
     /**
+     * Drops the memoised project key list so the next {@link #getProjectKeys()} refetches it.
+     *
+     * <p>Without this, a periodic refresh at the {@link JiraSite} layer that reuses the same session
+     * would keep getting the same set back, and newly created Jira projects would stay invisible.
+     */
+    /* package */ void invalidateProjectKeys() {
+        projectKeys = null;
+    }
+
+    /**
      * Adds a comment to the existing issue. Constrains the visibility of the
      * comment the the supplied groupVisibility.
      */

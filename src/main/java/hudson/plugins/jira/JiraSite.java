@@ -265,9 +265,21 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
      * last time we checked. Copy on write semantics.
      */
-    // TODO: seems like this is never invalidated (never set to null)
-    // should we implement to invalidate this (say every hour)?
     private transient volatile Set<String> projects;
+
+    /**
+     * When {@link #projects} was last fetched, in {@link System#currentTimeMillis()} terms.
+     */
+    private transient volatile long projectsFetchedAt;
+
+    private static final long DEFAULT_PROJECTS_TTL_MILLIS =
+            Long.getLong(JiraSite.class.getName() + ".projectKeys.ttlMillis", TimeUnit.HOURS.toMillis(1));
+
+    /**
+     * How long a fetched project list stays usable before it is refreshed. Per instance and not final so
+     * tests can age the list out without waiting; production only ever reads the default.
+     */
+    /* package */ transient long projectsTtlMillis = DEFAULT_PROJECTS_TTL_MILLIS;
 
     private transient Cache<String, Optional<Issue>> issueCache = makeIssueCache();
 
@@ -1182,31 +1194,61 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * This information could be bit old, or it can be null.
      */
     public Set<String> getProjectKeys(Item item) {
-        // FIXME it means projects list will be never updated until Jenkins is restarted...
-        if (projects == null) {
-            try {
-                if (getProjectUpdateLock().tryLock(3, TimeUnit.SECONDS)) {
-                    try {
-                        JiraSession session = getSession(item);
-                        if (session != null) {
-                            projects = Collections.unmodifiableSet(session.getProjectKeys());
-                        }
-                    } finally {
-                        getProjectUpdateLock().unlock();
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // process this interruption later
-            } catch (RestClientException e) {
-                return Collections.emptySet();
-            }
-        }
-        // fall back to empty if failed to talk to the server
-        if (projects == null) {
-            return Collections.emptySet();
+        if (isProjectListStale()) {
+            refreshProjectKeysUnderLock(item);
         }
 
-        return projects;
+        // Keep serving the previous list on failure. Returning an empty set instead used to make
+        // JiraChangeLogAnnotator treat every issue as belonging to an unknown project, so all issue
+        // links silently disappeared from the changelog with nothing logged to explain it.
+        Set<String> current = projects;
+        return current == null ? Collections.emptySet() : current;
+    }
+
+    private void refreshProjectKeysUnderLock(Item item) {
+        try {
+            if (getProjectUpdateLock().tryLock(3, TimeUnit.SECONDS)) {
+                try {
+                    // another thread may have refreshed the list while we waited for the lock
+                    if (isProjectListStale()) {
+                        refreshProjectKeys(item);
+                    }
+                } finally {
+                    getProjectUpdateLock().unlock();
+                }
+            } else {
+                LOGGER.log(
+                        Level.WARNING,
+                        () -> "Timed out after 3s waiting to refresh the Jira project list of " + getName()
+                                + "; keeping the previously fetched list");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // process this interruption later
+            LOGGER.log(Level.FINE, e, () -> "Interrupted while refreshing the Jira project list of " + getName());
+        } catch (RestClientException e) {
+            LOGGER.log(
+                    Level.WARNING,
+                    e,
+                    () -> "Failed to refresh the Jira project list of " + getName() + ": " + e.getMessage());
+        }
+    }
+
+    private boolean isProjectListStale() {
+        return projects == null || System.currentTimeMillis() - projectsFetchedAt >= projectsTtlMillis;
+    }
+
+    private void refreshProjectKeys(Item item) {
+        JiraSession session = getSession(item);
+        if (session == null) {
+            LOGGER.log(
+                    Level.WARNING,
+                    () -> "Cannot refresh the Jira project list of " + getName() + ": no session could be established");
+            return;
+        }
+        // the session memoises the list too, so it has to be told to refetch
+        session.invalidateProjectKeys();
+        projects = Collections.unmodifiableSet(session.getProjectKeys());
+        projectsFetchedAt = System.currentTimeMillis();
     }
 
     /**

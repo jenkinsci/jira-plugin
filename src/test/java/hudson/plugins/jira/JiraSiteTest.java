@@ -3,6 +3,7 @@ package hudson.plugins.jira;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -10,9 +11,12 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import com.cloudbees.hudson.plugins.folder.Folder;
@@ -36,14 +40,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import jenkins.model.Jenkins;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LogRecorder;
 import org.jvnet.hudson.test.WithoutJenkins;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
@@ -528,6 +535,49 @@ class JiraSiteTest {
         doReturn(null).when(job).getProperty(JiraProjectProperty.class);
 
         assertEquals(jiraSite.getUrl(), JiraSite.get(job).getUrl());
+    }
+
+    @Test
+    @WithoutJenkins
+    void projectKeysAreRefetchedOnceTheListGoesStale() {
+        JiraSite jiraSite = spy(new JiraSite(exampleOrg.toExternalForm()));
+        JiraSession session = mock(JiraSession.class);
+        when(session.getProjectKeys())
+                .thenReturn(new HashSet<>(Collections.singletonList("FIRST")))
+                .thenReturn(new HashSet<>(Collections.singletonList("SECOND")));
+        doReturn(session).when(jiraSite).createSession(any(), anyBoolean());
+
+        assertEquals(Collections.singleton("FIRST"), jiraSite.getProjectKeys(null));
+
+        // The list used to be fetched once and never again until Jenkins restarted.
+        jiraSite.projectsTtlMillis = 0;
+        assertEquals(Collections.singleton("SECOND"), jiraSite.getProjectKeys(null));
+        // and the session's own memo has to be dropped too, or it hands back the same set:
+        // once per fetch, so twice for the two fetches above
+        verify(session, times(2)).invalidateProjectKeys();
+    }
+
+    @Test
+    @WithoutJenkins
+    void aFailedProjectKeyRefreshKeepsThePreviousListAndLogsWhy() {
+        LogRecorder logs =
+                new LogRecorder().record(JiraSite.class, Level.WARNING).capture(10);
+
+        JiraSite jiraSite = spy(new JiraSite(exampleOrg.toExternalForm()));
+        JiraSession session = mock(JiraSession.class);
+        when(session.getProjectKeys())
+                .thenReturn(new HashSet<>(Collections.singletonList("FIRST")))
+                .thenThrow(new RestClientException(new IOException("boom"), 500));
+        doReturn(session).when(jiraSite).createSession(any(), anyBoolean());
+
+        assertEquals(Collections.singleton("FIRST"), jiraSite.getProjectKeys(null));
+
+        jiraSite.projectsTtlMillis = 0;
+
+        // Used to return an empty set, which made JiraChangeLogAnnotator drop every issue link,
+        // and logged nothing at all about the failure.
+        assertEquals(Collections.singleton("FIRST"), jiraSite.getProjectKeys(null));
+        assertThat(logs.getMessages(), hasItem(containsString("Failed to refresh the Jira project list")));
     }
 
     @Test
