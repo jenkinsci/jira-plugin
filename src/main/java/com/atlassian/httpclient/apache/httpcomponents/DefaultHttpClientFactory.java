@@ -14,8 +14,17 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     private final EventPublisher eventPublisher;
     private final ApplicationProperties applicationProperties;
     private final ThreadLocalContextManager threadLocalContextManager;
-    // shared http client
-    private static ApacheAsyncHttpClient httpClient;
+
+    /**
+     * The client this factory has built, if any.
+     *
+     * <p>This is deliberately an <em>instance</em> field. It used to be {@code static}, which meant the
+     * first Jira site to build a client pinned its {@link HttpClientOptions} — socket timeout, io thread
+     * count, callback executor — and its application properties onto every other site in the JVM, until
+     * Jenkins restarted. {@code JiraSite} builds one factory per client, so caching per instance keeps
+     * the original "one client per site" intent without leaking one site's configuration into another.
+     */
+    private volatile ApacheAsyncHttpClient httpClient;
 
     public DefaultHttpClientFactory(
             EventPublisher eventPublisher,
@@ -39,26 +48,38 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     @Override
     public void dispose(@NonNull final HttpClient httpClient) throws Exception {
         if (httpClient instanceof ApacheAsyncHttpClient) {
+            // Forget the client before destroying it, so a later create() builds a fresh one rather
+            // than handing back an instance whose executor and connection manager are shut down.
+            synchronized (this) {
+                if (this.httpClient == httpClient) {
+                    this.httpClient = null;
+                }
+            }
             ((ApacheAsyncHttpClient) httpClient).destroy();
         }
     }
 
     private HttpClient doCreate(HttpClientOptions options, ThreadLocalContextManager threadLocalContextManager) {
         Objects.requireNonNull(options);
-        // we create only one http client instance as we don't need more
-
-        if (httpClient != null) {
-            return httpClient;
+        // we create only one http client instance per factory as we don't need more
+        ApacheAsyncHttpClient existing = httpClient;
+        if (existing != null) {
+            return existing;
         }
         synchronized (this) {
-            httpClient = new ApacheAsyncHttpClient(
-                    eventPublisher, applicationProperties, threadLocalContextManager, options);
+            if (httpClient == null) {
+                httpClient = new ApacheAsyncHttpClient(
+                        eventPublisher, applicationProperties, threadLocalContextManager, options);
+            }
             return httpClient;
         }
     }
 
     @Override
     public void destroy() throws Exception {
-        httpClient.destroy();
+        ApacheAsyncHttpClient client = httpClient;
+        if (client != null) {
+            client.destroy();
+        }
     }
 }
