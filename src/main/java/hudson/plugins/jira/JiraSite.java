@@ -709,22 +709,34 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     @SuppressWarnings("unused")
     protected Object readResolve() throws FormException {
-        JiraSite jiraSite;
+        JiraSite jiraSite = null;
 
         if (credentialsId == null && userName != null && password != null) { // Migrate credentials
-            jiraSite = new JiraSite(
-                    url,
-                    alternativeUrl,
-                    userName,
-                    password.getPlainText(),
-                    supportsWikiStyleComment,
-                    recordScmChanges,
-                    userPattern,
-                    updateJiraIssueForAllStatus,
-                    groupVisibility,
-                    roleVisibility,
-                    useHTTPAuth);
-        } else {
+            try {
+                jiraSite = new JiraSite(
+                        url,
+                        alternativeUrl,
+                        userName,
+                        password.getPlainText(),
+                        supportsWikiStyleComment,
+                        recordScmChanges,
+                        userPattern,
+                        updateJiraIssueForAllStatus,
+                        groupVisibility,
+                        roleVisibility,
+                        useHTTPAuth);
+            } catch (FormException e) {
+                // Migration could not persist the credentials. Fall through and load the site without
+                // any, so it shows up as needing reconfiguration - failing here would abort
+                // deserialization and take the whole global configuration down with it.
+                LOGGER.log(
+                        Level.WARNING,
+                        e,
+                        () -> "Could not migrate the stored credentials of " + url
+                                + "; loading the site without credentials, it needs to be reconfigured");
+            }
+        }
+        if (jiraSite == null) {
             jiraSite = new JiraSite(
                     url,
                     alternativeUrl,
