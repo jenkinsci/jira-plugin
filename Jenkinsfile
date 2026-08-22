@@ -1,3 +1,4 @@
+Library('pipeline-library@pull/1040/head') _ // TODO remove after #98 merged & released
 /*
  See the documentation for more options:
  https://github.com/jenkins-infra/pipeline-library/
