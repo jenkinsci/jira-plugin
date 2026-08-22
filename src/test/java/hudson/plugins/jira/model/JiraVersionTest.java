@@ -4,9 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -40,5 +44,27 @@ class JiraVersionTest {
         versions.add(new JiraVersion("1.0", "notes", START, RELEASE, true, false));
 
         assertTrue(versions.contains(new JiraVersion("1.0", "notes", START, RELEASE, true, false)));
+    }
+
+    @Test
+    void versionsWithoutAReleaseDateSortLastInsteadOfThrowing() {
+        JiraVersion released = new JiraVersion("1.0", null, START, RELEASE, true, false);
+        JiraVersion unreleased = new JiraVersion("2.0", null, START, null, false, false);
+
+        List<JiraVersion> versions = new ArrayList<>(Arrays.asList(unreleased, released));
+
+        // compareTo used to dereference releaseDate, which two of the constructors set to null.
+        Collections.sort(versions);
+
+        assertEquals(Arrays.asList(released, unreleased), versions);
+    }
+
+    @Test
+    void versionsWithTheSameReleaseDateAreOrderedByStartDateThenName() {
+        JiraVersion early = new JiraVersion("b", null, START, RELEASE, true, false);
+        JiraVersion late = new JiraVersion("a", null, RELEASE, RELEASE, true, false);
+
+        assertTrue(early.compareTo(late) < 0);
+        assertEquals(0, early.compareTo(new JiraVersion("b", "other notes", START, RELEASE, true, false)));
     }
 }
