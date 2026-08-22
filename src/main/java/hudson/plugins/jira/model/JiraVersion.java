@@ -3,6 +3,7 @@ package hudson.plugins.jira.model;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class JiraVersion implements Comparable<JiraVersion> {
@@ -70,14 +71,25 @@ public class JiraVersion implements Comparable<JiraVersion> {
                 version.isArchived());
     }
 
+    /**
+     * Orders by release date, then start date, then name - the same fields {@link #equals(Object)}
+     * compares, so the ordering is consistent with equality. Versions with no date sort last: a version
+     * that has not been released yet has no place on a release timeline.
+     */
     @Override
     public int compareTo(JiraVersion that) {
-        int result = this.releaseDate.compareTo(that.releaseDate);
-        if (result == 0) {
-            return this.name.compareTo(that.name);
-        }
-        return result;
+        // Dates and name are all nullable - releaseDate is explicitly set to null by two of the
+        // constructors - and this used to dereference them, so sorting the versions of any project
+        // holding an unreleased version threw NullPointerException.
+        return COMPARATOR.compare(this, that);
     }
+
+    private static final Comparator<Calendar> DATE_ORDER = Comparator.nullsLast(Comparator.naturalOrder());
+
+    private static final Comparator<JiraVersion> COMPARATOR = Comparator.comparing(
+                    JiraVersion::getReleaseDate, DATE_ORDER)
+            .thenComparing(JiraVersion::getStartDate, DATE_ORDER)
+            .thenComparing(JiraVersion::getName, Comparator.nullsLast(Comparator.naturalOrder()));
 
     @Override
     public int hashCode() {
