@@ -821,8 +821,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     protected HttpClientOptions getHttpClientOptions() {
         final HttpClientOptions options = new HttpClientOptions();
-        options.setRequestTimeout(readTimeout, TimeUnit.SECONDS);
-        options.setSocketTimeout(timeout, TimeUnit.SECONDS);
+        options.setConnectionTimeout(timeout, TimeUnit.SECONDS);
+        options.setSocketTimeout(readTimeout, TimeUnit.SECONDS);
         options.setCallbackExecutor(getExecutorService());
         options.setIoThreadCount(ioThreadCount);
         return options;
