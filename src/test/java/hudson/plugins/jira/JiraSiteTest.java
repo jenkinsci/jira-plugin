@@ -34,6 +34,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import jenkins.model.Jenkins;
 import org.junit.jupiter.api.BeforeEach;
@@ -316,6 +318,57 @@ class JiraSiteTest {
         JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
         jiraSite.setCredentialsId("");
         assertNull(jiraSite.getCredentialsId());
+    }
+
+    @Test
+    @WithoutJenkins
+    void eachSiteGetsItsOwnCallbackExecutorSizedFromItsOwnSetting() {
+        JiraSite first = new JiraSite(exampleOrg.toExternalForm());
+        first.setThreadExecutorNumber(3);
+        JiraSite second = new JiraSite(exampleOrg.toExternalForm());
+        second.setThreadExecutorNumber(7);
+
+        ExecutorService firstExecutor = first.getHttpClientOptions().getCallbackExecutor();
+        ExecutorService secondExecutor = second.getHttpClientOptions().getCallbackExecutor();
+
+        try {
+            // The pool used to be static and sized from whichever site happened to build it first.
+            assertNotSame(firstExecutor, secondExecutor);
+            assertEquals(3, ((ThreadPoolExecutor) firstExecutor).getCorePoolSize());
+            assertEquals(7, ((ThreadPoolExecutor) secondExecutor).getCorePoolSize());
+        } finally {
+            first.destroy();
+            second.destroy();
+        }
+    }
+
+    @Test
+    @WithoutJenkins
+    void aShutDownCallbackExecutorIsReplacedInsteadOfReused() {
+        JiraSite site = new JiraSite(exampleOrg.toExternalForm());
+        ExecutorService original = site.getHttpClientOptions().getCallbackExecutor();
+
+        // ApacheAsyncHttpClient.destroy() shuts the callback executor down.
+        original.shutdown();
+
+        ExecutorService replacement = site.getHttpClientOptions().getCallbackExecutor();
+        try {
+            assertNotSame(original, replacement);
+            assertFalse(replacement.isShutdown());
+        } finally {
+            site.destroy();
+        }
+    }
+
+    @Test
+    @WithoutJenkins
+    void destroyReleasesTheCallbackExecutor() {
+        JiraSite site = new JiraSite(exampleOrg.toExternalForm());
+        ExecutorService executor = site.getHttpClientOptions().getCallbackExecutor();
+
+        site.destroy();
+
+        assertTrue(executor.isShutdown());
     }
 
     @Test

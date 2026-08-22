@@ -270,7 +270,18 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     private transient JiraSession jiraSession;
 
-    private static ExecutorService executorService;
+    /**
+     * Callback executor handed to this site's HTTP client.
+     *
+     * <p>This used to be {@code static} while being sized from the <em>instance</em> field
+     * {@link #threadExecutorNumber}, so whichever site built it first fixed the pool size for the whole
+     * controller. Worse, it was passed to every site's client as the callback executor, and
+     * {@code ApacheAsyncHttpClient.destroy()} calls {@code shutdown()} on it - so closing one site's
+     * client disabled Jira for every site until Jenkins restarted. One pool per site, owned by that site.
+     */
+    private transient volatile ExecutorService executorService;
+
+    private final transient Object executorServiceLock = new Object();
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
     @Deprecated
@@ -829,25 +840,35 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     private ExecutorService getExecutorService() {
-        if (executorService == null) {
-            synchronized (JiraSite.class) {
-                int nThreads = threadExecutorNumber;
-                if (nThreads < 1) {
-                    LOGGER.warning("nThreads " + nThreads + " cannot be lower than 1 so use default "
-                            + DEFAULT_THREAD_EXECUTOR_NUMBER);
-                    nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
-                }
-                executorService = Executors.newFixedThreadPool(nThreads, new ThreadFactory() {
-                    final AtomicInteger threadNumber = new AtomicInteger(0);
-
-                    @Override
-                    public Thread newThread(Runnable r) {
-                        return new Thread(r, "jira-plugin-http-request-" + threadNumber.getAndIncrement() + "-thread");
-                    }
-                });
-            }
+        ExecutorService cached = executorService;
+        if (cached != null && !cached.isShutdown()) {
+            return cached;
         }
-        return executorService;
+        synchronized (executorServiceLock) {
+            // Rebuild when the pool was shut down as well as when there is none yet: the HTTP client
+            // shuts its callback executor down on destroy(), and a terminated pool rejects every task.
+            if (executorService == null || executorService.isShutdown()) {
+                executorService = newExecutorService();
+            }
+            return executorService;
+        }
+    }
+
+    private ExecutorService newExecutorService() {
+        int nThreads = threadExecutorNumber;
+        if (nThreads < 1) {
+            LOGGER.warning("nThreads " + nThreads + " cannot be lower than 1 so use default "
+                    + DEFAULT_THREAD_EXECUTOR_NUMBER);
+            nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
+        }
+        return Executors.newFixedThreadPool(nThreads, new ThreadFactory() {
+            final AtomicInteger threadNumber = new AtomicInteger(0);
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "jira-plugin-http-request-" + threadNumber.getAndIncrement() + "-thread");
+            }
+        });
     }
 
     // not really used but let's leave when it will be implemented
@@ -855,6 +876,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void destroy() {
         try {
             this.jiraSession = null;
+            ExecutorService toShutdown;
+            synchronized (executorServiceLock) {
+                toShutdown = executorService;
+                executorService = null;
+            }
+            if (toShutdown != null) {
+                toShutdown.shutdown();
+            }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "skip error destroying JiraSite:" + e.getMessage(), e);
         }
