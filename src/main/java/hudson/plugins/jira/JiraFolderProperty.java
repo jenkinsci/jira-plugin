@@ -6,7 +6,7 @@ import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.ItemGroup;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -17,8 +17,12 @@ import org.kohsuke.stapler.DataBoundSetter;
 public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>> {
     /**
      * Hold the Jira sites configuration.
+     *
+     * <p>Never the immutable {@code Collections.emptyList()} it used to default to: {@link
+     * #setSites(JiraSite)} adds to this list in place, so a freshly constructed property threw
+     * {@link UnsupportedOperationException} on every call.
      */
-    private List<JiraSite> sites = Collections.emptyList();
+    private List<JiraSite> sites = new ArrayList<>();
 
     /**
      * Constructor.
@@ -41,12 +45,16 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
      */
     @Deprecated
     public void setSites(JiraSite site) {
-        sites.add(site);
+        List<JiraSite> updated = new ArrayList<>(this.sites);
+        updated.add(site);
+        this.sites = updated;
     }
 
     @DataBoundSetter
     public void setSites(List<JiraSite> sites) {
-        this.sites = sites;
+        // Copy rather than alias: callers pass Arrays.asList(...) and other fixed-size lists, and used
+        // to find their own list mutated by the single-site setter above.
+        this.sites = sites == null ? new ArrayList<>() : new ArrayList<>(sites);
     }
 
     /**
