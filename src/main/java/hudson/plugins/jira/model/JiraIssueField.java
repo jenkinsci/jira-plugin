@@ -1,5 +1,7 @@
 package hudson.plugins.jira.model;
 
+import java.util.Comparator;
+
 public class JiraIssueField implements Comparable<JiraIssueField> {
 
     private final String fieldId;
@@ -12,7 +14,10 @@ public class JiraIssueField implements Comparable<JiraIssueField> {
 
     @Override
     public int compareTo(JiraIssueField that) {
-        return this.compareTo(that);
+        // Used to delegate to itself, which recursed until it threw StackOverflowError. The field id is
+        // the only part of this class with a natural order; values are arbitrary objects.
+        return Comparator.comparing(JiraIssueField::getId, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .compare(this, that);
     }
 
     @Override
