@@ -1,14 +1,23 @@
 package com.atlassian.httpclient.apache.httpcomponents;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.atlassian.event.api.EventPublisher;
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.httpclient.api.factory.HttpClientOptions;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -65,6 +74,64 @@ class DefaultHttpClientFactoryTest {
 
         // destroy() used to dereference the cached client unconditionally.
         assertDoesNotThrow(factory::destroy);
+    }
+
+    @Test
+    void destroyShutsDownTheCachedClientsCallbackExecutor(JenkinsRule r) throws Exception {
+        DefaultHttpClientFactory factory = newFactory();
+        HttpClientOptions options = optionsWithSocketTimeout(7);
+        ExecutorService callbackExecutor = Executors.newSingleThreadExecutor();
+        options.setCallbackExecutor(callbackExecutor);
+        create(factory, options);
+
+        factory.destroy();
+
+        assertTrue(callbackExecutor.isShutdown());
+    }
+
+    @Test
+    void twoArgCreateOverloadReusesTheSameCachedClient(JenkinsRule r) {
+        DefaultHttpClientFactory factory = newFactory();
+        HttpClientOptions options = optionsWithSocketTimeout(7);
+
+        HttpClient viaOneArg = create(factory, options);
+        HttpClient viaTwoArgs =
+                factory.create(options, new ApacheAsyncHttpClientTest.NoOpThreadLocalContextManager<>());
+        created.add(viaTwoArgs);
+
+        assertNotNull(viaTwoArgs);
+        assertSame(viaOneArg, viaTwoArgs);
+    }
+
+    @Test
+    void concurrentCreateCallsOnOneFactoryAllReturnTheSameClient(JenkinsRule r) throws Exception {
+        DefaultHttpClientFactory factory = newFactory();
+        HttpClientOptions options = optionsWithSocketTimeout(7);
+        int threadCount = 16;
+        ExecutorService pool = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch ready = new CountDownLatch(threadCount);
+        CountDownLatch go = new CountDownLatch(1);
+        List<Future<HttpClient>> futures = new ArrayList<>();
+        for (int i = 0; i < threadCount; i++) {
+            futures.add(pool.submit(() -> {
+                ready.countDown();
+                go.await();
+                return factory.create(options);
+            }));
+        }
+
+        ready.await();
+        go.countDown();
+
+        Set<HttpClient> results = new HashSet<>();
+        for (Future<HttpClient> future : futures) {
+            results.add(future.get());
+        }
+        pool.shutdown();
+
+        // Racing threads through doCreate() used to be able to build and orphan more than one client.
+        assertEquals(1, results.size());
+        created.addAll(results);
     }
 
     private HttpClient create(DefaultHttpClientFactory factory, HttpClientOptions options) {
