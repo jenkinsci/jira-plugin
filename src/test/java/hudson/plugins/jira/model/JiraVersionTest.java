@@ -2,6 +2,7 @@ package hudson.plugins.jira.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -66,5 +67,25 @@ class JiraVersionTest {
 
         assertTrue(early.compareTo(late) < 0);
         assertEquals(0, early.compareTo(new JiraVersion("b", "other notes", START, RELEASE, true, false)));
+    }
+
+    @Test
+    void theFourArgConstructorLeavesDescriptionAndStartDateNull() {
+        // This is what the JIRA-RPC-derived Version constructor path produces.
+        JiraVersion version = new JiraVersion("1.0", RELEASE, true, false);
+
+        assertNull(version.getDescription());
+        assertNull(version.getStartDate());
+        assertEquals(RELEASE, version.getReleaseDate());
+    }
+
+    @Test
+    @SuppressWarnings("deprecation")
+    void theDeprecatedFiveArgConstructorHonorsStartDateButLeavesDescriptionNull() {
+        JiraVersion version = new JiraVersion("1.0", START, RELEASE, true, false);
+
+        assertNull(version.getDescription());
+        assertEquals(START, version.getStartDate());
+        assertEquals(RELEASE, version.getReleaseDate());
     }
 }
