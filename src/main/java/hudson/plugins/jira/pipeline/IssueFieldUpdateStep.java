@@ -17,7 +17,6 @@ import hudson.plugins.jira.selector.AbstractIssueSelector;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
-import jakarta.servlet.ServletException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -216,12 +215,12 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         // Named for the field it validates: the config form binds field="fieldId", so Stapler looks for
         // doCheckFieldId and the old doCheckField_id was never called. Its digits-only rule would have
         // rejected every built-in field name had it been, so both are fixed together.
-        public FormValidation doCheckFieldId(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckFieldId(@QueryParameter String value) {
             String fieldId = Util.fixNull(value).trim();
             if (fieldId.isEmpty()) {
                 return FormValidation.warning(Messages.JiraIssueFieldUpdater_NoIssueFieldID());
             }
-            if (!fieldId.matches("[A-Za-z0-9_]+")) {
+            if (!fieldId.matches("\\w+")) {
                 return FormValidation.error(Messages.JiraIssueFieldUpdater_NotAtIssueFieldID());
             }
             return FormValidation.ok();
