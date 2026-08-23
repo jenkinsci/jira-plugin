@@ -88,14 +88,14 @@ class IssueFieldUpdateStepTest {
         // A bare number is the shorthand for a custom field; everything else is a Jira field id
         // already. Built-in names used to be prefixed too, so "labels" went out as
         // "customfield_labels" and Jira rejected it.
-        List<String> field_test = Arrays.asList("10100", " 10100 ", "customfield_10100", "labels", "duedate");
+        List<String> fieldTest = Arrays.asList("10100", " 10100 ", "customfield_10100", "labels", "duedate");
 
-        List<String> field_after =
+        List<String> fieldAfter =
                 Arrays.asList("customfield_10100", "customfield_10100", "customfield_10100", "labels", "duedate");
 
         IssueFieldUpdateStep jifu = new IssueFieldUpdateStep(null, null, "");
-        for (int i = 0; i < field_test.size(); i++) {
-            assertEquals(field_after.get(i), jifu.prepareFieldId(field_test.get(i)), "Check field id conversion #" + i);
+        for (int i = 0; i < fieldTest.size(); i++) {
+            assertEquals(fieldAfter.get(i), jifu.prepareFieldId(fieldTest.get(i)), "Check field id conversion #" + i);
         }
     }
 
