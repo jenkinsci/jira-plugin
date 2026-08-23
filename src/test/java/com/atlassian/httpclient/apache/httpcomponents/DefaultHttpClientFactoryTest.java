@@ -88,15 +88,23 @@ class DefaultHttpClientFactoryTest {
 
     private static final class NoOpEventPublisher implements EventPublisher {
         @Override
-        public void publish(Object o) {}
+        public void publish(Object o) {
+            // no-op: these tests don't exercise event publishing
+        }
 
         @Override
-        public void register(Object o) {}
+        public void register(Object o) {
+            // no-op: these tests don't exercise event publishing
+        }
 
         @Override
-        public void unregister(Object o) {}
+        public void unregister(Object o) {
+            // no-op: these tests don't exercise event publishing
+        }
 
         @Override
-        public void unregisterAll() {}
+        public void unregisterAll() {
+            // no-op: these tests don't exercise event publishing
+        }
     }
 }

@@ -8,6 +8,7 @@ import com.atlassian.sal.api.ApplicationProperties;
 import com.atlassian.sal.api.executor.ThreadLocalContextManager;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicReference;
 import org.springframework.beans.factory.DisposableBean;
 
 public final class DefaultHttpClientFactory implements HttpClientFactory, DisposableBean {
@@ -24,7 +25,7 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
      * Jenkins restarted. {@code JiraSite} builds one factory per client, so caching per instance keeps
      * the original "one client per site" intent without leaking one site's configuration into another.
      */
-    private volatile ApacheAsyncHttpClient httpClient;
+    private final AtomicReference<ApacheAsyncHttpClient> httpClient = new AtomicReference<>();
 
     public DefaultHttpClientFactory(
             EventPublisher eventPublisher,
@@ -50,11 +51,7 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
         if (httpClient instanceof ApacheAsyncHttpClient) {
             // Forget the client before destroying it, so a later create() builds a fresh one rather
             // than handing back an instance whose executor and connection manager are shut down.
-            synchronized (this) {
-                if (this.httpClient == httpClient) {
-                    this.httpClient = null;
-                }
-            }
+            this.httpClient.compareAndSet((ApacheAsyncHttpClient) httpClient, null);
             ((ApacheAsyncHttpClient) httpClient).destroy();
         }
     }
@@ -62,22 +59,21 @@ public final class DefaultHttpClientFactory implements HttpClientFactory, Dispos
     private HttpClient doCreate(HttpClientOptions options, ThreadLocalContextManager threadLocalContextManager) {
         Objects.requireNonNull(options);
         // we create only one http client instance per factory as we don't need more
-        ApacheAsyncHttpClient existing = httpClient;
+        ApacheAsyncHttpClient existing = httpClient.get();
         if (existing != null) {
             return existing;
         }
         synchronized (this) {
-            if (httpClient == null) {
-                httpClient = new ApacheAsyncHttpClient(
-                        eventPublisher, applicationProperties, threadLocalContextManager, options);
-            }
-            return httpClient;
+            return httpClient.updateAndGet(current -> current != null
+                    ? current
+                    : new ApacheAsyncHttpClient(
+                            eventPublisher, applicationProperties, threadLocalContextManager, options));
         }
     }
 
     @Override
     public void destroy() throws Exception {
-        ApacheAsyncHttpClient client = httpClient;
+        ApacheAsyncHttpClient client = httpClient.get();
         if (client != null) {
             client.destroy();
         }
