@@ -18,6 +18,7 @@ import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.model.JiraIssueField;
 import hudson.plugins.jira.selector.ExplicitIssueSelector;
+import hudson.util.FormValidation;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
 import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
 import java.io.IOException;
@@ -97,6 +98,27 @@ class IssueFieldUpdateStepTest {
         for (int i = 0; i < fieldTest.size(); i++) {
             assertEquals(fieldAfter.get(i), jifu.prepareFieldId(fieldTest.get(i)), "Check field id conversion #" + i);
         }
+    }
+
+    @Test
+    void checkFieldIdRejectsAnEmptyValue() {
+        IssueFieldUpdateStep.DescriptorImpl descriptor = new IssueFieldUpdateStep.DescriptorImpl();
+
+        assertEquals(FormValidation.Kind.WARNING, descriptor.doCheckFieldId(" ").kind);
+    }
+
+    @Test
+    void checkFieldIdRejectsCharactersOutsideWordCharacters() {
+        IssueFieldUpdateStep.DescriptorImpl descriptor = new IssueFieldUpdateStep.DescriptorImpl();
+
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckFieldId("field-id!").kind);
+    }
+
+    @Test
+    void checkFieldIdAcceptsABuiltInFieldName() {
+        IssueFieldUpdateStep.DescriptorImpl descriptor = new IssueFieldUpdateStep.DescriptorImpl();
+
+        assertEquals(FormValidation.Kind.OK, descriptor.doCheckFieldId("labels").kind);
     }
 
     @Test
