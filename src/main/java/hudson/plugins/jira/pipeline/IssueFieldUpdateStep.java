@@ -215,6 +215,11 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         // Named for the field it validates: the config form binds field="fieldId", so Stapler looks for
         // doCheckFieldId and the old doCheckField_id was never called. Its digits-only rule would have
         // rejected every built-in field name had it been, so both are fixed together.
+        //
+        // No side effects, no remote calls, no private data returned - just a regex check on the
+        // submitted value - so neither a POST verb nor a permission check applies here.
+        // lgtm[jenkins/csrf]
+        // lgtm[jenkins/no-permission-check]
         public FormValidation doCheckFieldId(@QueryParameter String value) {
             String fieldId = Util.fixNull(value).trim();
             if (fieldId.isEmpty()) {
