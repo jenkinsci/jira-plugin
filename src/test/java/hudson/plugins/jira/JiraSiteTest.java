@@ -101,6 +101,41 @@ class JiraSiteTest {
     }
 
     @Test
+    void sessionIsNotSharedAcrossFoldersHoldingDifferentSecrets(JenkinsRule r) throws Exception {
+        String sharedId = "shared-credentials-id";
+        Folder folderA = r.jenkins.createProject(Folder.class, "folderA");
+        Folder folderB = r.jenkins.createProject(Folder.class, "folderB");
+        JiraFolderPropertyTest.getFolderStore(folderA)
+                .addCredentials(
+                        Domain.global(),
+                        new UsernamePasswordCredentialsImpl(
+                                CredentialsScope.GLOBAL, sharedId, null, "user-a", "secret-a"));
+        JiraFolderPropertyTest.getFolderStore(folderB)
+                .addCredentials(
+                        Domain.global(),
+                        new UsernamePasswordCredentialsImpl(
+                                CredentialsScope.GLOBAL, sharedId, null, "user-b", "secret-b"));
+
+        JiraSite site = new JiraSite(validPrimaryUrl.toExternalForm());
+        site.setCredentialsId(sharedId);
+        site.setTimeout(1);
+
+        FreeStyleProject jobInA = folderA.createProject(FreeStyleProject.class, "job-a");
+        FreeStyleProject jobInB = folderB.createProject(FreeStyleProject.class, "job-b");
+
+        JiraSession sessionForA = site.getSession(jobInA);
+        JiraSession sessionForB = site.getSession(jobInB);
+
+        assertNotNull(sessionForA);
+        assertNotNull(sessionForB);
+        // folderB used to be handed the session folderA's secret had already established
+        assertNotSame(sessionForA, sessionForB);
+        // ... while a second job in the same folder still reuses it
+        assertSame(sessionForB, site.getSession(jobInB));
+        assertNotSame(sessionForB, site.getSession(jobInA));
+    }
+
+    @Test
     void createSessionReturnsNullIfCredentialsIsNull(JenkinsRule r) throws FormException {
         JiraSite site = new JiraSite(
                 validPrimaryUrl,
