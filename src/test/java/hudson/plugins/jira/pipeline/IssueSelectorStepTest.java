@@ -12,11 +12,15 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraGlobalConfiguration;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Set;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,9 +54,11 @@ class IssueSelectorStepTest {
 
     private IssueSelectorStep.IssueSelectorStepExecution stepExecution;
     private IssueSelectorStep subject;
+    private JenkinsRule jenkinsRule;
 
     @BeforeEach
     void setUp(JenkinsRule jenkinsRule) throws Exception {
+        this.jenkinsRule = jenkinsRule;
         jenkinsRule.getInstance().getInjector().injectMembers(this);
 
         when(listener.getLogger()).thenReturn(logger);
@@ -88,6 +94,21 @@ class IssueSelectorStepTest {
 
         verify(run, times(0)).setResult(Result.FAILURE);
         verify(issueSelector).findIssueIds(run, site, listener);
+    }
+
+    @Test
+    void jiraIssueSelectorWithoutASelectorUsesTheDefaultSelector() throws Exception {
+        JiraGlobalConfiguration.get().setSites(Collections.singletonList(mock(JiraSite.class)));
+        WorkflowJob job = jenkinsRule.createProject(WorkflowJob.class);
+        job.setDefinition(new CpsFlowDefinition("echo \"ids=${jiraIssueSelector()}\"", true));
+
+        // jiraIssueSelector() with no selector used to fail the build with a bare NullPointerException:
+        // the selector is an optional @DataBoundSetter, but run() dereferenced it unconditionally and
+        // the only catch there is for RestClientException.
+        WorkflowRun build = jenkinsRule.buildAndAssertStatus(Result.SUCCESS, job);
+
+        jenkinsRule.assertLogContains(Messages.IssueSelectorStep_NoIssueSelector(), build);
+        jenkinsRule.assertLogContains("ids=[]", build);
     }
 
     @Test
