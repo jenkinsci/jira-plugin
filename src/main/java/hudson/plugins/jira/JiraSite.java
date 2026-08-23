@@ -59,6 +59,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -269,6 +270,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private transient Lock projectUpdateLock = new ReentrantLock();
 
     private transient JiraSession jiraSession;
+
+    /**
+     * Identifies the credentials {@link #jiraSession} was created with, so a session established for one
+     * folder is never handed to a job in another. Credentials are resolved per {@link Item}, but the
+     * session used to be cached with no key at all - two folders can define the same {@code credentialsId}
+     * with different secrets, and the second folder would then act as the first folder's Jira user.
+     */
+    private transient String jiraSessionKey;
 
     /**
      * Callback executor handed to this site's HTTP client.
@@ -752,10 +761,29 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     JiraSession getSession(Item item, boolean uiValidation) {
-        if (jiraSession == null) {
+        String key = sessionKey(item, uiValidation);
+        if (jiraSession == null || !Objects.equals(key, jiraSessionKey)) {
             jiraSession = createSession(item, uiValidation);
+            jiraSessionKey = key;
         }
         return jiraSession;
+    }
+
+    /**
+     * Identity of the credentials {@code item} resolves to, or {@code null} when none can be resolved.
+     * The secret is folded into the key because two folders may hold different secrets under the same
+     * credentials id, which is exactly the case a credentials-id-only key would fail to separate.
+     */
+    private String sessionKey(Item item, boolean uiValidation) {
+        StandardUsernamePasswordCredentials credentials = resolveCredentialsFor(item, uiValidation);
+        if (credentials == null) {
+            return null;
+        }
+        return credentials.getId()
+                + '\n'
+                + credentials.getUsername()
+                + '\n'
+                + Secret.toString(credentials.getPassword()).hashCode();
     }
 
     JiraSession createSession(Item item) {
@@ -768,10 +796,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null if remote access is not supported.
      */
     JiraSession createSession(Item item, boolean uiValidation) {
-        ItemGroup itemGroup = map(item);
-        item = itemGroup instanceof Folder ? ((Folder) itemGroup) : item;
-
-        StandardUsernamePasswordCredentials credentials = resolveCredentials(item, uiValidation);
+        StandardUsernamePasswordCredentials credentials = resolveCredentialsFor(item, uiValidation);
 
         if (credentials == null) {
             LOGGER.fine("no Jira credentials available for " + item);
@@ -801,6 +826,16 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @param item         can be <code>null</code> if top level
      * @param uiValidation if <code>true</code> and credentials not found at item level will not go up
      */
+    /**
+     * Resolves credentials in the scope {@code item} belongs to, substituting the enclosing folder when
+     * there is one - the scope {@link #sessionKey} and {@link #createSession} must agree on.
+     */
+    private StandardUsernamePasswordCredentials resolveCredentialsFor(Item item, boolean uiValidation) {
+        ItemGroup itemGroup = map(item);
+        Item scope = itemGroup instanceof Folder ? ((Folder) itemGroup) : item;
+        return resolveCredentials(scope, uiValidation);
+    }
+
     private StandardUsernamePasswordCredentials resolveCredentials(Item item, boolean uiValidation) {
         if (credentialsId == null) {
             LOGGER.fine("credentialsId is null");
@@ -876,6 +911,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void destroy() {
         try {
             this.jiraSession = null;
+            this.jiraSessionKey = null;
             ExecutorService toShutdown;
             synchronized (executorServiceLock) {
                 toShutdown = executorService;
