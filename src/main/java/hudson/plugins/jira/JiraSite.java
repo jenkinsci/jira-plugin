@@ -68,6 +68,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -307,7 +308,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * {@code ApacheAsyncHttpClient.destroy()} calls {@code shutdown()} on it - so closing one site's
      * client disabled Jira for every site until Jenkins restarted. One pool per site, owned by that site.
      */
-    private transient volatile ExecutorService executorService;
+    private final transient AtomicReference<ExecutorService> executorService = new AtomicReference<>();
 
     private final transient Object executorServiceLock = new Object();
 
@@ -856,15 +857,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * This method only supports credential matching by credentialsId.
+     * Resolves credentials in the scope {@code item} belongs to, substituting the enclosing folder when
+     * there is one - the scope {@link #sessionKey} and {@link #createSession} must agree on.
+     *
+     * <p>This method only supports credential matching by credentialsId.
      * Older methods are not and will not be supported as the credentials should have been migrated already.
      *
      * @param item         can be <code>null</code> if top level
      * @param uiValidation if <code>true</code> and credentials not found at item level will not go up
-     */
-    /**
-     * Resolves credentials in the scope {@code item} belongs to, substituting the enclosing folder when
-     * there is one - the scope {@link #sessionKey} and {@link #createSession} must agree on.
      */
     private StandardUsernamePasswordCredentials resolveCredentialsFor(Item item, boolean uiValidation) {
         ItemGroup itemGroup = map(item);
@@ -911,17 +911,19 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     private ExecutorService getExecutorService() {
-        ExecutorService cached = executorService;
+        ExecutorService cached = executorService.get();
         if (cached != null && !cached.isShutdown()) {
             return cached;
         }
         synchronized (executorServiceLock) {
             // Rebuild when the pool was shut down as well as when there is none yet: the HTTP client
             // shuts its callback executor down on destroy(), and a terminated pool rejects every task.
-            if (executorService == null || executorService.isShutdown()) {
-                executorService = newExecutorService();
+            ExecutorService current = executorService.get();
+            if (current == null || current.isShutdown()) {
+                current = newExecutorService();
+                executorService.set(current);
             }
-            return executorService;
+            return current;
         }
     }
 
@@ -950,8 +952,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             this.jiraSessionKey = null;
             ExecutorService toShutdown;
             synchronized (executorServiceLock) {
-                toShutdown = executorService;
-                executorService = null;
+                toShutdown = executorService.getAndSet(null);
             }
             if (toShutdown != null) {
                 toShutdown.shutdown();
