@@ -83,6 +83,13 @@ public class SearchIssuesStep extends Step {
         @Override
         protected List<String> run() throws Exception {
             JiraSite site = JiraSite.get(getContext().get(Run.class).getParent());
+            if (site == null) {
+                // JiraSite.get is @Nullable and this used to be dereferenced straight away, so a job with
+                // no Jira site configured failed with a bare NullPointerException instead of saying so.
+                getContext().get(TaskListener.class).getLogger().println(Messages.NoJiraSite());
+                throw new AbortException(Messages.NoJiraSite());
+            }
+
             JiraSession session = site.getSession(getContext().get(Run.class).getParent());
             if (session == null) {
                 getContext().get(TaskListener.class).getLogger().println(Messages.FailedToConnect());
