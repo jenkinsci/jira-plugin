@@ -1,4 +1,4 @@
 [tools]
-java = "21"
+java = "21.0.12+101.0.LTS"
 maven = "latest"
 node = "latest"
