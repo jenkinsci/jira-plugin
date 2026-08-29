@@ -18,6 +18,7 @@ import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.model.JiraIssueField;
 import hudson.plugins.jira.selector.ExplicitIssueSelector;
+import hudson.util.FormValidation;
 import io.jenkins.plugins.casc.misc.JenkinsConfiguredWithCodeRule;
 import io.jenkins.plugins.casc.misc.junit.jupiter.WithJenkinsConfiguredWithCode;
 import java.io.IOException;
@@ -85,14 +86,63 @@ class IssueFieldUpdateStepTest {
     @Test
     void checkPrepareFieldId() {
 
-        List<String> field_test = Arrays.asList("10100", "customfield_10100", "field_10100");
+        // A bare number is the shorthand for a custom field; everything else is a Jira field id
+        // already. Built-in names used to be prefixed too, so "labels" went out as
+        // "customfield_labels" and Jira rejected it.
+        List<String> fieldTest = Arrays.asList("10100", " 10100 ", "customfield_10100", "labels", "duedate");
 
-        List<String> field_after = Arrays.asList("customfield_10100", "customfield_10100", "customfield_field_10100");
+        List<String> fieldAfter =
+                Arrays.asList("customfield_10100", "customfield_10100", "customfield_10100", "labels", "duedate");
 
         IssueFieldUpdateStep jifu = new IssueFieldUpdateStep(null, null, "");
-        for (int i = 0; i < field_test.size(); i++) {
-            assertEquals(jifu.prepareFieldId(field_test.get(i)), field_after.get(i), "Check field id conversion #" + i);
+        for (int i = 0; i < fieldTest.size(); i++) {
+            assertEquals(fieldAfter.get(i), jifu.prepareFieldId(fieldTest.get(i)), "Check field id conversion #" + i);
         }
+    }
+
+    @Test
+    void checkFieldIdRejectsAnEmptyValue() {
+        IssueFieldUpdateStep.DescriptorImpl descriptor = new IssueFieldUpdateStep.DescriptorImpl();
+
+        assertEquals(FormValidation.Kind.WARNING, descriptor.doCheckFieldId(" ").kind);
+    }
+
+    @Test
+    void checkFieldIdRejectsCharactersOutsideWordCharacters() {
+        IssueFieldUpdateStep.DescriptorImpl descriptor = new IssueFieldUpdateStep.DescriptorImpl();
+
+        assertEquals(FormValidation.Kind.ERROR, descriptor.doCheckFieldId("field-id!").kind);
+    }
+
+    @Test
+    void checkFieldIdAcceptsABuiltInFieldName() {
+        IssueFieldUpdateStep.DescriptorImpl descriptor = new IssueFieldUpdateStep.DescriptorImpl();
+
+        assertEquals(FormValidation.Kind.OK, descriptor.doCheckFieldId("labels").kind);
+    }
+
+    @Test
+    void labelsAreSentAsAListOfStrings() throws Exception {
+        EnvVars env = new EnvVars();
+        env.put("BUILD_NUMBER", "42");
+        when(build.getEnvironment(listener)).thenReturn(env);
+
+        final List<JiraIssueField> fieldsAfter = new ArrayList<>();
+        doAnswer(invocation -> {
+                    fieldsAfter.addAll((List<JiraIssueField>) invocation.getArguments()[1]);
+                    return null;
+                })
+                .when(session)
+                .addFields(anyString(), anyList());
+
+        IssueFieldUpdateStep jifu = spy(new IssueFieldUpdateStep(
+                new ExplicitIssueSelector("ISSUE-1"), "labels", "alpha, beta, build-${BUILD_NUMBER}"));
+        jifu.perform(build, null, launcher, listener);
+
+        // Jira wants a JSON array here, not the bare string the step used to send for every field.
+        assertEquals("labels", fieldsAfter.get(0).getId());
+        assertEquals(
+                Arrays.asList("alpha", "beta", "build-42"), fieldsAfter.get(0).getValue());
     }
 
     @Test
@@ -107,7 +157,7 @@ class IssueFieldUpdateStepTest {
         Random random = new Random();
         Integer randomBuildNumber = random.nextInt(85) + 15; // random number 15 < r < 99
         String issueId = "ISSUE-" + random.nextInt(1000) + 999;
-        String beforeFieldid = "field" + random.nextInt(100) + 99;
+        String beforeFieldid = String.valueOf(10000 + random.nextInt(100));
         String beforeFieldValue = "Some comment, build #${BUILD_NUMBER}";
 
         EnvVars env = new EnvVars();
@@ -157,7 +207,7 @@ class IssueFieldUpdateStepTest {
         Random random = new Random();
         Integer randomBuildNumber = random.nextInt(85) + 15; // random number 15 < r < 99
         String issueId = "ISSUE-" + random.nextInt(1000) + 999;
-        String beforeFieldid = "field" + random.nextInt(100) + 99;
+        String beforeFieldid = String.valueOf(10000 + random.nextInt(100));
         String beforeFieldValue = "Some comment, build #${BUILD_NUMBER}";
 
         EnvVars env = new EnvVars();
@@ -193,7 +243,7 @@ class IssueFieldUpdateStepTest {
         Random random = new Random();
         Integer randomBuildNumber = random.nextInt(85) + 15; // random number 15 < r < 99
         String issueId = "ISSUE-" + random.nextInt(1000) + 999;
-        String beforeFieldid = "field" + random.nextInt(100) + 99;
+        String beforeFieldid = String.valueOf(10000 + random.nextInt(100));
         String beforeFieldValue = "Some comment, build #${BUILD_NUMBER}";
 
         EnvVars env = new EnvVars();

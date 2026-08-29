@@ -64,12 +64,36 @@ node {
 
 ## jiraUpdateIssueField usage example
 
+`fieldId` takes either a custom field - as its bare number or in full - or a built-in Jira field name:
+
 ```groovy
 node {
+    // custom field, by number
     jiraUpdateIssueField(
             issueSelector: ExplicitSelector("JIRA-123"),
             fieldId: "10001",
             fieldValue: "value"
+    )
+
+    // custom field, by full id
+    jiraUpdateIssueField(
+            issueSelector: ExplicitSelector("JIRA-123"),
+            fieldId: "customfield_10001",
+            fieldValue: "value"
+    )
+
+    // built-in field
+    jiraUpdateIssueField(
+            issueSelector: ExplicitSelector("JIRA-123"),
+            fieldId: "duedate",
+            fieldValue: "2026-12-24"
+    )
+
+    // labels take a comma-separated list
+    jiraUpdateIssueField(
+            issueSelector: ExplicitSelector("JIRA-123"),
+            fieldId: "labels",
+            fieldValue: "alpha, beta"
     )
 }
 ```
