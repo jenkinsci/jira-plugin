@@ -1,10 +1,10 @@
 # Modernisation — draft epics and issues
 
-Derived from the modernisation plan and ADRs 0002-0006 by @rantoniuk.
+Derived from the modernisation plan and [ADRs 0002-0006](adr/README.md) by @rantoniuk.
 
 ## Epic 1 — Jira Cloud correctness
 
-`Epic` · milestone `3.x` · `jira-cloud` · implements ADR 0002
+`Epic` · milestone `3.x` · `jira-cloud` · implements [ADR 0002](adr/0002-jira-cloud-detection-and-search-api-routing.md)
 
 > JQL operations fail against Jira Cloud sites configured with the API-gateway URL. Highest-impact open
 > defect; ships before anything else and on its own.
@@ -19,14 +19,14 @@ Derived from the modernisation plan and ADRs 0002-0006 by @rantoniuk.
 | Task | **#1178** — Retire the second, legacy HTTP client still used for versions and components — open PR [#1193](https://github.com/jenkinsci/jira-plugin/pull/1193) (draft) | `internal` |
 | Enhancement | Fetch more than the first page of JQL results on Jira Cloud | `enhancement` `jira-cloud` |
 
-The last one is the residual risk recorded in ADR 0002 — worth an issue now so it isn't forgotten once
+The last one is the residual risk recorded in [ADR 0002](adr/0002-jira-cloud-detection-and-search-api-routing.md) — worth an issue now so it isn't forgotten once
 the `410` stops being visible.
 
 ---
 
 ## Epic 2 — HTTP stack correctness
 
-`Epic` · milestone `3.x` · `internal` · implements ADR 0003 and ADR 0006
+`Epic` · milestone `3.x` · `internal` · implements [ADR 0003](adr/0003-future-of-the-vendored-atlassian-http-client.md) and [ADR 0006](adr/0006-http-client-lifecycle-and-jenkins-60536.md)
 
 > The vendored HTTP client has correctness bugs, its settings are partly inert, and it is excluded from
 > static analysis. Fix it in place; HttpClient 5 is a 4.0 target.
@@ -42,8 +42,9 @@ the `410` stops being visible.
 | Task | Bring the vendored HTTP tree under static analysis and add its missing license headers | `internal` |
 | Task | Clean up the vendored tree: deprecated TLS APIs, dead code paths, unused event plumbing | `internal` |
 
-Also on the epic, not as issues: close PR #755 with the ADR 0003 rationale, and add a SpotBugs
-suppression pointing at ADR 0006 rather than "fixing" the per-request client.
+Also on the epic, not as issues: close PR #755 with the [ADR 0003](adr/0003-future-of-the-vendored-atlassian-http-client.md)
+rationale, and add a SpotBugs suppression pointing at
+[ADR 0006](adr/0006-http-client-lifecycle-and-jenkins-60536.md) rather than "fixing" the per-request client.
 
 ---
 
@@ -81,7 +82,7 @@ suppression pointing at ADR 0006 rather than "fixing" the per-request client.
 
 ## Epic 4 — CI/CD, release automation and housekeeping
 
-`Epic` · milestone `3.x` · `internal` · implements ADR 0004
+`Epic` · milestone `3.x` · `internal` · implements [ADR 0004](adr/0004-continuous-delivery-and-version-numbering.md)
 
 > Releases are cut by hand though the prerequisites are already in the repo; some checks never run in CI;
 > several docs describe a version of the project that no longer exists. Independent of epics 1-3.
@@ -131,7 +132,7 @@ the endpoint it needs sits on the code path that change deletes.
 
 ## Epic 6 — 4.0 breaking changes
 
-`Epic` · milestone `4.0` · `breaking` · implements ADR 0005
+`Epic` · milestone `4.0` · `breaking` · implements [ADR 0005](adr/0005-staged-deprecation-removal.md)
 
 > Removals batched into one announced release, so users can take the Cloud fix without also taking API
 > breakage. Opens now to collect scope; starts only once the 3.x work has soaked.
@@ -149,7 +150,7 @@ the endpoint it needs sits on the code path that change deletes.
 | Documentation | Write the 4.0 upgrade guide | `4.0` |
 
 The first two are 3.x mitigations deliberately parented to this epic: they make the 4.0 removals
-non-surprising, and per ADR 0005 users get at least one release of warning where they'll actually see it.
+non-surprising, and per [ADR 0005](adr/0005-staged-deprecation-removal.md) users get at least one release of warning where they'll actually see it.
 They are the only rows in the whole draft whose milestone differs from their epic's.
 
 ---
@@ -198,5 +199,6 @@ Once these land, epic 6 gains a follow-up row to retire the superseded `JiraCrea
 **16 carry `good first issue`** — 10 in epic 3, 5 in epic 4, 1 in epic 2. Those are the epics where a
 drive-by contributor can be useful without needing a real Jira instance.
 
-Four open PRs are resolved without merging as-is: **#754** superseded by epic 1, **#755** by ADR 0003,
-**#562** closes with #541, and **#746** gets rebased under epic 5 rather than closed.
+Four open PRs are resolved without merging as-is: **#754** superseded by epic 1, **#755** by
+[ADR 0003](adr/0003-future-of-the-vendored-atlassian-http-client.md), **#562** closes with #541, and
+**#746** gets rebased under epic 5 rather than closed.
