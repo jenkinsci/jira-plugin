@@ -18,12 +18,16 @@ The repo already has what this needs, so nothing new has to be invented:
   `documentation`, `breaking`, `pipeline`, `jira-cloud`, `jira-server`, `security`, `good first issue`,
   `configuration`, `jcasc-compatibility`, `localization`, `needs-real-testing`.
 
-**Two backlog corrections to make first:**
+**Three backlog corrections to make first:**
 
 - **#1175 moves out of the `4.0` milestone into `3.x`.** `maven.compiler.release` already evaluates to 21
   from the 2.555.x parent POM, so the minimum is a fact, not a pending break. What is left is making it
   explicit and fixing the docs that still claim Java 17.
 - **The `4.0` milestone is otherwise empty** and becomes epic 6's home.
+- **The two Pipeline-parity rows in epic 3 move into new epic 7, retargeted from `3.x` to `4.0`.**
+  They're one coherent capability gap against the Jenkins.io Pipeline Steps Reference, not two
+  unrelated maintenance tasks, and pair naturally with epic 6's retirement of the freestyle-only
+  notifiers it already supersedes.
 
 `[GFI]` marks issues suitable for the `good first issue` label: self-contained, one obvious fix, provable
 with an offline test, no real Jira instance and no design judgement required.
@@ -101,8 +105,6 @@ suppression pointing at ADR 0006 rather than "fixing" the per-request client.
 | Bug | Credential migration reports success even when saving failed | `bug` `[GFI]` |
 | Bug | The explicit issue selector stores its keys twice and they can disagree | `bug` |
 | Task | Replace deprecated credentials and security APIs | `maintenance` |
-| Task | Export Jira environment variables in Pipeline builds, not just freestyle | `pipeline` |
-| Task | Make issue creation and issue migration usable from Pipeline | `pipeline` |
 | Task | Give global and per-job configuration proper JCasC names | `jcasc-compatibility` |
 | Task | Stop hiding Pipeline steps when class loading fails | `pipeline` `[GFI]` |
 | Task | Delete config files and message keys for classes that no longer exist | `maintenance` `[GFI]` |
@@ -185,17 +187,46 @@ They are the only rows in the whole draft whose milestone differs from their epi
 
 ---
 
+## Epic 7 — Pipeline step parity
+
+`Epic` · milestone `4.0` · `pipeline`
+
+> Three freestyle-only classes have no Pipeline equivalent: `JiraCreateIssueNotifier`,
+> `JiraIssueMigrator`, and `JiraEnvironmentVariableBuilder` — exactly the gap `docs/features.md`
+> names in its "Freestyle only" section and explains in "What is not yet supported in Pipeline".
+> The [Jenkins.io Pipeline Steps Reference](https://www.jenkins.io/doc/pipeline/steps/jira/) is
+> generated straight from this plugin's `@Symbol` steps on every release, so it's the objective
+> measure of parity: closing this epic means every plugin capability shows up there. Follows the
+> same `Builder`+`SimpleBuildStep`+`@Symbol` pattern already used to replace
+> `JiraVersionCreator`/`JiraReleaseVersionUpdater` (epic 6) — sequenced into `4.0` alongside that
+> cleanup, since retiring the freestyle-only originals once their replacements exist is itself a
+> breaking change.
+
+| Type | Title | Labels |
+|---|---|---|
+| Task | Add a Pipeline step that creates/comments on an issue when a build fails, replacing `JiraCreateIssueNotifier` | `pipeline` |
+| Task | Add a Pipeline step that adds or migrates a fix version on matching issues, replacing `JiraIssueMigrator` | `pipeline` |
+| Task | Decide whether `JiraEnvironmentVariableBuilder` still needs a dedicated step, given the `jiraIssueSelector` + `JiraSite.get(...)` workaround already documented in `docs/features.md` | `pipeline` |
+| Documentation | Update `docs/features.md`'s "Freestyle only" and "What is not yet supported in Pipeline" sections once parity is reached | `documentation` `pipeline` |
+
+Once these land, epic 6 gains a follow-up row to retire the superseded `JiraCreateIssueNotifier` and
+`JiraIssueMigrator` classes the same way it already retires `JiraVersionCreator` and
+`JiraReleaseVersionUpdater`.
+
+---
+
 ## Counts
 
 | Epic | Issues | Milestone | Already open |
 |---|---|---|---|
 | 1 · Jira Cloud correctness | 7 | 3.x | #747, #1178 |
 | 2 · HTTP stack correctness | 8 | 3.x | — |
-| 3 · Java 21 and code health | 21 | 3.x | #1175, #731 |
+| 3 · Java 21 and code health | 19 | 3.x | #1175, #731 |
 | 4 · CI/CD, release automation and housekeeping | 13 | 3.x | #468, #1179, #714 |
 | 5 · Extend step and parameter functionality | 7 | 3.x | #677, #691, #694, #453 |
 | 6 · 4.0 breaking changes | 9 | 4.0 (2 rows in 3.x) | #541 |
-| **Total** | **65 issues + 6 epics** | 58 in `3.x`, 7 in `4.0` | 12 already open |
+| 7 · Pipeline step parity | 4 | 4.0 | — |
+| **Total** | **67 issues + 7 epics** | 56 in `3.x`, 11 in `4.0` | 12 already open |
 
 **16 carry `good first issue`** — 10 in epic 3, 5 in epic 4, 1 in epic 2. Those are the epics where a
 drive-by contributor can be useful without needing a real Jira instance.
