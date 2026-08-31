@@ -50,7 +50,7 @@ Rows are listed in intended execution order within each epic.
 | Task | Assert in tests that Cloud and Data Center sites reach their own search endpoints | `test` |
 | Bug | Validating a site can hang a Jenkins request thread indefinitely | `bug` |
 | Bug | Failed Jira calls lose their cause and swallow interrupts, making them hard to diagnose | `bug` |
-| Task | **#1178** — Retire the second, legacy HTTP client still used for versions and components | `internal` |
+| Task | **#1178** — Retire the second, legacy HTTP client still used for versions and components — open PR [#1193](https://github.com/jenkinsci/jira-plugin/pull/1193) (draft) | `internal` |
 | Enhancement | Fetch more than the first page of JQL results on Jira Cloud | `enhancement` `jira-cloud` |
 
 The last one is the residual risk recorded in ADR 0002 — worth an issue now so it isn't forgotten once
@@ -68,9 +68,9 @@ the `410` stops being visible.
 | Type | Title | Labels |
 |---|---|---|
 | Task | Record in the code why an HTTP client is built per request, so it stops being "fixed" and reverted | `internal` |
-| Bug | Every Jira site silently inherits the first configured site's connection settings | `bug` |
-| Bug | The "Read timeout" setting has no effect, and connect timeout is never applied | `bug` `configuration` |
-| Bug | A shared thread pool is sized from one site and can be shut down out from under the others | `bug` |
+| Bug | Every Jira site silently inherits the first configured site's connection settings — open PR [#1199](https://github.com/jenkinsci/jira-plugin/pull/1199) | `bug` |
+| Bug | The "Read timeout" setting has no effect, and connect timeout is never applied — open PR [#1200](https://github.com/jenkinsci/jira-plugin/pull/1200) | `bug` `configuration` |
+| Bug | A shared thread pool is sized from one site and can be shut down out from under the others — open PR [#1200](https://github.com/jenkinsci/jira-plugin/pull/1200) | `bug` |
 | Documentation | Document that trusting self-signed certificates also disables hostname verification | `documentation` `security` `[GFI]` |
 | Task | Reproduce and root-cause the connection freeze behind JENKINS-60536 (spike) | `internal` |
 | Task | Bring the vendored HTTP tree under static analysis and add its missing license headers | `internal` |
@@ -93,17 +93,18 @@ suppression pointing at ADR 0006 rather than "fixing" the per-request client.
 | Task | **#1175** — Declare the Java 21 minimum explicitly and fix the docs that still say Java 17 | `maintenance` `[GFI]` |
 | Task | Add a test proving a fully-configured Jira site survives being saved and reloaded | `test` |
 | Task | Split `JiraSite` — extract client construction and issue-link caching | `internal` |
-| Bug | A Jira session created for one folder can be handed to jobs in another | `bug` `security` |
-| Bug | A transient failure gets cached for two minutes, and the issue cache is unbounded | `bug` |
-| Bug | The project list is never refreshed until restart, and times out without logging anything | `bug` |
+| Bug | A Jira session created for one folder can be handed to jobs in another — open PR [#1200](https://github.com/jenkinsci/jira-plugin/pull/1200) | `bug` `security` |
+| Bug | A transient failure gets cached for two minutes, and the issue cache is unbounded — open PR [#1200](https://github.com/jenkinsci/jira-plugin/pull/1200) | `bug` |
+| Bug | The project list is never refreshed until restart, and times out without logging anything — open PR [#1200](https://github.com/jenkinsci/jira-plugin/pull/1200) | `bug` |
 | Task | **#731** — Adopt Java 21 language features where they make the code clearer | `maintenance` |
-| Bug | Adding a Jira site to a folder throws an error every time | `bug` `[GFI]` |
+| Bug | Adding a Jira site to a folder throws an error every time — open PR [#1202](https://github.com/jenkinsci/jira-plugin/pull/1202) | `bug` `[GFI]` |
 | Bug | `jiraIssueSelector` throws when no selector is configured | `bug` `pipeline` `[GFI]` |
 | Bug | `jiraSearch` fails unhelpfully when no Jira site is configured | `bug` `pipeline` `[GFI]` |
-| Bug | Equal version objects can produce different hash codes | `bug` `[GFI]` |
-| Bug | A redundant duplicate Jira call on every workflow transition | `bug` `[GFI]` |
-| Bug | Credential migration reports success even when saving failed | `bug` `[GFI]` |
-| Bug | The explicit issue selector stores its keys twice and they can disagree | `bug` |
+| Bug | Equal version objects can produce different hash codes — open PR [#1201](https://github.com/jenkinsci/jira-plugin/pull/1201) | `bug` `[GFI]` |
+| Bug | `JiraIssueField.compareTo` recurses into itself and throws `StackOverflowError` — open PR [#1208](https://github.com/jenkinsci/jira-plugin/pull/1208) | `bug` |
+| Bug | A redundant duplicate Jira call on every workflow transition — open PR [#1200](https://github.com/jenkinsci/jira-plugin/pull/1200) | `bug` `[GFI]` |
+| Bug | Credential migration reports success even when saving failed — open PR [#1200](https://github.com/jenkinsci/jira-plugin/pull/1200) | `bug` `[GFI]` |
+| Bug | The explicit issue selector stores its keys twice and they can disagree — open PR [#1205](https://github.com/jenkinsci/jira-plugin/pull/1205) | `bug` |
 | Task | Replace deprecated credentials and security APIs | `maintenance` |
 | Task | Give global and per-job configuration proper JCasC names | `jcasc-compatibility` |
 | Task | Stop hiding Pipeline steps when class loading fails | `pipeline` `[GFI]` |
@@ -129,7 +130,7 @@ suppression pointing at ADR 0006 rather than "fixing" the per-request client.
 | Task | Run the static-analysis check in CI, where it currently never runs | `internal` |
 | Task | Remove the dead coverage plugin and its obsolete workaround | `maintenance` `[GFI]` |
 | Task | Delete the leftover manual test programs from the pre-JUnit 5 era | `test` `[GFI]` |
-| Documentation | Fix stale claims in `README.md` and `AGENTS.md` | `documentation` `[GFI]` |
+| Documentation | Fix stale claims in `README.md` and `AGENTS.md` — open PR [#1190](https://github.com/jenkinsci/jira-plugin/pull/1190) | `documentation` `[GFI]` |
 | Documentation | `docs/changelog.md` stops in March 2020 — point it at releases or regenerate it | `documentation` `[GFI]` |
 | Task | Delete stale branches from this repo — five are merged or abandoned and every new fork copies them | `internal` `[GFI]` |
 | Task | Triage the ~25 imported JENKINS-* issues from 2011-2019 | `maintenance` |
@@ -148,7 +149,7 @@ suppression pointing at ADR 0006 rather than "fixing" the per-request client.
 
 | Type | Title | Labels |
 |---|---|---|
-| Bug | **#677** — Built-in fields such as labels can't be updated from Pipeline | `bug` `pipeline` |
+| Bug | **#677** — Built-in fields such as labels can't be updated from Pipeline — open PR [#1207](https://github.com/jenkinsci/jira-plugin/pull/1207) | `bug` `pipeline` |
 | Enhancement | Support structured and multi-value field updates, appending instead of overwriting | `enhancement` `pipeline` |
 | Enhancement | **#691**, **#694** — Allow field updates and workflow transitions as post-build actions | `enhancement` |
 | Enhancement | **#453** — Issue selector for all changes since the last successful build | `enhancement` |
@@ -221,12 +222,12 @@ Once these land, epic 6 gains a follow-up row to retire the superseded `JiraCrea
 |---|---|---|---|
 | 1 · Jira Cloud correctness | 7 | 3.x | #747, #1178 |
 | 2 · HTTP stack correctness | 8 | 3.x | — |
-| 3 · Java 21 and code health | 19 | 3.x | #1175, #731 |
+| 3 · Java 21 and code health | 20 | 3.x | #1175, #731 |
 | 4 · CI/CD, release automation and housekeeping | 13 | 3.x | #468, #1179, #714 |
 | 5 · Extend step and parameter functionality | 7 | 3.x | #677, #691, #694, #453 |
 | 6 · 4.0 breaking changes | 9 | 4.0 (2 rows in 3.x) | #541 |
 | 7 · Pipeline step parity | 4 | 4.0 | — |
-| **Total** | **67 issues + 7 epics** | 56 in `3.x`, 11 in `4.0` | 12 already open |
+| **Total** | **68 issues + 7 epics** | 57 in `3.x`, 11 in `4.0` | 12 already open |
 
 **16 carry `good first issue`** — 10 in epic 3, 5 in epic 4, 1 in epic 2. Those are the epics where a
 drive-by contributor can be useful without needing a real Jira instance.
