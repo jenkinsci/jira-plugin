@@ -77,6 +77,7 @@ public class ExplicitIssueSelector extends AbstractIssueSelector {
                 .collect(Collectors.toList());
     }
 
+    // TODO(4.0): remove along with jiraIssueKeys once this migration is no longer needed - see #1214
     @SuppressWarnings("deprecation")
     protected Object readResolve() {
         if (issueKeys == null && jiraIssueKeys != null) {
