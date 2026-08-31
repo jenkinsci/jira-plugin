@@ -1,40 +1,6 @@
 # Modernisation — draft epics and issues
 
-Draft backlog for the modernisation programme, for manual review before anything is created on GitHub.
-Derived from the modernisation plan and ADRs 0002-0006.
-
-## Structure
-
-The repo already has what this needs, so nothing new has to be invented:
-
-- **`Epic` is an enabled issue type** here, alongside `Task`, `Bug`, `Enhancement` and `Documentation` —
-  and the latter four are already in active use. So each epic is a real issue with type `Epic`, and the
-  work below hangs off it as native **sub-issues**, not as a checklist in the body.
-- **Two milestones only: `3.x` and `4.0`.** No per-release sub-milestones — sequencing lives in the epic
-  grouping and in the row order within each epic. This also sidesteps the fact that CD (ADR 0004) makes
-  version numbers incremental and on-demand, so fixed release numbers stop being predictable anyway. The
-  existing `4.0` milestone is reused; `3.x` is new.
-- **Labels** all exist already: `bug`, `enhancement`, `feature`, `maintenance`, `internal`, `test`,
-  `documentation`, `breaking`, `pipeline`, `jira-cloud`, `jira-server`, `security`, `good first issue`,
-  `configuration`, `jcasc-compatibility`, `localization`, `needs-real-testing`.
-
-**Three backlog corrections to make first:**
-
-- **#1175 moves out of the `4.0` milestone into `3.x`.** `maven.compiler.release` already evaluates to 21
-  from the 2.555.x parent POM, so the minimum is a fact, not a pending break. What is left is making it
-  explicit and fixing the docs that still claim Java 17.
-- **The `4.0` milestone is otherwise empty** and becomes epic 6's home.
-- **The two Pipeline-parity rows in epic 3 move into new epic 7, retargeted from `3.x` to `4.0`.**
-  They're one coherent capability gap against the Jenkins.io Pipeline Steps Reference, not two
-  unrelated maintenance tasks, and pair naturally with epic 6's retirement of the freestyle-only
-  notifiers it already supersedes.
-
-`[GFI]` marks issues suitable for the `good first issue` label: self-contained, one obvious fix, provable
-with an offline test, no real Jira instance and no design judgement required.
-
-Rows are listed in intended execution order within each epic.
-
----
+Derived from the modernisation plan and ADRs 0002-0006 by @rantoniuk.
 
 ## Epic 1 — Jira Cloud correctness
 

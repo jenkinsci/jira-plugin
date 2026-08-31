@@ -183,7 +183,6 @@ for the actual failing conditions, use the SonarQube MCP tools
   exception; state that in the PR description rather than silently skipping.
 - Write issue and PR descriptions, and comments, in **GitHub-flavored Markdown** — headings,
   fenced code blocks with a language tag, bullet/numbered lists, tables, and task lists
-  (`- [ ]`) — rather than dense unformatted paragraphs. It renders far more legibly on GitHub
-  and is easier for both humans and agents to scan.
+  (`- [ ]`) — rather than dense unformatted paragraphs.
 - Confirm the SonarCloud quality gate (above) passes before considering a PR done.
 - Commit message length max 79 chars.
