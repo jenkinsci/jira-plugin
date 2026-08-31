@@ -123,7 +123,12 @@ Jira Data Center/Server supports both a traditional username+password login and,
 
 Connection failing? See [Troubleshooting](troubleshooting.md).
 
-## Next steps
+## System Properties
 
-- **[Usage Examples](usage-examples.md)** — ready-to-copy Pipeline snippets for each step.
-- **[System Properties](system-properties.md)** — settings not exposed in the UI.
+Some plugin behaviour is only changeable globally, by overriding
+[Jenkins system properties](https://www.jenkins.io/doc/book/managing/system-properties/) — for
+settings that aren't exposed in the UI.
+
+- `-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true`
+
+  Disables resolving a user's email address from their Jira username.

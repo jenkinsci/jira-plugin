@@ -7,7 +7,7 @@ need it.
 **In this guide:** [Quick start](#quick-start) · [Before you open a PR](#before-you-open-a-pr) ·
 [Building & testing](#building--testing) · [Testing](#testing) ·
 [Updating documentation](#updating-documentation) · [Running Jenkins locally](#running-jenkins-locally) ·
-[For Maintainers](maintainers.md)
+[For Maintainers](#for-maintainers)
 
 ## Quick start
 
@@ -187,6 +187,9 @@ Then replace the `JENKINS_AGENT_SSH_PUBKEY` value in `docker-compose.yml` with t
 the placeholder, and don't commit your own private key.
 
 ## For Maintainers
+
+Notes for jira-plugin maintainers — release process and a couple of decisions that aren't obvious
+from the code.
 
 ### Atlassian sources import
 
