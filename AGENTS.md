@@ -175,11 +175,10 @@ for the actual failing conditions, use the SonarQube MCP tools
 - Always run `mvn spotless:apply` and `mvn clean test` before committing/opening a PR.
 - **Every PR ships a documentation change too.** If the change is user-visible — new behaviour, a new
   or renamed step parameter, a changed default, a changed failure mode — update the relevant
-  **Declarative Pipeline** example in `docs/usage-examples.md` in the same PR, and `docs/features.md`,
-  `docs/system-properties.md` or `docs/troubleshooting.md` when one of those is the right page. Write
-  new and updated examples in Declarative form (`pipeline { agent any; stages { ... } }`); the file
-  still contains older scripted (`node { ... }`) snippets, which are converted opportunistically as
-  they are touched — don't add new ones. A step's example must stay runnable: if you add a required
+  **Declarative Pipeline** example in `docs/features.md` in the same PR (every feature there has one),
+  and `docs/configuration.md` or `docs/troubleshooting.md` when one of those is the right page. Write
+  new and updated examples in Declarative form (`pipeline { agent any; stages { ... } }`) — don't add
+  scripted (`node { ... }`) snippets. A step's example must stay runnable: if you add a required
   parameter, every example using that step needs it. Docs-only and pure-refactoring PRs are the
   exception; state that in the PR description rather than silently skipping.
 - Write issue and PR descriptions, and comments, in **GitHub-flavored Markdown** — headings,

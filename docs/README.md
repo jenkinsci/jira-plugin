@@ -15,10 +15,10 @@ flowchart LR
 ```
 
 1. Install **Jira Integration** from *Manage Jenkins → Plugins*.
-2. Skim [Features](features.md) to see what the plugin can do.
+2. Skim [Features](features.md) to see what the plugin can do — every feature there comes with a
+   ready-to-copy Pipeline snippet.
 3. Follow [Configuration](configuration.md) to connect Jenkins to your Jira instance — it also
-   covers [Usage Examples](usage-examples.md) (ready-to-copy Pipeline snippets) and
-   [System Properties](system-properties.md) (settings not exposed in the UI).
+   covers System Properties (settings not exposed in the UI).
 
 ## Something doesn't work?
 
