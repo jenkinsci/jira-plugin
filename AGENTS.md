@@ -129,11 +129,9 @@ Enforced by the build, not optional:
 - Prefer reusing existing utilities/patterns over introducing new ones — this codebase has a
   fairly small, consistent surface area (see Project overview above); check for an existing
   equivalent before adding a new helper.
-- **Check `.github/adr/` before "fixing" code that looks wrong.** Architecture decisions are recorded
-  there in MADR format (`.github/adr/README.md` has the index and template). Some of this code looks
-  like a plain bug and is not — `ApacheAsyncHttpClient` building an HTTP client per request is the
-  standing example (ADR 0006: it is the shipped fix for JENKINS-60536, and reverting it reintroduces a
-  build hang). If you make a decision worth keeping, or reject a reasonable alternative for a
+- **Check `docs/adr/` before "fixing" code that looks wrong.** Architecture decisions are recorded
+  there in MADR format (`docs/adr/README.md` has the index and template) - some of this code looks
+  like a plain bug and is not. If you make a decision worth keeping, or reject a reasonable alternative for a
   non-obvious reason, add a record.
 - New `catch` blocks around Jira REST calls should re-interrupt on `InterruptedException` and log
   via a deferred `Supplier`, not eager string concatenation (see SonarCloud section below for why):
