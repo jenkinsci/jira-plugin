@@ -129,6 +129,10 @@ Enforced by the build, not optional:
 - Prefer reusing existing utilities/patterns over introducing new ones — this codebase has a
   fairly small, consistent surface area (see Project overview above); check for an existing
   equivalent before adding a new helper.
+- **Check `docs/adr/` before "fixing" code that looks wrong.** Architecture decisions are recorded
+  there in MADR format (`docs/adr/README.md` has the index and template) - some of this code looks
+  like a plain bug and is not. If you make a decision worth keeping, or reject a reasonable alternative for a
+  non-obvious reason, add a record.
 - New `catch` blocks around Jira REST calls should re-interrupt on `InterruptedException` and log
   via a deferred `Supplier`, not eager string concatenation (see SonarCloud section below for why):
   ```java
@@ -167,8 +171,16 @@ for the actual failing conditions, use the SonarQube MCP tools
 - Title format: Conventional Commits — `<type>(<scope>): <subject>`, where type is one of
   `feat|fix|docs|style|refactor|test|chore|perf`.
 - Always run `mvn spotless:apply` and `mvn clean test` before committing/opening a PR.
+- **Every PR ships a documentation change too.** If the change is user-visible — new behaviour, a new
+  or renamed step parameter, a changed default, a changed failure mode — update the relevant
+  **Declarative Pipeline** example in `docs/features.md` in the same PR (every feature there has one),
+  and `docs/configuration.md` or `docs/troubleshooting.md` when one of those is the right page. Write
+  new and updated examples in Declarative form (`pipeline { agent any; stages { ... } }`) — don't add
+  scripted (`node { ... }`) snippets. A step's example must stay runnable: if you add a required
+  parameter, every example using that step needs it. Docs-only and pure-refactoring PRs are the
+  exception; state that in the PR description rather than silently skipping.
 - Write issue and PR descriptions, and comments, in **GitHub-flavored Markdown** — headings,
   fenced code blocks with a language tag, bullet/numbered lists, tables, and task lists
-  (`- [ ]`) — rather than dense unformatted paragraphs. It renders far more legibly on GitHub
-  and is easier for both humans and agents to scan.
+  (`- [ ]`) — rather than dense unformatted paragraphs.
 - Confirm the SonarCloud quality gate (above) passes before considering a PR done.
+- Commit message length max 79 chars.
