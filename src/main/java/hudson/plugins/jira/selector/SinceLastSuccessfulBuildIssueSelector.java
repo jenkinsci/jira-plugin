@@ -9,6 +9,7 @@ import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
@@ -53,6 +54,7 @@ public class SinceLastSuccessfulBuildIssueSelector extends DefaultIssueSelector 
     }
 
     @Extension
+    @Symbol("SinceLastSuccessfulBuildSelector")
     public static final class DescriptorImpl extends Descriptor<AbstractIssueSelector> {
 
         @Override

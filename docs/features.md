@@ -468,6 +468,7 @@ Several steps above take an `issueSelector:` argument that decides *which* issue
 - **`JqlSelector('project = EX AND status = Open')`** — runs a JQL query.
 - **`P4Selector()`** — reads Perforce job IDs from the changelog instead of scanning for issue-key
   patterns. Requires the P4 plugin to be also installed.
+- **`SinceLastSuccessfulBuildSelector()`** — collects issues from the current build and all builds since the last successful build (excluding the last successful build itself). If no previous successful build exists, only the current build is scanned.
 
 ## What is not yet supported in Pipeline
 
