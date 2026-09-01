@@ -15,7 +15,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
  * Selects JIRA issues from the current build and all builds
  * since the last successful one.
  */
-public class SinceLastSuccessfulBuildIssueSelector extends AbstractIssueSelector {
+public class SinceLastSuccessfulBuildIssueSelector extends DefaultIssueSelector {
 
     @DataBoundConstructor
     public SinceLastSuccessfulBuildIssueSelector() {}
