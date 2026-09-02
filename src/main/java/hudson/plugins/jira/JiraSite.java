@@ -59,6 +59,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -67,6 +68,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
@@ -254,12 +256,31 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     private int ioThreadCount = Integer.getInteger(JiraSite.class.getName() + ".httpclient.options.ioThreadCount", 2);
 
     /**
+     * Upper bound on {@link #issueCache}. It used to be unbounded, so every issue key ever seen by the
+     * changelog annotator stayed resident.
+     */
+    private static final int ISSUE_CACHE_MAX_SIZE =
+            Integer.getInteger(JiraSite.class.getName() + ".issueCache.maxSize", 1000);
+
+    /**
      * List of project keys (i.e., "MNG" portion of "MNG-512"),
      * last time we checked. Copy on write semantics.
      */
-    // TODO: seems like this is never invalidated (never set to null)
-    // should we implement to invalidate this (say every hour)?
     private transient volatile Set<String> projects;
+
+    /**
+     * When {@link #projects} was last fetched, in {@link System#currentTimeMillis()} terms.
+     */
+    private transient volatile long projectsFetchedAt;
+
+    private static final long DEFAULT_PROJECTS_TTL_MILLIS =
+            Long.getLong(JiraSite.class.getName() + ".projectKeys.ttlMillis", TimeUnit.HOURS.toMillis(1));
+
+    /**
+     * How long a fetched project list stays usable before it is refreshed. Per instance and not final so
+     * tests can age the list out without waiting; production only ever reads the default.
+     */
+    /* package */ transient long projectsTtlMillis = DEFAULT_PROJECTS_TTL_MILLIS;
 
     private transient Cache<String, Optional<Issue>> issueCache = makeIssueCache();
 
@@ -270,7 +291,26 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     private transient JiraSession jiraSession;
 
-    private static ExecutorService executorService;
+    /**
+     * Identifies the credentials {@link #jiraSession} was created with, so a session established for one
+     * folder is never handed to a job in another. Credentials are resolved per {@link Item}, but the
+     * session used to be cached with no key at all - two folders can define the same {@code credentialsId}
+     * with different secrets, and the second folder would then act as the first folder's Jira user.
+     */
+    private transient String jiraSessionKey;
+
+    /**
+     * Callback executor handed to this site's HTTP client.
+     *
+     * <p>This used to be {@code static} while being sized from the <em>instance</em> field
+     * {@link #threadExecutorNumber}, so whichever site built it first fixed the pool size for the whole
+     * controller. Worse, it was passed to every site's client as the callback executor, and
+     * {@code ApacheAsyncHttpClient.destroy()} calls {@code shutdown()} on it - so closing one site's
+     * client disabled Jira for every site until Jenkins restarted. One pool per site, owned by that site.
+     */
+    private final transient AtomicReference<ExecutorService> executorService = new AtomicReference<>();
+
+    private final transient Object executorServiceLock = new Object();
 
     // Deprecate the previous constructor but leave it in place for Java-level compatibility.
     @Deprecated
@@ -670,22 +710,34 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     @SuppressWarnings("unused")
     protected Object readResolve() throws FormException {
-        JiraSite jiraSite;
+        JiraSite jiraSite = null;
 
         if (credentialsId == null && userName != null && password != null) { // Migrate credentials
-            jiraSite = new JiraSite(
-                    url,
-                    alternativeUrl,
-                    userName,
-                    password.getPlainText(),
-                    supportsWikiStyleComment,
-                    recordScmChanges,
-                    userPattern,
-                    updateJiraIssueForAllStatus,
-                    groupVisibility,
-                    roleVisibility,
-                    useHTTPAuth);
-        } else {
+            try {
+                jiraSite = new JiraSite(
+                        url,
+                        alternativeUrl,
+                        userName,
+                        password.getPlainText(),
+                        supportsWikiStyleComment,
+                        recordScmChanges,
+                        userPattern,
+                        updateJiraIssueForAllStatus,
+                        groupVisibility,
+                        roleVisibility,
+                        useHTTPAuth);
+            } catch (FormException e) {
+                // Migration could not persist the credentials. Fall through and load the site without
+                // any, so it shows up as needing reconfiguration - failing here would abort
+                // deserialization and take the whole global configuration down with it.
+                LOGGER.log(
+                        Level.WARNING,
+                        e,
+                        () -> "Could not migrate the stored credentials of " + url
+                                + "; loading the site without credentials, it needs to be reconfigured");
+            }
+        }
+        if (jiraSite == null) {
             jiraSite = new JiraSite(
                     url,
                     alternativeUrl,
@@ -714,7 +766,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     protected static Cache<String, Optional<Issue>> makeIssueCache() {
-        return Caffeine.newBuilder().expireAfterAccess(2, TimeUnit.MINUTES).build();
+        // expireAfterWrite, not expireAfterAccess: the changelog annotator re-reads the same keys on every
+        // page render, which under expireAfterAccess kept renewing entries instead of letting them age out.
+        return Caffeine.newBuilder()
+                .maximumSize(ISSUE_CACHE_MAX_SIZE)
+                .expireAfterWrite(2, TimeUnit.MINUTES)
+                .build();
     }
 
     public String getName() {
@@ -741,10 +798,29 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     JiraSession getSession(Item item, boolean uiValidation) {
-        if (jiraSession == null) {
+        String key = sessionKey(item, uiValidation);
+        if (jiraSession == null || !Objects.equals(key, jiraSessionKey)) {
             jiraSession = createSession(item, uiValidation);
+            jiraSessionKey = key;
         }
         return jiraSession;
+    }
+
+    /**
+     * Identity of the credentials {@code item} resolves to, or {@code null} when none can be resolved.
+     * The secret is folded into the key because two folders may hold different secrets under the same
+     * credentials id, which is exactly the case a credentials-id-only key would fail to separate.
+     */
+    private String sessionKey(Item item, boolean uiValidation) {
+        StandardUsernamePasswordCredentials credentials = resolveCredentialsFor(item, uiValidation);
+        if (credentials == null) {
+            return null;
+        }
+        return credentials.getId()
+                + '\n'
+                + credentials.getUsername()
+                + '\n'
+                + Secret.toString(credentials.getPassword()).hashCode();
     }
 
     JiraSession createSession(Item item) {
@@ -757,10 +833,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * @return null if remote access is not supported.
      */
     JiraSession createSession(Item item, boolean uiValidation) {
-        ItemGroup itemGroup = map(item);
-        item = itemGroup instanceof Folder ? ((Folder) itemGroup) : item;
-
-        StandardUsernamePasswordCredentials credentials = resolveCredentials(item, uiValidation);
+        StandardUsernamePasswordCredentials credentials = resolveCredentialsFor(item, uiValidation);
 
         if (credentials == null) {
             LOGGER.fine("no Jira credentials available for " + item);
@@ -784,12 +857,21 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     /**
-     * This method only supports credential matching by credentialsId.
+     * Resolves credentials in the scope {@code item} belongs to, substituting the enclosing folder when
+     * there is one - the scope {@link #sessionKey} and {@link #createSession} must agree on.
+     *
+     * <p>This method only supports credential matching by credentialsId.
      * Older methods are not and will not be supported as the credentials should have been migrated already.
      *
      * @param item         can be <code>null</code> if top level
      * @param uiValidation if <code>true</code> and credentials not found at item level will not go up
      */
+    private StandardUsernamePasswordCredentials resolveCredentialsFor(Item item, boolean uiValidation) {
+        ItemGroup itemGroup = map(item);
+        Item scope = itemGroup instanceof Folder ? ((Folder) itemGroup) : item;
+        return resolveCredentials(scope, uiValidation);
+    }
+
     private StandardUsernamePasswordCredentials resolveCredentials(Item item, boolean uiValidation) {
         if (credentialsId == null) {
             LOGGER.fine("credentialsId is null");
@@ -821,33 +903,45 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
 
     protected HttpClientOptions getHttpClientOptions() {
         final HttpClientOptions options = new HttpClientOptions();
-        options.setRequestTimeout(readTimeout, TimeUnit.SECONDS);
-        options.setSocketTimeout(timeout, TimeUnit.SECONDS);
+        options.setConnectionTimeout(timeout, TimeUnit.SECONDS);
+        options.setSocketTimeout(readTimeout, TimeUnit.SECONDS);
         options.setCallbackExecutor(getExecutorService());
         options.setIoThreadCount(ioThreadCount);
         return options;
     }
 
     private ExecutorService getExecutorService() {
-        if (executorService == null) {
-            synchronized (JiraSite.class) {
-                int nThreads = threadExecutorNumber;
-                if (nThreads < 1) {
-                    LOGGER.warning("nThreads " + nThreads + " cannot be lower than 1 so use default "
-                            + DEFAULT_THREAD_EXECUTOR_NUMBER);
-                    nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
-                }
-                executorService = Executors.newFixedThreadPool(nThreads, new ThreadFactory() {
-                    final AtomicInteger threadNumber = new AtomicInteger(0);
-
-                    @Override
-                    public Thread newThread(Runnable r) {
-                        return new Thread(r, "jira-plugin-http-request-" + threadNumber.getAndIncrement() + "-thread");
-                    }
-                });
-            }
+        ExecutorService cached = executorService.get();
+        if (cached != null && !cached.isShutdown()) {
+            return cached;
         }
-        return executorService;
+        synchronized (executorServiceLock) {
+            // Rebuild when the pool was shut down as well as when there is none yet: the HTTP client
+            // shuts its callback executor down on destroy(), and a terminated pool rejects every task.
+            ExecutorService current = executorService.get();
+            if (current == null || current.isShutdown()) {
+                current = newExecutorService();
+                executorService.set(current);
+            }
+            return current;
+        }
+    }
+
+    private ExecutorService newExecutorService() {
+        int nThreads = threadExecutorNumber;
+        if (nThreads < 1) {
+            LOGGER.warning("nThreads " + nThreads + " cannot be lower than 1 so use default "
+                    + DEFAULT_THREAD_EXECUTOR_NUMBER);
+            nThreads = DEFAULT_THREAD_EXECUTOR_NUMBER;
+        }
+        return Executors.newFixedThreadPool(nThreads, new ThreadFactory() {
+            final AtomicInteger threadNumber = new AtomicInteger(0);
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, "jira-plugin-http-request-" + threadNumber.getAndIncrement() + "-thread");
+            }
+        });
     }
 
     // not really used but let's leave when it will be implemented
@@ -855,6 +949,14 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public void destroy() {
         try {
             this.jiraSession = null;
+            this.jiraSessionKey = null;
+            ExecutorService toShutdown;
+            synchronized (executorServiceLock) {
+                toShutdown = executorService.getAndSet(null);
+            }
+            if (toShutdown != null) {
+                toShutdown.shutdown();
+            }
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, "skip error destroying JiraSite:" + e.getMessage(), e);
         }
@@ -1105,31 +1207,61 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      * This information could be bit old, or it can be null.
      */
     public Set<String> getProjectKeys(Item item) {
-        // FIXME it means projects list will be never updated until Jenkins is restarted...
-        if (projects == null) {
-            try {
-                if (getProjectUpdateLock().tryLock(3, TimeUnit.SECONDS)) {
-                    try {
-                        JiraSession session = getSession(item);
-                        if (session != null) {
-                            projects = Collections.unmodifiableSet(session.getProjectKeys());
-                        }
-                    } finally {
-                        getProjectUpdateLock().unlock();
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt(); // process this interruption later
-            } catch (RestClientException e) {
-                return Collections.emptySet();
-            }
-        }
-        // fall back to empty if failed to talk to the server
-        if (projects == null) {
-            return Collections.emptySet();
+        if (isProjectListStale()) {
+            refreshProjectKeysUnderLock(item);
         }
 
-        return projects;
+        // Keep serving the previous list on failure. Returning an empty set instead used to make
+        // JiraChangeLogAnnotator treat every issue as belonging to an unknown project, so all issue
+        // links silently disappeared from the changelog with nothing logged to explain it.
+        Set<String> current = projects;
+        return current == null ? Collections.emptySet() : current;
+    }
+
+    private void refreshProjectKeysUnderLock(Item item) {
+        try {
+            if (getProjectUpdateLock().tryLock(3, TimeUnit.SECONDS)) {
+                try {
+                    // another thread may have refreshed the list while we waited for the lock
+                    if (isProjectListStale()) {
+                        refreshProjectKeys(item);
+                    }
+                } finally {
+                    getProjectUpdateLock().unlock();
+                }
+            } else {
+                LOGGER.log(
+                        Level.WARNING,
+                        () -> "Timed out after 3s waiting to refresh the Jira project list of " + getName()
+                                + "; keeping the previously fetched list");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // process this interruption later
+            LOGGER.log(Level.FINE, e, () -> "Interrupted while refreshing the Jira project list of " + getName());
+        } catch (RestClientException e) {
+            LOGGER.log(
+                    Level.WARNING,
+                    e,
+                    () -> "Failed to refresh the Jira project list of " + getName() + ": " + e.getMessage());
+        }
+    }
+
+    private boolean isProjectListStale() {
+        return projects == null || System.currentTimeMillis() - projectsFetchedAt >= projectsTtlMillis;
+    }
+
+    private void refreshProjectKeys(Item item) {
+        JiraSession session = getSession(item);
+        if (session == null) {
+            LOGGER.log(
+                    Level.WARNING,
+                    () -> "Cannot refresh the Jira project list of " + getName() + ": no session could be established");
+            return;
+        }
+        // the session memoises the list too, so it has to be told to refetch
+        session.invalidateProjectKeys();
+        projects = Collections.unmodifiableSet(session.getProjectKeys());
+        projectsFetchedAt = System.currentTimeMillis();
     }
 
     /**
@@ -1137,12 +1269,15 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     @CheckForNull
     public JiraIssue getIssue(final String id) throws IOException {
-        Optional<Issue> issue = issueCache.get(id, s -> {
-            if (this.jiraSession == null) {
-                return Optional.empty();
-            }
-            return Optional.ofNullable(this.jiraSession.getIssue(id));
-        });
+        JiraSession session = this.jiraSession;
+        if (session == null) {
+            // Not having a session is not the same as the issue not existing. This used to be written into
+            // the cache as Optional.empty(), so one transient outage made the plugin report every issue it
+            // was asked about as missing - and the annotator's own re-reads kept the lie alive.
+            return null;
+        }
+
+        Optional<Issue> issue = issueCache.get(id, s -> Optional.ofNullable(session.getIssue(id)));
 
         if (issue == null || !issue.isPresent()) {
             return null;
@@ -1316,7 +1451,12 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 continue;
             }
 
-            Integer actionId = this.jiraSession.getActionIdForIssue(issueKey, workflowActionName);
+            // Fetch the issue once and reuse it for both the lookup and the transition. The issue from
+            // the JQL search above cannot be reused - the search only asks for a handful of fields and
+            // does not include the transitions link - but the two calls below used to fetch the very same
+            // issue independently, one immediately after the other.
+            Issue fullIssue = this.jiraSession.getIssue(issueKey);
+            Integer actionId = this.jiraSession.getActionIdForIssue(fullIssue, workflowActionName);
 
             if (actionId == null) {
                 LOGGER.fine(String.format(
@@ -1327,7 +1467,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
                 continue;
             }
 
-            String newStatus = this.jiraSession.progressWorkflowAction(issueKey, actionId);
+            String newStatus = this.jiraSession.progressWorkflowAction(fullIssue, actionId);
 
             console.println(String.format(
                     "[Jira] Issue %s transitioned to \"%s\" due to action \"%s\".",

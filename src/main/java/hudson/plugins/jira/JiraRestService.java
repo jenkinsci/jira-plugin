@@ -536,9 +536,16 @@ public class JiraRestService {
     }
 
     public Issue progressWorkflowAction(String issueKey, Integer actionId) {
-        final TransitionInput transitionInput = new TransitionInput(actionId);
+        return progressWorkflowAction(getIssue(issueKey), actionId);
+    }
 
-        final Issue issue = getIssue(issueKey);
+    /**
+     * Same as {@link #progressWorkflowAction(String, Integer)} for an issue that has already been fetched
+     * with its transitions, so a caller that also needed the available actions does not pay for a second
+     * identical GET of the same issue.
+     */
+    public Issue progressWorkflowAction(Issue issue, Integer actionId) {
+        final TransitionInput transitionInput = new TransitionInput(actionId);
 
         try {
             jiraRestClient.getIssueClient().transition(issue, transitionInput).get(timeout, TimeUnit.SECONDS);
@@ -553,12 +560,19 @@ public class JiraRestService {
         // The transitions endpoint returns 204 with no body, so `issue` above is still the
         // pre-transition snapshot fetched before the transition was requested. Re-fetch to
         // report the status the issue actually ended up in.
-        return getIssue(issueKey);
+        return getIssue(issue.getKey());
     }
 
     public List<Transition> getAvailableActions(String issueKey) {
-        final Issue issue = getIssue(issueKey);
+        return getAvailableActions(getIssue(issueKey));
+    }
 
+    /**
+     * Same as {@link #getAvailableActions(String)} for an already-fetched issue. Note the issue must come
+     * from {@link #getIssue(String)}: issues returned by a JQL search only carry the fields the search asked
+     * for, and not the transitions link this needs.
+     */
+    public List<Transition> getAvailableActions(Issue issue) {
         try {
             final Iterable<Transition> transitions =
                     jiraRestClient.getIssueClient().getTransitions(issue).get(timeout, TimeUnit.SECONDS);

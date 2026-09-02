@@ -3,13 +3,20 @@ package hudson.plugins.jira;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.atlassian.httpclient.api.factory.HttpClientOptions;
+import com.atlassian.jira.rest.client.api.RestClientException;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderProperty;
 import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import com.cloudbees.hudson.plugins.folder.Folder;
@@ -33,11 +40,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import jenkins.model.Jenkins;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LogRecorder;
 import org.jvnet.hudson.test.WithoutJenkins;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
@@ -94,6 +107,41 @@ class JiraSiteTest {
         JiraSession session = site.getSession(mock(Job.class));
         assertNotNull(session);
         assertEquals(session, site.getSession(null));
+    }
+
+    @Test
+    void sessionIsNotSharedAcrossFoldersHoldingDifferentSecrets(JenkinsRule r) throws Exception {
+        String sharedId = "shared-credentials-id";
+        Folder folderA = r.jenkins.createProject(Folder.class, "folderA");
+        Folder folderB = r.jenkins.createProject(Folder.class, "folderB");
+        JiraFolderPropertyTest.getFolderStore(folderA)
+                .addCredentials(
+                        Domain.global(),
+                        new UsernamePasswordCredentialsImpl(
+                                CredentialsScope.GLOBAL, sharedId, null, "user-a", "secret-a"));
+        JiraFolderPropertyTest.getFolderStore(folderB)
+                .addCredentials(
+                        Domain.global(),
+                        new UsernamePasswordCredentialsImpl(
+                                CredentialsScope.GLOBAL, sharedId, null, "user-b", "secret-b"));
+
+        JiraSite site = new JiraSite(validPrimaryUrl.toExternalForm());
+        site.setCredentialsId(sharedId);
+        site.setTimeout(1);
+
+        FreeStyleProject jobInA = folderA.createProject(FreeStyleProject.class, "job-a");
+        FreeStyleProject jobInB = folderB.createProject(FreeStyleProject.class, "job-b");
+
+        JiraSession sessionForA = site.getSession(jobInA);
+        JiraSession sessionForB = site.getSession(jobInB);
+
+        assertNotNull(sessionForA);
+        assertNotNull(sessionForB);
+        // folderB used to be handed the session folderA's secret had already established
+        assertNotSame(sessionForA, sessionForB);
+        // ... while a second job in the same folder still reuses it
+        assertSame(sessionForB, site.getSession(jobInB));
+        assertNotSame(sessionForB, site.getSession(jobInA));
     }
 
     @Test
@@ -317,6 +365,70 @@ class JiraSiteTest {
     }
 
     @Test
+    @WithoutJenkins
+    void eachSiteGetsItsOwnCallbackExecutorSizedFromItsOwnSetting() {
+        JiraSite first = new JiraSite(exampleOrg.toExternalForm());
+        first.setThreadExecutorNumber(3);
+        JiraSite second = new JiraSite(exampleOrg.toExternalForm());
+        second.setThreadExecutorNumber(7);
+
+        ExecutorService firstExecutor = first.getHttpClientOptions().getCallbackExecutor();
+        ExecutorService secondExecutor = second.getHttpClientOptions().getCallbackExecutor();
+
+        try {
+            // The pool used to be static and sized from whichever site happened to build it first.
+            assertNotSame(firstExecutor, secondExecutor);
+            assertEquals(3, ((ThreadPoolExecutor) firstExecutor).getCorePoolSize());
+            assertEquals(7, ((ThreadPoolExecutor) secondExecutor).getCorePoolSize());
+        } finally {
+            first.destroy();
+            second.destroy();
+        }
+    }
+
+    @Test
+    @WithoutJenkins
+    void aShutDownCallbackExecutorIsReplacedInsteadOfReused() {
+        JiraSite site = new JiraSite(exampleOrg.toExternalForm());
+        ExecutorService original = site.getHttpClientOptions().getCallbackExecutor();
+
+        // ApacheAsyncHttpClient.destroy() shuts the callback executor down.
+        original.shutdown();
+
+        ExecutorService replacement = site.getHttpClientOptions().getCallbackExecutor();
+        try {
+            assertNotSame(original, replacement);
+            assertFalse(replacement.isShutdown());
+        } finally {
+            site.destroy();
+        }
+    }
+
+    @Test
+    @WithoutJenkins
+    void destroyReleasesTheCallbackExecutor() {
+        JiraSite site = new JiraSite(exampleOrg.toExternalForm());
+        ExecutorService executor = site.getHttpClientOptions().getCallbackExecutor();
+
+        site.destroy();
+
+        assertTrue(executor.isShutdown());
+    }
+
+    @Test
+    @WithoutJenkins
+    void httpClientOptionsApplyConnectAndReadTimeouts() {
+        JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
+        jiraSite.setTimeout(7);
+        jiraSite.setReadTimeout(42);
+
+        HttpClientOptions options = jiraSite.getHttpClientOptions();
+
+        assertEquals(TimeUnit.SECONDS.toMillis(7), options.getConnectionTimeout());
+        assertEquals(TimeUnit.SECONDS.toMillis(42), options.getSocketTimeout());
+    }
+
+    @Test
     void credentials(JenkinsRule r) throws Exception {
         JiraSite jiraSite = new JiraSite(exampleOrg.toExternalForm());
         String cred = "cred-1";
@@ -427,12 +539,79 @@ class JiraSiteTest {
 
     @Test
     @WithoutJenkins
+    void projectKeysAreRefetchedOnceTheListGoesStale() {
+        JiraSite jiraSite = spy(new JiraSite(exampleOrg.toExternalForm()));
+        JiraSession session = mock(JiraSession.class);
+        when(session.getProjectKeys())
+                .thenReturn(new HashSet<>(Collections.singletonList("FIRST")))
+                .thenReturn(new HashSet<>(Collections.singletonList("SECOND")));
+        doReturn(session).when(jiraSite).createSession(any(), anyBoolean());
+
+        assertEquals(Collections.singleton("FIRST"), jiraSite.getProjectKeys(null));
+
+        // The list used to be fetched once and never again until Jenkins restarted.
+        jiraSite.projectsTtlMillis = 0;
+        assertEquals(Collections.singleton("SECOND"), jiraSite.getProjectKeys(null));
+        // and the session's own memo has to be dropped too, or it hands back the same set:
+        // once per fetch, so twice for the two fetches above
+        verify(session, times(2)).invalidateProjectKeys();
+    }
+
+    @Test
+    @WithoutJenkins
+    void aFailedProjectKeyRefreshKeepsThePreviousListAndLogsWhy() {
+        LogRecorder logs =
+                new LogRecorder().record(JiraSite.class, Level.WARNING).capture(10);
+
+        JiraSite jiraSite = spy(new JiraSite(exampleOrg.toExternalForm()));
+        JiraSession session = mock(JiraSession.class);
+        when(session.getProjectKeys())
+                .thenReturn(new HashSet<>(Collections.singletonList("FIRST")))
+                .thenThrow(new RestClientException(new IOException("boom"), 500));
+        doReturn(session).when(jiraSite).createSession(any(), anyBoolean());
+
+        assertEquals(Collections.singleton("FIRST"), jiraSite.getProjectKeys(null));
+
+        jiraSite.projectsTtlMillis = 0;
+
+        // Used to return an empty set, which made JiraChangeLogAnnotator drop every issue link,
+        // and logged nothing at all about the failure.
+        assertEquals(Collections.singleton("FIRST"), jiraSite.getProjectKeys(null));
+        assertThat(logs.getMessages(), hasItem(containsString("Failed to refresh the Jira project list")));
+    }
+
+    @Test
+    @WithoutJenkins
     void getIssueWithoutSession() throws Exception {
         JiraSite jiraSite = new JiraSite(new URL("https://foo.org/").toExternalForm());
         // Verify that no session will be created
         assertNull(jiraSite.getSession(null));
         JiraIssue issue = jiraSite.getIssue("JIRA-1235");
         assertNull(issue);
+    }
+
+    @Test
+    @WithoutJenkins
+    void aMissingSessionIsNotRememberedAsAMissingIssue() throws Exception {
+        JiraSite jiraSite = spy(new JiraSite(new URL("https://foo.org/").toExternalForm()));
+
+        // No session yet - this must not be written into the issue cache as "no such issue".
+        assertNull(jiraSite.getIssue("JIRA-1235"));
+
+        com.atlassian.jira.rest.client.api.domain.Issue remoteIssue =
+                mock(com.atlassian.jira.rest.client.api.domain.Issue.class);
+        when(remoteIssue.getKey()).thenReturn("JIRA-1235");
+        when(remoteIssue.getSummary()).thenReturn("a real issue");
+        JiraSession session = mock(JiraSession.class);
+        when(session.getIssue("JIRA-1235")).thenReturn(remoteIssue);
+        doReturn(session).when(jiraSite).createSession(any(), anyBoolean());
+        assertNotNull(jiraSite.getSession(null));
+
+        JiraIssue found = jiraSite.getIssue("JIRA-1235");
+
+        // Used to stay null for the whole cache TTL, renewed on every read.
+        assertNotNull(found);
+        assertEquals("JIRA-1235", found.getKey());
     }
 
     @Test
