@@ -3,11 +3,15 @@ package hudson.plugins.jira;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.hamcrest.core.Is.is;
 
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -38,5 +42,25 @@ class JiraGlobalConfigurationSaveTest {
         url = jiraSite.getUrl();
         assertThat(url, is(notNullValue()));
         assertThat(url.toString(), is(jiraUrl));
+    }
+
+    @Test
+    void jiraSitesListSavedAfterDeletionLastSite(JenkinsRule jenkins) throws Exception {
+        // given
+        JiraGlobalConfiguration.get().setSites(List.of(new JiraSite("https://jira.delete.me")));
+
+        HtmlPage page = jenkins.createWebClient().goTo("manage/configure");
+        HtmlForm form = page.getFormByName("config");
+        HtmlElement deleteButton =
+                form.getFirstByXPath("//div[@name='sites']//button[contains(@class,'repeatable-delete')]");
+        deleteButton.click();
+
+        // when
+        jenkins.submit(form);
+
+        // then
+        jenkins.waitUntilNoActivity();
+
+        assertThat(JiraGlobalConfiguration.get().getSites(), is(empty()));
     }
 }
