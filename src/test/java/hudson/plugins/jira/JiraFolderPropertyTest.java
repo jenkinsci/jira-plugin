@@ -67,6 +67,23 @@ public class JiraFolderPropertyTest {
     }
 
     @Test
+    void folderSitesCanBeAssembledFromCode(JenkinsRule r) throws Exception {
+        Folder folder = r.jenkins.createProject(Folder.class, "platform");
+
+        // The exact sequence documented under "Configuring sites as code" in docs/configuration.md.
+        JiraFolderProperty property = new JiraFolderProperty();
+        property.setSites(Collections.singletonList(new JiraSite("https://issues.example.org/")));
+        property.setSites(new JiraSite("https://jira.example.com/"));
+        folder.getProperties().replace(property);
+
+        // What the jobs inside the folder actually resolve against.
+        List<JiraSite> sites = JiraSite.getSitesFromFolders(folder);
+        assertEquals(2, sites.size());
+        assertEquals("https://issues.example.org/", sites.get(0).getName());
+        assertEquals("https://jira.example.com/", sites.get(1).getName());
+    }
+
+    @Test
     void setSitesToleratesNull(JenkinsRule r) {
         JiraFolderProperty property = new JiraFolderProperty();
 

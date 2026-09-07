@@ -145,9 +145,42 @@ lists the global sites plus the folder's, and the **Issue Priority** and **Issue
 the *Jira: Create issue* post-build action list entries from each site in scope, labelled by site
 name.
 
-Folder sites can be assembled from code as well as from the form, for example from a Groovy init
-script or a Configuration as Code definition. `setSites(List)` replaces the list and `setSites(site)`
-appends one, and both take their own copy, so the list you pass in stays yours.
+### Configuring sites as code
+
+Global sites are configurable with
+[Configuration as Code](https://github.com/jenkinsci/configuration-as-code-plugin):
+
+```yaml
+unclassified:
+  jiraglobalconfiguration:
+    sites:
+      - url: "https://issues.example.org/"
+      - url: "https://jira.example.com/"
+```
+
+Folder sites are not reachable from a JCasC document. JCasC only creates items through the `jobs:`
+element contributed by the Job DSL plugin, and there is no Job DSL binding for the **Associated
+Jira** property. Build them from a Groovy init script in `$JENKINS_HOME/init.groovy.d/` instead:
+
+```groovy
+import com.cloudbees.hudson.plugins.folder.Folder
+import hudson.plugins.jira.JiraFolderProperty
+import hudson.plugins.jira.JiraSite
+import jenkins.model.Jenkins
+
+def folder = Jenkins.get().getItemByFullName('platform', Folder)
+
+def property = new JiraFolderProperty()
+property.setSites([new JiraSite('https://issues.example.org/')])   // set the list
+property.setSites(new JiraSite('https://jira.example.com/'))       // append another site
+
+folder.properties.replace(property)
+folder.save()
+```
+
+`setSites(List)` replaces the list, `setSites(site)` appends one, and both take their own copy, so
+the list you pass in stays yours and the script can run against a freshly created folder or an
+existing one.
 
 ## System Properties
 
