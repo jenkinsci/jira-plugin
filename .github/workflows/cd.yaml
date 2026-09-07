@@ -10,11 +10,11 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           distribution: corretto
           java-version: '21'
@@ -22,7 +22,7 @@ jobs:
 
       - name: Verify CI status
         id: verify-ci-status
-        uses: jenkins-infra/verify-ci-status-action@v1.2.2
+        uses: jenkins-infra/verify-ci-status-action@7d194d0c5785a12623f350581db5243063542f90 # v1.2.2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           output_result: true
@@ -34,7 +34,7 @@ jobs:
           exit 1
 
       - name: Draft the release jenkins-maven-cd-action will publish
-        uses: release-drafter/release-drafter@v7
+        uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7
         with:
           name: next
           tag: next
@@ -42,7 +42,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Release
-        uses: jenkins-infra/jenkins-maven-cd-action@v1.4.1
+        uses: jenkins-infra/jenkins-maven-cd-action@6d01e3d3f0d952c7ed2fa88df031de46426299c6 # v1.4.1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
