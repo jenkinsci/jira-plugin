@@ -6,6 +6,7 @@ import hudson.Extension;
 import hudson.Util;
 import hudson.init.InitMilestone;
 import hudson.init.Initializer;
+import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.JobProperty;
 import hudson.model.JobPropertyDescriptor;
@@ -15,6 +16,7 @@ import java.util.stream.Stream;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Associates {@link Job} with {@link JiraSite}.
@@ -104,9 +106,13 @@ public class JiraProjectProperty extends JobProperty<Job<?, ?>> {
             return JiraGlobalConfiguration.get().getSites().toArray(new JiraSite[0]);
         }
 
+        @RequirePOST
         @SuppressWarnings("unused") // Used by stapler
-        public ListBoxModel doFillSiteNameItems(@AncestorInPath AbstractFolder<?> folder) {
+        public ListBoxModel doFillSiteNameItems(@AncestorInPath Item item, @AncestorInPath AbstractFolder<?> folder) {
             ListBoxModel items = new ListBoxModel();
+            if (!DescriptorPermissions.canSeeConfiguration(item)) {
+                return items;
+            }
             for (JiraSite site : JiraGlobalConfiguration.get().getSites()) {
                 items.add(site.getName());
             }

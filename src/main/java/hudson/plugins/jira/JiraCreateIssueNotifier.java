@@ -41,6 +41,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * When a build fails it creates jira issues.
@@ -489,15 +490,23 @@ public class JiraCreateIssueNotifier extends Notifier {
             super(JiraCreateIssueNotifier.class);
         }
 
-        public FormValidation doCheckProjectKey(@QueryParameter String value) throws IOException {
+        @RequirePOST
+        public FormValidation doCheckProjectKey(@AncestorInPath Item item, @QueryParameter String value) {
+            if (!DescriptorPermissions.canSeeConfiguration(item)) {
+                return FormValidation.ok();
+            }
             if (value.length() == 0) {
                 return FormValidation.error("Please set the project key");
             }
             return FormValidation.ok();
         }
 
+        @RequirePOST
         public ListBoxModel doFillPriorityIdItems(@AncestorInPath final Item item) {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
+            if (!DescriptorPermissions.canSeeConfiguration(item)) {
+                return items;
+            }
             List<JiraSite> sites = JiraSite.getJiraSites(item);
             for (JiraSite site : sites) {
                 JiraSession session = site.getSession(item);
@@ -510,8 +519,12 @@ public class JiraCreateIssueNotifier extends Notifier {
             return items;
         }
 
+        @RequirePOST
         public ListBoxModel doFillTypeIdItems(@AncestorInPath final Item item) {
             ListBoxModel items = new ListBoxModel().add(""); // optional field
+            if (!DescriptorPermissions.canSeeConfiguration(item)) {
+                return items;
+            }
             List<JiraSite> sites = JiraSite.getJiraSites(item);
             for (JiraSite site : sites) {
                 JiraSession session = site.getSession(item);

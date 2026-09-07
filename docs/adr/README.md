@@ -31,6 +31,7 @@ and follow the shape of the existing records here:
 | [0004](adr/0004-continuous-delivery-and-version-numbering.md) | Continuous delivery and version numbering — JEP-229 CD with a manually controlled `3.x` prefix and an on-demand trigger | proposed |
 | [0005](adr/0005-staged-deprecation-removal.md) | Staged deprecation removal — correctness and internals in 3.x, all API removals batched into one 4.0 | proposed |
 | [0006](adr/0006-http-client-lifecycle-and-jenkins-60536.md) | HTTP client lifecycle — why a client is built per request, and the conditions under which that may change | accepted |
+| [0007](adr/0007-permission-gates-on-descriptor-web-methods.md) | Permission gates and POST on descriptor web methods, one shared `Item.CONFIGURE`/`Jenkins.ADMINISTER` gate, returning an empty answer rather than throwing | accepted |
 
 ## When to write one
 
