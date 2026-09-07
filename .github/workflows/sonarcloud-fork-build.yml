@@ -19,11 +19,11 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           persist-credentials: false
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
         with:
           java-version: '21'
           distribution: 'corretto'
@@ -62,14 +62,14 @@ jobs:
           echo "$BASE_REF" > pr-info/base-ref
 
       - name: Upload PR information
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: pr-info-${{ github.event.pull_request.number }}
           path: pr-info/
           retention-days: 1
 
       - name: Upload build output for analysis
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: sonar-data-${{ github.event.pull_request.number }}
           path: |

@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: Download PR information
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
@@ -78,7 +78,7 @@ jobs:
           echo "BASE_REF=$BASE_REF" >> "$GITHUB_ENV"
 
       - name: Checkout PR head commit
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: ${{ env.HEAD_REPO }}
           ref: ${{ env.HEAD_SHA }}
@@ -104,7 +104,7 @@ jobs:
         run: git fetch --no-tags --force "https://github.com/${{ github.repository }}" "$BASE_REF:$BASE_REF"
 
       - name: Download build output
-        uses: actions/github-script@v9
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
@@ -137,7 +137,7 @@ jobs:
         run: unzip -q "$RUNNER_TEMP/sonar-data/sonar-data.zip" -d target
 
       - name: Run SonarCloud analysis
-        uses: SonarSource/sonarqube-scan-action@v8
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
