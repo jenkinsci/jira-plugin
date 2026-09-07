@@ -30,6 +30,7 @@ import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Issue field updater
@@ -216,10 +217,12 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
         // doCheckFieldId and the old doCheckField_id was never called. Its digits-only rule would have
         // rejected every built-in field name had it been, so both are fixed together.
         //
-        // No side effects, no remote calls, no private data returned - just a regex check on the
-        // submitted value - so neither a POST verb nor a permission check applies here.
-        // lgtm[jenkins/csrf]
+        // @RequirePOST matches what the form already sends: inline validation has posted the check
+        // request since Jenkins 2.285, well below this plugin's baseline. No permission check: the
+        // method returns whether a string is word-characters and nothing else, so there is no
+        // privileged data to withhold.
         // lgtm[jenkins/no-permission-check]
+        @RequirePOST
         public FormValidation doCheckFieldId(@QueryParameter String value) {
             String fieldId = Util.fixNull(value).trim();
             if (fieldId.isEmpty()) {
