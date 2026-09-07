@@ -12,7 +12,7 @@ Commits, with type one of `feat|fix|docs|style|refactor|test|chore|perf`. They a
 Only one of them enforces anything, and it enforces the wrong artifact in the wrong place. The
 `conventional-pre-commit` hook checks **commit messages**, on the contributor's machine, and only
 after they have run `pre-commit install`. It never runs in CI. Nothing at all checks the **PR
-title**, which is what actually reaches `master`, because this repository squash-merges.
+title**, which is what reaches `master` whenever a PR is squash-merged with more than one commit.
 
 The result is visible in the history. Of the last 100 pull requests, 67 titles do not match
 `^(feat|fix|docs|style|refactor|test|chore|perf)(\([a-z0-9-]+\))?!?: `. Almost all of that is bot
@@ -27,6 +27,11 @@ Two further details decide the shape of the fix:
 * This repository's `squash_merge_commit_title` setting is `COMMIT_OR_PR_TITLE`, not `PR_TITLE`.
   When a PR contains exactly one commit, GitHub squashes using that **commit's** subject and ignores
   the PR title entirely.
+* Squash is not the only merge path. `allow_merge_commit` and `allow_rebase_merge` are both true, and
+  **17 of the last 100 commits on `master` are merge commits** (`Merge pull request #1194 from ...`).
+  For those, no PR title reaches `master` at all. A title check therefore improves the common case
+  rather than guaranteeing the whole history, and the repository settings, not this workflow, are
+  what would close the remainder.
 
 ## Decision Drivers
 
@@ -78,5 +83,12 @@ both bots keep their labels (`dependencies`, `localization`).
 * The allowed-type list now lives in four places rather than three. `.github/workflows/pr-title.yml`,
   `.pre-commit-config.yaml`, `AGENTS.md` and `docs/CONTRIBUTING.md` must be changed together; each
   carries a comment saying so.
-* The check reports as **Conventional Commits** and does not block merging until it is added to the
-  branch protection rules for `master`.
+* The check reports as **Conventional Commits** and does not block anything yet. `master` is governed
+  by **ruleset `main` (id 7479969)**, not by classic branch protection, whose required-check list is
+  empty. That ruleset currently requires exactly one status check,
+  `continuous-integration/jenkins/pr-head`; this one has to be added there to bite. Note the ruleset
+  also carries a `bypass_actors` entry, so for those actors this stays a guardrail rather than a gate.
+* Two repository settings would strengthen the guarantee and have no in-tree representation, so they
+  are recorded here: setting `squash_merge_commit_title` to `PR_TITLE` closes the single-commit hole
+  outright and makes `validateSingleCommit` redundant, and disallowing merge commits would remove the
+  17-in-100 case above.

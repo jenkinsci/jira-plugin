@@ -52,6 +52,10 @@ No [mise](https://mise.jdx.dev)? Any JDK 17+ and Maven on your `PATH` works fine
   `docs`, `style`, `refactor`, `test`, `chore`, `perf`; the scope is optional) — the pre-commit hook
   from the Quick start enforces this locally, and the **PR title** check enforces it in CI. The title
   is the one that matters most: it becomes the commit subject when the PR is squash-merged.
+  Add `!` before the colon for a breaking change (`feat(api)!: drop the deprecated constructor`).
+  One wrinkle: GitHub's **Revert** button titles the PR `Revert "feat(ci): ..."`, which is not a
+  Conventional Commit and will fail the check. Rename it, for example to
+  `fix(ci): revert the CD workflow change`.
 
 ## Building & testing
 
