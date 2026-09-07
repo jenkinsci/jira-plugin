@@ -139,11 +139,17 @@ For a given job the plugin picks the site in this order:
 3. The single globally configured site, if there is exactly one.
 4. Otherwise none, and the build step logs that no Jira site is configured.
 
-A folder can hold more than one site, but every build step resolves to a single one, so the
-additional sites only widen what the configuration form offers: the **Jira site** dropdown on a job
-lists the global sites plus the folder's, and the **Issue Priority** and **Issue Type** dropdowns of
-the *Jira: Create issue* post-build action list entries from each site in scope, labelled by site
-name.
+A folder can hold more than one site, but **a job talks to exactly one of them**. Every step resolves
+its site through the order above and no step takes a site parameter, so a single pipeline cannot
+update issues on one instance and create a version on another. Which site a job gets is decided at
+configuration time, by the **Jira site** field on the job: leave it unset and the first site on the
+nearest folder wins; name one and that site is used, whether it comes from the folder or from the
+global list. Two jobs in the same folder can therefore target different instances, but one job
+cannot.
+
+The extra sites do widen what the forms offer: the **Jira site** dropdown on a job lists the global
+sites plus the folder's, and the **Issue Priority** and **Issue Type** dropdowns of the
+*Jira: Create issue* post-build action list entries from each site in scope, labelled by site name.
 
 ### Configuring sites as code
 
