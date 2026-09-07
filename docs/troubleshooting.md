@@ -44,6 +44,17 @@ References:
 - [Jenkins fails with PKIX Path building error](https://stackoverflow.com/questions/52842214/jenkins-fails-with-pkix-path-building-error)
 - [PKIX path building failed error message](https://support.cloudbees.com/hc/en-us/articles/217078498-PKIX-path-building-failed-error-message)
 
+## Empty Jira dropdowns, or no validation on the config form
+
+If the **Jira site**, **Issue Priority** or **Issue Type** dropdown on a job's configuration page is
+empty, and the URL and JQL fields give no inline feedback, the account viewing the page most likely
+has read access to the job but not `Item/Configure` on it.
+
+These fields are filled and validated by web methods that reach out to Jira, so they deliberately
+return nothing to a caller who cannot configure the item rather than calling Jira on their behalf.
+Grant `Item/Configure` (or `Overall/Administer` for the global Jira site configuration) to the account
+that needs to edit the job.
+
 ## Still stuck?
 
 Check [existing GitHub issues](https://github.com/jenkinsci/jira-plugin/issues), or
