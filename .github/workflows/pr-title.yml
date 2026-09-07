@@ -1,0 +1,55 @@
+name: PR title
+
+# The PR title becomes the commit subject on master, so it is checked here the
+# same way .pre-commit-config.yaml checks commit messages locally. That hook is
+# opt-in (it only runs once a contributor has run `pre-commit install`) and
+# never runs in CI, which is the gap this closes.
+#
+# Plain `pull_request`, never `pull_request_target`: this needs no checkout and
+# no secrets, and docs/adr/0001-sonarcloud-analysis-for-fork-prs.md rejects
+# `pull_request_target` for this repository.
+
+on:
+  pull_request:
+    types: [ opened, edited, reopened, synchronize ]
+
+permissions:
+  pull-requests: read
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Conventional Commits
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Validate the pull request title
+        uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Keep this list in step with the other three places that state it:
+          # .pre-commit-config.yaml, AGENTS.md and docs/CONTRIBUTING.md.
+          # `build`, `ci` and `revert` are deliberately absent - `ci` is used as
+          # a scope here, as in `feat(ci): ...`.
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            test
+            chore
+            perf
+          # Scope is optional and unrestricted: plenty of conforming titles have
+          # none, and no allowed-scope list is documented anywhere.
+          requireScope: false
+          # This repository's squash-merge title setting is COMMIT_OR_PR_TITLE,
+          # so for a single-commit PR GitHub squashes using the commit subject
+          # rather than the PR title. Check that commit too, otherwise a
+          # conventional title can still land a non-conventional subject.
+          validateSingleCommit: true

@@ -169,7 +169,9 @@ for the actual failing conditions, use the SonarQube MCP tools
 ## PR instructions
 
 - Title format: Conventional Commits — `<type>(<scope>): <subject>`, where type is one of
-  `feat|fix|docs|style|refactor|test|chore|perf`.
+  `feat|fix|docs|style|refactor|test|chore|perf`. The scope is optional. `.github/workflows/pr-title.yml`
+  enforces this on every PR, and because the repository squash-merges, a single-commit PR has its
+  commit subject checked too.
 - Always run `mvn spotless:apply` and `mvn clean test` before committing/opening a PR.
 - **Every PR ships a documentation change too.** If the change is user-visible — new behaviour, a new
   or renamed step parameter, a changed default, a changed failure mode — update the relevant
