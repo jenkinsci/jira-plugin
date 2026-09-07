@@ -47,10 +47,11 @@ No [mise](https://mise.jdx.dev)? Any JDK 17+ and Maven on your `PATH` works fine
 - Rejecting a reasonable alternative, or making a call that will look wrong without the history?
   Add an ADR — see [`adr/README.md`](adr/README.md).
 - Open the PR as a **draft** first, let CI run, then mark it ready for review once checks are green.
-- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
+- Commit messages **and the PR title** follow [Conventional Commits](https://www.conventionalcommits.org/)
   (`type(scope): subject`, e.g. `fix(rest): handle 404 from getIssue`; allowed types: `feat`, `fix`,
-  `docs`, `style`, `refactor`, `test`, `chore`, `perf`) — the pre-commit hook from the Quick start
-  enforces this for you.
+  `docs`, `style`, `refactor`, `test`, `chore`, `perf`; the scope is optional) — the pre-commit hook
+  from the Quick start enforces this locally, and the **PR title** check enforces it in CI. The title
+  is the one that matters most: it becomes the commit subject when the PR is squash-merged.
 
 ## Building & testing
 

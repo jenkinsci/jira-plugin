@@ -3,6 +3,8 @@
   "extends": [
     "github>jenkinsci/renovate-config"
   ],
+  "//": "The shared jenkinsci preset sets :semanticCommitsDisabled. Override it: the PR title check in .github/workflows/pr-title.yml holds every PR to Conventional Commits, and the title is what lands on master.",
+  "semanticCommits": "enabled",
   "packageRules": [
     {
       "matchManagers": ["maven"],
