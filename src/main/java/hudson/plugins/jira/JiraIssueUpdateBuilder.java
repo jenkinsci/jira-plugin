@@ -28,8 +28,10 @@ import java.io.IOException;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Build step that will mass-update all issues matching a JQL query, using the specified workflow
@@ -130,7 +132,11 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
          * @param value This parameter receives the value that the user has typed.
          * @return Indicates the outcome of the validation. This is sent to the browser.
          */
-        public FormValidation doCheckJqlSearch(@QueryParameter String value) {
+        @RequirePOST
+        public FormValidation doCheckJqlSearch(@AncestorInPath Item item, @QueryParameter String value) {
+            if (!DescriptorPermissions.canSeeConfiguration(item)) {
+                return FormValidation.ok();
+            }
             if (value.length() == 0) {
                 return FormValidation.error(Messages.JiraIssueUpdateBuilder_NoJqlSearch());
             }
@@ -138,7 +144,11 @@ public class JiraIssueUpdateBuilder extends Builder implements SimpleBuildStep {
             return FormValidation.ok();
         }
 
-        public FormValidation doCheckWorkflowActionName(@QueryParameter String value) {
+        @RequirePOST
+        public FormValidation doCheckWorkflowActionName(@AncestorInPath Item item, @QueryParameter String value) {
+            if (!DescriptorPermissions.canSeeConfiguration(item)) {
+                return FormValidation.ok();
+            }
             if (Util.fixNull(value).trim().length() == 0) {
                 return FormValidation.warning(Messages.JiraIssueUpdateBuilder_NoWorkflowAction());
             }

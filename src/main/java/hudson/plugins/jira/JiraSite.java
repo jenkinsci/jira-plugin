@@ -42,7 +42,6 @@ import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
-import jakarta.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -1344,13 +1343,21 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return "Jira Site";
         }
 
+        @RequirePOST
         @SuppressWarnings("unused") // used by stapler
-        public FormValidation doCheckUrl(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckUrl(@AncestorInPath Item item, @QueryParameter String value) {
+            if (!DescriptorPermissions.canSeeConfiguration(item)) {
+                return FormValidation.ok();
+            }
             return checkUrl(value);
         }
 
+        @RequirePOST
         @SuppressWarnings("unused") // used by stapler
-        public FormValidation doCheckAlternativeUrl(@QueryParameter String value) throws IOException, ServletException {
+        public FormValidation doCheckAlternativeUrl(@AncestorInPath Item item, @QueryParameter String value) {
+            if (!DescriptorPermissions.canSeeConfiguration(item)) {
+                return FormValidation.ok();
+            }
             return checkUrl(value);
         }
 
@@ -1452,6 +1459,8 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return FormValidation.error("Failed to login to Jira");
         }
 
+        // CredentialsHelper applies the permission check for both of these.
+        @RequirePOST
         @SuppressWarnings("unused") // Used by stapler
         public ListBoxModel doFillCredentialsIdItems(
                 @AncestorInPath final Item item,
@@ -1460,6 +1469,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return CredentialsHelper.doFillCredentialsIdItems(item, credentialsId, url);
         }
 
+        @RequirePOST
         @SuppressWarnings("unused") // Used by stapler
         public FormValidation doCheckCredentialsId(
                 @AncestorInPath final Item item, @QueryParameter final String value, @QueryParameter final String url) {
