@@ -83,9 +83,12 @@ public class IssueFieldUpdateStep extends Builder implements SimpleBuildStep {
     /**
      * Jira field ids that take a JSON array of plain strings rather than a scalar.
      *
-     * <p>Deliberately just {@code labels}: the other multi-valued built-ins ({@code components},
-     * {@code fixVersions}, {@code versions}) need arrays of objects, which is the structured-value
-     * work tracked separately.
+     * <p>Deliberately just {@code labels}. The other multi-valued built-ins need arrays of objects
+     * rather than strings, which this step does not build, and two of them are already reachable
+     * another way: {@code fixVersions} through {@code JiraIssueMigrator} ("Add or migrate a fix
+     * version"), which goes to {@code JiraSession#addFixVersion} and builds the structured input
+     * itself, and {@code components} at issue creation through {@code JiraCreateIssueNotifier}.
+     * {@code versions} has no path at all.
      */
     private static final Set<String> MULTI_VALUE_BUILT_IN_FIELDS = Set.of("labels");
 

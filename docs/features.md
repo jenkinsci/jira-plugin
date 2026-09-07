@@ -210,8 +210,11 @@ pipeline {
 }
 ```
 
-`components`, `fixVersions` and `versions` aren't supported yet: Jira expects arrays of objects for
-those, and the step only sends plain strings.
+`components`, `fixVersions` and `versions` can't be set through this step: Jira expects arrays of
+objects for those, and the step only sends plain strings. For `fixVersions`, use
+[Add or migrate a fix version](#add-or-migrate-a-fix-version) instead, which builds the structured
+value itself. `components` can only be set when the issue is created, by
+[Create an issue when a build fails](#create-an-issue-when-a-build-fails).
 
 ## Execute a workflow transition on issues
 
