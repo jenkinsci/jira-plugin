@@ -123,6 +123,32 @@ Jira Data Center/Server supports both a traditional username+password login and,
 
 Connection failing? See [Troubleshooting](troubleshooting.md).
 
+## Folder-level Jira sites
+
+Jira sites are normally configured once globally, under **Manage Jenkins** -> **System** -> **Jira**.
+They can also be attached to a folder, so the jobs inside it talk to a different Jira instance
+without touching the global list. On the folder's **Configure** page, add the **Associated Jira**
+property and define its sites there.
+
+For a given job the plugin picks the site in this order:
+
+1. The site selected on the job itself (**Jira site** on the job's configuration page), chosen from
+   the global list.
+2. The first site found walking up the folder chain, nearest folder first, so a site on a subfolder
+   wins over one on its parent.
+3. The single globally configured site, if there is exactly one.
+4. Otherwise none, and the build step logs that no Jira site is configured.
+
+A folder can hold more than one site, but every build step resolves to a single one, so the
+additional sites only widen what the configuration form offers: the **Jira site** dropdown on a job
+lists the global sites plus the folder's, and the **Issue Priority** and **Issue Type** dropdowns of
+the *Jira: Create issue* post-build action list entries from each site in scope, labelled by site
+name.
+
+Folder sites can be assembled from code as well as from the form, for example from a Groovy init
+script or a Configuration as Code definition. `setSites(List)` replaces the list and `setSites(site)`
+appends one, and both take their own copy, so the list you pass in stays yours.
+
 ## System Properties
 
 Some plugin behaviour is only changeable globally, by overriding
