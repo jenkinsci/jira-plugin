@@ -1,5 +1,9 @@
 <!--
 Put an `x` into the [ ] to show you have filled the information
+
+Title this PR as a Conventional Commit: <type>(<scope>): <subject>
+Allowed types: feat, fix, docs, style, refactor, test, chore, perf. Scope is optional.
+It is checked by CI, and it becomes the commit subject once this PR is squash-merged.
 -->
 
 ### Related issue
