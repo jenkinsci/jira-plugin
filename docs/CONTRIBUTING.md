@@ -86,7 +86,11 @@ It runs against two backends:
 - **`LiveJiraCloudE2ETest`** — a real [Jira Cloud test instance](https://jenkins-jira-plugin.atlassian.net/).
   Opt-in and skipped by default; official maintainers can grant PR submitters access on a
   need-to-have basis. Useful for validating/refreshing the WireMock stub shapes when the Jira API
-  contract changes:
+  contract changes. It also runs automatically as a release gate in the
+  [`cd.yaml`](../.github/workflows/cd.yaml) workflow, fed by the repo secrets `JIRA_LIVE_USER` /
+  `JIRA_LIVE_TOKEN` and the repo variables `JIRA_LIVE_URL` / `JIRA_LIVE_PROJECT_KEY` (see
+  [ADR 0009](adr/0009-live-jira-cloud-e2e-as-release-gate.md) for why there and not on every PR).
+  To run it locally:
 
   ```sh
   JIRA_LIVE_TEST=true \
@@ -207,7 +211,9 @@ Releases are published via the [`cd.yaml`](.github/workflows/cd.yaml) GitHub Act
 (JEP-229 continuous delivery) — no more local `mvn release:prepare`/`release:perform`.
 
 From the Actions tab, run the "cd" workflow manually (`workflow_dispatch`) on `master` when it's
-in a releasable state — merging alone never publishes. The workflow deploys whatever `<revision>`
+in a releasable state — merging alone never publishes. The workflow first checks that the latest
+commit's CI is green and runs `LiveJiraCloudE2ETest` against the Jira Cloud test instance, and
+refuses to release if either fails. It then deploys whatever `<revision>`
 in `pom.xml` currently is, with a short commit-hash suffix appended for traceability (e.g.
 `3.23-abc123def456`), publishes the GitHub release, then automatically bumps `<revision>` to the
 next value and pushes that to `master` — the direct (non-maven-release-plugin) replacement for the

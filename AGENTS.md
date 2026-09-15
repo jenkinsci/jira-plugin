@@ -154,8 +154,9 @@ most often:
 
 - **`new_coverage` ≥ 80%.** Only lines under `src/main` count, and only if a test that runs in
   the default `mvn test` actually exercises them. `LiveJiraCloudE2ETest` doesn't count towards
-  this — it's env-var-gated and never runs in CI, so new `JiraRestService` methods added only for
-  its sake still need a `JiraRestServiceWireMockTest` (or other offline) test to be covered here.
+  this — it's env-var-gated and only runs in the `cd.yaml` release workflow, never in the PR
+  checks SonarCloud measures, so new `JiraRestService` methods added only for its sake still need
+  a `JiraRestServiceWireMockTest` (or other offline) test to be covered here.
 - **`new_reliability_rating` = A (no new Bugs).** The most common trigger is copying an existing
   `JiraRestService` catch block as a template — see the Code style section above for the pattern
   to use instead.

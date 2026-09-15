@@ -33,6 +33,16 @@ jobs:
           echo "::error::Latest commit's CI check is '${{ steps.verify-ci-status.outputs.result }}' - refusing to release."
           exit 1
 
+      - name: Run live Jira Cloud e2e suite before releasing
+        timeout-minutes: 15
+        env:
+          JIRA_LIVE_TEST: 'true'
+          JIRA_LIVE_URL: ${{ vars.JIRA_LIVE_URL }}
+          JIRA_LIVE_USER: ${{ secrets.JIRA_LIVE_USER }}
+          JIRA_LIVE_TOKEN: ${{ secrets.JIRA_LIVE_TOKEN }}
+          JIRA_LIVE_PROJECT_KEY: ${{ vars.JIRA_LIVE_PROJECT_KEY }}
+        run: mvn --batch-mode -ntp test -Dtest=LiveJiraCloudE2ETest
+
       - name: Draft the release jenkins-maven-cd-action will publish
         uses: release-drafter/release-drafter@34d80673e067bdc0c24568d3af899c216adcfaa9 # v7
         with:
