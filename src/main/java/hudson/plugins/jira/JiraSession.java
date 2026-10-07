@@ -74,6 +74,16 @@ public class JiraSession {
     }
 
     /**
+     * Drops the memoised project key list so the next {@link #getProjectKeys()} refetches it.
+     *
+     * <p>Without this, a periodic refresh at the {@link JiraSite} layer that reuses the same session
+     * would keep getting the same set back, and newly created Jira projects would stay invisible.
+     */
+    /* package */ void invalidateProjectKeys() {
+        projectKeys = null;
+    }
+
+    /**
      * Adds a comment to the existing issue. Constrains the visibility of the
      * comment the the supplied groupVisibility.
      */
@@ -347,13 +357,36 @@ public class JiraSession {
     }
 
     /**
+     * Progresses the workflow of an issue that has already been fetched, saving the fetch this would
+     * otherwise repeat. The issue's new status is returned.
+     *
+     * @return The new status
+     */
+    public String progressWorkflowAction(Issue issue, Integer actionId) {
+        LOGGER.fine(() -> "Progressing issue " + issue.getKey() + " with workflow action: " + actionId);
+        final Issue transitioned = service.progressWorkflowAction(issue, actionId);
+        return getStatusById(transitioned.getStatus().getId());
+    }
+
+    /**
      * Returns the matching action id for a given action name.
      *
      * @return The action id, or null if the action cannot be found.
      */
     public Integer getActionIdForIssue(String issueKey, String workflowAction) {
-        List<Transition> actions = service.getAvailableActions(issueKey);
+        return findActionId(service.getAvailableActions(issueKey), workflowAction);
+    }
 
+    /**
+     * Same as {@link #getActionIdForIssue(String, String)} for an already-fetched issue.
+     *
+     * @return The action id, or null if the action cannot be found.
+     */
+    public Integer getActionIdForIssue(Issue issue, String workflowAction) {
+        return findActionId(service.getAvailableActions(issue), workflowAction);
+    }
+
+    private Integer findActionId(List<Transition> actions, String workflowAction) {
         if (actions != null) {
             for (Transition action : actions) {
                 if (action.getName() != null && action.getName().equalsIgnoreCase(workflowAction)) {
