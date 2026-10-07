@@ -1,4 +1,4 @@
-@Library('pipeline-library@pull/1069/head') _ // TODO remove after #98 merged & released
+@Library('pipeline-library@feature/sonar-support') _ // TODO remove after #98 merged & released
 
 /*
  See the documentation for more options:
