@@ -36,6 +36,17 @@ public class JiraFolderPropertyTest {
         r.assertEqualDataBoundBeans(list, actual);
     }
 
+    @Test
+    void setSitesSingleSiteOnDefaultInstanceDoesNotThrow() {
+        JiraFolderProperty property = new JiraFolderProperty();
+        JiraSite site = new JiraSite("https://example.com");
+        property.setSites(site);
+        JiraSite[] sites = property.getSites();
+        assertNotNull(sites);
+        org.junit.jupiter.api.Assertions.assertEquals(1, sites.length);
+        org.junit.jupiter.api.Assertions.assertEquals(site, sites[0]);
+    }
+
     public static CredentialsStore getFolderStore(Folder f) {
         return StreamSupport.stream(CredentialsProvider.lookupStores(f).spliterator(), false)
                 .filter(s -> s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f)
