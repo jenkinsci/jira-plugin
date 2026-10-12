@@ -36,6 +36,16 @@ public class JiraFolderPropertyTest {
         r.assertEqualDataBoundBeans(list, actual);
     }
 
+    @Test
+    void descriptorHasSymbolAnnotation(JenkinsRule r) {
+        JiraFolderProperty.DescriptorImpl descriptor =
+                r.jenkins.getDescriptorByType(JiraFolderProperty.DescriptorImpl.class);
+        assertNotNull(descriptor);
+        org.jenkinsci.Symbol symbol = descriptor.getClass().getAnnotation(org.jenkinsci.Symbol.class);
+        assertNotNull(symbol);
+        org.junit.jupiter.api.Assertions.assertArrayEquals(new String[] {"jiraFolder"}, symbol.value());
+    }
+
     public static CredentialsStore getFolderStore(Folder f) {
         return StreamSupport.stream(CredentialsProvider.lookupStores(f).spliterator(), false)
                 .filter(s -> s.getProvider() instanceof FolderCredentialsProvider && s.getContext() == f)
