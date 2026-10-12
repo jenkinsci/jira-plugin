@@ -8,6 +8,7 @@ import hudson.Extension;
 import hudson.model.ItemGroup;
 import java.util.Collections;
 import java.util.List;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
@@ -61,6 +62,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
      * Descriptor class.
      */
     @Extension
+    @Symbol("jiraFolder")
     public static class DescriptorImpl extends AbstractFolderPropertyDescriptor {
 
         @NonNull
