@@ -1,5 +1,6 @@
 package hudson.plugins.jira;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -9,6 +10,7 @@ import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsStore;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
@@ -43,8 +45,50 @@ public class JiraFolderPropertyTest {
         property.setSites(site);
         JiraSite[] sites = property.getSites();
         assertNotNull(sites);
-        org.junit.jupiter.api.Assertions.assertEquals(1, sites.length);
-        org.junit.jupiter.api.Assertions.assertEquals(site, sites[0]);
+        assertEquals(1, sites.length);
+        assertEquals(site, sites[0]);
+    }
+
+    @Test
+    void setSitesWhenSitesIsNull() {
+        JiraFolderProperty property = new JiraFolderProperty();
+        property.setSites((List<JiraSite>) null);
+        JiraSite site = new JiraSite("https://example.com");
+        property.setSites(site);
+        JiraSite[] sites = property.getSites();
+        assertNotNull(sites);
+        assertEquals(1, sites.length);
+        assertEquals(site, sites[0]);
+    }
+
+    @Test
+    void setSitesWhenSitesIsUnmodifiableList() {
+        JiraFolderProperty property = new JiraFolderProperty();
+        JiraSite initialSite = new JiraSite("https://initial.com");
+        property.setSites(Collections.singletonList(initialSite));
+        JiraSite additionalSite = new JiraSite("https://additional.com");
+        property.setSites(additionalSite);
+        JiraSite[] sites = property.getSites();
+        assertNotNull(sites);
+        assertEquals(2, sites.length);
+        assertEquals(initialSite, sites[0]);
+        assertEquals(additionalSite, sites[1]);
+    }
+
+    @Test
+    void setSitesWhenSitesIsAlreadyArrayList() {
+        JiraFolderProperty property = new JiraFolderProperty();
+        List<JiraSite> list = new ArrayList<>();
+        JiraSite first = new JiraSite("https://first.com");
+        list.add(first);
+        property.setSites(list);
+        JiraSite second = new JiraSite("https://second.com");
+        property.setSites(second);
+        JiraSite[] sites = property.getSites();
+        assertNotNull(sites);
+        assertEquals(2, sites.length);
+        assertEquals(first, sites[0]);
+        assertEquals(second, sites[1]);
     }
 
     public static CredentialsStore getFolderStore(Folder f) {
