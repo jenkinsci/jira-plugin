@@ -43,7 +43,8 @@ public class JiraFolderPropertyTest {
         assertNotNull(descriptor);
         org.jenkinsci.Symbol symbol = descriptor.getClass().getAnnotation(org.jenkinsci.Symbol.class);
         assertNotNull(symbol);
-        org.junit.jupiter.api.Assertions.assertArrayEquals(new String[] {"jiraFolder"}, symbol.value());
+        org.junit.jupiter.api.Assertions.assertArrayEquals(
+                new String[] {"jiraFolderProperty", "jiraFolder"}, symbol.value());
     }
 
     public static CredentialsStore getFolderStore(Folder f) {
