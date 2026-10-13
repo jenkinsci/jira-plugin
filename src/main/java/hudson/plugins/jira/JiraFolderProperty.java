@@ -62,7 +62,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
      * Descriptor class.
      */
     @Extension
-    @Symbol("jiraFolder")
+    @Symbol({"jiraFolderProperty", "jiraFolder"})
     public static class DescriptorImpl extends AbstractFolderPropertyDescriptor {
 
         @NonNull

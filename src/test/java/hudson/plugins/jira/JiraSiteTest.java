@@ -443,6 +443,15 @@ class JiraSiteTest {
         assertEquals(5000, jiraSite.getMaxIssuesFromJqlSearch());
     }
 
+    @Test
+    void descriptorHasSymbolAnnotation(JenkinsRule r) {
+        JiraSite.DescriptorImpl descriptor = r.jenkins.getDescriptorByType(JiraSite.DescriptorImpl.class);
+        assertNotNull(descriptor);
+        org.jenkinsci.Symbol symbol = descriptor.getClass().getAnnotation(org.jenkinsci.Symbol.class);
+        assertNotNull(symbol);
+        assertArrayEquals(new String[] {"jiraSite"}, symbol.value());
+    }
+
     private Folder createFolder(JenkinsRule j, Folder folder) throws IOException {
         return folder == null
                 ? j.jenkins.createProject(
