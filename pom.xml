@@ -340,6 +340,11 @@
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>job-dsl</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>pipeline-input-step</artifactId>
       <scope>test</scope>
     </dependency>
@@ -450,12 +455,6 @@
               <goal>check</goal>
             </goals>
             <phase>verify</phase>
-            <configuration>
-              <failOnError>${spotbugs.failOnError}</failOnError>
-              <effort>${spotbugs.effort}</effort>
-              <threshold>${spotbugs.threshold}</threshold>
-              <onlyAnalyze>hudson.plugins.jira.*</onlyAnalyze>
-            </configuration>
           </execution>
         </executions>
       </plugin>
