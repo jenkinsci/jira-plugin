@@ -62,14 +62,14 @@ jobs:
           echo "$BASE_REF" > pr-info/base-ref
 
       - name: Upload PR information
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: pr-info-${{ github.event.pull_request.number }}
           path: pr-info/
           retention-days: 1
 
       - name: Upload build output for analysis
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sonar-data-${{ github.event.pull_request.number }}
           path: |
