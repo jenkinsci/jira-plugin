@@ -44,7 +44,7 @@ jobs:
         run: mvn --batch-mode -ntp test -Dtest=LiveJiraCloudE2ETest
 
       - name: Draft the release jenkins-maven-cd-action will publish
-        uses: release-drafter/release-drafter@v7.9.0
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
         with:
           name: next
           tag: next
