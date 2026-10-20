@@ -73,6 +73,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.annotation.PreDestroy;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -1337,6 +1338,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     @Extension
+    @Symbol("jiraSite")
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
         public String getDisplayName() {
