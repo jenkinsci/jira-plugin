@@ -132,3 +132,27 @@ settings that aren't exposed in the UI.
 - `-Dhudson.plugins.jira.JiraMailAddressResolver.disabled=true`
 
   Disables resolving a user's email address from their Jira username.
+## Configuring Sites as Code
+
+The Jenkins Jira plugin supports configuring Jira instances both globally and at the folder level using Configuration as Code (JCasC) and Job DSL.
+
+### Global Configuration
+Global Jira sites can be defined under the global Jenkins configuration.
+
+### Folder-Level Configuration
+You can configure Jira sites specific to a folder and its child items. This is particularly useful in multi-tenant or multi-project setups where different folders require separate Jira connections or credentials.
+
+#### Example using Job DSL:
+```groovy
+folder('my-project-folder') {
+    properties {
+        jiraFolderProperty {
+            sites {
+                jiraSite {
+                    url('[https://jira.example.com](https://jira.example.com)')
+                    credentialsId('jira-credentials-id')
+                }
+            }
+        }
+    }
+}
