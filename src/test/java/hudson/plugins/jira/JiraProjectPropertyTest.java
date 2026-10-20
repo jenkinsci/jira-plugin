@@ -119,6 +119,42 @@ class JiraProjectPropertyTest {
         r.assertEqualDataBoundBeans(expected, property.getSite());
     }
 
+    /**
+     * A folder holding two Jira instances. Every step in a job resolves one site, so which one it is
+     * has to be decided per job, by the Jira site job property.
+     */
+    @Test
+    @ConfiguredWithCode("single-site.yml")
+    void firstFolderSiteWinsWhenAJobNamesNone() throws Exception {
+        givenTheFolderHoldsTwoSites();
+        freeStyleProject = folder.createProject(FreeStyleProject.class, "unpinned");
+
+        JiraSite resolved = JiraSite.get(freeStyleProject);
+
+        assertNotNull(resolved);
+        assertEquals("https://first.com/", resolved.getName());
+    }
+
+    @Test
+    @ConfiguredWithCode("single-site.yml")
+    void aJobCanNameTheSecondOfSeveralFolderSites() throws Exception {
+        givenTheFolderHoldsTwoSites();
+        freeStyleProject = folder.createProject(FreeStyleProject.class, "pinned");
+        freeStyleProject.addProperty(new JiraProjectProperty("https://second.com/"));
+
+        JiraSite resolved = JiraSite.get(freeStyleProject);
+
+        // Not the first folder site, and not the single global site from single-site.yml either.
+        assertNotNull(resolved);
+        assertEquals("https://second.com/", resolved.getName());
+    }
+
+    private void givenTheFolderHoldsTwoSites() throws Exception {
+        JiraFolderProperty property = folder.getProperties().get(JiraFolderProperty.class);
+        property.setSites(new JiraSite("https://second.com/"));
+        folder.getProperties().replace(property);
+    }
+
     @Test
     @ConfiguredWithCode("single-site.yml")
     void getSiteFromNestedFolderLayer() throws Exception {

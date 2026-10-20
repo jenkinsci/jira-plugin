@@ -123,6 +123,71 @@ Jira Data Center/Server supports both a traditional username+password login and,
 
 Connection failing? See [Troubleshooting](troubleshooting.md).
 
+## Folder-level Jira sites
+
+Jira sites are normally configured once globally, under **Manage Jenkins** -> **System** -> **Jira**.
+They can also be attached to a folder, so the jobs inside it talk to a different Jira instance
+without touching the global list. On the folder's **Configure** page, add the **Associated Jira**
+property and define its sites there.
+
+For a given job the plugin picks the site in this order:
+
+1. The site selected on the job itself (**Jira site** on the job's configuration page), chosen from
+   the global list.
+2. The first site found walking up the folder chain, nearest folder first, so a site on a subfolder
+   wins over one on its parent.
+3. The single globally configured site, if there is exactly one.
+4. Otherwise none, and the build step logs that no Jira site is configured.
+
+A folder can hold more than one site, but **a job talks to exactly one of them**. Every step resolves
+its site through the order above and no step takes a site parameter, so a single pipeline cannot
+update issues on one instance and create a version on another. Which site a job gets is decided at
+configuration time, by the **Jira site** field on the job: leave it unset and the first site on the
+nearest folder wins; name one and that site is used, whether it comes from the folder or from the
+global list. Two jobs in the same folder can therefore target different instances, but one job
+cannot.
+
+The extra sites do widen what the forms offer: the **Jira site** dropdown on a job lists the global
+sites plus the folder's, and the **Issue Priority** and **Issue Type** dropdowns of the
+*Jira: Create issue* post-build action list entries from each site in scope, labelled by site name.
+
+### Configuring sites as code
+
+Global sites are configurable with
+[Configuration as Code](https://github.com/jenkinsci/configuration-as-code-plugin):
+
+```yaml
+unclassified:
+  jiraglobalconfiguration:
+    sites:
+      - url: "https://issues.example.org/"
+      - url: "https://jira.example.com/"
+```
+
+Folder sites are not reachable from a JCasC document. JCasC only creates items through the `jobs:`
+element contributed by the Job DSL plugin, and there is no Job DSL binding for the **Associated
+Jira** property. Build them from a Groovy init script in `$JENKINS_HOME/init.groovy.d/` instead:
+
+```groovy
+import com.cloudbees.hudson.plugins.folder.Folder
+import hudson.plugins.jira.JiraFolderProperty
+import hudson.plugins.jira.JiraSite
+import jenkins.model.Jenkins
+
+def folder = Jenkins.get().getItemByFullName('platform', Folder)
+
+def property = new JiraFolderProperty()
+property.setSites([new JiraSite('https://issues.example.org/')])   // set the list
+property.setSites(new JiraSite('https://jira.example.com/'))       // append another site
+
+folder.properties.replace(property)
+folder.save()
+```
+
+`setSites(List)` replaces the list, `setSites(site)` appends one, and both take their own copy, so
+the list you pass in stays yours and the script can run against a freshly created folder or an
+existing one.
+
 ## System Properties
 
 Some plugin behaviour is only changeable globally, by overriding
