@@ -31,8 +31,7 @@ public class ExtendedVersionInput extends VersionInput {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof ExtendedVersionInput) {
-            ExtendedVersionInput that = (ExtendedVersionInput) obj;
+        if (obj instanceof ExtendedVersionInput that) {
             return Objects.equals(this.startDate, that.startDate);
         }
         return super.equals(obj);

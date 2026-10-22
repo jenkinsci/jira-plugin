@@ -9,7 +9,6 @@ import hudson.scm.ChangeLogSet.Entry;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,11 +21,9 @@ public class RunScmChangeExtractor {
     private RunScmChangeExtractor() {}
 
     public static List<ChangeLogSet<? extends Entry>> getChanges(Run<?, ?> run) {
-        if (run instanceof AbstractBuild) {
-            ChangeLogSet<? extends Entry> cs = ((AbstractBuild<?, ?>) run).getChangeSet();
-            return cs.isEmptySet()
-                    ? Collections.<ChangeLogSet<? extends ChangeLogSet.Entry>>emptyList()
-                    : Collections.<ChangeLogSet<? extends ChangeLogSet.Entry>>singletonList(cs);
+        if (run instanceof AbstractBuild<?, ?> build) {
+            ChangeLogSet<? extends Entry> cs = build.getChangeSet();
+            return cs.isEmptySet() ? Collections.emptyList() : Collections.singletonList(cs);
         } else if (run == null) {
             throw new IllegalStateException("run cannot be null!");
         } else {
@@ -55,13 +52,9 @@ public class RunScmChangeExtractor {
         }
         if (getChangeSetMethod != null) {
             try {
-                Object result = getChangeSetMethod.invoke(run, new Object[] {});
+                Object result = getChangeSetMethod.invoke(run);
                 return (List<ChangeLogSet<? extends Entry>>) result;
-            } catch (IllegalAccessException e) {
-                throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
-            } catch (InvocationTargetException e) {
+            } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
                 throw new IllegalStateException(CANNOT_ACCESS_GET_CHANGESET_METHOD, e);
             }
         } else {
@@ -72,13 +65,11 @@ public class RunScmChangeExtractor {
     }
 
     public static Map<AbstractProject, DependencyChange> getDependencyChanges(Run<?, ?> run) {
-        if (run instanceof AbstractBuild) {
-            Run<?, ?> previousBuild = run.getPreviousCompletedBuild();
-            if (previousBuild instanceof AbstractBuild) {
-                return ((AbstractBuild) run).getDependencyChanges((AbstractBuild) previousBuild);
-            }
+        if (run instanceof AbstractBuild<?, ?> build
+                && build.getPreviousCompletedBuild() instanceof AbstractBuild<?, ?> previousBuild) {
+            return build.getDependencyChanges(previousBuild);
         }
         // jenkins workflow plugin etc.
-        return new HashMap();
+        return Collections.emptyMap();
     }
 }
