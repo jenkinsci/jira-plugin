@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.WithoutJenkins;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 @WithJenkins
@@ -39,6 +40,7 @@ public class JiraFolderPropertyTest {
     }
 
     @Test
+    @WithoutJenkins
     void setSitesSingleSiteOnDefaultInstanceDoesNotThrow() {
         JiraFolderProperty property = new JiraFolderProperty();
         JiraSite site = new JiraSite("https://example.com");
@@ -50,9 +52,11 @@ public class JiraFolderPropertyTest {
     }
 
     @Test
+    @WithoutJenkins
     void setSitesWhenSitesIsNull() {
         JiraFolderProperty property = new JiraFolderProperty();
         property.setSites((List<JiraSite>) null);
+        assertEquals(0, property.getSites().length);
         JiraSite site = new JiraSite("https://example.com");
         property.setSites(site);
         JiraSite[] sites = property.getSites();
@@ -62,6 +66,7 @@ public class JiraFolderPropertyTest {
     }
 
     @Test
+    @WithoutJenkins
     void setSitesWhenSitesIsUnmodifiableList() {
         JiraFolderProperty property = new JiraFolderProperty();
         JiraSite initialSite = new JiraSite("https://initial.com");
@@ -76,6 +81,7 @@ public class JiraFolderPropertyTest {
     }
 
     @Test
+    @WithoutJenkins
     void setSitesWhenSitesIsAlreadyArrayList() {
         JiraFolderProperty property = new JiraFolderProperty();
         List<JiraSite> list = new ArrayList<>();

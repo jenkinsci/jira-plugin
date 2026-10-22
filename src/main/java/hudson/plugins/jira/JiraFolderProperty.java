@@ -42,7 +42,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
      */
     @Deprecated
     public void setSites(JiraSite site) {
-        if (sites == null) {
+        if (sites == null || sites.isEmpty()) {
             sites = new ArrayList<>();
         } else if (!(sites instanceof ArrayList)) {
             sites = new ArrayList<>(sites);
@@ -52,7 +52,7 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
 
     @DataBoundSetter
     public void setSites(List<JiraSite> sites) {
-        this.sites = sites;
+        this.sites = sites == null ? Collections.emptyList() : sites;
     }
 
     /**
