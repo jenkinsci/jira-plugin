@@ -757,7 +757,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     JiraSession createSession(Item item, boolean uiValidation) {
         ItemGroup itemGroup = map(item);
-        item = itemGroup instanceof Folder ? ((Folder) itemGroup) : item;
+        item = itemGroup instanceof Folder folder ? folder : item;
 
         StandardUsernamePasswordCredentials credentials = resolveCredentials(item, uiValidation);
 
@@ -1568,7 +1568,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     public static ItemGroup map(Item item) {
         ItemGroup parent = null;
         if (item != null) {
-            parent = item instanceof Folder ? (Folder) item : item.getParent();
+            parent = item instanceof Folder folder ? folder : item.getParent();
         }
         return parent;
     }
@@ -1581,7 +1581,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
         List<JiraSite> sites = (itemGroup instanceof Folder)
                 ? getSitesFromFolders(itemGroup)
                 : JiraGlobalConfiguration.get().getSites();
-        sites.stream().forEach(jiraSite -> jiraSite.getSession(item));
+        sites.forEach(jiraSite -> jiraSite.getSession(item));
         return sites;
     }
 
@@ -1590,8 +1590,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
      */
     public static List<JiraSite> getSitesFromFolders(ItemGroup itemGroup) {
         List<JiraSite> result = new ArrayList<>();
-        while (itemGroup instanceof AbstractFolder<?>) {
-            AbstractFolder<?> folder = (AbstractFolder<?>) itemGroup;
+        while (itemGroup instanceof AbstractFolder<?> folder) {
             JiraFolderProperty jiraFolderProperty = folder.getProperties().get(JiraFolderProperty.class);
             if (jiraFolderProperty != null && jiraFolderProperty.getSites().length != 0) {
                 List<JiraSite> sites = Arrays.asList(jiraFolderProperty.getSites());

@@ -57,8 +57,8 @@ public class VersionReleaser {
             }
         } catch (Exception e) {
             listener.fatalError("Unable to release jira version %s/%s: %s", realRelease, realProjectKey, e);
-            if (listener instanceof BuildListener) {
-                ((BuildListener) listener).finished(Result.FAILURE);
+            if (listener instanceof BuildListener buildListener) {
+                buildListener.finished(Result.FAILURE);
             }
             return false;
         }

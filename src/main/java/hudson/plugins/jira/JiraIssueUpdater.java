@@ -44,11 +44,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
     public JiraIssueUpdater(AbstractIssueSelector issueSelector, SCM scm, List<String> labels) {
         this.issueSelector = issueSelector;
         this.scm = scm;
-        if (labels != null) {
-            this.labels = labels;
-        } else {
-            this.labels = new ArrayList();
-        }
+        this.labels = labels != null ? labels : new ArrayList<>();
     }
 
     @Override
@@ -56,8 +52,7 @@ public class JiraIssueUpdater extends Recorder implements MatrixAggregatable, Si
         // Don't do anything for individual matrix runs.
         if (run instanceof MatrixRun) {
             return;
-        } else if (run instanceof AbstractBuild) {
-            AbstractBuild<?, ?> abstractBuild = (AbstractBuild<?, ?>) run;
+        } else if (run instanceof AbstractBuild<?, ?> abstractBuild) {
             Updater updater = new Updater(abstractBuild.getParent().getScm(), labels);
             updater.perform(run, listener, getIssueSelector());
         } else if (scm != null) {

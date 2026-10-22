@@ -152,8 +152,8 @@ public class DefaultIssueSelector extends AbstractIssueSelector {
 
         if (parameters != null) {
             for (ParameterValue val : parameters.getParameters()) {
-                if (val instanceof JiraIssueParameterValue) {
-                    String issueId = ((JiraIssueParameterValue) val).getValue().toString();
+                if (val instanceof JiraIssueParameterValue jiraVal) {
+                    String issueId = jiraVal.getValue().toString();
                     if (issueIds.add(issueId)) {
                         getLogger().finer("Added perforce issue " + issueId + " from build " + build);
                     }

@@ -143,8 +143,8 @@ public class JiraCreateReleaseNotes extends SimpleBuildWrapper {
         } catch (Exception e) {
             e.printStackTrace(listener.fatalError(
                     "Unable to generate release notes for Jira version %s/%s: %s", realRelease, realProjectKey, e));
-            if (listener instanceof BuildListener) {
-                ((BuildListener) listener).finished(Result.FAILURE);
+            if (listener instanceof BuildListener buildListener) {
+                buildListener.finished(Result.FAILURE);
             }
         }
 
