@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>6.2221.va_045130417c9</version>
+    <version>6.2236.v12dd4c483242</version>
     <relativePath />
   </parent>
 
@@ -37,7 +37,6 @@
   <scm>
     <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
-    <tag>jira-3.20</tag>
     <url>https://github.com/${gitHubRepo}</url>
   </scm>
 
@@ -52,7 +51,7 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <hpi.bundledArtifacts>atlassian-event,atlassian-httpclient-api,atlassian-util-concurrent,fugue,jira-rest-java-client-api,jira-rest-java-client-core,maven-artifact,plexus-utils,sal-api</hpi.bundledArtifacts>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
-    <jira-rest-client.version>6.0.4</jira-rest-client.version>
+    <jira-rest-client.version>7.0.2</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <wiremock.version>3.13.2</wiremock.version>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
@@ -68,14 +67,14 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>6815.v1fb_2a_fee3765</version>
+        <version>7134.vc450c4b_83de0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
         <groupId>com.atlassian.plugins</groupId>
         <artifactId>atlassian-plugins-core</artifactId>
-        <version>8.2.1</version>
+        <version>9.4.0</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -234,7 +233,7 @@
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
-      <artifactId>jersey2-api</artifactId>
+      <artifactId>jersey3-api</artifactId>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
@@ -248,7 +247,7 @@
     <dependency>
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-artifact</artifactId>
-      <version>3.9.16</version>
+      <version>3.10.0</version>
       <exclusions>
         <!-- Provided by commons-lang3-api plugin -->
         <exclusion>

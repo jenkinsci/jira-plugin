@@ -88,9 +88,13 @@ mvn test -Dtest='JiraRestServiceWireMockTest,LiveJiraCloudE2ETest' -DfailIfNoTes
   Adding coverage for another `JiraRestService` method means adding one test method to the
   abstract class and implementing its hooks in both subclasses — don't duplicate test bodies
   between the two subclasses.
-  - WireMock fixture bodies are checked against Atlassian's real OpenAPI spec at test time via
-    `OpenApiSpecConformance` (`com.atlassian.oai:swagger-request-validator-core`). If you add a
+  - WireMock fixture bodies are checked against Atlassian's Jira Cloud OpenAPI spec at test time via
+    `OpenApiSpecConformance` (`com.atlassian.oai:openapi-request-validator-core`). If you add a
     new fixture, call `OpenApiSpecConformance.assertConformsToSpec(...)` on it before stubbing.
+    The spec is a trimmed copy checked in under `src/test/resources/hudson/plugins/jira/wiremock/`,
+    not a download, so this suite runs offline. If your fixture needs a path the copy doesn't carry,
+    add it to `KEPT_PATHS` in `tools/trim-jira-openapi-spec.mjs` and re-run that script — the test
+    tells you so rather than validating against nothing.
   - Do **not** add `com.atlassian.oai:swagger-request-validator-wiremock*` — those pull in
     `com.github.tomakehurst:wiremock-jre8` (WireMock 2.x), which collides with this project's
     `org.wiremock:wiremock-standalone` (WireMock 3.x) under the same package namespace.
@@ -125,6 +129,10 @@ Enforced by the build, not optional:
 - Prefer reusing existing utilities/patterns over introducing new ones — this codebase has a
   fairly small, consistent surface area (see Project overview above); check for an existing
   equivalent before adding a new helper.
+- **Check `docs/adr/` before "fixing" code that looks wrong.** Architecture decisions are recorded
+  there in MADR format (`docs/adr/README.md` has the index and template) - some of this code looks
+  like a plain bug and is not. If you make a decision worth keeping, or reject a reasonable alternative for a
+  non-obvious reason, add a record.
 - New `catch` blocks around Jira REST calls should re-interrupt on `InterruptedException` and log
   via a deferred `Supplier`, not eager string concatenation (see SonarCloud section below for why):
   ```java
@@ -146,8 +154,9 @@ most often:
 
 - **`new_coverage` ≥ 80%.** Only lines under `src/main` count, and only if a test that runs in
   the default `mvn test` actually exercises them. `LiveJiraCloudE2ETest` doesn't count towards
-  this — it's env-var-gated and never runs in CI, so new `JiraRestService` methods added only for
-  its sake still need a `JiraRestServiceWireMockTest` (or other offline) test to be covered here.
+  this — it's env-var-gated and only runs in the `cd.yaml` release workflow, never in the PR
+  checks SonarCloud measures, so new `JiraRestService` methods added only for its sake still need
+  a `JiraRestServiceWireMockTest` (or other offline) test to be covered here.
 - **`new_reliability_rating` = A (no new Bugs).** The most common trigger is copying an existing
   `JiraRestService` catch block as a template — see the Code style section above for the pattern
   to use instead.
@@ -163,8 +172,16 @@ for the actual failing conditions, use the SonarQube MCP tools
 - Title format: Conventional Commits — `<type>(<scope>): <subject>`, where type is one of
   `feat|fix|docs|style|refactor|test|chore|perf`.
 - Always run `mvn spotless:apply` and `mvn clean test` before committing/opening a PR.
+- **Every PR ships a documentation change too.** If the change is user-visible — new behaviour, a new
+  or renamed step parameter, a changed default, a changed failure mode — update the relevant
+  **Declarative Pipeline** example in `docs/features.md` in the same PR (every feature there has one),
+  and `docs/configuration.md` or `docs/troubleshooting.md` when one of those is the right page. Write
+  new and updated examples in Declarative form (`pipeline { agent any; stages { ... } }`) — don't add
+  scripted (`node { ... }`) snippets. A step's example must stay runnable: if you add a required
+  parameter, every example using that step needs it. Docs-only and pure-refactoring PRs are the
+  exception; state that in the PR description rather than silently skipping.
 - Write issue and PR descriptions, and comments, in **GitHub-flavored Markdown** — headings,
   fenced code blocks with a language tag, bullet/numbered lists, tables, and task lists
-  (`- [ ]`) — rather than dense unformatted paragraphs. It renders far more legibly on GitHub
-  and is easier for both humans and agents to scan.
+  (`- [ ]`) — rather than dense unformatted paragraphs.
 - Confirm the SonarCloud quality gate (above) passes before considering a PR done.
+- Commit message length max 79 chars.

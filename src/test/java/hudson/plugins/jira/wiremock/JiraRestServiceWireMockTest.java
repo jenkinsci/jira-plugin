@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.atlassian.jira.rest.client.api.domain.IssueType;
 import com.atlassian.oai.validator.model.Request;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.github.tomakehurst.wiremock.stubbing.Scenario;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import java.util.List;
@@ -74,6 +75,7 @@ class JiraRestServiceWireMockTest extends AbstractJiraRestServiceContractTest {
             """;
 
     private static final String ISSUE_KEY = "TEST-1";
+    private static final String TRANSITION_SCENARIO = "issue transition";
 
     @Override
     protected JiraSite site(JenkinsRule j) throws Exception {
@@ -91,29 +93,28 @@ class JiraRestServiceWireMockTest extends AbstractJiraRestServiceContractTest {
         // attachments/watchers/subtasks/description (all optional). "self" always points back at
         // this WireMock server (not a fixed placeholder) because progressWorkflowAction() derives
         // the transitions URI from it.
+        //
+        // Registered as two Scenario-gated stubs rather than one static response: WireMock has no
+        // real state, so this is what lets progressWorkflowActionTransitionsIssue() (see the
+        // contract test) tell apart an implementation that reports the pre-transition status from
+        // one that re-fetches and reports the post-transition status. Every other test here never
+        // triggers the transition stub below, so the scenario stays STARTED and they only ever see
+        // the "Open" response, same as before this was split in two.
         String self = wireMock.baseUrl() + "/rest/api/latest/issue/" + ISSUE_KEY;
-        String issueJson = """
-                {
-                  "expand": "",
-                  "id": "10001",
-                  "self": "%s",
-                  "key": "%s",
-                  "fields": {
-                    "summary": "%s",
-                    "issuetype": { "self": "%s/type", "id": 1, "name": "Bug", "subtask": false },
-                    "status": { "self": "%s/status", "name": "Open", "description": "", "iconUrl": "%s/icon", "id": 1 },
-                    "project": { "self": "%s/project", "id": 10000, "key": "TEST", "name": "Example" },
-                    "created": "2024-01-01T10:00:00.000+00:00",
-                    "updated": "2024-01-02T11:30:00.000+00:00"
-                  },
-                  "names": {},
-                  "schema": {}
-                }
-                """.formatted(self, ISSUE_KEY, summary, self, self, self, self);
+        String openIssueJson = issueJson(self, summary, "Open", 1);
+        String doneIssueJson = issueJson(self, summary, "Done", 3);
         OpenApiSpecConformance.assertConformsToSpec(
-                "/rest/api/3/issue/{issueIdOrKey}", Request.Method.GET, 200, issueJson);
-        wireMock.stubFor(
-                get(urlPathEqualTo("/rest/api/latest/issue/" + ISSUE_KEY)).willReturn(okJson(issueJson)));
+                "/rest/api/3/issue/{issueIdOrKey}", Request.Method.GET, 200, openIssueJson);
+        OpenApiSpecConformance.assertConformsToSpec(
+                "/rest/api/3/issue/{issueIdOrKey}", Request.Method.GET, 200, doneIssueJson);
+        wireMock.stubFor(get(urlPathEqualTo("/rest/api/latest/issue/" + ISSUE_KEY))
+                .inScenario(TRANSITION_SCENARIO)
+                .whenScenarioStateIs(Scenario.STARTED)
+                .willReturn(okJson(openIssueJson)));
+        wireMock.stubFor(get(urlPathEqualTo("/rest/api/latest/issue/" + ISSUE_KEY))
+                .inScenario(TRANSITION_SCENARIO)
+                .whenScenarioStateIs("transitioned")
+                .willReturn(okJson(doneIssueJson)));
 
         OpenApiSpecConformance.assertConformsToSpec(
                 "/rest/api/3/serverInfo", Request.Method.GET, 200, SERVER_INFO_JSON);
@@ -129,9 +130,35 @@ class JiraRestServiceWireMockTest extends AbstractJiraRestServiceContractTest {
     @Override
     protected int givenTransition(String issueKey) {
         // Derived from: POST /rest/api/3/issue/{issueIdOrKey}/transitions response example (204, no body).
+        // Flips the scenario registered in givenIssue() so that only a GET issued after this
+        // transition actually completes sees the "Done" status.
         wireMock.stubFor(post(urlPathEqualTo("/rest/api/latest/issue/" + issueKey + "/transitions"))
+                .inScenario(TRANSITION_SCENARIO)
+                .whenScenarioStateIs(Scenario.STARTED)
+                .willSetStateTo("transitioned")
                 .willReturn(aResponse().withStatus(204)));
         return 21;
+    }
+
+    private static String issueJson(String self, String summary, String statusName, int statusId) {
+        return """
+                {
+                  "expand": "",
+                  "id": "10001",
+                  "self": "%s",
+                  "key": "%s",
+                  "fields": {
+                    "summary": "%s",
+                    "issuetype": { "self": "%s/type", "id": 1, "name": "Bug", "subtask": false },
+                    "status": { "self": "%s/status", "name": "%s", "description": "", "iconUrl": "%s/icon", "id": %d },
+                    "project": { "self": "%s/project", "id": 10000, "key": "TEST", "name": "Example" },
+                    "created": "2024-01-01T10:00:00.000+00:00",
+                    "updated": "2024-01-02T11:30:00.000+00:00"
+                  },
+                  "names": {},
+                  "schema": {}
+                }
+                """.formatted(self, ISSUE_KEY, summary, self, self, statusName, self, statusId, self);
     }
 
     @Override

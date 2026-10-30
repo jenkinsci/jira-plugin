@@ -343,7 +343,6 @@ public class JiraSession {
     public String progressWorkflowAction(String issueKey, Integer actionId) {
         LOGGER.fine("Progressing issue " + issueKey + " with workflow action: " + actionId);
         final Issue issue = service.progressWorkflowAction(issueKey, actionId);
-        getStatusById(issue.getStatus().getId());
         return getStatusById(issue.getStatus().getId());
     }
 

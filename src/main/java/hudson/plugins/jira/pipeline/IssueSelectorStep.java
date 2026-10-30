@@ -10,6 +10,7 @@ import hudson.model.TaskListener;
 import hudson.plugins.jira.JiraSite;
 import hudson.plugins.jira.Messages;
 import hudson.plugins.jira.selector.AbstractIssueSelector;
+import hudson.plugins.jira.selector.DefaultIssueSelector;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -90,9 +91,19 @@ public class IssueSelectorStep extends Step {
         protected Set<String> run() throws Exception {
             TaskListener listener = getContext().get(TaskListener.class);
             Run run = getContext().get(Run.class);
+            AbstractIssueSelector selector = step.getIssueSelector();
+            if (selector == null) {
+                // jiraIssueSelector() with no selector is a legal Pipeline call - the selector is an
+                // optional @DataBoundSetter - and used to fail with a bare NullPointerException, because
+                // the only catch below is for RestClientException. Reading issue ids "the default way" is
+                // what the step name promises, and unlike jiraUpdateIssueField this step only reads.
+                listener.getLogger().println(Messages.IssueSelectorStep_NoIssueSelector());
+                selector = new DefaultIssueSelector();
+            }
+            AbstractIssueSelector issueSelector = selector;
             try {
                 return Optional.ofNullable(JiraSite.get(run.getParent()))
-                        .map(site -> step.getIssueSelector().findIssueIds(run, site, listener))
+                        .map(site -> issueSelector.findIssueIds(run, site, listener))
                         .orElseGet(() -> {
                             listener.getLogger().println(Messages.NoJiraSite());
                             run.setResult(Result.FAILURE);

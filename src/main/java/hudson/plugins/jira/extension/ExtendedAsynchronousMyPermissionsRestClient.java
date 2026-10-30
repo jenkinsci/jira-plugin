@@ -5,8 +5,8 @@ import com.atlassian.jira.rest.client.api.domain.Permissions;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousMyPermissionsRestClient;
 import com.atlassian.jira.rest.client.internal.json.PermissionsJsonParser;
 import io.atlassian.util.concurrent.Promise;
+import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
-import javax.ws.rs.core.UriBuilder;
 
 public class ExtendedAsynchronousMyPermissionsRestClient extends AsynchronousMyPermissionsRestClient
         implements ExtendedMyPermissionsRestClient {

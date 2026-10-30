@@ -1,0 +1,72 @@
+# Note: additional setup is required, see https://www.jenkins.io/redirect/continuous-delivery-of-plugins
+name: cd
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: corretto
+          java-version: '21'
+          cache: maven
+
+      - name: Verify CI status
+        id: verify-ci-status
+        uses: jenkins-infra/verify-ci-status-action@7d194d0c5785a12623f350581db5243063542f90 # v1.2.2
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          output_result: true
+
+      - name: Fail if the latest commit's CI isn't green
+        if: steps.verify-ci-status.outputs.result != 'success'
+        run: |
+          echo "::error::Latest commit's CI check is '${{ steps.verify-ci-status.outputs.result }}' - refusing to release."
+          exit 1
+
+      - name: Run live Jira Cloud e2e suite before releasing
+        timeout-minutes: 15
+        env:
+          JIRA_LIVE_TEST: 'true'
+          JIRA_LIVE_URL: ${{ vars.JIRA_LIVE_URL }}
+          JIRA_LIVE_USER: ${{ secrets.JIRA_LIVE_USER }}
+          JIRA_LIVE_TOKEN: ${{ secrets.JIRA_LIVE_TOKEN }}
+          JIRA_LIVE_PROJECT_KEY: ${{ vars.JIRA_LIVE_PROJECT_KEY }}
+        run: mvn --batch-mode -ntp test -Dtest=LiveJiraCloudE2ETest
+
+      - name: Draft the release jenkins-maven-cd-action will publish
+        uses: release-drafter/release-drafter@978bb0b30c5ee8cdd332ced253758157150d43f0 # v7.10.0
+        with:
+          name: next
+          tag: next
+          version: next
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release
+        uses: jenkins-infra/jenkins-maven-cd-action@6d01e3d3f0d952c7ed2fa88df031de46426299c6 # v1.4.1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_TOKEN: ${{ secrets.MAVEN_TOKEN }}
+
+      - name: Bump <revision> for the next release
+        run: |
+          CURRENT=$(mvn -q -ntp -Dexpression=revision -DforceStdout help:evaluate)
+          MAJOR="${CURRENT%.*}"
+          MINOR="${CURRENT##*.}"
+          NEXT="$MAJOR.$((MINOR + 1))"
+          sed -i "s|<revision>${CURRENT}</revision>|<revision>${NEXT}</revision>|" pom.xml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pom.xml
+          git commit -m "chore(release): bump revision to ${NEXT}"
+          git push origin HEAD:master

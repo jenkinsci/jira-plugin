@@ -13,6 +13,7 @@
 1. See user documentation at [https://jenkinsci.github.io/jira-plugin/](https://jenkinsci.github.io/jira-plugin/).
 1. Use [Declarative pipelines](https://www.jenkins.io/doc/book/pipeline/#declarative-versus-scripted-pipeline-syntax).
 1. Check [jira plugin steps reference](https://www.jenkins.io/doc/pipeline/steps/jira/).
+1. Want to contribute? See [CONTRIBUTING.md](docs/CONTRIBUTING.md).
 
 ## i18n
 

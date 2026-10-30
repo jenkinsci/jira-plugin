@@ -4,15 +4,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.google.inject.Inject;
+import hudson.AbortException;
 import hudson.model.*;
 import hudson.plugins.jira.JiraProjectProperty;
 import hudson.plugins.jira.JiraSession;
 import hudson.plugins.jira.JiraSite;
+import hudson.plugins.jira.Messages;
 import hudson.plugins.jira.pipeline.SearchIssuesStep.SearchStepExecution;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -92,6 +95,33 @@ class SearchIssuesStepTest {
         assertThat(returnedList, hasSize(1));
         assertThat(assertCalledList.iterator().next().getKey(), equalTo("EXAMPLE-1"));
         assertThat(returnedList.iterator().next(), equalTo("EXAMPLE-1"));
+    }
+
+    @Test
+    void abortsWithAClearMessageWhenNoJiraSiteIsConfigured() throws Exception {
+        AbstractProject mockProject = mock(FreeStyleProject.class);
+        Run mockRun = mock(Run.class);
+        when(mockRun.getParent()).thenReturn(mockProject);
+        when(mockRun.getParent().getProperty(JiraProjectProperty.class)).thenReturn(null);
+
+        Map<String, Object> r = new HashMap<>();
+        r.put("jql", "key='EXAMPLE-1'");
+        SearchIssuesStep step = (SearchIssuesStep) descriptor.newInstance(r);
+
+        StepContext ctx = mock(StepContext.class);
+        when(ctx.get(Node.class)).thenReturn(jenkinsRule.getInstance());
+        when(ctx.get(Run.class)).thenReturn(mockRun);
+        TaskListener listener = mock(TaskListener.class);
+        PrintStream logger = mock(PrintStream.class);
+        when(ctx.get(TaskListener.class)).thenReturn(listener);
+        when(listener.getLogger()).thenReturn(logger);
+
+        SearchStepExecution start = (SearchStepExecution) step.start(ctx);
+
+        // Used to be a bare NullPointerException.
+        AbortException thrown = assertThrows(AbortException.class, start::run);
+        assertEquals(Messages.NoJiraSite(), thrown.getMessage());
+        verify(logger).println(Messages.NoJiraSite());
     }
 
     @Test
