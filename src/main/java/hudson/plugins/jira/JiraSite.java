@@ -73,6 +73,7 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.annotation.PreDestroy;
 import jenkins.model.Jenkins;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -81,7 +82,6 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * <b>You must get instance of this only by using the static {@link #get} or {@link #getSitesFromFolders(ItemGroup)} methods</b>
- * <b>The constructors are only used by Jenkins</b>
  * <p>
  * Represents an external Jira installation and configuration
  * needed to access this Jira.
@@ -1337,6 +1337,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
     }
 
     @Extension
+    @Symbol("jiraSite")
     public static class DescriptorImpl extends Descriptor<JiraSite> {
         @Override
         public String getDisplayName() {
