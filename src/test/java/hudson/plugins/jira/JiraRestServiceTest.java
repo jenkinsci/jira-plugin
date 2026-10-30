@@ -18,8 +18,10 @@ import com.atlassian.jira.rest.client.api.ProjectRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.SearchRestClient;
 import com.atlassian.jira.rest.client.api.UserRestClient;
+import com.atlassian.jira.rest.client.api.domain.Component;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.domain.User;
 import hudson.plugins.jira.extension.ExtendedJiraRestClient;
 import hudson.plugins.jira.extension.ExtendedMyPermissionsRestClient;
 import hudson.plugins.jira.extension.ExtendedVersion;
@@ -162,6 +164,22 @@ class JiraRestServiceTest {
     }
 
     @Test
+    void getVersionsPreservesCauseAndInterruptFlag() throws Exception {
+        Promise<Iterable<ExtendedVersion>> promise = mock(Promise.class);
+        doReturn(promise).when(client).getVersionsForProject(any(URI.class));
+
+        assertPreservesCauseAndInterruptFlag(promise, () -> service.getVersions("KEY"));
+    }
+
+    @Test
+    void getComponentsPreservesCauseAndInterruptFlag() throws Exception {
+        Promise<Iterable<Component>> promise = mock(Promise.class);
+        doReturn(promise).when(client).getComponentsForProject(any(URI.class));
+
+        assertPreservesCauseAndInterruptFlag(promise, () -> service.getComponents("KEY"));
+    }
+
+    @Test
     void addVersionPreservesCauseAndInterruptFlag() throws Exception {
         Promise<ExtendedVersion> promise = mock(Promise.class);
         doReturn(promise).when(extendedVersionRestClient).createExtendedVersion(any());
@@ -188,6 +206,14 @@ class JiraRestServiceTest {
         assertPreservesCauseAndInterruptFlag(
                 promise,
                 () -> service.createIssue("KEY", "description", null, Collections.emptyList(), "summary", 1L, null));
+    }
+
+    @Test
+    void getMyselfPreservesCauseAndInterruptFlag() throws Exception {
+        Promise<User> promise = mock(Promise.class);
+        doReturn(promise).when(userClient).getUser(any(URI.class));
+
+        assertPreservesCauseAndInterruptFlag(promise, service::getMyself);
     }
 
     @Test
