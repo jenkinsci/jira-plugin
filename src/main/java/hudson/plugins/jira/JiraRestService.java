@@ -102,16 +102,34 @@ public class JiraRestService {
     public JiraRestService(
             URI uri, ExtendedJiraRestClient jiraRestClient, String username, String password, int timeout) {
         this.uri = uri;
-        this.timeout = timeout;
+        this.timeout = sanitizeTimeout(timeout);
         this.jiraRestClient = jiraRestClient;
         baseApiPath = buildBaseApiPath(uri);
     }
 
     public JiraRestService(URI uri, ExtendedJiraRestClient jiraRestClient, String token, int timeout) {
         this.uri = uri;
-        this.timeout = timeout;
+        this.timeout = sanitizeTimeout(timeout);
         this.jiraRestClient = jiraRestClient;
         baseApiPath = buildBaseApiPath(uri);
+    }
+
+    /**
+     * Rest calls block on the async client's future via {@code get(timeout, SECONDS)}. A
+     * non-positive value there is a zero-length deadline that fails immediately with a
+     * {@link java.util.concurrent.TimeoutException}, so callers that leave the timeout
+     * unset (the form-validation path sends {@code 0}) would never actually wait for the
+     * response. Fall back to the default timeout in that case, matching the previous
+     * behaviour of the synchronous client where an unset timeout meant "wait for the call
+     * to complete".
+     */
+    private static int sanitizeTimeout(int timeout) {
+        if (timeout < 1) {
+            LOGGER.fine(() ->
+                    "Jira REST timeout " + timeout + " is not positive; using default " + JiraSite.DEFAULT_TIMEOUT);
+            return JiraSite.DEFAULT_TIMEOUT;
+        }
+        return timeout;
     }
 
     private String buildBaseApiPath(URI uri) {

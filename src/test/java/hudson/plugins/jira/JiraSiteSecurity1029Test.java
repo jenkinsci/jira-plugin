@@ -263,7 +263,7 @@ public class JiraSiteSecurity1029Test {
         private JenkinsRule jenkinsRule;
         private URI serverUri;
 
-        private volatile String pwdCollected;
+        private String pwdCollected;
 
         FakeJiraServlet(JenkinsRule jenkinsRule) {
             this.jenkinsRule = jenkinsRule;
@@ -295,36 +295,11 @@ public class JiraSiteSecurity1029Test {
             try {
                 if ("GET".equals(he.getRequestMethod()) && "/rest/api/latest/mypermissions".equals(path)) {
                     myPermissions(he);
-                } else if ("GET".equals(he.getRequestMethod()) && "/rest/api/latest/myself".equals(path)) {
-                    myself(he);
                 } else {
                     he.sendResponseHeaders(HttpURLConnection.HTTP_NOT_FOUND, -1);
                 }
             } finally {
                 he.close();
-            }
-        }
-
-        private void myself(HttpExchange he) throws IOException {
-            // JiraSite.doValidate verifies credentials through JiraSession.getMyself(), which now
-            // routes GET /rest/api/latest/myself through the shared async JRJC transport. The client
-            // parses the response into a User, so a well-formed body is required; a bare status with
-            // no payload left the parser to react to an empty body, which raced with request
-            // teardown on Windows. Mirror the minimal /myself shape the real API returns.
-            Object body = new HashMap<String, Object>() {
-                {
-                    put("self", serverUri + "rest/api/latest/user?accountId=1");
-                    put("accountId", "1");
-                    put("displayName", "Test User");
-                    put("active", "true");
-                }
-            };
-
-            String response = JSONObject.fromObject(body).toString();
-            byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
-            he.sendResponseHeaders(HttpURLConnection.HTTP_OK, bytes.length);
-            try (OutputStream os = he.getResponseBody()) {
-                os.write(bytes);
             }
         }
 
