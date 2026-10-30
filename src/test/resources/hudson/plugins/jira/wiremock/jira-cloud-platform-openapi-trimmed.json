@@ -11,7 +11,7 @@
     },
     "termsOfService": "https://developer.atlassian.com/platform/marketplace/atlassian-developer-terms/",
     "title": "The Jira Cloud platform REST API",
-    "version": "1001.0.0-SNAPSHOT-51db16d09affda6811b2365b55ba1c8ab381e058"
+    "version": "1001.0.0-SNAPSHOT-d794cfb4c7554a89092e2f32783da3a72153f3f0"
   },
   "servers": [
     {
@@ -982,7 +982,7 @@
             }
           },
           {
-            "description": "A list of project properties to return for the project. This parameter accepts a comma-separated list.",
+            "description": "A list of project properties to return for the project. This parameter accepts a comma-separated list. Note that only the properties named here are returned in `properties` in the response; that object is empty when this parameter is omitted.",
             "in": "query",
             "name": "properties",
             "schema": {
@@ -1260,6 +1260,102 @@
             "scheme": "OAuth2",
             "scopes": [
               "read:project-version:jira"
+            ],
+            "state": "Beta"
+          }
+        ],
+        "x-atlassian-connect-scope": "READ"
+      }
+    },
+    "/rest/api/3/project/{projectIdOrKey}/components": {
+      "get": {
+        "deprecated": false,
+        "description": "Returns all components in a project. See the [Get project components paginated](#api-rest-api-3-project-projectIdOrKey-component-get) resource if you want to get a full list of components with pagination.\n\nIf your project uses Compass components, this API will return a paginated list of Compass components that are linked to issues in that project.\n\nThis operation can be accessed anonymously.\n\n**[Permissions](#permissions) required:** *Browse Projects* [project permission](https://confluence.atlassian.com/x/yodKLg) for the project.",
+        "operationId": "getProjectComponents",
+        "parameters": [
+          {
+            "description": "The project ID or project key (case sensitive).",
+            "in": "path",
+            "name": "projectIdOrKey",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The source of the components to return. Can be `jira` (default), `compass` or `auto`. When `auto` is specified, the API will return connected Compass components if the project is opted into Compass, otherwise it will return Jira components. Defaults to `jira`.",
+            "in": "query",
+            "name": "componentSource",
+            "schema": {
+              "default": "jira",
+              "enum": [
+                "jira",
+                "compass",
+                "auto"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "example": "[{\"ari\":\"ari:cloud:compass:fdb3fdec-4e70-be56-11ee-0242ac120002:component/fdb3fdec-4e70-11ee-be56-0242ac120002/fdb3fdec-11ee-4e70-be56-0242ac120002\",\"assignee\":{\"accountId\":\"5b10a2844c20165700ede21g\",\"accountType\":\"atlassian\",\"active\":false,\"avatarUrls\":{\"16x16\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=16&s=16\",\"24x24\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=24&s=24\",\"32x32\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=32&s=32\",\"48x48\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=48&s=48\"},\"displayName\":\"Mia Krystof\",\"key\":\"\",\"name\":\"\",\"self\":\"https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g\"},\"assigneeType\":\"PROJECT_LEAD\",\"description\":\"This is a Jira component\",\"id\":\"10000\",\"isAssigneeTypeValid\":false,\"lead\":{\"accountId\":\"5b10a2844c20165700ede21g\",\"accountType\":\"atlassian\",\"active\":false,\"avatarUrls\":{\"16x16\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=16&s=16\",\"24x24\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=24&s=24\",\"32x32\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=32&s=32\",\"48x48\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=48&s=48\"},\"displayName\":\"Mia Krystof\",\"key\":\"\",\"name\":\"\",\"self\":\"https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g\"},\"metadata\":{\"icon\":\"https://www.example.com/icon.png\"},\"name\":\"Component 1\",\"project\":\"HSP\",\"projectId\":10000,\"realAssignee\":{\"accountId\":\"5b10a2844c20165700ede21g\",\"accountType\":\"atlassian\",\"active\":false,\"avatarUrls\":{\"16x16\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=16&s=16\",\"24x24\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=24&s=24\",\"32x32\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=32&s=32\",\"48x48\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=48&s=48\"},\"displayName\":\"Mia Krystof\",\"key\":\"\",\"name\":\"\",\"self\":\"https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g\"},\"realAssigneeType\":\"PROJECT_LEAD\",\"self\":\"https://your-domain.atlassian.net/rest/api/3/component/10000\"},{\"ari\":\"ari:cloud:compass:fdb3fdec-4e70-be56-11ee-0242ac120002:component/fdb3fdec-11ee-4e70-be56-0242ac120002/fdb3fdec-4e70-11ee-be56-0242ac120002\",\"assignee\":{\"accountId\":\"5b10a2844c20165700ede21g\",\"accountType\":\"atlassian\",\"active\":false,\"avatarUrls\":{\"16x16\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=16&s=16\",\"24x24\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=24&s=24\",\"32x32\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=32&s=32\",\"48x48\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=48&s=48\"},\"displayName\":\"Mia Krystof\",\"key\":\"\",\"name\":\"\",\"self\":\"https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g\"},\"assigneeType\":\"PROJECT_LEAD\",\"description\":\"This is a another Jira component\",\"id\":\"10050\",\"isAssigneeTypeValid\":false,\"lead\":{\"accountId\":\"5b10a2844c20165700ede21g\",\"accountType\":\"atlassian\",\"active\":false,\"avatarUrls\":{\"16x16\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=16&s=16\",\"24x24\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=24&s=24\",\"32x32\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=32&s=32\",\"48x48\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=48&s=48\"},\"displayName\":\"Mia Krystof\",\"key\":\"\",\"name\":\"\",\"self\":\"https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g\"},\"metadata\":{\"icon\":\"https://www.example.com/icon.png\"},\"name\":\"PXA\",\"project\":\"PROJECTKEY\",\"projectId\":10000,\"realAssignee\":{\"accountId\":\"5b10a2844c20165700ede21g\",\"accountType\":\"atlassian\",\"active\":false,\"avatarUrls\":{\"16x16\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=16&s=16\",\"24x24\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=24&s=24\",\"32x32\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=32&s=32\",\"48x48\":\"https://avatar-management--avatars.server-location.prod.public.atl-paas.net/initials/MK-5.png?size=48&s=48\"},\"displayName\":\"Mia Krystof\",\"key\":\"\",\"name\":\"\",\"self\":\"https://your-domain.atlassian.net/rest/api/3/user?accountId=5b10a2844c20165700ede21g\"},\"realAssigneeType\":\"PROJECT_LEAD\",\"self\":\"https://your-domain.atlassian.net/rest/api/3/component/10000\"}]",
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectComponent"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Returned if the request is successful."
+          },
+          "401": {
+            "description": "Returned if the authentication credentials are incorrect or missing."
+          },
+          "404": {
+            "description": "Returned if the project is not found or the user does not have permission to view it."
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "OAuth2": [
+              "read:jira-work"
+            ]
+          },
+          {}
+        ],
+        "summary": "Get project components",
+        "tags": [
+          "Project components"
+        ],
+        "x-atlassian-data-security-policy": [
+          {
+            "app-access-rule-exempt": true
+          }
+        ],
+        "x-atlassian-oauth2-scopes": [
+          {
+            "scheme": "OAuth2",
+            "scopes": [
+              "read:jira-work"
+            ],
+            "state": "Current"
+          },
+          {
+            "scheme": "OAuth2",
+            "scopes": [
+              "read:project:jira",
+              "read:project.component:jira",
+              "read:user:jira",
+              "read:application-role:jira",
+              "read:avatar:jira",
+              "read:group:jira"
             ],
             "state": "Beta"
           }
@@ -1827,7 +1923,8 @@
             "enum": [
               "software",
               "service_desk",
-              "business"
+              "business",
+              "product_discovery"
             ],
             "readOnly": true,
             "type": "string"
@@ -1836,7 +1933,7 @@
             "additionalProperties": {
               "readOnly": true
             },
-            "description": "Map of project properties",
+            "description": "Map of project properties. Only the properties named in the request's properties query parameter are returned, so this is an empty object when that parameter is omitted.",
             "readOnly": true,
             "type": "object"
           },
@@ -1973,6 +2070,122 @@
           }
         },
         "type": "object"
+      },
+      "ProjectComponent": {
+        "additionalProperties": false,
+        "description": "Details about a project component.",
+        "properties": {
+          "ari": {
+            "description": "Compass component's ID. Can't be updated. Not required for creating a Project Component.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "assignee": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "description": "The details of the user associated with `assigneeType`, if any. See `realAssignee` for details of the user assigned to issues created with this component.",
+            "readOnly": true
+          },
+          "assigneeType": {
+            "description": "The nominal user type used to determine the assignee for issues created with this component. See `realAssigneeType` for details on how the type of the user, and hence the user, assigned to issues is determined. Can take the following values:\n\n *  `PROJECT_LEAD` the assignee to any issues created with this component is nominally the lead for the project the component is in.\n *  `COMPONENT_LEAD` the assignee to any issues created with this component is nominally the lead for the component.\n *  `UNASSIGNED` an assignee is not set for issues created with this component.\n *  `PROJECT_DEFAULT` the assignee to any issues created with this component is nominally the default assignee for the project that the component is in.\n\nDefault value: `PROJECT_DEFAULT`.  \nOptional when creating or updating a component.",
+            "enum": [
+              "PROJECT_DEFAULT",
+              "COMPONENT_LEAD",
+              "PROJECT_LEAD",
+              "UNASSIGNED"
+            ],
+            "type": "string"
+          },
+          "description": {
+            "description": "The description for the component. Optional when creating or updating a component.",
+            "type": "string"
+          },
+          "id": {
+            "description": "The unique identifier for the component.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "isAssigneeTypeValid": {
+            "description": "Whether a user is associated with `assigneeType`. For example, if the `assigneeType` is set to `COMPONENT_LEAD` but the component lead is not set, then `false` is returned.",
+            "readOnly": true,
+            "type": "boolean"
+          },
+          "lead": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "description": "The user details for the component's lead user.",
+            "readOnly": true
+          },
+          "leadAccountId": {
+            "description": "The accountId of the component's lead user. The accountId uniquely identifies the user across all Atlassian products. For example, *5b10ac8d82e05b22cc7d4ef5*.",
+            "maxLength": 128,
+            "type": "string",
+            "writeOnly": true
+          },
+          "leadUserName": {
+            "description": "This property is no longer available and will be removed from the documentation soon. See the [deprecation notice](https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/) for details.",
+            "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": {
+              "readOnly": true,
+              "type": "string"
+            },
+            "description": "Compass component's metadata. Can't be updated. Not required for creating a Project Component.",
+            "readOnly": true,
+            "type": "object"
+          },
+          "name": {
+            "description": "The unique name for the component in the project. Required when creating a component. Optional when updating a component. The maximum length is 255 characters.",
+            "type": "string"
+          },
+          "project": {
+            "description": "The key of the project the component is assigned to. Required when creating a component. Can't be updated.",
+            "type": "string"
+          },
+          "projectId": {
+            "description": "The ID of the project the component is assigned to.",
+            "format": "int64",
+            "readOnly": true,
+            "type": "integer"
+          },
+          "realAssignee": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              }
+            ],
+            "description": "The user assigned to issues created with this component, when `assigneeType` does not identify a valid assignee.",
+            "readOnly": true
+          },
+          "realAssigneeType": {
+            "description": "The type of the assignee that is assigned to issues created with this component, when an assignee cannot be set from the `assigneeType`. For example, `assigneeType` is set to `COMPONENT_LEAD` but no component lead is set. This property is set to one of the following values:\n\n *  `PROJECT_LEAD` when `assigneeType` is `PROJECT_LEAD` and the project lead has permission to be assigned issues in the project that the component is in.\n *  `COMPONENT_LEAD` when `assignee`Type is `COMPONENT_LEAD` and the component lead has permission to be assigned issues in the project that the component is in.\n *  `UNASSIGNED` when `assigneeType` is `UNASSIGNED` and Jira is configured to allow unassigned issues.\n *  `PROJECT_DEFAULT` when none of the preceding cases are true.",
+            "enum": [
+              "PROJECT_DEFAULT",
+              "COMPONENT_LEAD",
+              "PROJECT_LEAD",
+              "UNASSIGNED"
+            ],
+            "readOnly": true,
+            "type": "string"
+          },
+          "self": {
+            "description": "The URL of the component.",
+            "format": "uri",
+            "readOnly": true,
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "xml": {
+          "name": "component"
+        }
       },
       "PageOfChangelogs": {
         "additionalProperties": false,
@@ -2534,122 +2747,6 @@
           }
         },
         "type": "object"
-      },
-      "ProjectComponent": {
-        "additionalProperties": false,
-        "description": "Details about a project component.",
-        "properties": {
-          "ari": {
-            "description": "Compass component's ID. Can't be updated. Not required for creating a Project Component.",
-            "readOnly": true,
-            "type": "string"
-          },
-          "assignee": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/User"
-              }
-            ],
-            "description": "The details of the user associated with `assigneeType`, if any. See `realAssignee` for details of the user assigned to issues created with this component.",
-            "readOnly": true
-          },
-          "assigneeType": {
-            "description": "The nominal user type used to determine the assignee for issues created with this component. See `realAssigneeType` for details on how the type of the user, and hence the user, assigned to issues is determined. Can take the following values:\n\n *  `PROJECT_LEAD` the assignee to any issues created with this component is nominally the lead for the project the component is in.\n *  `COMPONENT_LEAD` the assignee to any issues created with this component is nominally the lead for the component.\n *  `UNASSIGNED` an assignee is not set for issues created with this component.\n *  `PROJECT_DEFAULT` the assignee to any issues created with this component is nominally the default assignee for the project that the component is in.\n\nDefault value: `PROJECT_DEFAULT`.  \nOptional when creating or updating a component.",
-            "enum": [
-              "PROJECT_DEFAULT",
-              "COMPONENT_LEAD",
-              "PROJECT_LEAD",
-              "UNASSIGNED"
-            ],
-            "type": "string"
-          },
-          "description": {
-            "description": "The description for the component. Optional when creating or updating a component.",
-            "type": "string"
-          },
-          "id": {
-            "description": "The unique identifier for the component.",
-            "readOnly": true,
-            "type": "string"
-          },
-          "isAssigneeTypeValid": {
-            "description": "Whether a user is associated with `assigneeType`. For example, if the `assigneeType` is set to `COMPONENT_LEAD` but the component lead is not set, then `false` is returned.",
-            "readOnly": true,
-            "type": "boolean"
-          },
-          "lead": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/User"
-              }
-            ],
-            "description": "The user details for the component's lead user.",
-            "readOnly": true
-          },
-          "leadAccountId": {
-            "description": "The accountId of the component's lead user. The accountId uniquely identifies the user across all Atlassian products. For example, *5b10ac8d82e05b22cc7d4ef5*.",
-            "maxLength": 128,
-            "type": "string",
-            "writeOnly": true
-          },
-          "leadUserName": {
-            "description": "This property is no longer available and will be removed from the documentation soon. See the [deprecation notice](https://developer.atlassian.com/cloud/jira/platform/deprecation-notice-user-privacy-api-migration-guide/) for details.",
-            "type": "string"
-          },
-          "metadata": {
-            "additionalProperties": {
-              "readOnly": true,
-              "type": "string"
-            },
-            "description": "Compass component's metadata. Can't be updated. Not required for creating a Project Component.",
-            "readOnly": true,
-            "type": "object"
-          },
-          "name": {
-            "description": "The unique name for the component in the project. Required when creating a component. Optional when updating a component. The maximum length is 255 characters.",
-            "type": "string"
-          },
-          "project": {
-            "description": "The key of the project the component is assigned to. Required when creating a component. Can't be updated.",
-            "type": "string"
-          },
-          "projectId": {
-            "description": "The ID of the project the component is assigned to.",
-            "format": "int64",
-            "readOnly": true,
-            "type": "integer"
-          },
-          "realAssignee": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/User"
-              }
-            ],
-            "description": "The user assigned to issues created with this component, when `assigneeType` does not identify a valid assignee.",
-            "readOnly": true
-          },
-          "realAssigneeType": {
-            "description": "The type of the assignee that is assigned to issues created with this component, when an assignee cannot be set from the `assigneeType`. For example, `assigneeType` is set to `COMPONENT_LEAD` but no component lead is set. This property is set to one of the following values:\n\n *  `PROJECT_LEAD` when `assigneeType` is `PROJECT_LEAD` and the project lead has permission to be assigned issues in the project that the component is in.\n *  `COMPONENT_LEAD` when `assignee`Type is `COMPONENT_LEAD` and the component lead has permission to be assigned issues in the project that the component is in.\n *  `UNASSIGNED` when `assigneeType` is `UNASSIGNED` and Jira is configured to allow unassigned issues.\n *  `PROJECT_DEFAULT` when none of the preceding cases are true.",
-            "enum": [
-              "PROJECT_DEFAULT",
-              "COMPONENT_LEAD",
-              "PROJECT_LEAD",
-              "UNASSIGNED"
-            ],
-            "readOnly": true,
-            "type": "string"
-          },
-          "self": {
-            "description": "The URL of the component.",
-            "format": "uri",
-            "readOnly": true,
-            "type": "string"
-          }
-        },
-        "type": "object",
-        "xml": {
-          "name": "component"
-        }
       },
       "ProjectInsight": {
         "additionalProperties": false,
@@ -3511,7 +3608,8 @@
             "enum": [
               "software",
               "service_desk",
-              "business"
+              "business",
+              "product_discovery"
             ],
             "readOnly": true,
             "type": "string"
@@ -3616,6 +3714,7 @@
               "read:attachment:jira": "View issue attachments.",
               "read:audit-log:jira": "View audit logs.",
               "read:avatar:jira": "View system and custom avatars.",
+              "read:bulk-job:jira": "View bulk jobs and their results.",
               "read:comment.property:jira": "View issue comment properties.",
               "read:comment:jira": "View issue comments.",
               "read:custom-field-contextual-configuration:jira": "Read custom field contextual configurations.",
@@ -3699,6 +3798,7 @@
               "write:app-data:jira": "Write app data.",
               "write:attachment:jira": "Create and update issue attachments.",
               "write:avatar:jira": "Create and update system and custom avatars.",
+              "write:bulk-job:jira": "Create and manage bulk jobs, including uploads, retries, and cancellation.",
               "write:comment.property:jira": "Create and update issue comment properties.",
               "write:comment:jira": "Create and update issue comments.",
               "write:custom-field-contextual-configuration:jira": "Save custom field contextual configurations.",
