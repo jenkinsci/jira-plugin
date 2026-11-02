@@ -6,6 +6,7 @@ import com.cloudbees.hudson.plugins.folder.AbstractFolderPropertyDescriptor;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.ItemGroup;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -41,12 +42,17 @@ public class JiraFolderProperty extends AbstractFolderProperty<AbstractFolder<?>
      */
     @Deprecated
     public void setSites(JiraSite site) {
+        if (sites == null || sites.isEmpty()) {
+            sites = new ArrayList<>();
+        } else if (!(sites instanceof ArrayList)) {
+            sites = new ArrayList<>(sites);
+        }
         sites.add(site);
     }
 
     @DataBoundSetter
     public void setSites(List<JiraSite> sites) {
-        this.sites = sites;
+        this.sites = sites == null ? Collections.emptyList() : sites;
     }
 
     /**
