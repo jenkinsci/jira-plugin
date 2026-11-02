@@ -46,7 +46,7 @@
   </issueManagement>
 
   <properties>
-    <revision>3.23</revision>
+    <revision>3.24</revision>
     <changelist>-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <hpi.bundledArtifacts>atlassian-event,atlassian-httpclient-api,atlassian-util-concurrent,fugue,jira-rest-java-client-api,jira-rest-java-client-core,maven-artifact,plexus-utils,sal-api</hpi.bundledArtifacts>
