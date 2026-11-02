@@ -1,7 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>jenkinsci/renovate-config"
+    "github>jenkinsci/renovate-config",
+    "schedule:earlyMondays"
   ],
   "packageRules": [
     {
@@ -26,7 +27,8 @@
       "matchPackageNames": [
         "io.jenkins.tools.bom:bom-*",
         "org.jenkins-ci.plugins:plugin"
-      ]
+      ],
+      "automerge": true
     }
   ]
 }
