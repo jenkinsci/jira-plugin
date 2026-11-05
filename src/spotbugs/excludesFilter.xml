@@ -43,11 +43,6 @@
     <Class name="hudson.plugins.jira.JiraReleaseVersionUpdaterBuilder$DescriptorImpl" />
   </Match>
   <Match>
-    <Bug pattern="LI_LAZY_INIT_STATIC" />
-    <Class name="hudson.plugins.jira.JiraSite" />
-    <Field name="executorService" />
-  </Match>
-  <Match>
     <Bug pattern="NP_NONNULL_PARAM_VIOLATION" />
     <Class name="hudson.plugins.jira.JiraSession" />
     <Method name="createIssue" />
