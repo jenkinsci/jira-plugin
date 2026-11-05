@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.perforce.p4java.core.IFix;
 import com.perforce.p4java.impl.generic.core.Fix;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
@@ -11,60 +12,95 @@ import hudson.plugins.jira.JiraSite;
 import hudson.scm.ChangeLogSet;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.jenkinsci.plugins.p4.changes.P4ChangeEntry;
 import org.jenkinsci.plugins.p4.changes.P4ChangeSet;
 import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 class P4JobIssueSelectorTest extends JobIssueSelectorTest {
 
     @Test
     void findsTwoP4Jobs() {
-        final String jobIdIW1231 = "IW-1231";
-        final String jobIdEC3453 = "EC-3453";
+        Set<String> result = findIssueIdsIn(p4EntryWith(fixWithId("IW-1231")), p4EntryWith(fixWithId("EC-3453")));
 
-        FreeStyleBuild build = mock(FreeStyleBuild.class);
-        BuildListener listener = mock(BuildListener.class);
-        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
-        P4ChangeSet perforceChangeLogSet = mock(P4ChangeSet.class);
-        Fix fixIW1231 = mock(Fix.class);
-        Fix fixEC3453 = mock(Fix.class);
+        assertEquals(Set.of("IW-1231", "EC-3453"), result);
+    }
 
-        when(fixIW1231.getJobId()).thenReturn(jobIdIW1231);
-        when(fixEC3453.getJobId()).thenReturn(jobIdEC3453);
+    @Test
+    void skipsP4EntryWithoutJobList() {
+        P4ChangeEntry entryWithoutJobs = mock(P4ChangeEntry.class);
+        when(entryWithoutJobs.getJobs()).thenReturn(null);
 
-        when(listener.getLogger()).thenReturn(System.out);
-        when(build.getChangeSet()).thenReturn(changeLogSet);
+        Set<String> result = findIssueIdsIn(entryWithoutJobs, p4EntryWith(fixWithId("IW-1231")));
 
-        ArrayList<P4ChangeEntry> entries = new ArrayList<>();
+        assertEquals(Set.of("IW-1231"), result);
+    }
 
-        P4ChangeEntry entry1 = new P4ChangeEntry(perforceChangeLogSet);
-        entry1.getJobs().add(fixIW1231);
-        entries.add(entry1);
+    @Test
+    void ignoresEntriesFromOtherScms() {
+        ChangeLogSet.Entry otherScmEntry = mock(ChangeLogSet.Entry.class);
+        when(otherScmEntry.getMsg()).thenReturn("EC-3453 mentioned in a commit message");
 
-        P4ChangeEntry entry2 = new P4ChangeEntry(perforceChangeLogSet);
-        entry2.getJobs().add(fixEC3453);
-        entries.add(entry2);
-        when(changeLogSet.iterator()).thenReturn(entries.iterator());
+        Set<String> result = findIssueIdsIn(otherScmEntry, p4EntryWith(fixWithId("IW-1231")));
 
-        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
-        changeSets.add(changeLogSet);
-        when(build.getChangeSets()).thenReturn(changeSets);
+        assertEquals(Set.of("IW-1231"), result);
+    }
 
-        Set<String> expected = new HashSet<>(Arrays.asList(jobIdEC3453, jobIdIW1231));
+    @Test
+    void collapsesJobSharedByTwoEntries() {
+        Set<String> result = findIssueIdsIn(p4EntryWith(fixWithId("IW-1231")), p4EntryWith(fixWithId("IW-1231")));
 
-        P4JobIssueSelector selector = new P4JobIssueSelector();
-        JiraSite jiraSite = mock(JiraSite.class);
-        Set<String> result = selector.findIssueIds(build, jiraSite, listener);
+        assertEquals(Set.of("IW-1231"), result);
+    }
 
-        assertEquals(expected.size(), result.size());
-        assertEquals(expected, result);
+    /**
+     * Uses a real {@link P4ChangeEntry}, whose constructor needs a running Jenkins since p4 1.18.1,
+     * so a change in how p4 exposes jobs fails here rather than being hidden by a stub.
+     * The {@link JenkinsRule} parameter stays although unused: requesting it is what boots Jenkins
+     * and marks this as the one Jenkins-booting test, the others here run without Jenkins.
+     */
+    @Test
+    @WithJenkins
+    void readsJobsFromRealP4ChangeEntry(JenkinsRule jenkins) {
+        P4ChangeEntry entry = new P4ChangeEntry(mock(P4ChangeSet.class));
+        entry.addJob(fixWithId("IW-1231"));
+
+        assertEquals(Set.of("IW-1231"), findIssueIdsIn(entry));
     }
 
     @Override
     protected JobIssueSelector createJobIssueSelector() {
         return new P4JobIssueSelector();
+    }
+
+    private static Fix fixWithId(String jobId) {
+        Fix fix = mock(Fix.class);
+        when(fix.getJobId()).thenReturn(jobId);
+        return fix;
+    }
+
+    private static P4ChangeEntry p4EntryWith(IFix... jobs) {
+        P4ChangeEntry entry = mock(P4ChangeEntry.class);
+        when(entry.getJobs()).thenReturn(List.of(jobs));
+        return entry;
+    }
+
+    private static Set<String> findIssueIdsIn(ChangeLogSet.Entry... entries) {
+        FreeStyleBuild build = mock(FreeStyleBuild.class);
+        BuildListener listener = mock(BuildListener.class);
+        ChangeLogSet changeLogSet = mock(ChangeLogSet.class);
+
+        when(listener.getLogger()).thenReturn(System.out);
+        when(build.getChangeSet()).thenReturn(changeLogSet);
+        when(changeLogSet.iterator()).thenReturn(Arrays.asList(entries).iterator());
+
+        List<ChangeLogSet<? extends ChangeLogSet.Entry>> changeSets = new ArrayList<>();
+        changeSets.add(changeLogSet);
+        when(build.getChangeSets()).thenReturn(changeSets);
+
+        return new P4JobIssueSelector().findIssueIds(build, mock(JiraSite.class), listener);
     }
 }

@@ -283,7 +283,7 @@
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>p4</artifactId>
-      <version>1.18.0</version>
+      <version>1.18.1</version>
       <optional>true</optional>
       <exclusions>
         <exclusion>
