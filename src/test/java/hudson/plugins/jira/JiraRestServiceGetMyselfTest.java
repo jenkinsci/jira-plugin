@@ -8,7 +8,11 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import com.atlassian.jira.rest.client.api.RestClientException;
+import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
+import com.atlassian.jira.rest.client.internal.async.AsynchronousHttpClientFactory;
+import com.atlassian.jira.rest.client.internal.async.DisposableHttpClient;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import hudson.plugins.jira.extension.ExtendedAsynchronousJiraRestClient;
 import java.net.URI;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -34,8 +38,16 @@ class JiraRestServiceGetMyselfTest {
 
     @Test
     void succeedsWhenCredentialsAreAccepted(JenkinsRule r) {
-        wireMock.stubFor(get(urlPathEqualTo("/rest/api/2/myself"))
-                .willReturn(okJson("{\"accountId\":\"1\",\"displayName\":\"Test User\"}")));
+        String myselfJson = """
+                {
+                  "self": "%1$s/rest/api/2/user?accountId=1",
+                  "accountId": "1",
+                  "displayName": "Test User",
+                  "avatarUrls": {"48x48": "%1$s/avatar.png"},
+                  "active": true
+                }
+                """.formatted(wireMock.baseUrl());
+        wireMock.stubFor(get(urlPathEqualTo("/rest/api/2/myself")).willReturn(okJson(myselfJson)));
 
         service().getMyself();
     }
@@ -51,6 +63,10 @@ class JiraRestServiceGetMyselfTest {
 
     private JiraRestService service() {
         URI serverUri = URI.create(wireMock.baseUrl());
-        return new JiraRestService(serverUri, null, "user", "pass", JiraSite.DEFAULT_TIMEOUT);
+        DisposableHttpClient httpClient = new AsynchronousHttpClientFactory()
+                .createClient(serverUri, new BasicHttpAuthenticationHandler("user", "pass"));
+        ExtendedAsynchronousJiraRestClient client =
+                new ExtendedAsynchronousJiraRestClient(serverUri, httpClient, false);
+        return new JiraRestService(serverUri, client, "user", "pass", JiraSite.DEFAULT_TIMEOUT);
     }
 }
