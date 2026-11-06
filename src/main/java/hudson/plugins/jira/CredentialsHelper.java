@@ -99,7 +99,7 @@ public class CredentialsHelper {
         }
         return result.includeEmptyValue()
                 .includeMatchingAs(
-                        item instanceof Queue.Task ? Tasks.getAuthenticationOf((Queue.Task) item) : ACL.SYSTEM,
+                        item instanceof Queue.Task task ? Tasks.getAuthenticationOf(task) : ACL.SYSTEM,
                         item,
                         StandardCredentials.class,
                         URIRequirementBuilder.fromUri(uri).build(),
@@ -122,7 +122,7 @@ public class CredentialsHelper {
         if (StringUtils.isEmpty(credentialsId)) {
             return FormValidation.ok();
         }
-        if (!(findCredentials(item, credentialsId, uri).isPresent())) {
+        if (findCredentials(item, credentialsId, uri).isEmpty()) {
             return FormValidation.error("Cannot find currently selected credentials");
         }
         return FormValidation.ok();
@@ -134,7 +134,7 @@ public class CredentialsHelper {
                 CredentialsProvider.lookupCredentials(
                         StandardUsernamePasswordCredentials.class,
                         item,
-                        item instanceof Queue.Task ? Tasks.getAuthenticationOf((Queue.Task) item) : ACL.SYSTEM,
+                        item instanceof Queue.Task task ? Tasks.getAuthenticationOf(task) : ACL.SYSTEM,
                         URIRequirementBuilder.fromUri(uri).build()),
                 CredentialsMatchers.withId(credentialsId)));
     }

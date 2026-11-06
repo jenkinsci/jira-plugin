@@ -13,6 +13,7 @@ import hudson.EnvVars;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Result;
 import hudson.plugins.jira.extension.ExtendedVersion;
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -89,7 +90,7 @@ class VersionReleaserTest {
                 return expanded;
             }
         });
-        when(listener.getLogger()).thenReturn(logger);
+        Mockito.lenient().when(listener.getLogger()).thenReturn(logger);
         doReturn(site).when(versionReleaser).getSiteForProject(any());
     }
 
@@ -129,5 +130,15 @@ class VersionReleaserTest {
 
         versionReleaser.perform(project, JIRA_PRJ_PARAM, JIRA_VER_PARAM, JIRA_DES_PARAM, build, listener);
         verify(session, times(0)).releaseVersion(projectCaptor.capture(), versionCaptor.capture());
+    }
+
+    @Test
+    void marksBuildAsFailedWhenExceptionThrown() {
+        when(site.getVersions(JIRA_PRJ)).thenThrow(new RuntimeException("Jira error"));
+
+        boolean result = versionReleaser.perform(project, JIRA_PRJ, JIRA_VER, JIRA_DES, build, listener);
+
+        assertThat(result, is(false));
+        verify(listener).finished(Result.FAILURE);
     }
 }

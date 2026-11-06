@@ -66,8 +66,8 @@ class VersionCreator {
             if (existingVersions.stream().anyMatch(v -> v.getName().equals(finalRealVersion))) {
                 listener.getLogger().println(Messages.JiraVersionCreator_VersionExists(realVersion, realProjectKey));
                 if (failIfAlreadyExists) {
-                    if (listener instanceof BuildListener) {
-                        ((BuildListener) listener).finished(Result.FAILURE);
+                    if (listener instanceof BuildListener buildListener) {
+                        buildListener.finished(Result.FAILURE);
                     }
                     return false;
                 }
