@@ -23,7 +23,7 @@ public class RunScmChangeExtractor {
     public static List<ChangeLogSet<? extends Entry>> getChanges(Run<?, ?> run) {
         if (run instanceof AbstractBuild<?, ?> build) {
             ChangeLogSet<? extends Entry> cs = build.getChangeSet();
-            return cs.isEmptySet() ? Collections.emptyList() : Collections.singletonList(cs);
+            return cs.isEmptySet() ? List.of() : List.of(cs);
         } else if (run == null) {
             throw new IllegalStateException("run cannot be null!");
         } else {

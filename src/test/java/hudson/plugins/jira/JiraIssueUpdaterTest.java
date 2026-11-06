@@ -4,6 +4,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -74,5 +76,14 @@ class JiraIssueUpdaterTest {
                 """, true));
         WorkflowRun b = r.buildAndAssertStatus(Result.FAILURE, job);
         r.assertLogContains(" Unsupported run type", b);
+    }
+
+    @WithJenkins
+    @Test
+    void testPerformWithAbstractBuild(JenkinsRule r) throws Exception {
+        FreeStyleProject project = r.createFreeStyleProject();
+        project.getPublishersList().add(new JiraIssueUpdater(new DefaultIssueSelector(), null, null));
+        FreeStyleBuild build = r.buildAndAssertStatus(Result.FAILURE, project);
+        r.assertLogContains(Messages.NoJiraSite(), build);
     }
 }

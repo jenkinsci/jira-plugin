@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 class RunScmChangeExtractorTest {
 
     public abstract static class WorkflowRunLike extends Run {
+        // Constructor is bypassed by Mockito when creating mocks; satisfies Java requirements for extending Run.
         protected WorkflowRunLike() {
             super(mock(Job.class), (Calendar) null);
         }
@@ -60,7 +61,7 @@ class RunScmChangeExtractorTest {
         List<ChangeLogSet<? extends Entry>> changes = RunScmChangeExtractor.getChanges(build);
 
         assertEquals(1, changes.size());
-        assertSame(changeLogSet, changes.get(0));
+        assertSame(changeLogSet, changes.getFirst());
     }
 
     @Test
@@ -111,9 +112,20 @@ class RunScmChangeExtractorTest {
     }
 
     @Test
-    void getDependencyChangesReturnsEmptyMapWhenPreviousBuildNotAbstractBuild() {
+    void getDependencyChangesReturnsEmptyMapWhenNoPreviousBuild() {
         AbstractBuild<?, ?> build = mock(AbstractBuild.class);
         doReturn(null).when(build).getPreviousCompletedBuild();
+
+        Map<AbstractProject, DependencyChange> actual = RunScmChangeExtractor.getDependencyChanges(build);
+
+        assertTrue(actual.isEmpty());
+    }
+
+    @Test
+    void getDependencyChangesReturnsEmptyMapWhenPreviousBuildNotAbstractBuild() {
+        AbstractBuild<?, ?> build = mock(AbstractBuild.class);
+        Run<?, ?> previousRun = mock(Run.class);
+        doReturn(previousRun).when(build).getPreviousCompletedBuild();
 
         Map<AbstractProject, DependencyChange> actual = RunScmChangeExtractor.getDependencyChanges(build);
 

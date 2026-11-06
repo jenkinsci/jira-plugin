@@ -1143,7 +1143,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             return Optional.ofNullable(this.jiraSession.getIssue(id));
         });
 
-        if (issue == null || !issue.isPresent()) {
+        if (issue.isEmpty()) {
             return null;
         }
         return new JiraIssue(issue.get());
@@ -1628,7 +1628,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             // This only supports one site per folder
             List<JiraSite> sitesFromFolders = getSitesFromFolders(p.getParent());
             if (sitesFromFolders.size() > 0) {
-                found = sitesFromFolders.get(0);
+                found = sitesFromFolders.getFirst();
             }
         }
         if (found == null) {
@@ -1636,7 +1636,7 @@ public class JiraSite extends AbstractDescribableImpl<JiraSite> {
             // if only one is configured, that must be it.
             List<JiraSite> sites = JiraGlobalConfiguration.get().getSites();
             if (sites != null && sites.size() == 1) {
-                found = sites.get(0);
+                found = sites.getFirst();
             }
         }
         if (found != null) {
