@@ -209,7 +209,7 @@ public class ApacheAsyncHttpClientTest {
         }
     }
 
-    private ApplicationProperties buildApplicationProperties() {
+    static ApplicationProperties buildApplicationProperties() {
         ApplicationProperties applicationProperties = new ApplicationProperties() {
             @Override
             public String getBaseUrl() {
@@ -284,7 +284,7 @@ public class ApacheAsyncHttpClientTest {
         return applicationProperties;
     }
 
-    private static final class NoOpThreadLocalContextManager<C> implements ThreadLocalContextManager<C> {
+    static final class NoOpThreadLocalContextManager<C> implements ThreadLocalContextManager<C> {
         @Override
         public C getThreadLocalContext() {
             return null;
