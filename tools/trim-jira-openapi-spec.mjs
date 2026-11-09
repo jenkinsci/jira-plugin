@@ -29,6 +29,7 @@ const KEPT_PATHS = [
     "/rest/api/3/version/{id}",
     "/rest/api/3/project/{projectIdOrKey}",
     "/rest/api/3/project/{projectIdOrKey}/versions",
+    "/rest/api/3/project/{projectIdOrKey}/components",
 ];
 
 const spec = await (await fetch(SPEC_URL)).json();

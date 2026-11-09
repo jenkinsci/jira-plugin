@@ -84,6 +84,11 @@ class LiveJiraCloudE2ETest extends AbstractJiraRestServiceContractTest {
     }
 
     @Override
+    protected void prepareGetComponents() {
+        // Nothing to prepare: the real API returns the project's existing components.
+    }
+
+    @Override
     protected void assertCommentWasSent(String issueKey, String commentBody) {
         Issue issue = session.service.getIssue(issueKey);
         boolean found = false;
