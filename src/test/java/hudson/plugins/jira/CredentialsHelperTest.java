@@ -2,9 +2,12 @@ package hudson.plugins.jira;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.cloudbees.plugins.credentials.CredentialsProvider;
 import com.cloudbees.plugins.credentials.CredentialsScope;
@@ -14,10 +17,14 @@ import com.cloudbees.plugins.credentials.domains.DomainSpecification;
 import com.cloudbees.plugins.credentials.domains.HostnameSpecification;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import hudson.model.Descriptor.FormException;
+import hudson.model.FreeStyleProject;
+import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
@@ -83,5 +90,37 @@ class CredentialsHelperTest {
                 CredentialsHelper.migrateCredentials("username", "password", new URL("http://example.org"));
 
         assertEquals(c, cred);
+    }
+
+    @Test
+    void doCheckFillCredentialsIdReturnsErrorForUnknownCredentialsId(JenkinsRule r) {
+        FormValidation validation =
+                CredentialsHelper.doCheckFillCredentialsId(null, "unknown-id", "http://example.org");
+        assertEquals(FormValidation.Kind.ERROR, validation.kind);
+    }
+
+    @Test
+    void credentialsOperationsWithQueueTaskItem(JenkinsRule r) throws Exception {
+        FreeStyleProject project = r.createFreeStyleProject();
+
+        FormValidation validation =
+                CredentialsHelper.doCheckFillCredentialsId(project, "unknown-id", "http://example.org");
+        assertEquals(FormValidation.Kind.ERROR, validation.kind);
+
+        Optional<StandardUsernamePasswordCredentials> notFound =
+                CredentialsHelper.findCredentials(project, "unknown-id", "http://example.org");
+        assertTrue(notFound.isEmpty());
+
+        StandardUsernamePasswordCredentials c =
+                new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, "cred-id", null, "username", "password");
+        CredentialsProvider.lookupStores(r.jenkins).iterator().next().addCredentials(Domain.global(), c);
+
+        Optional<StandardUsernamePasswordCredentials> found =
+                CredentialsHelper.findCredentials(project, "cred-id", "http://example.org");
+        assertTrue(found.isPresent());
+        assertEquals(c, found.get());
+
+        ListBoxModel model = CredentialsHelper.doFillCredentialsIdItems(project, "cred-id", "http://example.org");
+        assertThat(model.size(), is(greaterThan(0)));
     }
 }
